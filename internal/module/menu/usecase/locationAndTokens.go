@@ -2,11 +2,11 @@ package usecase
 
 import (
 	"context"
-	"example.com/fxdemo/internal/module/menu/domain"
-	"example.com/fxdemo/internal/module/menu/dto"
-	"example.com/fxdemo/pkg/logger"
 	"github.com/kamva/mgm/v3"
-	menu_validator "github.com/n-goo/ngo-menu-service/pkg/validators"
+	"samm/internal/module/menu/domain"
+	"samm/internal/module/menu/dto"
+	"samm/pkg/logger"
+	"samm/pkg/validators"
 )
 
 type MenuUseCase struct {
@@ -23,27 +23,27 @@ func NewMenuUseCase(repo domain.MenuRepository, logger logger.ILogger) domain.Me
 	}
 }
 
-func (oRec *MenuUseCase) UpdateTokens(ctx context.Context) menu_validator.ErrorResponse {
+func (oRec *MenuUseCase) UpdateTokens(ctx context.Context) validators.ErrorResponse {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (oRec *MenuUseCase) MenuWebhook(ctx context.Context, webhook *dto.MenusWebhook) menu_validator.ErrorResponse {
+func (oRec *MenuUseCase) MenuWebhook(ctx context.Context, webhook *dto.MenusWebhook) validators.ErrorResponse {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (oRec *MenuUseCase) LocationActiveStatusWebhook(ctx context.Context, webhook *dto.BusyModeLocationWebhook) menu_validator.ErrorResponse {
+func (oRec *MenuUseCase) LocationActiveStatusWebhook(ctx context.Context, webhook *dto.BusyModeLocationWebhook) validators.ErrorResponse {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (oRec *MenuUseCase) MenuActiveStatusWebhook(ctx context.Context, webhook *dto.SnoozeMenuWebhook) menu_validator.ErrorResponse {
+func (oRec *MenuUseCase) MenuActiveStatusWebhook(ctx context.Context, webhook *dto.SnoozeMenuWebhook) validators.ErrorResponse {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (oRec *MenuUseCase) LocationRegisterWebhook(ctx context.Context, payload *dto.LocationRegisterWebhook) (errResponse menu_validator.ErrorResponse) {
+func (oRec *MenuUseCase) LocationRegisterWebhook(ctx context.Context, payload *dto.LocationRegisterWebhook) (errResponse validators.ErrorResponse) {
 	oRec.repo.UpdateTokens(ctx, &domain.Token{
 		DefaultModel: mgm.DefaultModel{},
 		AccessToken:  "aqw		q",
@@ -52,14 +52,14 @@ func (oRec *MenuUseCase) LocationRegisterWebhook(ctx context.Context, payload *d
 		TokenType:    "231123",
 		Scope:        "123123312",
 	})
-	return menu_validator.ErrorResponse{}
+	return validators.ErrorResponse{}
 }
 
-func (oRec *MenuUseCase) FindLocation(ctx context.Context, locationId string) (response domain.Location, errResponse menu_validator.ErrorResponse) {
+func (oRec *MenuUseCase) FindLocation(ctx context.Context, locationId string) (response domain.Location, errResponse validators.ErrorResponse) {
 	token, err := oRec.repo.FindToken(ctx)
 	if err != nil {
-		return domain.Location{}, menu_validator.ErrorResponse{}
+		return domain.Location{}, validators.ErrorResponse{}
 	}
 	oRec.logger.Info("fawaaaaaaz", token)
-	return domain.Location{}, menu_validator.ErrorResponse{}
+	return domain.Location{}, validators.ErrorResponse{}
 }

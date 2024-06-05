@@ -1,12 +1,12 @@
 package config
 
 import (
-	echoserver "example.com/fxdemo/pkg/http/echo/server"
-	"example.com/fxdemo/pkg/logger"
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"os"
+	echoserver "samm/pkg/http/echo/server"
+	"samm/pkg/logger"
 	"time"
 )
 

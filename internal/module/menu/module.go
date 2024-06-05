@@ -1,10 +1,10 @@
 package menu
 
 import (
-	"example.com/fxdemo/internal/module/menu/delivery"
-	"example.com/fxdemo/internal/module/menu/repository/mongodb"
-	"example.com/fxdemo/internal/module/menu/usecase"
 	"go.uber.org/fx"
+	"samm/internal/module/menu/delivery"
+	"samm/internal/module/menu/repository/mongodb"
+	"samm/internal/module/menu/usecase"
 )
 
 // Module for controller database repository

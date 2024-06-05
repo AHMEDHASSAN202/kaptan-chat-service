@@ -2,7 +2,6 @@ package httpclient
 
 import (
 	"github.com/go-resty/resty/v2"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"net"
 	"net/http"
 	"time"
@@ -37,7 +36,9 @@ func NewHttpClient() *resty.Client {
 		SetTimeout(timeout).
 		SetRetryCount(retryCount).
 		SetRetryWaitTime(retryWaitTime).
-		SetTransport(otelhttp.NewTransport(transport)) // use custom transport open-telemetry for tracing http-client
+		SetTransport(transport)
+	//todo- handle otelhttp
+	//.SetTransport(otelhttp.NewTransport(transport)) // use custom transport open-telemetry for tracing http-client
 
 	return client
 }

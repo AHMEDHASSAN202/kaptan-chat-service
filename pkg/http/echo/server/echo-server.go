@@ -2,9 +2,9 @@ package echoserver
 
 import (
 	"context"
-	"example.com/fxdemo/pkg/logger"
 	"fmt"
 	"github.com/labstack/echo/v4"
+	"samm/pkg/logger"
 	"time"
 )
 

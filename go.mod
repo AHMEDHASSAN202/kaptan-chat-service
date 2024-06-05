@@ -1,7 +1,6 @@
-module example.com/fxdemo
+module samm
 
 go 1.19
-
 
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0
@@ -13,8 +12,6 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/kamva/mgm/v3 v3.5.0
 	github.com/labstack/echo/v4 v4.12.0
-	github.com/meysamhadeli/shop-golang-microservices/internal/pkg v0.0.0-20240513190723-741e6e749ab4
-	github.com/n-goo/ngo-menu-service v1.9.9
 	github.com/pkg/errors v0.9.1
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.9.3
@@ -23,10 +20,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go v0.31.0
 	go.mongodb.org/mongo-driver v1.15.0
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.52.0
 	go.uber.org/fx v1.22.0
-	golang.org/x/crypto v0.23.0
-	gorm.io/gorm v1.25.10
 )
 
 require (
@@ -117,6 +111,7 @@ require (
 	go.uber.org/dig v1.17.1 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	go.uber.org/zap v1.26.0 // indirect
+	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect

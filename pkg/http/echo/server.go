@@ -2,14 +2,14 @@ package echo
 
 import (
 	"context"
-	"example.com/fxdemo/pkg/config"
-	echomiddleware "example.com/fxdemo/pkg/http/echo/middleware"
-	echoserver "example.com/fxdemo/pkg/http/echo/server"
-	"example.com/fxdemo/pkg/logger"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"go.uber.org/fx"
 	"net/http"
+	"samm/pkg/config"
+	echomiddleware "samm/pkg/http/echo/middleware"
+	echoserver "samm/pkg/http/echo/server"
+	"samm/pkg/logger"
 )
 
 func RunServers(lc fx.Lifecycle, log logger.ILogger, e *echo.Echo, ctx context.Context, cfg *config.Config) error {

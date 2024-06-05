@@ -1,9 +1,9 @@
 package dto
 
 import (
-	"example.com/fxdemo/pkg/validators"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/pkg/validators"
 	"time"
 )
 

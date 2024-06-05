@@ -2,12 +2,12 @@ package delivery
 
 import (
 	"context"
-	"example.com/fxdemo/internal/module/menu/domain"
-	"example.com/fxdemo/internal/module/menu/dto"
-	"example.com/fxdemo/pkg/logger"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"samm/internal/module/menu/domain"
+	"samm/internal/module/menu/dto"
+	"samm/pkg/logger"
 )
 
 type MenuHandler struct {

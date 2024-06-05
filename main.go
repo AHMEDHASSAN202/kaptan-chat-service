@@ -1,16 +1,16 @@
 package main
 
 import (
-	"example.com/fxdemo/internal/module/menu"
-	"example.com/fxdemo/pkg/config"
-	"example.com/fxdemo/pkg/database"
-	"example.com/fxdemo/pkg/http"
-	"example.com/fxdemo/pkg/http/echo"
-	echoserver "example.com/fxdemo/pkg/http/echo/server"
-	httpclient "example.com/fxdemo/pkg/http_client"
-	"example.com/fxdemo/pkg/logger"
-	"example.com/fxdemo/pkg/validators"
 	"go.uber.org/fx"
+	"samm/internal/module/menu"
+	"samm/pkg/config"
+	"samm/pkg/database"
+	"samm/pkg/http"
+	"samm/pkg/http/echo"
+	echoserver "samm/pkg/http/echo/server"
+	httpclient "samm/pkg/http_client"
+	"samm/pkg/logger"
+	"samm/pkg/validators"
 )
 
 func main() {

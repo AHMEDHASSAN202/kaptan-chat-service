@@ -1,8 +1,8 @@
 package database
 
 import (
-	"example.com/fxdemo/pkg/database/mongodb"
 	"go.uber.org/fx"
+	"samm/pkg/database/mongodb"
 )
 
 var Module = fx.Options(

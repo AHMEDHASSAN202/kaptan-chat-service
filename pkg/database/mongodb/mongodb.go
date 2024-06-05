@@ -2,13 +2,13 @@ package mongodb
 
 import (
 	"context"
-	"example.com/fxdemo/pkg/config"
 	"fmt"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"os"
+	"samm/pkg/config"
 	"time"
 )
 

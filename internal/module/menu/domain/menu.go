@@ -2,9 +2,9 @@ package domain
 
 import (
 	"context"
-	"example.com/fxdemo/internal/module/menu/dto"
 	"github.com/kamva/mgm/v3"
-	"github.com/n-goo/ngo-menu-service/pkg/validators"
+	"samm/internal/module/menu/dto"
+	"samm/pkg/validators"
 )
 
 type Token struct {
