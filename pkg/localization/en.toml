@@ -1,0 +1,3 @@
+[E3233]
+description = "The number of messages a person has"
+one = "{{.Name}} has {{.Count}} message."

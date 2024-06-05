@@ -4,10 +4,10 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"net/http"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto"
 	"samm/pkg/logger"
+	"samm/pkg/validators"
 )
 
 type MenuHandler struct {
@@ -37,23 +37,23 @@ func (a *MenuHandler) GetByID(c echo.Context) error {
 	}
 	art, errResponse := a.menuUsecase.FindLocation(ctx, id)
 	if errResponse.IsError {
-		return c.JSON(http.StatusBadRequest, nil)
+		return validators.ErrorStatusBadRequest(c, errResponse)
 	}
 
-	return c.JSON(http.StatusOK, art)
+	return validators.Success(c, art)
 }
 
 func (a *MenuHandler) Store(c echo.Context) error {
 	var userRequest dto.LocationRegisterWebhook
 	err := c.Bind(&userRequest)
 	if err != nil {
-		return c.JSON(http.StatusUnprocessableEntity, err.Error())
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
 	validationErr := userRequest.Validate(c, a.validator)
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
-		return c.JSON(http.StatusUnprocessableEntity, validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 	ctx := c.Request().Context()
 	if ctx == nil {
@@ -62,8 +62,8 @@ func (a *MenuHandler) Store(c echo.Context) error {
 
 	errResp := a.menuUsecase.LocationRegisterWebhook(ctx, &dto.LocationRegisterWebhook{})
 	if errResp.IsError {
-		return c.JSON(http.StatusBadRequest, nil)
+		return validators.ErrorStatusBadRequest(c, validationErr)
 	}
 
-	return c.JSON(http.StatusCreated, nil)
+	return validators.Success(c, nil)
 }

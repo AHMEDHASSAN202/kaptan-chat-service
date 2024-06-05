@@ -1,6 +1,7 @@
 package validators
 
 import (
+	"context"
 	"github.com/go-playground/locales/ar"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -8,11 +9,12 @@ import (
 	ar_translations "github.com/go-playground/validator/v10/translations/ar"
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/labstack/echo/v4"
+	"github.com/pkg/errors"
+	"net/http"
 )
 
 type Message struct {
-	En   string `json:"en"`
-	Ar   string `json:"ar"`
+	Text string `json:"text"`
 	Code string `json:"code"`
 }
 
@@ -41,9 +43,9 @@ func Init() *validator.Validate {
 	return validate
 }
 
-func ValidateStruct(c echo.Context, validate *validator.Validate, obj interface{}) ErrorResponse {
+func ValidateStruct(c context.Context, validate *validator.Validate, obj interface{}) ErrorResponse {
 	err := validate.Struct(obj)
-	lang := c.Request().Context().Value("lang")
+	lang := c.Value("lang")
 	if err != nil {
 		errs := err.(validator.ValidationErrors)
 		errMap := make(map[string][]string)
@@ -62,6 +64,35 @@ func ValidateStruct(c echo.Context, validate *validator.Validate, obj interface{
 		}
 	}
 	return ErrorResponse{}
+}
+
+func GetErrorResponseFromErr(e error) ErrorResponse {
+	return ErrorResponse{
+		ValidationErrors: nil,
+		IsError:          true,
+		ErrorMessageObject: &Message{
+			Text: e.Error(),
+			Code: "",
+		},
+	}
+}
+
+func Success(c echo.Context, data any) error {
+	c.JSON(http.StatusOK, data)
+	return nil
+}
+
+func ErrorStatusUnprocessableEntity(c echo.Context, validationErr ErrorResponse) error {
+	c.JSON(http.StatusUnprocessableEntity, validationErr)
+	return errors.New("ErrorStatusUnprocessableEntity")
+}
+func ErrorStatusBadRequest(c echo.Context, validationErr ErrorResponse) error {
+	c.JSON(http.StatusBadRequest, validationErr)
+	return errors.New("ErrorStatusBadRequest")
+}
+func ErrorStatusInternalServerError(c echo.Context, validationErr ErrorResponse) error {
+	c.JSON(http.StatusInternalServerError, validationErr)
+	return errors.New("ErrorStatusInternalServerError")
 }
 
 //package validators

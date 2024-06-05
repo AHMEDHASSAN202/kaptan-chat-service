@@ -9,6 +9,7 @@ import (
 	"samm/pkg/http/echo"
 	echoserver "samm/pkg/http/echo/server"
 	httpclient "samm/pkg/http_client"
+	"samm/pkg/localization"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
 )
@@ -23,6 +24,7 @@ func main() {
 				echoserver.NewEchoServer,
 				httpclient.NewHttpClient,
 				validators.Init,
+				localization.InitLocalization,
 			),
 			menu.Module,
 			database.Module,

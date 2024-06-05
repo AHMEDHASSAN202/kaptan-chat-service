@@ -17,5 +17,5 @@ type LocationRegisterWebhook struct {
 }
 
 func (l *LocationRegisterWebhook) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
-	return validators.ValidateStruct(c, validate, l)
+	return validators.ValidateStruct(c.Request().Context(), validate, l)
 }
