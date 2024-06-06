@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 	"github.com/kamva/mgm/v3"
-	"samm/internal/module/menu/domain"
-	"samm/internal/module/menu/dto"
+	"samm/internal/module/example/domain"
+	"samm/internal/module/example/dto"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
 )

@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"samm/internal/module/menu/domain"
+	"samm/internal/module/example/domain"
 )
 
 type mongoRepository struct {

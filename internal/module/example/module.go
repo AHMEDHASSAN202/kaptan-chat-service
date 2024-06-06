@@ -1,10 +1,10 @@
-package menu
+package example
 
 import (
 	"go.uber.org/fx"
-	"samm/internal/module/menu/delivery"
-	"samm/internal/module/menu/repository/mongodb"
-	"samm/internal/module/menu/usecase"
+	"samm/internal/module/example/delivery"
+	"samm/internal/module/example/repository/mongodb"
+	"samm/internal/module/example/usecase"
 )
 
 // Module for controller database repository

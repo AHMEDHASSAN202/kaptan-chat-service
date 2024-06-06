@@ -3,7 +3,7 @@ package domain
 import (
 	"context"
 	"github.com/kamva/mgm/v3"
-	"samm/internal/module/menu/dto"
+	"samm/internal/module/example/dto"
 	"samm/pkg/validators"
 )
 

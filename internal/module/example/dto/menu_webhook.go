@@ -1,7 +1,7 @@
 package dto
 
 type MenuWebhook struct {
-	Menu            string                    `json:"menu"`
+	Menu            string                    `json:"example"`
 	MenuId          string                    `json:"menuId"`
 	Availabilities  []Availability            `json:"availabilities"`
 	Categories      []Category                `json:"categories"`
@@ -30,7 +30,7 @@ type Category struct {
 	Availabilities          []Availability    `json:"availabilities"` //todo: check this
 	ImageURL                string            `json:"imageUrl"`
 	Products                []string          `json:"products"`
-	Menu                    string            `json:"menu"`
+	Menu                    string            `json:"example"`
 	Level                   int               `json:"level,omitempty"`
 }
 type Product struct {

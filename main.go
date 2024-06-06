@@ -2,7 +2,7 @@ package main
 
 import (
 	"go.uber.org/fx"
-	"samm/internal/module/menu"
+	"samm/internal/module/example"
 	"samm/pkg/config"
 	"samm/pkg/database"
 	"samm/pkg/http"
@@ -26,7 +26,7 @@ func main() {
 				validators.Init,
 				localization.InitLocalization,
 			),
-			menu.Module,
+			example.Module,
 			database.Module,
 			fx.Invoke(echo.RunServers),
 		),

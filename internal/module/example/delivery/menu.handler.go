@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"samm/internal/module/menu/domain"
-	"samm/internal/module/menu/dto"
+	"samm/internal/module/example/domain"
+	"samm/internal/module/example/dto"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
 )
