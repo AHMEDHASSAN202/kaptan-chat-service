@@ -22,6 +22,6 @@ func NewItemRepository(dbs *mongo.Database) domain.ItemRepository {
 
 func (i *itemRepo) GetByIds(ctx context.Context, ids []primitive.ObjectID) ([]domain.Item, error) {
 	items := []domain.Item{}
-	err := mgm.Coll(&domain.Item{}).SimpleFind(&items, bson.M{"_id": bson.M{"$in": ids}})
+	err := mgm.Coll(&domain.Item{}).SimpleFind(&items, bson.M{"_id": bson.M{"$in": ids}, "deleted_at": nil})
 	return items, err
 }
