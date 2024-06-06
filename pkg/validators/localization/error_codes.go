@@ -16,5 +16,4 @@ const (
 	E1010 = "E1010" // Conflict
 	E1011 = "E1011" // Quota exceeded
 	E1012 = "E1012" // Feature not supported
-	E3233 = "E3233" // The number of messages a person has
 )
