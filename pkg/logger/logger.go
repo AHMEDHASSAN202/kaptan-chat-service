@@ -6,8 +6,6 @@ import (
 )
 
 // Logger methods interface
-//
-//go:generate mockery --name ILogger
 type ILogger interface {
 	getLevel() log.Level
 	Debug(args ...interface{})
@@ -72,7 +70,7 @@ func InitLogger(cfg LoggerConfig) ILogger {
 
 	env := os.Getenv("APP_ENV")
 
-	if env == "production" {
+	if env == "main" {
 		log.SetFormatter(&log.JSONFormatter{})
 	} else {
 		// The TextFormatter is default, you don't actually have to do this.

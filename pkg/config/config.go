@@ -22,7 +22,8 @@ const (
 	defaultVerificationCodeLength = 8
 
 	EnvLocal = "local"
-	Prod     = "prod"
+	EnvMain  = "main"
+	EnvDev   = "dev"
 )
 
 type (
@@ -123,7 +124,7 @@ func setFromEnv(cfg *Config) {
 
 func parseConfigFile(folder, env string) error {
 	viper.AddConfigPath(folder)
-	viper.SetConfigName("main")
+	viper.SetConfigName(env)
 
 	if err := viper.ReadInConfig(); err != nil {
 		return err
