@@ -10,7 +10,7 @@ import (
 var bundle *i18n.Bundle
 
 func InitLocalization() *i18n.Bundle {
-	bundle := i18n.NewBundle(language.English)
+	bundle = i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
 	bundle.LoadMessageFile("pkg/localization/en.toml")
 	bundle.LoadMessageFile("pkg/localization/ar.toml")
@@ -23,6 +23,7 @@ func GetTranslation(c *context.Context, errorCode string, TemplateData map[strin
 	translation, err := loc.Localize(&i18n.LocalizeConfig{
 		MessageID:    errorCode,
 		TemplateData: TemplateData,
+		PluralCount:  0,
 	})
 	if err != nil {
 		translation = "error_msg_not_found"

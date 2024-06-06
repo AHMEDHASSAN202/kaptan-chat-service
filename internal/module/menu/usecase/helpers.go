@@ -6,15 +6,18 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/menu_group"
 	"samm/pkg/utils"
+	"samm/pkg/validators"
 )
 
-func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_group.CreateMenuGroupDTO) error {
+func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_group.CreateMenuGroupDTO) validators.ErrorResponse {
 	itemIds := []primitive.ObjectID{}
 	if dto.Categories != nil {
 		for _, category := range dto.Categories {
 			if category.MenuItems != nil {
 				for _, menuItem := range category.MenuItems {
-					itemIds = append(itemIds, utils.ConvertStringIdToObjectId(menuItem.ItemId))
+					if !utils.Contains(itemIds, menuItem.ItemId) {
+						itemIds = append(itemIds, utils.ConvertStringIdToObjectId(menuItem.ItemId))
+					}
 				}
 			}
 		}
@@ -22,12 +25,17 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 
 	items, err := oRec.itemRepo.GetByIds(ctx, itemIds)
 	if err != nil || items == nil {
-		return err
+		oRec.logger.Error(err)
+		return validators.GetErrorResponse(&ctx, "E1000", nil)
 	}
 
 	itemsMap := map[string]domain.Item{}
 	for _, item := range items {
-		itemsMap[item.ID.String()] = item
+		itemsMap[utils.ConvertObjectIdToStringId(item.ID)] = item
+	}
+
+	if len(itemsMap) != len(itemIds) {
+		return validators.GetErrorResponse(&ctx, "E1001", nil)
 	}
 
 	if dto.Categories != nil {
@@ -36,9 +44,10 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 				for ii, menuItem := range category.MenuItems {
 					item := itemsMap[menuItem.ItemId]
 					menuGroupItem := menu_group.MenuItemDTO{}
-					if menuItem.Id == "" || utils.IsValidateObjectId(menuItem.Id) {
+					if menuItem.Id == "" || !utils.IsValidateObjectId(menuItem.Id) {
 						menuItem.Id = utils.ConvertObjectIdToStringId(primitive.NewObjectID())
 					}
+					menuGroupItem.Id = menuItem.Id
 					menuGroupItem.ItemId = utils.ConvertObjectIdToStringId(item.ID)
 					menuGroupItem.Name.En = item.Name.En
 					menuGroupItem.Name.Ar = item.Name.Ar
@@ -46,7 +55,7 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 					menuGroupItem.Desc.Ar = item.Desc.Ar
 					menuGroupItem.Calories = item.Calories
 					menuGroupItem.Price = utils.If(menuItem.Price == 0, item.Price, menuItem.Price).(float64)
-					menuGroupItem.ModifierGroupsIds = item.ModifierGroupsIds
+					menuGroupItem.ModifierGroupIds = item.ModifierGroupIds
 					menuGroupItem.Tags = item.Tags
 					menuGroupItem.Status = menuItem.Status
 					menuGroupItem.Image = item.Image
@@ -66,6 +75,5 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 			}
 		}
 	}
-
-	return nil
+	return validators.ErrorResponse{}
 }

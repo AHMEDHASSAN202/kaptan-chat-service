@@ -11,6 +11,7 @@ import (
 var Module = fx.Options(
 	fx.Provide(
 		mongodb.NewItemRepository,
+		mongodb.NewMenuGroupItemRepository,
 		mongodb.NewMenuGroupRepository,
 		usecase.NewMenuGroupUseCase,
 	),

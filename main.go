@@ -25,12 +25,11 @@ func main() {
 				echoserver.NewEchoServer,
 				httpclient.NewHttpClient,
 				validators.Init,
-				localization.InitLocalization,
 			),
 			example.Module,
 			menu.Module,
 			database.Module,
-			fx.Invoke(echo.RunServers),
+			fx.Invoke(echo.RunServers, localization.InitLocalization),
 		),
 	).Run()
 }
