@@ -42,11 +42,12 @@ func (a *ItemHandler) Create(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-
-	validationErr := (&item.CreateItemDto{}).Validate(c, a.validator, input)
-	if validationErr.IsError {
-		a.logger.Error(validationErr)
-		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	for _, itemDoc := range input {
+		validationErr := itemDoc.Validate(c, a.validator)
+		if validationErr.IsError {
+			a.logger.Error(validationErr)
+			return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+		}
 	}
 
 	errResp := a.itemUsecase.Create(ctx, input)

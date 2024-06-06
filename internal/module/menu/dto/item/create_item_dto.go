@@ -39,7 +39,19 @@ type CreateItemDto struct {
 	AdminDetails      []dto.AdminDetails   `json:"-"`
 }
 
-func (input *CreateItemDto) Validate(c echo.Context, validate *validator.Validate, items []CreateItemDto) validators.ErrorResponse {
-	validate.RegisterValidation("modifier_groups_ids_rules", utils.ValidateIDsIsMongoObjectIds)
+func (input *CreateItemDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
+	validateModifierGroupsExistsInDB := func(fl validator.FieldLevel) bool {
+		value := fl.Field().Interface().([]string)
+		isValidObjectIds := utils.ValidateIDsIsMongoObjectIds(fl)
+		if !isValidObjectIds {
+			return false
+		}
+		return existsIModifierGroup("db", value)
+	}
+	validate.RegisterValidation("modifier_groups_ids_rules", validateModifierGroupsExistsInDB)
 	return validators.ValidateStruct(c.Request().Context(), validate, input)
+}
+
+func existsIModifierGroup(db interface{}, value []string) bool {
+	return true
 }
