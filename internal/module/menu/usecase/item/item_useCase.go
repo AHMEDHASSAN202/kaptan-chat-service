@@ -72,7 +72,7 @@ func (oRec *ItemUseCase) GetById(ctx context.Context, id string) (domain.Item, v
 		return domain.Item{}, validators.GetErrorResponseFromErr(err)
 	}
 	if len(items) <= 0 {
-		return domain.Item{}, validators.GetErrorResponseFromTranslation(ctx, localization.E4001)
+		return domain.Item{}, validators.GetErrorResponse(&ctx, localization.E1002, nil)
 	}
 	return items[0], validators.ErrorResponse{}
 }

@@ -29,7 +29,7 @@ func main() {
 			example.Module,
 			menu.Module,
 			database.Module,
-]]			fx.Invoke(echo.RunServers, localization.InitLocalization),
+			fx.Invoke(echo.RunServers, localization.InitLocalization),
 		),
 	).Run()
 }

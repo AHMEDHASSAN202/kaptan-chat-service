@@ -12,7 +12,7 @@ func convertDtoArrToCorrespondingDomain(dto []item.CreateItemDto) []domain.Item 
 	copier.Copy(&itemDocs, &dto)
 	for i, _ := range itemDocs {
 		itemDocs[i].DeletedAt = nil
-		itemDocs[i].ModifierGroupsIds = utils.ConvertStringIdsToObjectIds(dto[i].ModifierGroupsIds)
+		itemDocs[i].ModifierGroupIds = utils.ConvertStringIdsToObjectIds(dto[i].ModifierGroupsIds)
 	}
 	return itemDocs
 }
@@ -20,6 +20,6 @@ func convertDtoToCorrespondingDomain(dto item.UpdateItemDto) domain.Item {
 	itemDoc := domain.Item{}
 	copier.Copy(&itemDoc, &dto)
 	itemDoc.DeletedAt = nil
-	itemDoc.ModifierGroupsIds = utils.ConvertStringIdsToObjectIds(dto.ModifierGroupsIds)
+	itemDoc.ModifierGroupIds = utils.ConvertStringIdsToObjectIds(dto.ModifierGroupsIds)
 	return itemDoc
 }
