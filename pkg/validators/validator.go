@@ -78,13 +78,14 @@ func GetErrorResponseFromErr(e error) ErrorResponse {
 	}
 }
 
-func GetErrorResponseFromTranslation(ctx context.Context, errorCode string) ErrorResponse {
+func GetErrorResponse(ctx *context.Context, code string, data map[string]interface{}) ErrorResponse {
+	message := localization.GetTranslation(ctx, code, data)
 	return ErrorResponse{
 		ValidationErrors: nil,
 		IsError:          true,
 		ErrorMessageObject: &Message{
-			Text: localization.GetTranslation(&ctx, errorCode, nil),
-			Code: "",
+			Text: message,
+			Code: code,
 		},
 	}
 }

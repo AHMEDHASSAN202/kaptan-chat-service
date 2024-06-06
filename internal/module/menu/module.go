@@ -14,6 +14,8 @@ var Module = fx.Options(
 	fx.Provide(
 		item.NewItemRepository,
 		useCaseItem.NewItemUseCase,
+		mongodb.NewItemRepository,
+		mongodb.NewMenuGroupItemRepository,
 		mongodb.NewMenuGroupRepository,
 		usecase.NewMenuGroupUseCase,
 	),
