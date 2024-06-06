@@ -11,6 +11,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"net/http"
+	"samm/pkg/validators/localization"
 )
 
 type Message struct {
@@ -72,6 +73,17 @@ func GetErrorResponseFromErr(e error) ErrorResponse {
 		IsError:          true,
 		ErrorMessageObject: &Message{
 			Text: e.Error(),
+			Code: "",
+		},
+	}
+}
+
+func GetErrorResponseFromTranslation(ctx context.Context, errorCode string) ErrorResponse {
+	return ErrorResponse{
+		ValidationErrors: nil,
+		IsError:          true,
+		ErrorMessageObject: &Message{
+			Text: localization.GetTranslation(&ctx, errorCode, nil),
 			Code: "",
 		},
 	}

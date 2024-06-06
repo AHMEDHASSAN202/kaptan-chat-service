@@ -24,7 +24,7 @@ func (r *menuGroupRepo) Create(ctx context.Context, domainData *domain.MenuGroup
 		if err != nil {
 			return err
 		}
-		//add to menu group items
+		//add to menu group item
 		return session.CommitTransaction(sc)
 	})
 	return domainData, err

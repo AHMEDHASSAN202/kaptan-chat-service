@@ -1,3 +1,0 @@
-[E3233]
-description = "وصف"
-one = "{{.Name}} لديه {{.Count}} رساله."

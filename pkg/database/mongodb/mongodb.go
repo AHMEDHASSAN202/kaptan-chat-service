@@ -48,11 +48,25 @@ func NewClient(c *config.MongoConfig) (*mongo.Client, *mongo.Database, error) {
 	return client, db, nil
 }
 
-func CreateIndex(collectionConnection *mongo.Collection, unique bool, fields ...string) bool {
+var (
+	IndexType = struct {
+		Asc     int
+		Desc    int
+		Text    string
+		Spatial string
+	}{
+		Asc:     1,
+		Desc:    -1,
+		Text:    "text",
+		Spatial: "2dsphere",
+	}
+)
+
+func CreateIndex(collectionConnection *mongo.Collection, unique bool, fields ...bson.E) bool {
 	// 1. Lets define the keys for the index we want to create
 	var keys bson.D
 	for _, field := range fields {
-		keys = append(keys, bson.E{field, 1})
+		keys = append(keys, field)
 	}
 	mod := mongo.IndexModel{
 		Keys:    keys, // index in ascending order or -1 for descending order

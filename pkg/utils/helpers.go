@@ -1,8 +1,6 @@
 package utils
 
 import (
-	"encoding/json"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"reflect"
 )
@@ -71,13 +69,10 @@ func If(condition bool, trueVal interface{}, falseVal interface{}) interface{} {
 	return falseVal
 }
 
-// LogJSON logs data as JSON
-func LogJSON(data interface{}) {
-	jsonData, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		fmt.Println("Error marshaling data to JSON:", err)
-		return
+func ConvertArrStructToInterfaceArr[T any](t []T) []interface{} {
+	s := make([]interface{}, len(t))
+	for i, v := range t {
+		s[i] = v
 	}
-	fmt.Println("Logged JSON:")
-	fmt.Println(string(jsonData))
+	return s
 }

@@ -10,9 +10,9 @@ import (
 	"samm/pkg/http/echo"
 	echoserver "samm/pkg/http/echo/server"
 	httpclient "samm/pkg/http_client"
-	"samm/pkg/localization"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 )
 
 func main() {
@@ -25,12 +25,12 @@ func main() {
 				echoserver.NewEchoServer,
 				httpclient.NewHttpClient,
 				validators.Init,
-				localization.InitLocalization,
 			),
 			example.Module,
 			menu.Module,
 			database.Module,
 			fx.Invoke(echo.RunServers),
+			fx.Invoke(localization.InitLocalization),
 		),
 	).Run()
 }

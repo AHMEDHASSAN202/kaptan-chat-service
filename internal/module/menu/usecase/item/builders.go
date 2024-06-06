@@ -1,0 +1,25 @@
+package item
+
+import (
+	"github.com/jinzhu/copier"
+	"samm/internal/module/menu/domain"
+	"samm/internal/module/menu/dto/item"
+	"samm/pkg/utils"
+)
+
+func convertDtoArrToCorrespondingDomain(dto []item.CreateItemDto) []domain.Item {
+	itemDocs := make([]domain.Item, 0)
+	copier.Copy(&itemDocs, &dto)
+	for i, _ := range itemDocs {
+		itemDocs[i].DeletedAt = nil
+		itemDocs[i].ModifierGroupsIds = utils.ConvertStringIdsToObjectIds(dto[i].ModifierGroupsIds)
+	}
+	return itemDocs
+}
+func convertDtoToCorrespondingDomain(dto item.UpdateItemDto) domain.Item {
+	itemDoc := domain.Item{}
+	copier.Copy(&itemDoc, &dto)
+	itemDoc.DeletedAt = nil
+	itemDoc.ModifierGroupsIds = utils.ConvertStringIdsToObjectIds(dto.ModifierGroupsIds)
+	return itemDoc
+}
