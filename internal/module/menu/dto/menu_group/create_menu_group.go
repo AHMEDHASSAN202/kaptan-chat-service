@@ -4,6 +4,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"samm/pkg/utils"
 	"samm/pkg/validators"
 )
 
@@ -61,6 +62,6 @@ type CreateMenuGroupDTO struct {
 }
 
 func (input *CreateMenuGroupDTO) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
-	validate.RegisterValidation("branch_ids_rules", ValidateBranchIDs)
+	validate.RegisterValidation("branch_ids_rules", utils.ValidateIDsIsMongoObjectIds)
 	return validators.ValidateStruct(c.Request().Context(), validate, input)
 }

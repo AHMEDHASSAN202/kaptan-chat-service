@@ -20,5 +20,6 @@ var Module = fx.Options(
 	),
 	fx.Invoke(
 		delivery.InitMenuGroupController,
+		delivery.InitItemController,
 	),
 )

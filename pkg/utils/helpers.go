@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"reflect"
 )
@@ -75,4 +76,17 @@ func ConvertArrStructToInterfaceArr[T any](t []T) []interface{} {
 		s[i] = v
 	}
 	return s
+}
+
+func ValidateIDsIsMongoObjectIds(fl validator.FieldLevel) bool {
+	entityIDs := fl.Field().Interface().([]string)
+	if len(entityIDs) == 0 {
+		return true
+	}
+	for _, id := range entityIDs {
+		if !IsValidateObjectId(id) {
+			return false
+		}
+	}
+	return true
 }
