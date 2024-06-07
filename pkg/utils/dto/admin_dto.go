@@ -1,9 +1,14 @@
 package dto
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type AdminDetails struct {
 	Id        primitive.ObjectID `bson:"id"`
 	Name      string             `bson:"name"`
-	UpdatedAt string             `bson:"updatedAt"`
+	Operation string             `bson:"operation"`
+	UpdatedAt time.Time          `bson:"updatedAt"`
 }
