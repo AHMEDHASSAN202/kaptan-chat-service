@@ -5,7 +5,7 @@ his document outlines key points regarding the role
 - [ ] auto create module with command line.
 - [ ] restrict access to repo layer between modules
 - [ ] handle migration scripts
-- [ ] handle RBAC https://casbin.org/docs/get-started
+- [ ] handle RBAC https://casbin.org/docs/get-started, https://klotzandrew.com/blog/authorization-with-casbin
 
 
 
