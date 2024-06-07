@@ -1,7 +1,7 @@
 package location
 
 import (
-	"samm/internal/module/location/domain"
+	"samm/internal/module/retails/domain"
 	"samm/pkg/logger"
 )
 

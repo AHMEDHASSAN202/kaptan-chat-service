@@ -1,10 +1,10 @@
-package location
+package retails
 
 import (
 	"go.uber.org/fx"
-	"samm/internal/module/location/delivery"
-	"samm/internal/module/location/repository/location/mongodb"
-	"samm/internal/module/location/usecase/location"
+	"samm/internal/module/retails/delivery"
+	"samm/internal/module/retails/repository/location/mongodb"
+	"samm/internal/module/retails/usecase/location"
 )
 
 // Module for controller database repository
