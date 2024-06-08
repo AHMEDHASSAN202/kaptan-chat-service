@@ -27,11 +27,9 @@ func LocationBuilder(payload *location.StoreLocationDto) *domain.Location {
 
 	locationDomain.Status = consts.LocationStatusInActive
 
-	// Define the resolution
-	resolution := 9
 	// Convert latitude and longitude to H3 index
 	latLng := h3.NewLatLng(payload.Lat, payload.Lng)
-	locationDomain.Index = h3.LatLngToCell(latLng, resolution).String()
+	locationDomain.Index = h3.LatLngToCell(latLng, consts.H3Resolution).String()
 
 	// Set Branch Signature
 	//locationDomain.BranchSignature = ""
@@ -54,11 +52,9 @@ func UpdateLocationBuilder(payload *location.StoreLocationDto, locationDomain *d
 	// Set Branch Signature
 	//locationDomain.BranchSignature = ""
 
-	// Define the resolution
-	resolution := 9
 	// Convert latitude and longitude to H3 index
 	latLng := h3.NewLatLng(payload.Lat, payload.Lng)
-	locationDomain.Index = h3.LatLngToCell(latLng, resolution).String()
+	locationDomain.Index = h3.LatLngToCell(latLng, consts.H3Resolution).String()
 
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return locationDomain
