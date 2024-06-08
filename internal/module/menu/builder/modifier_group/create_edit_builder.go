@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func convertDtoToCorrespondingDomain(dto modifier_group.CreateUpdateModifierGroupDto, oldDoc *domain.ModifierGroup) domain.ModifierGroup {
+func ConvertDtoToCorrespondingDomain(dto modifier_group.CreateUpdateModifierGroupDto, oldDoc *domain.ModifierGroup) domain.ModifierGroup {
 	var modifierGroupDoc domain.ModifierGroup
 	copier.Copy(&modifierGroupDoc, &dto)
 	modifierGroupDoc.AccountId = utils.ConvertStringIdToObjectId(dto.AccountId)
