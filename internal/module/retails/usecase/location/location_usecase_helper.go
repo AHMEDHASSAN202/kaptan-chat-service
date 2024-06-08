@@ -1,0 +1,65 @@
+package location
+
+import (
+	"github.com/jinzhu/copier"
+	"github.com/uber/h3-go/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"samm/internal/module/retails/consts"
+	"samm/internal/module/retails/domain"
+	"samm/internal/module/retails/dto/location"
+	"samm/pkg/utils"
+	"time"
+)
+
+func LocationBuilder(payload *location.StoreLocationDto) *domain.Location {
+	var locationDomain domain.Location
+
+	copier.Copy(&locationDomain, payload)
+
+	locationDomain.ID = primitive.NewObjectID()
+	locationDomain.City.Id = utils.ConvertStringIdToObjectId(payload.City.Id)
+	locationDomain.BrandDetails.Id = utils.ConvertStringIdToObjectId(payload.BrandDetails.Id)
+	locationDomain.AccountId = utils.ConvertStringIdToObjectId(payload.AccountId)
+	locationDomain.Coordinate = domain.Coordinate{
+		Type:        "Point",
+		Coordinates: []float64{payload.Lng, payload.Lat},
+	}
+
+	locationDomain.Status = consts.LocationStatusInActive
+
+	// Define the resolution
+	resolution := 9
+	// Convert latitude and longitude to H3 index
+	latLng := h3.NewLatLng(payload.Lat, payload.Lng)
+	locationDomain.Index = h3.LatLngToCell(latLng, resolution).String()
+
+	// Set Branch Signature
+	//locationDomain.BranchSignature = ""
+
+	locationDomain.CreatedAt = time.Now().UTC()
+	locationDomain.UpdatedAt = time.Now().UTC()
+	return &locationDomain
+}
+func UpdateLocationBuilder(payload *location.StoreLocationDto, locationDomain *domain.Location) *domain.Location {
+
+	copier.Copy(&locationDomain, payload)
+	locationDomain.City.Id = utils.ConvertStringIdToObjectId(payload.City.Id)
+	locationDomain.BrandDetails.Id = utils.ConvertStringIdToObjectId(payload.BrandDetails.Id)
+	locationDomain.AccountId = utils.ConvertStringIdToObjectId(payload.AccountId)
+	locationDomain.Coordinate = domain.Coordinate{
+		Type:        "Point",
+		Coordinates: []float64{payload.Lng, payload.Lat},
+	}
+
+	// Set Branch Signature
+	//locationDomain.BranchSignature = ""
+
+	// Define the resolution
+	resolution := 9
+	// Convert latitude and longitude to H3 index
+	latLng := h3.NewLatLng(payload.Lat, payload.Lng)
+	locationDomain.Index = h3.LatLngToCell(latLng, resolution).String()
+
+	locationDomain.UpdatedAt = time.Now().UTC()
+	return locationDomain
+}
