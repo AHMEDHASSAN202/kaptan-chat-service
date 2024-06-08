@@ -26,8 +26,15 @@ func NewModifierGroupUseCase(repo domain.ModifierGroupRepository, logger logger.
 	}
 }
 
-func (oRec *ModifierGroupUseCase) Create(ctx context.Context, dto modifier_group.CreateUpdateModifierGroupDto) validators.ErrorResponse {
-	err := oRec.repo.Create(ctx, convertDtoToCorrespondingDomain(dto, nil))
+func (oRec *ModifierGroupUseCase) Create(ctx context.Context, dto []modifier_group.CreateUpdateModifierGroupDto) validators.ErrorResponse {
+
+	modifierGroupDocs := make([]domain.ModifierGroup, 0)
+	for index := range dto {
+		modifierGroupDocs = append(modifierGroupDocs, convertDtoToCorrespondingDomain(dto[index], nil))
+
+	}
+
+	err := oRec.repo.Create(ctx, modifierGroupDocs)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}

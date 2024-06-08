@@ -26,7 +26,7 @@ type ModifierGroup struct {
 }
 
 type ModifierGroupUseCase interface {
-	Create(ctx context.Context, dto modifier_group.CreateUpdateModifierGroupDto) validators.ErrorResponse
+	Create(ctx context.Context, dto []modifier_group.CreateUpdateModifierGroupDto) validators.ErrorResponse
 	Update(ctx context.Context, dto modifier_group.CreateUpdateModifierGroupDto) validators.ErrorResponse
 	GetById(ctx context.Context, id string) (ModifierGroup, validators.ErrorResponse)
 	List(ctx context.Context, dto *modifier_group.ListModifierGroupsDto) ([]ModifierGroup, validators.ErrorResponse)
@@ -35,7 +35,7 @@ type ModifierGroupUseCase interface {
 }
 
 type ModifierGroupRepository interface {
-	Create(ctx context.Context, doc ModifierGroup) error
+	Create(ctx context.Context, docs []ModifierGroup) error
 	Update(ctx context.Context, id *primitive.ObjectID, doc *ModifierGroup) error
 	GetByIds(ctx context.Context, ids []primitive.ObjectID) ([]ModifierGroup, error)
 	List(ctx context.Context, query *modifier_group.ListModifierGroupsDto) ([]ModifierGroup, error)
