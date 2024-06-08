@@ -12,7 +12,7 @@ type Items struct {
 	SnoozeEnd   string `json:"snoozeEnd"`
 }
 type Data struct {
-	Items []Items `json:"items"`
+	Items []Items `json:"cuisine"`
 }
 type Operations struct {
 	Action string `json:"action"`
