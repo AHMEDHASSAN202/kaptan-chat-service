@@ -1,13 +1,83 @@
 package location
 
 import (
+	"context"
+	"samm/internal/module/location/consts"
 	"samm/internal/module/location/domain"
+	"samm/internal/module/location/dto/location"
 	"samm/pkg/logger"
+	"samm/pkg/utils"
+	"samm/pkg/validators"
 )
 
 type LocationUseCase struct {
 	repo   domain.LocationRepository
 	logger logger.ILogger
+}
+
+func (l LocationUseCase) StoreLocation(ctx context.Context, payload *location.StoreLocationDto) (err validators.ErrorResponse) {
+
+	errRe := l.repo.StoreLocation(ctx, LocationBuilder(payload))
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+	return
+}
+
+func (l LocationUseCase) UpdateLocation(ctx context.Context, id string, payload *location.StoreLocationDto) (err validators.ErrorResponse) {
+	domainLocation, errRe := l.repo.FindLocation(ctx, utils.ConvertStringIdToObjectId(id))
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+
+	errRe = l.repo.UpdateLocation(ctx, UpdateLocationBuilder(payload, domainLocation))
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+	return
+}
+func (l LocationUseCase) ToggleLocationStatus(ctx context.Context, id string) (err validators.ErrorResponse) {
+	domainLocation, errRe := l.repo.FindLocation(ctx, utils.ConvertStringIdToObjectId(id))
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+	if domainLocation.Status == consts.LocationStatusActive {
+		domainLocation.Status = consts.LocationStatusInActive
+	} else {
+		domainLocation.Status = consts.LocationStatusActive
+	}
+	// todo handle admin_details for status change
+
+	errRe = l.repo.UpdateLocation(ctx, domainLocation)
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+	return
+}
+
+func (l LocationUseCase) FindLocation(ctx context.Context, Id string) (location domain.Location, err validators.ErrorResponse) {
+	domainLocation, errRe := l.repo.FindLocation(ctx, utils.ConvertStringIdToObjectId(Id))
+	if errRe != nil {
+		return *domainLocation, validators.GetErrorResponseFromErr(errRe)
+	}
+	return *domainLocation, validators.ErrorResponse{}
+}
+
+func (l LocationUseCase) DeleteLocation(ctx context.Context, Id string) (err validators.ErrorResponse) {
+	errRe := l.repo.DeleteLocation(ctx, utils.ConvertStringIdToObjectId(Id))
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+	return validators.ErrorResponse{}
+}
+
+func (l LocationUseCase) ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []domain.Location, paginationResult utils.PaginationResult, err validators.ErrorResponse) {
+	results, paginationResult, errRe := l.repo.ListLocation(ctx, payload)
+	if errRe != nil {
+		return results, paginationResult, validators.GetErrorResponseFromErr(errRe)
+	}
+	return results, paginationResult, validators.ErrorResponse{}
+
 }
 
 const tag = " LocationUseCase "
