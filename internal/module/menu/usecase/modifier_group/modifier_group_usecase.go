@@ -2,6 +2,7 @@ package modifier_group
 
 import (
 	"context"
+	builder "samm/internal/module/menu/builder/modifier_group"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/modifier_group"
 	"samm/pkg/logger"
@@ -30,7 +31,7 @@ func (oRec *ModifierGroupUseCase) Create(ctx context.Context, dto []modifier_gro
 
 	modifierGroupDocs := make([]domain.ModifierGroup, 0)
 	for index := range dto {
-		modifierGroupDocs = append(modifierGroupDocs, convertDtoToCorrespondingDomain(dto[index], nil))
+		modifierGroupDocs = append(modifierGroupDocs, builder.ConvertDtoToCorrespondingDomain(dto[index], nil))
 
 	}
 
@@ -47,7 +48,7 @@ func (oRec *ModifierGroupUseCase) Update(ctx context.Context, dto modifier_group
 		return getByIdErr
 	}
 	id := utils.ConvertStringIdToObjectId(dto.Id)
-	doc := convertDtoToCorrespondingDomain(dto, &oldDoc)
+	doc := builder.ConvertDtoToCorrespondingDomain(dto, &oldDoc)
 	err := oRec.repo.Update(ctx, &id, &doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
