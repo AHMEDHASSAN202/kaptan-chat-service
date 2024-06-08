@@ -7,7 +7,11 @@ type Pagination struct {
 }
 
 func (p *Pagination) SetDefault() {
-	p.Limit = 25
-	p.Page = 1
+	if p.Limit == 0 {
+		p.Limit = 25
+	}
+	if p.Page == 0 {
+		p.Page = 1
+	}
 	p.Pagination = true
 }

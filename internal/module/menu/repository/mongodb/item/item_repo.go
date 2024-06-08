@@ -19,10 +19,10 @@ type itemRepo struct {
 
 func NewItemRepository(dbs *mongo.Database) domain.ItemRepository {
 	itemCollection := mgm.Coll(&domain.Item{})
-	//text search menu item
+	//text search menu cuisine
 	mongodb.CreateIndex(itemCollection.Collection, false, bson.E{"name.ar", mongodb.IndexType.Text}, bson.E{"name.en", mongodb.IndexType.Text}, bson.E{"tags", mongodb.IndexType.Text},
 		bson.E{"desc.ar", mongodb.IndexType.Text}, bson.E{"desc.en", mongodb.IndexType.Text})
-	//make sure there are no duplicated menu item
+	//make sure there are no duplicated menu cuisine
 	mongodb.CreateIndex(itemCollection.Collection, true, bson.E{"name.ar", mongodb.IndexType.Asc}, bson.E{"name.en", mongodb.IndexType.Asc}, bson.E{"account_id", mongodb.IndexType.Asc}, bson.E{"deleted_at", mongodb.IndexType.Asc})
 	return &itemRepo{
 		itemCollection: itemCollection,
