@@ -3,6 +3,7 @@ package main
 import (
 	"go.uber.org/fx"
 	"samm/internal/module/example"
+	"samm/internal/module/menu"
 	"samm/internal/module/location"
 	"samm/pkg/config"
 	"samm/pkg/database"
@@ -10,9 +11,9 @@ import (
 	"samm/pkg/http/echo"
 	echoserver "samm/pkg/http/echo/server"
 	httpclient "samm/pkg/http_client"
-	"samm/pkg/localization"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 )
 
 func main() {
@@ -25,10 +26,11 @@ func main() {
 				echoserver.NewEchoServer,
 				httpclient.NewHttpClient,
 				validators.Init,
-				localization.InitLocalization,
 			),
 			example.Module,
+			menu.Module,
 			database.Module,
+			fx.Invoke(echo.RunServers, localization.InitLocalization),
 			location.Module,
 			fx.Invoke(echo.RunServers),
 		),

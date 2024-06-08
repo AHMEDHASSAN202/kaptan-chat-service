@@ -1,8 +1,3 @@
-[E3233]
-description = "The number of messages a person has"
-one = "{{.Name}} has {{.Count}} message."
-other = "{{.Name}} has {{.Count}} messages."
-
 [E1000]
 description = "Database layer error"
 one = "An error occurred in the database layer. Please try again later."
@@ -15,8 +10,8 @@ other = "The inputs provided are invalid. Please check and try again."
 
 [E1002]
 description = "Resource not found"
-one = "The requested resource {{.Resource}} was not found."
-other = "The requested resources {{.Resource}} were not found."
+one = "The requested resource was not found."
+other = "The requested resources were not found."
 
 [E1003]
 description = "Operation not permitted"
