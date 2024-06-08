@@ -4,26 +4,25 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"samm/internal/module/retails/domain"
-	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/location"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
 )
 
-type RetailsHandler struct {
-	retailsUsecase domain.LocationUseCase
-	validator      *validator.Validate
-	logger         logger.ILogger
+type LocationHandler struct {
+	locationUsecase domain.LocationUseCase
+	validator       *validator.Validate
+	logger          logger.ILogger
 }
 
 // InitUserController will initialize the article's HTTP controller
 func InitController(e *echo.Echo, us domain.LocationUseCase, validator *validator.Validate, logger logger.ILogger) {
-	handler := &RetailsHandler{
-		retailsUsecase: us,
-		validator:      validator,
-		logger:         logger,
+	handler := &LocationHandler{
+		locationUsecase: us,
+		validator:       validator,
+		logger:          logger,
 	}
-	dashboard := e.Group("admin/retails")
+	dashboard := e.Group("api/v1/admin/location")
 	dashboard.POST("", handler.StoreLocation)
 	dashboard.GET("", handler.ListLocation)
 	dashboard.PUT("/:id/toggle-active", handler.ToggleLocationActive)
@@ -31,13 +30,6 @@ func InitController(e *echo.Echo, us domain.LocationUseCase, validator *validato
 	dashboard.GET("/:id", handler.FindLocation)
 	dashboard.DELETE("/:id", handler.DeleteLocation)
 }
-
-func (a *RetailsHandler) StoreLocation(c echo.Context) error {
-	a.logger.Info("Test logger")
-	resp := map[string]interface{}{
-		"status":  true,
-		"message": "Success",
-		"data":    nil,
 func (a *LocationHandler) StoreLocation(c echo.Context) error {
 	ctx := c.Request().Context()
 

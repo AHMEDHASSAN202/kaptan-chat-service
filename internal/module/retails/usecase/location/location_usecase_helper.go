@@ -3,9 +3,9 @@ package location
 import (
 	"github.com/jinzhu/copier"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"samm/internal/module/location/consts"
-	"samm/internal/module/location/domain"
-	"samm/internal/module/location/dto/location"
+	"samm/internal/module/retails/consts"
+	"samm/internal/module/retails/domain"
+	"samm/internal/module/retails/dto/location"
 	"samm/pkg/utils"
 	"time"
 )

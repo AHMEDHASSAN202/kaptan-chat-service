@@ -1,7 +1,6 @@
 package location
 
 import (
-	"samm/internal/module/retails/domain"
 	"context"
 	"samm/internal/module/retails/consts"
 	"samm/internal/module/retails/domain"

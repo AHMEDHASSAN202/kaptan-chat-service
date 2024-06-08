@@ -4,16 +4,11 @@ import (
 	"context"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"samm/internal/module/location/dto/location"
+	"samm/internal/module/retails/dto/location"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"time"
 )
-
-type Name struct {
-	Ar string `json:"ar" bson:"ar"`
-	En string `json:"en" bson:"en"`
-}
 
 type City struct {
 	Id   primitive.ObjectID `json:"_id" bson:"id"`
