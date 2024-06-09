@@ -3,6 +3,7 @@ package utils
 import (
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/crypto/bcrypt"
 	"reflect"
 )
 
@@ -89,4 +90,8 @@ func ValidateIDsIsMongoObjectIds(fl validator.FieldLevel) bool {
 		}
 	}
 	return true
+}
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 6)
+	return string(bytes), err
 }
