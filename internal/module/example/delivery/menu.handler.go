@@ -40,7 +40,7 @@ func (a *MenuHandler) GetByID(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResponse)
 	}
 
-	return validators.Success(c, art)
+	return validators.SuccessResponse(c, art)
 }
 
 func (a *MenuHandler) Store(c echo.Context) error {
@@ -65,5 +65,5 @@ func (a *MenuHandler) Store(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, validationErr)
 	}
 
-	return validators.Success(c, nil)
+	return validators.SuccessResponse(c, nil)
 }

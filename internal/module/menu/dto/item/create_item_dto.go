@@ -32,8 +32,8 @@ type CreateItemDto struct {
 	Min               int                  `json:"min"`
 	Max               int                  `json:"max"`
 	Calories          int                  `json:"calories" validate:"required"`
-	Price             float64              `json:"price" validate:"required""`
-	ModifierGroupsIds []string             `json:"modifier_groups_ids" validate:"modifier_groups_ids_rules"`
+	Price             float64              `json:"price" validate:"required"`
+	ModifierGroupsIds []string             `json:"modifier_groups_ids" validate:"modifier_groups_ids_rules" msg:"E20202"`
 	Availabilities    []ItemAvailability   `json:"availabilities"`
 	Tags              []string             `json:"tags"`
 	Image             string               `json:"image" validate:"required"`
