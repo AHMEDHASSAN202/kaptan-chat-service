@@ -13,7 +13,7 @@ type Account struct {
 	mgm.DefaultModel `bson:",inline"`
 	Name             Name   `json:"name" bson:"name"`
 	Email            string `json:"email" bson:"email"`
-	Password         string `json:"password" bson:"password"`
+	Password         string `json:"-" bson:"password"`
 }
 
 type AccountUseCase interface {
