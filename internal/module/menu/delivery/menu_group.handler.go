@@ -82,7 +82,7 @@ func (a *MenuGroupHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{"id": id})
+	return validators.SuccessResponse(c, map[string]interface{}{"id": id})
 }
 
 func (a *MenuGroupHandler) Update(c echo.Context) error {
@@ -115,7 +115,7 @@ func (a *MenuGroupHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{"id": id})
+	return validators.SuccessResponse(c, map[string]interface{}{"id": id})
 }
 
 func (a *MenuGroupHandler) Delete(c echo.Context) error {
@@ -134,5 +134,5 @@ func (a *MenuGroupHandler) Delete(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
