@@ -11,19 +11,20 @@ import (
 	"samm/internal/module/retails/dto/brand"
 	"samm/pkg/database/mongodb"
 	"samm/pkg/logger"
-	"time"
 )
 
 type brandRepo struct {
 	brandCollection *mgm.Collection
+	locationRepo    domain.LocationRepository
 	logger          logger.ILogger
 }
 
-func NewBrandRepository(dbs *mongo.Database, log logger.ILogger) domain.BrandRepository {
+func NewBrandRepository(dbs *mongo.Database, locationRepo domain.LocationRepository, log logger.ILogger) domain.BrandRepository {
 	brandCollection := mgm.Coll(&domain.Brand{})
 	mongodb.CreateIndex(brandCollection.Collection, false, bson.E{"name.ar", mongodb.IndexType.Text}, bson.E{"name.en", mongodb.IndexType.Text})
 	return &brandRepo{
 		brandCollection: brandCollection,
+		locationRepo:    locationRepo,
 		logger:          log,
 	}
 }
@@ -57,13 +58,40 @@ func (i *brandRepo) GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) (*
 	return &cuisines, err
 }
 
-func (i *brandRepo) SoftDelete(ctx *context.Context, id primitive.ObjectID) error {
-	update := bson.M{"$set": bson.M{"deleted_at": time.Now()}}
-	_, err := i.brandCollection.UpdateByID(*ctx, id, update)
-	if err != nil {
-		return err
-	}
-	return nil
+func (i *brandRepo) UpdateBrandAndLocations(doc *domain.Brand) error {
+	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+		err := i.brandCollection.UpdateWithCtx(sc, doc)
+		if err != nil {
+			return err
+		}
+		brandDetails := domain.BrandDetails{
+			Id:       doc.ID,
+			Name:     doc.Name,
+			Logo:     doc.Logo,
+			IsActive: doc.IsActive,
+		}
+		err = i.locationRepo.UpdateBulkByBrand(sc, brandDetails)
+		if err != nil {
+			return err
+		}
+		return session.CommitTransaction(sc)
+	})
+	return err
+}
+
+func (i *brandRepo) SoftDelete(doc *domain.Brand) error {
+	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+		err := i.brandCollection.UpdateWithCtx(sc, doc)
+		if err != nil {
+			return err
+		}
+		err = i.locationRepo.SoftDeleteBulkByBrandId(sc, doc.ID)
+		if err != nil {
+			return err
+		}
+		return session.CommitTransaction(sc)
+	})
+	return err
 }
 
 func (i *brandRepo) List(ctx *context.Context, dto *brand.ListBrandDto) (brandsRes *[]domain.Brand, paginationMeta *PaginationData, err error) {

@@ -19,9 +19,10 @@ type Coordinate struct {
 	Coordinates []float64 `json:"coordinates" bson:"coordinates"`
 }
 type BrandDetails struct {
-	Id   primitive.ObjectID `json:"_id" bson:"_id"`
-	Name Name               `json:"name" bson:"name"`
-	Logo string             `json:"logo" bson:"logo"`
+	Id       primitive.ObjectID `json:"_id" bson:"_id"`
+	Name     Name               `json:"name" bson:"name"`
+	Logo     string             `json:"logo" bson:"logo"`
+	IsActive bool               `json:"is_active" bson:"is_active"`
 }
 type WorkingHour struct {
 	Day  string `json:"day" bson:"day"`
@@ -77,4 +78,6 @@ type LocationRepository interface {
 	FindLocation(ctx context.Context, Id primitive.ObjectID) (location *Location, err error)
 	DeleteLocation(ctx context.Context, Id primitive.ObjectID) (err error)
 	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult utils.PaginationResult, err error)
+	UpdateBulkByBrand(ctx context.Context, brand BrandDetails) error
+	SoftDeleteBulkByBrandId(ctx context.Context, brandId primitive.ObjectID) error
 }
