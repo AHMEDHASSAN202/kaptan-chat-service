@@ -36,7 +36,7 @@ type Category struct {
 type Product struct {
 	ID                      string            `json:"_id"`
 	Account                 string            `json:"account"`
-	Location                string            `json:"location"`
+	Location                string            `json:"retails"`
 	ProductType             int               `json:"productType"`
 	Plu                     string            `json:"plu"`
 	Price                   float64           `json:"price"`
@@ -63,7 +63,7 @@ type Bundle struct {
 	CapacityUsages          []any             `json:"capacityUsages"`
 	DeliveryTax             int               `json:"deliveryTax"`
 	EatInTax                int               `json:"eatInTax"`
-	Location                string            `json:"location"`
+	Location                string            `json:"retails"`
 	Max                     int               `json:"max"`
 	Min                     int               `json:"min"`
 	Multiply                int               `json:"multiply"`
@@ -82,7 +82,7 @@ type Bundle struct {
 type ModifierGroup struct {
 	ID               string            `json:"_id"`
 	Account          string            `json:"account"`
-	Location         string            `json:"location"`
+	Location         string            `json:"retails"`
 	ProductType      int               `json:"productType"`
 	Plu              string            `json:"plu"`
 	Price            float64           `json:"price"`
@@ -101,7 +101,7 @@ type ModifierGroup struct {
 type Modifier struct {
 	ID                      string            `json:"_id"`
 	Account                 string            `json:"account"`
-	Location                string            `json:"location"`
+	Location                string            `json:"retails"`
 	ProductType             int               `json:"productType"`
 	Plu                     string            `json:"plu"`
 	Price                   float64           `json:"price"`
@@ -119,7 +119,7 @@ type Modifier struct {
 }
 
 type SnoozedProduct struct {
-	Location    string `json:"location"`
+	Location    string `json:"retails"`
 	Plu         string `json:"plu"`
 	Name        string `json:"name"`
 	SnoozeStart string `json:"snoozeStart"`

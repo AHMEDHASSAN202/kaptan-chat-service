@@ -36,15 +36,24 @@ func InitModifierGroupController(e *echo.Echo, modifierGroupUsecase domain.Modif
 }
 
 func (a *ModifierGroupHandler) Create(c echo.Context) error {
+
 	ctx := c.Request().Context()
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
-	var input modifier_group.CreateUpdateModifierGroupDto
+	var input []modifier_group.CreateUpdateModifierGroupDto
 	err := c.Bind(&input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	for _, modifierGroupDoc := range input {
+		validationErr := modifierGroupDoc.Validate(c, a.validator)
+		if validationErr.IsError {
+			a.logger.Error(validationErr)
+			return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+		}
 	}
 
 	errResp := a.modifierGroupUsecase.Create(ctx, input)
@@ -101,7 +110,6 @@ func (a *ModifierGroupHandler) Find(c echo.Context) error {
 
 	modifierGroup, errResp := a.modifierGroupUsecase.GetById(ctx, id)
 	if errResp.IsError {
-		logger.Logger.Info("==================>")
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
@@ -115,6 +123,7 @@ func (a *ModifierGroupHandler) List(c echo.Context) error {
 	}
 
 	var input modifier_group.ListModifierGroupsDto
+	input.Pagination.SetDefault()
 	err := c.Bind(&input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
