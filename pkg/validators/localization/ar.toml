@@ -49,3 +49,7 @@ other = "You have exceeded your quotas: {{.Quota}}"
 [E1012]
 description = "Feature not supported"
 other = "These features are not supported: {{.Feature}}"
+
+[Modifier_groups_ids_rules]
+description = "Feature not supported"
+other = "يجب ان يكون objectId"

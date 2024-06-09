@@ -3,6 +3,7 @@ package utils
 import (
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/crypto/bcrypt"
 	"reflect"
 )
 
@@ -159,4 +160,9 @@ func compareStructs(valA, valB reflect.Value, parentField string, differences []
 			}
 		}
 	}
+}
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 6)
+	return string(bytes), err
 }

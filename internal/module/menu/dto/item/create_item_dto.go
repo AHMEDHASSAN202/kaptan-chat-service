@@ -1,12 +1,12 @@
 package item
 
 import (
+	"github.com/go-playground/validator/v10"
+	"github.com/labstack/echo/v4"
 	"samm/pkg/utils"
 	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
-
-	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
+	"samm/pkg/validators/localization"
 )
 
 type ItemAvailability struct {
@@ -26,14 +26,14 @@ type LocalizationTextDesc struct {
 type CreateItemDto struct {
 	Id                string               `json:"_"`
 	AccountId         string               `json:"account_id"`
-	Name              LocalizationText     `json:"name" validate:"required,dive"`
+	Name              LocalizationText     `json:"name" validate:"required"`
 	Desc              LocalizationTextDesc `json:"desc"`
 	Type              string               `json:"type"`
 	Min               int                  `json:"min"`
 	Max               int                  `json:"max"`
 	Calories          int                  `json:"calories" validate:"required"`
 	Price             float64              `json:"price" validate:"required"`
-	ModifierGroupsIds []string             `json:"modifier_groups_ids" validate:"modifier_groups_ids_rules" msg:"E20202"`
+	ModifierGroupsIds []string             `json:"modifier_groups_ids" validate:"Modifier_groups_ids_rules"`
 	Availabilities    []ItemAvailability   `json:"availabilities"`
 	Tags              []string             `json:"tags"`
 	Image             string               `json:"image" validate:"required"`
@@ -50,8 +50,13 @@ func (input *CreateItemDto) Validate(c echo.Context, validate *validator.Validat
 		}
 		return existsIModifierGroup("db", value)
 	}
-	validate.RegisterValidation("modifier_groups_ids_rules", validateModifierGroupsExistsInDB)
-	return validators.ValidateStruct(c.Request().Context(), validate, input)
+
+	// Register custom field-specific messages
+	ctx := c.Request().Context()
+	return validators.ValidateStruct(ctx, validate, input, validators.CustomErrorTags{
+		ValidationTag:          localization.Modifier_groups_ids_rules,
+		RegisterValidationFunc: validateModifierGroupsExistsInDB,
+	})
 }
 
 func existsIModifierGroup(db interface{}, value []string) bool {

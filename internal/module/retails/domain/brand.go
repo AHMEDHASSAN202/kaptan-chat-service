@@ -27,7 +27,6 @@ type BrandUseCase interface {
 	GetById(ctx *context.Context, id string) (*Brand, validators.ErrorResponse)
 	List(ctx *context.Context, dto *brand.ListBrandDto) (*[]Brand, *PaginationData, validators.ErrorResponse)
 	ChangeStatus(ctx *context.Context, dto *brand.ChangeBrandStatusDto) validators.ErrorResponse
-	ToggleSnooze(ctx *context.Context, dto *brand.BrandToggleSnoozeDto) validators.ErrorResponse
 	SoftDelete(ctx *context.Context, id string) validators.ErrorResponse
 }
 

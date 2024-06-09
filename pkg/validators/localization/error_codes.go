@@ -16,4 +16,5 @@ const (
     E1010 = "E1010" // Conflict
     E1011 = "E1011" // Quota exceeded
     E1012 = "E1012" // Feature not supported
+    Modifier_groups_ids_rules = "Modifier_groups_ids_rules" // Feature not supported
 )

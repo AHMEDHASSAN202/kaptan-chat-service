@@ -61,6 +61,15 @@ func (l locationRepository) DeleteLocation(ctx context.Context, Id primitive.Obj
 	return l.UpdateLocation(ctx, locationData)
 }
 
+func (l locationRepository) DeleteLocationByAccountId(ctx context.Context, accountId primitive.ObjectID) (err error) {
+	now := time.Now().UTC()
+
+	filter := bson.M{"deleted_at": nil, "account_id": accountId}
+	update := bson.M{"$set": bson.M{"deleted_at": now}}
+	_, err = l.locationCollection.UpdateMany(ctx, filter, update)
+	return
+}
+
 func (l locationRepository) ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []domain.Location, paginationResult utils.PaginationResult, err error) {
 
 	offset := (payload.Page - 1) * payload.Limit

@@ -1,12 +1,15 @@
 package delivery
 
 import (
+	"context"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/location"
 	"samm/pkg/logger"
+	"samm/pkg/utils"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 )
 
 type LocationHandler struct {
@@ -27,6 +30,7 @@ func InitController(e *echo.Echo, us domain.LocationUseCase, validator *validato
 	dashboard.GET("", handler.ListLocation)
 	dashboard.PUT("/:id/toggle-active", handler.ToggleLocationActive)
 	dashboard.PUT("/:id", handler.UpdateLocation)
+	dashboard.PUT("/:id/toggle-snooze", handler.ToggleSnooze)
 	dashboard.GET("/:id", handler.FindLocation)
 	dashboard.DELETE("/:id", handler.DeleteLocation)
 }
@@ -121,4 +125,36 @@ func (a *LocationHandler) ListLocation(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{"data": result, "meta": paginationResult})
+}
+func (a *LocationHandler) ToggleSnooze(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
+	}
+
+	var input location.LocationToggleSnoozeDto
+	input.Id = utils.ConvertStringIdToObjectId(id)
+
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.locationUsecase.ToggleSnooze(ctx, &input)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }

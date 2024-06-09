@@ -89,19 +89,6 @@ func (oRec *BrandUseCase) ChangeStatus(ctx *context.Context, dto *brand.ChangeBr
 	return validators.ErrorResponse{}
 }
 
-func (oRec *BrandUseCase) ToggleSnooze(ctx *context.Context, dto *brand.BrandToggleSnoozeDto) validators.ErrorResponse {
-	brand, err := oRec.repo.FindBrand(ctx, dto.Id)
-	if err != nil {
-		return validators.GetErrorResponseFromErr(err)
-	}
-	doc := domainBuilderToggleSnooze(dto, brand)
-	err = oRec.repo.Update(doc)
-	if err != nil {
-		return validators.GetErrorResponseFromErr(err)
-	}
-	return validators.ErrorResponse{}
-}
-
 func (oRec *BrandUseCase) SoftDelete(ctx *context.Context, id string) validators.ErrorResponse {
 	brand, err := oRec.repo.FindBrand(ctx, utils.ConvertStringIdToObjectId(id))
 	if err != nil {
