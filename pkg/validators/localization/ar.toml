@@ -52,5 +52,4 @@ other = "These features are not supported: {{.Feature}}"
 
 [Modifier_groups_ids_rules]
 description = "Feature not supported"
-one = "يجب ان يكون objectId"
 other = "يجب ان يكون objectId"

@@ -52,5 +52,4 @@ other = "These features are not supported: {{.Feature}}"
 
 [Modifier_groups_ids_rules]
 description = "Feature not supported"
-one = "This feature is not supported: {{.Feature}}"
 other = "These features are not supported: {{.Feature}}"

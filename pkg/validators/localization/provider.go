@@ -32,7 +32,6 @@ func GetTranslation(c *context.Context, errorCode string, TemplateData map[strin
 	translation, err := loc.Localize(&i18n.LocalizeConfig{
 		MessageID:    errorCode,
 		TemplateData: TemplateData,
-		PluralCount:  0,
 	})
 	fmt.Println("ERROR -> ", err)
 	fmt.Printf(translation, lang, "GetTranslation")
