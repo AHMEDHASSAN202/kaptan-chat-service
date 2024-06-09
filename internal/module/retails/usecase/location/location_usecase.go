@@ -71,6 +71,14 @@ func (l LocationUseCase) DeleteLocation(ctx context.Context, Id string) (err val
 	return validators.ErrorResponse{}
 }
 
+func (l LocationUseCase) DeleteLocationByAccountId(ctx context.Context, AccountId string) (err validators.ErrorResponse) {
+	errRe := l.repo.DeleteLocationByAccountId(ctx, utils.ConvertStringIdToObjectId(AccountId))
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+	return validators.ErrorResponse{}
+}
+
 func (l LocationUseCase) ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []domain.Location, paginationResult utils.PaginationResult, err validators.ErrorResponse) {
 	results, paginationResult, errRe := l.repo.ListLocation(ctx, payload)
 	if errRe != nil {

@@ -11,6 +11,7 @@ import (
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/account"
 	"samm/pkg/utils"
+	"time"
 )
 
 type AccountRepository struct {
@@ -43,21 +44,22 @@ func (l AccountRepository) UpdateAccount(ctx context.Context, account *domain.Ac
 }
 func (l AccountRepository) FindAccount(ctx context.Context, Id primitive.ObjectID) (account *domain.Account, err error) {
 	domainData := domain.Account{}
-	filter := bson.M{"_id": Id}
+	filter := bson.M{"deleted_at": nil, "_id": Id}
 	err = l.accountCollection.FirstWithCtx(ctx, filter, &domainData)
 
 	return &domainData, err
 }
 
-//func (l AccountRepository) DeleteAccount(ctx context.Context, Id primitive.ObjectID) (err error) {
-//	accountData, err := l.FindAccount(ctx, Id)
-//	if err != nil {
-//		return err
-//	}
-//	now := time.Now().UTC()
-//
-//	return l.UpdateAccount(ctx, locationData)
-//}
+func (l AccountRepository) DeleteAccount(ctx context.Context, Id primitive.ObjectID) (err error) {
+	accountData, err := l.FindAccount(ctx, Id)
+	if err != nil {
+		return err
+	}
+	now := time.Now().UTC()
+	accountData.DeletedAt = &now
+	accountData.UpdatedAt = now
+	return l.UpdateAccount(ctx, accountData)
+}
 
 func (l AccountRepository) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult utils.PaginationResult, err error) {
 
@@ -65,6 +67,8 @@ func (l AccountRepository) ListAccount(ctx context.Context, payload *account.Lis
 	findOptions := options.Find().SetLimit(payload.Limit).SetSkip(offset)
 
 	filter := bson.M{}
+	match := []bson.M{}
+	match = append(match, bson.M{"deleted_at": nil})
 	if payload.Query != "" {
 		filter = bson.M{
 			"$or": []bson.M{
@@ -74,6 +78,7 @@ func (l AccountRepository) ListAccount(ctx context.Context, payload *account.Lis
 			},
 		}
 	}
+	filter["$and"] = match
 
 	// Query the collection for the total count of documents
 	collection := mgm.Coll(&domain.Account{})

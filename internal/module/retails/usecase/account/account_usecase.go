@@ -2,6 +2,9 @@ package account
 
 import (
 	"context"
+	"errors"
+	"github.com/kamva/mgm/v3"
+	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/account"
 	"samm/pkg/logger"
@@ -11,8 +14,9 @@ import (
 )
 
 type AccountUseCase struct {
-	repo   domain.AccountRepository
-	logger logger.ILogger
+	repo            domain.AccountRepository
+	locationUseCase domain.LocationUseCase
+	logger          logger.ILogger
 }
 
 func (l AccountUseCase) StoreAccount(ctx context.Context, payload *account.StoreAccountDto) (err validators.ErrorResponse) {
@@ -67,13 +71,28 @@ func (l AccountUseCase) FindAccount(ctx context.Context, Id string) (account dom
 	return *domainAccount, validators.ErrorResponse{}
 }
 
-//func (l AccountUseCase) DeleteAccount(ctx context.Context, Id string) (err validators.ErrorResponse) {
-//	errRe := l.repo.DeleteAccount(ctx, utils.ConvertStringIdToObjectId(Id))
-//	if errRe != nil {
-//		return validators.GetErrorResponseFromErr(errRe)
-//	}
-//	return validators.ErrorResponse{}
-//}
+func (l AccountUseCase) DeleteAccount(ctx context.Context, Id string) (err validators.ErrorResponse) {
+
+	erre := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+		// Delete Account
+
+		errRe := l.repo.DeleteAccount(sc, utils.ConvertStringIdToObjectId(Id))
+		if errRe != nil {
+			return errRe
+		}
+		// Delete Locations
+		errRee := l.locationUseCase.DeleteLocationByAccountId(sc, Id)
+		if errRee.IsError {
+			return errors.New(errRee.ErrorMessageObject.Text)
+		}
+		return session.CommitTransaction(sc)
+	})
+
+	if erre != nil {
+		return validators.GetErrorResponseFromErr(erre)
+	}
+	return validators.ErrorResponse{}
+}
 
 func (l AccountUseCase) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult utils.PaginationResult, err validators.ErrorResponse) {
 	results, paginationResult, errRe := l.repo.ListAccount(ctx, payload)
@@ -86,9 +105,10 @@ func (l AccountUseCase) ListAccount(ctx context.Context, payload *account.ListAc
 
 const tag = " AccountUseCase "
 
-func NewAccountUseCase(repo domain.AccountRepository, logger logger.ILogger) domain.AccountUseCase {
+func NewAccountUseCase(repo domain.AccountRepository, locationUseCase domain.LocationUseCase, logger logger.ILogger) domain.AccountUseCase {
 	return &AccountUseCase{
-		repo:   repo,
-		logger: logger,
+		repo:            repo,
+		locationUseCase: locationUseCase,
+		logger:          logger,
 	}
 }

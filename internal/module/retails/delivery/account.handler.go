@@ -27,7 +27,7 @@ func InitAccountController(e *echo.Echo, us domain.AccountUseCase, validator *va
 	dashboard.GET("", handler.ListAccount)
 	dashboard.PUT("/:id", handler.UpdateAccount)
 	dashboard.GET("/:id", handler.FindAccount)
-	//dashboard.DELETE("/:id", handler.DeleteAccount)
+	dashboard.DELETE("/:id", handler.DeleteAccount)
 }
 func (a *AccountHandler) StoreAccount(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -85,17 +85,17 @@ func (a *AccountHandler) FindAccount(c echo.Context) error {
 	return validators.SuccessResponse(c, map[string]interface{}{"account": data})
 }
 
-//	func (a *AccountHandler) DeleteAccount(c echo.Context) error {
-//		ctx := c.Request().Context()
-//
-//		id := c.Param("id")
-//		errResp := a.accountUsecase.DeleteAccount(ctx, id)
-//		if errResp.IsError {
-//			a.logger.Error(errResp)
-//			return validators.ErrorStatusBadRequest(c, errResp)
-//		}
-//		return validators.SuccessResponse(c, map[string]interface{}{})
-//	}
+func (a *AccountHandler) DeleteAccount(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id := c.Param("id")
+	errResp := a.accountUsecase.DeleteAccount(ctx, id)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{})
+}
 func (a *AccountHandler) ListAccount(c echo.Context) error {
 	ctx := c.Request().Context()
 	var payload account.ListAccountDto
