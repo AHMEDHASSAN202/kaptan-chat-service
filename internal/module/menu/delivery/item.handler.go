@@ -23,7 +23,7 @@ func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, validator 
 		validator:   validator,
 		logger:      logger,
 	}
-	portal := e.Group("api/v1/portal/cuisine")
+	portal := e.Group("api/v1/portal/item")
 	{
 		portal.POST("", handler.Create)
 		portal.PUT("/:id", handler.Update)

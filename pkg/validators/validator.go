@@ -2,6 +2,7 @@ package validators
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-playground/locales/ar"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -33,6 +34,8 @@ type Response struct {
 var (
 	transEn ut.Translator
 	transAr ut.Translator
+	langEn  = "en"
+	langAr  = "ar"
 )
 
 func Init() *validator.Validate {
@@ -41,8 +44,8 @@ func Init() *validator.Validate {
 	ar := ar.New()
 	uni := ut.New(en, ar)
 	// this is usually know or extracted from http 'Accept-Language' header
-	transEn, _ = uni.GetTranslator("en")
-	transAr, _ = uni.GetTranslator("ar")
+	transEn, _ = uni.GetTranslator(langEn)
+	transAr, _ = uni.GetTranslator(langAr)
 	en_translations.RegisterDefaultTranslations(validate, transEn)
 	ar_translations.RegisterDefaultTranslations(validate, transAr)
 
@@ -50,16 +53,34 @@ func Init() *validator.Validate {
 
 	return validate
 }
+func GetTrans(c context.Context) ut.Translator {
+	lang := c.Value("lang")
+	switch lang {
+	case langEn:
+		return transEn
+	case langAr:
+		return transAr
+	default:
+		return transEn
+	}
+}
 
-func ValidateStruct(c context.Context, validate *validator.Validate, obj interface{}) ErrorResponse {
+type CustomErrorTags struct {
+	ValidationTag          string
+	RegisterValidationFunc func(fl validator.FieldLevel) bool
+}
+
+func ValidateStruct(c context.Context, validate *validator.Validate, obj interface{}, customErrorTags ...CustomErrorTags) ErrorResponse {
+	registerCustomValidation(c, validate, customErrorTags...)
 	err := validate.Struct(obj)
 	lang := c.Value("lang")
+	fmt.Println(lang)
 	if err != nil {
 		errs := err.(validator.ValidationErrors)
 		errMap := make(map[string][]string)
 		for _, e := range errs {
 			// can translate each error one at a time.
-			if lang == "en" {
+			if lang == langEn {
 				errMap[e.Field()] = []string{e.Translate(transEn)}
 			} else {
 				errMap[e.Field()] = []string{e.Translate(transAr)}
@@ -72,6 +93,17 @@ func ValidateStruct(c context.Context, validate *validator.Validate, obj interfa
 		}
 	}
 	return ErrorResponse{}
+}
+
+func registerCustomValidation(c context.Context, validate *validator.Validate, customErrorTags ...CustomErrorTags) {
+	for _, tag := range customErrorTags {
+		validate.RegisterTranslation(tag.ValidationTag, GetTrans(c), func(ut ut.Translator) error {
+			return nil
+		}, func(ut ut.Translator, fe validator.FieldError) string {
+			return localization.GetTranslation(&c, tag.ValidationTag, nil)
+		})
+		validate.RegisterValidation(tag.ValidationTag, tag.RegisterValidationFunc)
+	}
 }
 
 func GetErrorResponseFromErr(e error) ErrorResponse {

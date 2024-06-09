@@ -35,6 +35,8 @@ func GetTranslation(c *context.Context, errorCode string, TemplateData map[strin
 		PluralCount:  0,
 	})
 	fmt.Println("ERROR -> ", err)
+	fmt.Printf(translation, lang, "GetTranslation")
+
 	if err != nil {
 		translation = "error_msg_not_found"
 	}
