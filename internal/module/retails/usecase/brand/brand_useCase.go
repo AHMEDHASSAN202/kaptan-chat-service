@@ -2,6 +2,7 @@ package brand
 
 import (
 	"context"
+	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/retails/domain"
@@ -26,7 +27,7 @@ func NewBrandUseCase(repo domain.BrandRepository, logger logger.ILogger) domain.
 
 func (oRec *BrandUseCase) Create(ctx *context.Context, dto *brand.CreateBrandDto) validators.ErrorResponse {
 	doc := domainBuilderAtCreate(dto)
-	err := oRec.repo.Create(ctx, doc)
+	err := oRec.repo.Create(doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
@@ -39,7 +40,7 @@ func (oRec *BrandUseCase) Update(ctx *context.Context, dto *brand.UpdateBrandDto
 		return findBrandErr
 	}
 	doc := domainBuilderAtUpdate(dto, findBrand)
-	err := oRec.repo.Update(ctx, doc.ID, doc)
+	err := oRec.repo.Update(doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
@@ -58,7 +59,7 @@ func (oRec *BrandUseCase) Find(ctx *context.Context, id string) (*domain.Brand, 
 	return brand, validators.ErrorResponse{}
 }
 
-func (oRec *BrandUseCase) List(ctx *context.Context, dto *brand.ListBrandDto) (brands *[]domain.Brand, paginationMeta *utils.PaginationResult, err validators.ErrorResponse) {
+func (oRec *BrandUseCase) List(ctx *context.Context, dto *brand.ListBrandDto) (brands *[]domain.Brand, paginationMeta *PaginationData, err validators.ErrorResponse) {
 	brands, paginationMeta, resErr := oRec.repo.List(ctx, dto)
 	if resErr != nil {
 		err = validators.GetErrorResponseFromErr(resErr)
@@ -73,7 +74,7 @@ func (oRec *BrandUseCase) ChangeStatus(ctx *context.Context, dto *brand.ChangeBr
 		return validators.GetErrorResponseFromErr(err)
 	}
 	doc := domainBuilderChangeStatus(dto, brand)
-	err = oRec.repo.Update(ctx, doc.ID, doc)
+	err = oRec.repo.Update(doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}

@@ -110,7 +110,7 @@ func (a *BrandHandler) List(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{"data": brands, "meta": paginationMeta})
+	return validators.SuccessResponse(c, map[string]interface{}{"docs": brands, "meta": paginationMeta})
 }
 
 func (a *BrandHandler) Find(c echo.Context) error {

@@ -2,6 +2,7 @@ package cuisine
 
 import (
 	"context"
+	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/retails/domain"
@@ -24,8 +25,8 @@ func NewCuisineUseCase(repo domain.CuisineRepository, logger logger.ILogger) dom
 	}
 }
 
-func (oRec *CuisineUseCase) Create(ctx *context.Context, dto *[]cuisine.CreateCuisineDto) validators.ErrorResponse {
-	err := oRec.repo.Create(ctx, convertDtoArrToCorrespondingDomain(dto))
+func (oRec *CuisineUseCase) Create(ctx *context.Context, dto *cuisine.CreateCuisineDto) validators.ErrorResponse {
+	err := oRec.repo.Create(convertDtoArrToCorrespondingDomain(dto))
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
@@ -38,7 +39,7 @@ func (oRec *CuisineUseCase) Update(ctx *context.Context, dto *cuisine.UpdateCuis
 		return findCuisineErr
 	}
 	doc := domainBuilderAtUpdate(dto, findCuisine)
-	err := oRec.repo.Update(ctx, doc.ID, doc)
+	err := oRec.repo.Update(doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
@@ -61,7 +62,7 @@ func (oRec *CuisineUseCase) ChangeStatus(ctx *context.Context, dto *cuisine.Chan
 	return validators.ErrorResponse{}
 }
 
-func (oRec *CuisineUseCase) List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (cuisines *[]domain.Cuisine, paginationMeta *utils.PaginationResult, err validators.ErrorResponse) {
+func (oRec *CuisineUseCase) List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (cuisines *[]domain.Cuisine, paginationMeta *PaginationData, err validators.ErrorResponse) {
 	cuisines, paginationMeta, resErr := oRec.repo.List(ctx, dto)
 	if resErr != nil {
 		err = validators.GetErrorResponseFromErr(resErr)

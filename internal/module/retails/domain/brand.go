@@ -2,10 +2,10 @@ package domain
 
 import (
 	"context"
+	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/retails/dto/brand"
-	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"time"
 )
@@ -25,16 +25,16 @@ type BrandUseCase interface {
 	Update(ctx *context.Context, dto *brand.UpdateBrandDto) validators.ErrorResponse
 	Find(ctx *context.Context, id string) (*Brand, validators.ErrorResponse)
 	GetById(ctx *context.Context, id string) (*Brand, validators.ErrorResponse)
-	List(ctx *context.Context, dto *brand.ListBrandDto) (*[]Brand, *utils.PaginationResult, validators.ErrorResponse)
+	List(ctx *context.Context, dto *brand.ListBrandDto) (*[]Brand, *PaginationData, validators.ErrorResponse)
 	ChangeStatus(ctx *context.Context, dto *brand.ChangeBrandStatusDto) validators.ErrorResponse
 	SoftDelete(ctx *context.Context, id string) validators.ErrorResponse
 }
 
 type BrandRepository interface {
-	Create(ctx *context.Context, doc *Brand) error
-	Update(ctx *context.Context, id primitive.ObjectID, doc *Brand) error
+	Create(doc *Brand) error
+	Update(doc *Brand) error
 	FindBrand(*context.Context, primitive.ObjectID) (*Brand, error)
 	GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) (*[]Brand, error)
-	List(ctx *context.Context, query *brand.ListBrandDto) (*[]Brand, *utils.PaginationResult, error)
+	List(ctx *context.Context, query *brand.ListBrandDto) (*[]Brand, *PaginationData, error)
 	SoftDelete(ctx *context.Context, id primitive.ObjectID) error
 }
