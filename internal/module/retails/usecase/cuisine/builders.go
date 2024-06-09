@@ -16,9 +16,9 @@ func convertDtoArrToCorrespondingDomain(dto *[]cuisine.CreateCuisineDto) *[]doma
 	}
 	return &cuisineDocs
 }
-func convertDtoToCorrespondingDomain(dto *cuisine.UpdateCuisineDto) domain.Cuisine {
+func domainBuilderAtUpdate(dto *cuisine.UpdateCuisineDto, domainData *domain.Cuisine) *domain.Cuisine {
 	cuisineDoc := domain.Cuisine{}
-	copier.Copy(&cuisineDoc, dto)
+	copier.Copy(&cuisineDoc, domainData)
 	cuisineDoc.UpdatedAt = time.Now()
-	return cuisineDoc
+	return &cuisineDoc
 }
