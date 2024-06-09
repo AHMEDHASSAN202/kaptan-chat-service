@@ -2,12 +2,13 @@ package menu
 
 import (
 	"samm/internal/module/menu/delivery"
-	"samm/internal/module/menu/repository/mongodb"
 	"samm/internal/module/menu/repository/mongodb/item"
+	menu_group2 "samm/internal/module/menu/repository/mongodb/menu_group"
+	"samm/internal/module/menu/repository/mongodb/menu_group_item"
 	"samm/internal/module/menu/repository/mongodb/modifier_group"
 	"samm/internal/module/menu/repository/mongodb/sku"
-	"samm/internal/module/menu/usecase"
 	useCaseItem "samm/internal/module/menu/usecase/item"
+	"samm/internal/module/menu/usecase/menu_group"
 	useCaseModifierGroup "samm/internal/module/menu/usecase/modifier_group"
 	useCaseSku "samm/internal/module/menu/usecase/sku"
 
@@ -21,11 +22,11 @@ var Module = fx.Options(
 		useCaseItem.NewItemUseCase,
 		useCaseModifierGroup.NewModifierGroupUseCase,
 		modifier_group.NewModifierGroupRepository,
-		mongodb.NewMenuGroupItemRepository,
-		mongodb.NewMenuGroupRepository,
-		usecase.NewMenuGroupUseCase,
 		useCaseSku.NewSKUUseCase,
 		sku.NewSkuRepository,
+		menu_group_item.NewMenuGroupItemRepository,
+		menu_group2.NewMenuGroupRepository,
+		menu_group.NewMenuGroupUseCase,
 	),
 	fx.Invoke(
 		delivery.InitMenuGroupController,
