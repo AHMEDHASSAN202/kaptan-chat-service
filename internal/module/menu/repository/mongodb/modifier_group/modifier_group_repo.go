@@ -5,6 +5,7 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/modifier_group"
 	"samm/pkg/database/mongodb"
+	"samm/pkg/utils"
 	"samm/pkg/utils/dto"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type modifierGroupRepo struct {
@@ -29,8 +31,8 @@ func NewModifierGroupRepository(dbs *mongo.Database) domain.ModifierGroupReposit
 	}
 }
 
-func (i *modifierGroupRepo) Create(ctx context.Context, doc domain.ModifierGroup) error {
-	_, err := i.modifierGroupCollection.InsertOne(ctx, doc)
+func (i *modifierGroupRepo) Create(ctx context.Context, docs []domain.ModifierGroup) error {
+	_, err := i.modifierGroupCollection.InsertMany(ctx, utils.ConvertArrStructToInterfaceArr(docs))
 	if err != nil {
 		return err
 	}
@@ -53,12 +55,21 @@ func (i *modifierGroupRepo) GetByIds(ctx context.Context, ids []primitive.Object
 }
 
 func (i *modifierGroupRepo) List(ctx context.Context, query *modifier_group.ListModifierGroupsDto) ([]domain.ModifierGroup, error) {
+	options := options.Find()
 	filter := bson.M{"deleted_at": nil}
+	offset := (query.Page - 1) * query.Limit
+	options.SetLimit(query.Limit)
+	options.SetSkip(offset)
 	if query.Query != "" {
-		filter["$text"] = bson.M{"$search": query.Query}
+		filter = bson.M{
+			"$or": []bson.M{
+				{"name.ar": bson.M{"$regex": query.Query, "$options": "i"}},
+				{"name.en": bson.M{"$regex": query.Query, "$options": "i"}},
+			},
+		}
 	}
 	modifierGroups := []domain.ModifierGroup{}
-	err := i.modifierGroupCollection.SimpleFindWithCtx(ctx, &modifierGroups, filter)
+	err := i.modifierGroupCollection.SimpleFind(&modifierGroups, filter, options)
 	return modifierGroups, err
 }
 

@@ -24,6 +24,11 @@ type ErrorResponse struct {
 	IsError            bool                `json:"-"`
 	ErrorMessageObject *Message            `json:"message"`
 }
+type Response struct {
+	Data    interface{} `json:"data"`
+	Message string      `json:"message"`
+	Status  bool        `json:"status"`
+}
 
 var (
 	transEn ut.Translator
@@ -40,6 +45,8 @@ func Init() *validator.Validate {
 	transAr, _ = uni.GetTranslator("ar")
 	en_translations.RegisterDefaultTranslations(validate, transEn)
 	ar_translations.RegisterDefaultTranslations(validate, transAr)
+
+	validate.RegisterValidation("timeformat", ValidateTimeFormat)
 
 	return validate
 }
@@ -92,6 +99,15 @@ func GetErrorResponse(ctx *context.Context, code string, data map[string]interfa
 
 func Success(c echo.Context, data any) error {
 	c.JSON(http.StatusOK, data)
+	return nil
+}
+func SuccessResponse(c echo.Context, data any) error {
+	if data == nil {
+		data = make(map[string]interface{})
+	}
+
+	res := Response{Status: true, Message: "Success", Data: data}
+	c.JSON(http.StatusOK, res)
 	return nil
 }
 
