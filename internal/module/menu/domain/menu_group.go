@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	mongopagination "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/menu/consts"
@@ -27,7 +28,7 @@ type MenuGroupAvailability struct {
 
 type MenuGroup struct {
 	mgm.DefaultModel `bson:",inline"`
-	AccountId        string                  `json:"account_id" bson:"account_id"`
+	AccountId        primitive.ObjectID      `json:"account_id" bson:"account_id"`
 	Name             LocalizationText        `json:"name" bson:"name"`
 	BranchIds        []primitive.ObjectID    `json:"branch_ids" bson:"branch_ids"`
 	Categories       []Category              `json:"categories" bson:"categories"`
@@ -39,6 +40,7 @@ type MenuGroupUseCase interface {
 	Create(ctx context.Context, dto *menu_group.CreateMenuGroupDTO) (string, validators.ErrorResponse)
 	Update(ctx context.Context, dto *menu_group.CreateMenuGroupDTO) (string, validators.ErrorResponse)
 	Delete(ctx context.Context, menuGroupId primitive.ObjectID) validators.ErrorResponse
+	ListPortal(ctx context.Context, dto menu_group.ListMenuGroupDTO) (interface{}, validators.ErrorResponse)
 }
 
 type MenuGroupRepository interface {
@@ -46,6 +48,7 @@ type MenuGroupRepository interface {
 	Update(ctx context.Context, menuGroup *MenuGroup, menuGroupItems *[]MenuGroupItem) (*MenuGroup, error)
 	Delete(ctx context.Context, domainData *MenuGroup) error
 	Find(ctx context.Context, menuGroupId primitive.ObjectID) (*MenuGroup, error)
+	ListPortal(ctx context.Context, dto menu_group.ListMenuGroupDTO) ([]MenuGroup, *mongopagination.PaginationData, error)
 }
 
 func (model *MenuGroup) Creating(ctx context.Context) error {

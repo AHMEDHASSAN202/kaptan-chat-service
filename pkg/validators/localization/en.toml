@@ -1,64 +1,51 @@
 [E1000]
 description = "Database layer error"
-one = "An error occurred in the database layer. Please try again later."
 other = "An error occurred in the database layer. Please try again later."
 
 [E1001]
 description = "Invalid input"
-one = "The input provided is invalid. Please check and try again."
 other = "The inputs provided are invalid. Please check and try again."
 
 [E1002]
 description = "Resource not found"
-one = "The requested resource was not found."
 other = "The requested resources were not found."
 
 [E1003]
 description = "Operation not permitted"
-one = "You do not have permission to perform this operation."
 other = "You do not have permission to perform these operations."
 
 [E1004]
 description = "Internal server error"
-one = "An internal server error occurred. Please contact support."
 other = "Internal server errors occurred. Please contact support."
 
 [E1005]
 description = "Service unavailable"
-one = "The service is currently unavailable. Please try again later."
 other = "The services are currently unavailable. Please try again later."
 
 [E1006]
 description = "Unauthorized access"
-one = "Unauthorized access attempt detected. Please log in and try again."
 other = "Unauthorized access attempts detected. Please log in and try again."
 
 [E1007]
 description = "Session expired"
-one = "Your session has expired. Please log in again."
 other = "Your sessions have expired. Please log in again."
 
 [E1008]
 description = "Validation error"
-one = "There were validation errors: {{.Errors}}"
 other = "There were validation errors: {{.Errors}}"
 
 [E1009]
 description = "Timeout"
-one = "The request timed out. Please try again later."
 other = "The requests timed out. Please try again later."
 
 [E1010]
 description = "Conflict"
-one = "A conflict occurred: {{.Detail}}"
 other = "Conflicts occurred: {{.Detail}}"
 
 [E1011]
 description = "Quota exceeded"
-one = "You have exceeded your quota: {{.Quota}}"
 other = "You have exceeded your quotas: {{.Quota}}"
 
 [E1012]
 description = "Feature not supported"
-one = "This feature is not supported: {{.Feature}}"
 other = "These features are not supported: {{.Feature}}"
