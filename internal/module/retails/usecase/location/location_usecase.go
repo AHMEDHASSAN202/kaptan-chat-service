@@ -87,6 +87,18 @@ func (l LocationUseCase) ListLocation(ctx context.Context, payload *location.Lis
 	return results, paginationResult, validators.ErrorResponse{}
 
 }
+func (l *LocationUseCase) ToggleSnooze(ctx context.Context, dto *location.LocationToggleSnoozeDto) validators.ErrorResponse {
+	locationDomain, err := l.repo.FindLocation(ctx, dto.Id)
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	doc := domainBuilderToggleSnooze(dto, locationDomain)
+	err = l.repo.UpdateLocation(ctx, doc)
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	return validators.ErrorResponse{}
+}
 
 const tag = " LocationUseCase "
 

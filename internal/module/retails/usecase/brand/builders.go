@@ -35,16 +35,3 @@ func domainBuilderChangeStatus(dto *brand.ChangeBrandStatusDto, domainData *doma
 	brandDoc.IsActive = dto.IsActive
 	return &brandDoc
 }
-
-func domainBuilderToggleSnooze(dto *brand.BrandToggleSnoozeDto, domainData *domain.Brand) *domain.Brand {
-	var snoozedTill string
-	if dto.IsSnooze && dto.SnoozeMinutesInterval > 0 {
-		snoozedTill = time.Now().Add(time.Duration(dto.SnoozeMinutesInterval) * time.Minute).Format("2006-01-02 15:04:05")
-	}
-	brandDoc := domain.Brand{}
-	copier.Copy(&brandDoc, domainData)
-	brandDoc.UpdatedAt = time.Now()
-	brandDoc.ID = domainData.ID
-	brandDoc.SnoozedTill = snoozedTill
-	return &brandDoc
-}

@@ -59,3 +59,13 @@ func UpdateLocationBuilder(payload *location.StoreLocationDto, locationDomain *d
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return locationDomain
 }
+
+func domainBuilderToggleSnooze(dto *location.LocationToggleSnoozeDto, domainData *domain.Location) *domain.Location {
+	var snoozedTill time.Time
+	if dto.IsSnooze && dto.SnoozeMinutesInterval > 0 {
+		snoozedTill = time.Now().UTC().Add(time.Duration(dto.SnoozeMinutesInterval) * time.Minute)
+	}
+	domainData.UpdatedAt = time.Now()
+	domainData.SnoozeTo = &snoozedTill
+	return domainData
+}
