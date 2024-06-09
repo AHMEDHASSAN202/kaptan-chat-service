@@ -33,9 +33,12 @@ func (oRec *CuisineUseCase) Create(ctx *context.Context, dto *[]cuisine.CreateCu
 }
 
 func (oRec *CuisineUseCase) Update(ctx *context.Context, dto *cuisine.UpdateCuisineDto) validators.ErrorResponse {
-	id := utils.ConvertStringIdToObjectId(dto.Id)
-	doc := convertDtoToCorrespondingDomain(dto)
-	err := oRec.repo.Update(ctx, id, &doc)
+	findCuisine, findCuisineErr := oRec.GetById(ctx, dto.Id)
+	if findCuisineErr.IsError {
+		return findCuisineErr
+	}
+	doc := domainBuilderAtUpdate(dto, findCuisine)
+	err := oRec.repo.Update(ctx, doc.ID, doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
@@ -58,12 +61,25 @@ func (oRec *CuisineUseCase) ChangeStatus(ctx *context.Context, dto *cuisine.Chan
 	return validators.ErrorResponse{}
 }
 
-func (oRec *CuisineUseCase) List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*[]domain.Cuisine, validators.ErrorResponse) {
-	cuisines, err := oRec.repo.List(ctx, dto)
+func (oRec *CuisineUseCase) List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (cuisines *[]domain.Cuisine, paginationMeta *utils.PaginationResult, err validators.ErrorResponse) {
+	cuisines, paginationMeta, resErr := oRec.repo.List(ctx, dto)
+	if resErr != nil {
+		err = validators.GetErrorResponseFromErr(resErr)
+		return
+	}
+	return
+}
+
+func (oRec *CuisineUseCase) Find(ctx *context.Context, id string) (*domain.Cuisine, validators.ErrorResponse) {
+	cuisine, err := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(id))
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
-	return cuisines, validators.ErrorResponse{}
+	if cuisine == nil {
+		return nil, validators.GetErrorResponseFromErr(errors.New(localization.E1002))
+	}
+
+	return cuisine, validators.ErrorResponse{}
 }
 
 func (oRec *CuisineUseCase) GetById(ctx *context.Context, id string) (*domain.Cuisine, validators.ErrorResponse) {

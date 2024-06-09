@@ -2,7 +2,6 @@ package brand
 
 import (
 	"context"
-	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/retails/domain"
@@ -26,9 +25,8 @@ func NewBrandUseCase(repo domain.BrandRepository, logger logger.ILogger) domain.
 }
 
 func (oRec *BrandUseCase) Create(ctx *context.Context, dto *brand.CreateBrandDto) validators.ErrorResponse {
-	var brandDomain domain.Brand
-	copier.Copy(&dto, &brandDomain)
-	err := oRec.repo.Create(ctx, &brandDomain)
+	doc := domainBuilderAtCreate(dto)
+	err := oRec.repo.Create(ctx, doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
@@ -36,13 +34,65 @@ func (oRec *BrandUseCase) Create(ctx *context.Context, dto *brand.CreateBrandDto
 }
 
 func (oRec *BrandUseCase) Update(ctx *context.Context, dto *brand.UpdateBrandDto) validators.ErrorResponse {
-	doc := convertDtoToCorrespondingDomain(dto)
-	err := oRec.repo.Update(ctx, doc)
+	findBrand, findBrandErr := oRec.Find(ctx, dto.Id)
+	if findBrandErr.IsError {
+		return findBrandErr
+	}
+	doc := domainBuilderAtUpdate(dto, findBrand)
+	err := oRec.repo.Update(ctx, doc.ID, doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
 	return validators.ErrorResponse{}
 }
+
+func (oRec *BrandUseCase) Find(ctx *context.Context, id string) (*domain.Brand, validators.ErrorResponse) {
+	brand, err := oRec.repo.FindBrand(ctx, utils.ConvertStringIdToObjectId(id))
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	if brand == nil {
+		return nil, validators.GetErrorResponseFromErr(errors.New(localization.E1002))
+	}
+
+	return brand, validators.ErrorResponse{}
+}
+
+func (oRec *BrandUseCase) List(ctx *context.Context, dto *brand.ListBrandDto) (brands *[]domain.Brand, paginationMeta *utils.PaginationResult, err validators.ErrorResponse) {
+	brands, paginationMeta, resErr := oRec.repo.List(ctx, dto)
+	if resErr != nil {
+		err = validators.GetErrorResponseFromErr(resErr)
+		return
+	}
+	return
+}
+
+func (oRec *BrandUseCase) ChangeStatus(ctx *context.Context, dto *brand.ChangeBrandStatusDto) validators.ErrorResponse {
+	brand, err := oRec.repo.FindBrand(ctx, dto.Id)
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	doc := domainBuilderChangeStatus(dto, brand)
+	err = oRec.repo.Update(ctx, doc.ID, doc)
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	return validators.ErrorResponse{}
+}
+
+func (oRec *BrandUseCase) ToggleSnooze(ctx *context.Context, dto *brand.BrandToggleSnoozeDto) validators.ErrorResponse {
+	brand, err := oRec.repo.FindBrand(ctx, dto.Id)
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	doc := domainBuilderToggleSnooze(dto, brand)
+	err = oRec.repo.Update(ctx, doc.ID, doc)
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	return validators.ErrorResponse{}
+}
+
 func (oRec *BrandUseCase) SoftDelete(ctx *context.Context, id string) validators.ErrorResponse {
 	idDoc := utils.ConvertStringIdToObjectId(id)
 	err := oRec.repo.SoftDelete(ctx, idDoc)
@@ -50,22 +100,6 @@ func (oRec *BrandUseCase) SoftDelete(ctx *context.Context, id string) validators
 		return validators.GetErrorResponseFromErr(err)
 	}
 	return validators.ErrorResponse{}
-}
-
-//func (oRec *BrandUseCase) ChangeStatus(ctx *context.Context, dto *cuisine.ChangeCuisineStatusDto) validators.ErrorResponse {
-//	err := oRec.repo.ChangeStatus(ctx, dto)
-//	if err != nil {
-//		return validators.GetErrorResponseFromErr(err)
-//	}
-//	return validators.ErrorResponse{}
-//}
-
-func (oRec *BrandUseCase) List(ctx *context.Context, dto *brand.ListBrandDto) (*[]domain.Brand, validators.ErrorResponse) {
-	cuisines, err := oRec.repo.List(ctx, dto)
-	if err != nil {
-		return nil, validators.GetErrorResponseFromErr(err)
-	}
-	return cuisines, validators.ErrorResponse{}
 }
 
 func (oRec *BrandUseCase) GetById(ctx *context.Context, id string) (*domain.Brand, validators.ErrorResponse) {

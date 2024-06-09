@@ -8,10 +8,43 @@ import (
 	"time"
 )
 
-func convertDtoToCorrespondingDomain(dto *brand.UpdateBrandDto) *domain.Brand {
+func domainBuilderAtCreate(dto *brand.CreateBrandDto) *domain.Brand {
 	brandDoc := domain.Brand{}
 	copier.Copy(&brandDoc, dto)
-	brandDoc.ID = utils.ConvertStringIdToObjectId(dto.Id)
+	brandDoc.CuisineIds = utils.ConvertStringIdsToObjectIds(dto.CuisineIds)
+	brandDoc.CreatedAt = time.Now()
 	brandDoc.UpdatedAt = time.Now()
+	return &brandDoc
+}
+
+func domainBuilderAtUpdate(dto *brand.UpdateBrandDto, domainData *domain.Brand) *domain.Brand {
+	brandDoc := domain.Brand{}
+	copier.Copy(&brandDoc, dto)
+	brandDoc.CuisineIds = utils.ConvertStringIdsToObjectIds(dto.CuisineIds)
+	brandDoc.UpdatedAt = time.Now()
+	brandDoc.CreatedAt = domainData.CreatedAt
+	brandDoc.ID = domainData.ID
+	return &brandDoc
+}
+
+func domainBuilderChangeStatus(dto *brand.ChangeBrandStatusDto, domainData *domain.Brand) *domain.Brand {
+	brandDoc := domain.Brand{}
+	copier.Copy(&brandDoc, domainData)
+	brandDoc.UpdatedAt = time.Now()
+	brandDoc.ID = domainData.ID
+	brandDoc.IsActive = dto.IsActive
+	return &brandDoc
+}
+
+func domainBuilderToggleSnooze(dto *brand.BrandToggleSnoozeDto, domainData *domain.Brand) *domain.Brand {
+	var snoozedTill string
+	if dto.IsSnooze && dto.SnoozeMinutesInterval > 0 {
+		snoozedTill = time.Now().Add(time.Duration(dto.SnoozeMinutesInterval) * time.Minute).Format("2006-01-02 15:04:05")
+	}
+	brandDoc := domain.Brand{}
+	copier.Copy(&brandDoc, domainData)
+	brandDoc.UpdatedAt = time.Now()
+	brandDoc.ID = domainData.ID
+	brandDoc.SnoozedTill = snoozedTill
 	return &brandDoc
 }

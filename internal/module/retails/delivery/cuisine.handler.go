@@ -30,7 +30,7 @@ func InitCuisineController(e *echo.Echo, cuisineUsecase domain.CuisineUseCase, v
 		portal.PUT("/:id", handler.Update)
 		portal.GET("", handler.List)
 		portal.GET("/:id", handler.Find)
-		portal.PUT("/:id", handler.ChangeStatus)
+		portal.PUT("/:id/status", handler.ChangeStatus)
 		portal.DELETE("/:id", handler.Delete)
 	}
 }
@@ -107,12 +107,12 @@ func (a *CuisineHandler) List(c echo.Context) error {
 	//	return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	//}
 	input.Pagination.SetDefault()
-	cuisines, errResp := a.cuisineUsecase.List(&ctx, &input)
+	cuisines, paginationMeta, errResp := a.cuisineUsecase.List(&ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, cuisines)
+	return validators.SuccessResponse(c, map[string]interface{}{"data": cuisines, "meta": paginationMeta})
 }
 
 func (a *CuisineHandler) Find(c echo.Context) error {
@@ -126,7 +126,7 @@ func (a *CuisineHandler) Find(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
 	}
 
-	cuisine, errResp := a.cuisineUsecase.GetById(&ctx, id)
+	cuisine, errResp := a.cuisineUsecase.Find(&ctx, id)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}

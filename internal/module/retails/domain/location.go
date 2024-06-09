@@ -18,7 +18,7 @@ type Coordinate struct {
 	Type        string    `json:"type" bson:"type"`
 	Coordinates []float64 `json:"coordinates" bson:"coordinates"`
 }
-type Brand struct {
+type BrandDetails struct {
 	Id   primitive.ObjectID `json:"_id" bson:"_id"`
 	Name Name               `json:"name" bson:"name"`
 	Logo string             `json:"logo" bson:"logo"`
@@ -50,7 +50,7 @@ type Location struct {
 	BranchSignature  string             `json:"branch_signature" bson:"branch_signature"`
 	Coordinate       Coordinate         `json:"coordinate" bson:"coordinate"`
 	Index            string             `json:"index" bson:"index"`
-	BrandDetails     Brand              `json:"brand_details" bson:"brand_details"`
+	BrandDetails     BrandDetails       `json:"brand_details" bson:"brand_details"`
 	WorkingHour      []WorkingHour      `json:"working_hour" bson:"working_hour"`
 	PreparationTime  int                `json:"preparation_time" bson:"preparation_time"`
 	AutoAccept       bool               `json:"auto_accept" bson:"auto_accept"`

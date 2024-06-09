@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"math"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/cuisine"
 	"samm/pkg/utils"
@@ -46,6 +47,13 @@ func (i *cuisineRepo) Update(ctx *context.Context, id primitive.ObjectID, doc *d
 	return nil
 }
 
+func (l cuisineRepo) Find(ctx *context.Context, Id primitive.ObjectID) (*domain.Cuisine, error) {
+	var domainData domain.Cuisine
+	filter := bson.M{"deleted_at": nil, "_id": Id}
+	err := l.cuisineCollection.FirstWithCtx(*ctx, filter, &domainData)
+	return &domainData, err
+}
+
 func (i *cuisineRepo) GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) (*[]domain.Cuisine, error) {
 	var cuisines []domain.Cuisine
 	err := i.cuisineCollection.SimpleFind(&cuisines, bson.M{"_id": bson.M{"$in": *ids}})
@@ -69,13 +77,12 @@ func (i *cuisineRepo) ChangeStatus(ctx *context.Context, dto *cuisine.ChangeCuis
 	return nil
 }
 
-func (i *cuisineRepo) List(ctx *context.Context, query *cuisine.ListCuisinesDto) (*[]domain.Cuisine, error) {
-	options := options.Find()
+func (i *cuisineRepo) List(ctx *context.Context, query *cuisine.ListCuisinesDto) (*[]domain.Cuisine, *utils.PaginationResult, error) {
 	filter := bson.M{}
+	var cuisines []domain.Cuisine
 
 	offset := (query.Page - 1) * query.Limit
-	options.SetLimit(query.Limit)
-	options.SetSkip(offset)
+	options := options.Find().SetLimit(query.Limit).SetSkip(offset)
 
 	if query.Query != "" {
 		filter = bson.M{
@@ -85,7 +92,16 @@ func (i *cuisineRepo) List(ctx *context.Context, query *cuisine.ListCuisinesDto)
 			},
 		}
 	}
-	var cuisines []domain.Cuisine
-	err := i.cuisineCollection.SimpleFind(&cuisines, filter, options)
-	return &cuisines, err
+
+	// Query the collection for the total count of documents
+	totalItems, err := i.cuisineCollection.CountDocuments(*ctx, filter)
+	if err != nil {
+		return nil, nil, err
+	}
+	// Calculate total pages
+	totalPages := int(math.Ceil(float64(totalItems) / float64(query.Limit)))
+
+	err = i.cuisineCollection.SimpleFind(&cuisines, filter, options)
+
+	return &cuisines, &utils.PaginationResult{Page: query.Page, TotalPages: int64(totalPages), TotalItems: totalItems}, err
 }

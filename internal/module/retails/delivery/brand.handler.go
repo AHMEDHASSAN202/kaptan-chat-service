@@ -7,7 +7,9 @@ import (
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/brand"
 	"samm/pkg/logger"
+	"samm/pkg/utils"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 )
 
 type BrandHandler struct {
@@ -28,7 +30,8 @@ func InitBrandController(e *echo.Echo, brandUsecase domain.BrandUseCase, validat
 		portal.PUT("/:id", handler.Update)
 		portal.GET("", handler.List)
 		portal.GET("/:id", handler.Find)
-		//portal.PUT("/:id", handler.ChangeStatus)
+		portal.PUT("/:id/status", handler.ChangeStatus)
+		portal.PUT("/:id/toggle-snooze", handler.ToggleSnooze)
 		portal.DELETE("/:id", handler.Delete)
 	}
 }
@@ -103,12 +106,12 @@ func (a *BrandHandler) List(c echo.Context) error {
 	//	return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	//}
 	input.Pagination.SetDefault()
-	brands, errResp := a.brandUsecase.List(&ctx, &input)
+	brands, paginationMeta, errResp := a.brandUsecase.List(&ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, brands)
+	return validators.SuccessResponse(c, map[string]interface{}{"data": brands, "meta": paginationMeta})
 }
 
 func (a *BrandHandler) Find(c echo.Context) error {
@@ -122,7 +125,7 @@ func (a *BrandHandler) Find(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
 	}
 
-	brand, errResp := a.brandUsecase.GetById(&ctx, id)
+	brand, errResp := a.brandUsecase.Find(&ctx, id)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
@@ -130,38 +133,71 @@ func (a *BrandHandler) Find(c echo.Context) error {
 	return validators.Success(c, brand)
 }
 
-//func (a *BrandHandler) ChangeStatus(c echo.Context) error {
-//	ctx := c.Request().Context()
-//	if ctx == nil {
-//		ctx = context.Background()
-//	}
-//
-//	id := c.Param("id")
-//	if id == "" {
-//		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
-//	}
-//
-//	var input cuisine.ChangeCuisineStatusDto
-//	input.Id = utils.ConvertStringIdToObjectId(id)
-//
-//	err := c.Bind(&input)
-//	if err != nil {
-//		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
-//	}
-//
-//	validationErr := input.Validate(c, a.validator)
-//	if validationErr.IsError {
-//		a.logger.Error(validationErr)
-//		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
-//	}
-//
-//	errResp := a.brandUsecase.ChangeStatus(&ctx, &input)
-//	if errResp.IsError {
-//		return validators.ErrorStatusBadRequest(c, errResp)
-//	}
-//
-//	return validators.Success(c, map[string]interface{}{})
-//}
+func (a *BrandHandler) ChangeStatus(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
+	}
+
+	var input brand.ChangeBrandStatusDto
+	input.Id = utils.ConvertStringIdToObjectId(id)
+
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.brandUsecase.ChangeStatus(&ctx, &input)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.Success(c, map[string]interface{}{})
+}
+
+func (a *BrandHandler) ToggleSnooze(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
+	}
+
+	var input brand.BrandToggleSnoozeDto
+	input.Id = utils.ConvertStringIdToObjectId(id)
+
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.brandUsecase.ToggleSnooze(&ctx, &input)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.Success(c, map[string]interface{}{})
+}
 
 func (a *BrandHandler) Delete(c echo.Context) error {
 	ctx := c.Request().Context()

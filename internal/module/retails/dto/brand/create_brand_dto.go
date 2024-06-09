@@ -3,7 +3,6 @@ package brand
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 )
@@ -14,9 +13,11 @@ type Name struct {
 }
 
 type CreateBrandDto struct {
-	Name       Name                 `json:"name" validate:"required"`
-	Logo       string               `json:"logo"`
-	CuisineIds []primitive.ObjectID `json:"cuisine_ids" validate:"cuisine_ids_rule"`
+	Name        Name     `json:"name" validate:"required"`
+	Logo        string   `json:"logo"`
+	IsActive    bool     `json:"is_active"`
+	SnoozedTill string   `json:"snoozed_till"`
+	CuisineIds  []string `json:"cuisine_ids" validate:"cuisine_ids_rule,dive"`
 }
 
 func (input *CreateBrandDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
