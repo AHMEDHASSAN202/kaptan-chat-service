@@ -59,7 +59,7 @@ func (a *CuisineHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *CuisineHandler) Update(c echo.Context) error {
@@ -92,7 +92,7 @@ func (a *CuisineHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *CuisineHandler) List(c echo.Context) error {
@@ -131,7 +131,7 @@ func (a *CuisineHandler) Find(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, cuisine)
+	return validators.SuccessResponse(c, cuisine)
 }
 
 func (a *CuisineHandler) ChangeStatus(c echo.Context) error {
@@ -164,7 +164,7 @@ func (a *CuisineHandler) ChangeStatus(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *CuisineHandler) Delete(c echo.Context) error {
@@ -183,5 +183,5 @@ func (a *CuisineHandler) Delete(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }

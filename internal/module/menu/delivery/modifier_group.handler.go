@@ -61,7 +61,7 @@ func (a *ModifierGroupHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *ModifierGroupHandler) Update(c echo.Context) error {
@@ -94,7 +94,7 @@ func (a *ModifierGroupHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *ModifierGroupHandler) Find(c echo.Context) error {
@@ -113,7 +113,7 @@ func (a *ModifierGroupHandler) Find(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, modifierGroup)
+	return validators.SuccessResponse(c, modifierGroup)
 }
 
 func (a *ModifierGroupHandler) List(c echo.Context) error {
@@ -134,7 +134,7 @@ func (a *ModifierGroupHandler) List(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, modifierGroups)
+	return validators.SuccessResponse(c, modifierGroups)
 }
 
 func (a *ModifierGroupHandler) ChangeStatus(c echo.Context) error {
@@ -159,7 +159,7 @@ func (a *ModifierGroupHandler) ChangeStatus(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *ModifierGroupHandler) Delete(c echo.Context) error {
@@ -178,5 +178,5 @@ func (a *ModifierGroupHandler) Delete(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }

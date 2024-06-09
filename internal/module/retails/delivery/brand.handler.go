@@ -58,7 +58,7 @@ func (a *BrandHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *BrandHandler) Update(c echo.Context) error {
@@ -91,7 +91,7 @@ func (a *BrandHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *BrandHandler) List(c echo.Context) error {
@@ -130,7 +130,7 @@ func (a *BrandHandler) Find(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, brand)
+	return validators.SuccessResponse(c, brand)
 }
 
 func (a *BrandHandler) ChangeStatus(c echo.Context) error {
@@ -163,7 +163,7 @@ func (a *BrandHandler) ChangeStatus(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *BrandHandler) ToggleSnooze(c echo.Context) error {
@@ -196,7 +196,7 @@ func (a *BrandHandler) ToggleSnooze(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *BrandHandler) Delete(c echo.Context) error {
@@ -215,5 +215,5 @@ func (a *BrandHandler) Delete(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }

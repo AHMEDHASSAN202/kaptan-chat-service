@@ -55,7 +55,7 @@ func (a *ItemHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *ItemHandler) Update(c echo.Context) error {
@@ -88,7 +88,7 @@ func (a *ItemHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *ItemHandler) Delete(c echo.Context) error {
@@ -107,5 +107,5 @@ func (a *ItemHandler) Delete(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
