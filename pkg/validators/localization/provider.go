@@ -18,7 +18,7 @@ var enTomlPath = path + "/en.toml"
 var arTomlPath = path + "/ar.toml"
 
 func InitLocalization() *i18n.Bundle {
-	bundle := i18n.NewBundle(language.English)
+	bundle = i18n.NewBundle(language.English)
 	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
 	bundle.LoadMessageFile(enTomlPath)
 	bundle.LoadMessageFile(arTomlPath)
@@ -34,6 +34,7 @@ func GetTranslation(c *context.Context, errorCode string, TemplateData map[strin
 		TemplateData: TemplateData,
 		PluralCount:  0,
 	})
+	fmt.Println("ERROR -> ", err)
 	if err != nil {
 		translation = "error_msg_not_found"
 	}

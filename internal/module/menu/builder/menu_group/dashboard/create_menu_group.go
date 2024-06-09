@@ -1,4 +1,4 @@
-package menu_group
+package dashboard
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -6,6 +6,7 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/menu_group"
 	"samm/pkg/utils"
+	"strings"
 )
 
 func MenuGroupBuilder(dto *menu_group.CreateMenuGroupDTO) (*domain.MenuGroup, *[]domain.MenuGroupItem) {
@@ -14,7 +15,7 @@ func MenuGroupBuilder(dto *menu_group.CreateMenuGroupDTO) (*domain.MenuGroup, *[
 		dto.ID = primitive.NewObjectID()
 	}
 	menuGroupDomain.ID = dto.ID
-	menuGroupDomain.AccountId = ""
+	menuGroupDomain.AccountId = utils.ConvertStringIdToObjectId(dto.AccountId)
 	menuGroupDomain.Name.Ar = dto.Name.Ar
 	menuGroupDomain.Name.En = dto.Name.En
 	menuGroupDomain.BranchIds = utils.ConvertStringIdsToObjectIds(utils.RemoveDuplicates[string](dto.BranchIds))
@@ -23,7 +24,7 @@ func MenuGroupBuilder(dto *menu_group.CreateMenuGroupDTO) (*domain.MenuGroup, *[
 	}
 	menuGroupDomain.Categories = CategoriesBuilder(&dto.Categories)
 	menuGroupDomain.Availabilities = AvailabilitiesBuilder(dto.Availabilities)
-	menuGroupDomain.Status = dto.Status
+	menuGroupDomain.Status = strings.ToLower(dto.Status)
 	items := MenuGroupItemsBuilder(dto)
 	return &menuGroupDomain, items
 }
@@ -41,7 +42,7 @@ func CategoriesBuilder(categoriesInput *[]menu_group.CategoryDTO) []domain.Categ
 			cat.Name.Ar = category.Name.Ar
 			cat.Icon = category.Icon
 			cat.Sort = category.Sort
-			cat.Status = category.Status
+			cat.Status = strings.ToLower(category.Status)
 			cat.MenuItemIds = []primitive.ObjectID{}
 			if category.MenuItems != nil {
 				for _, item := range category.MenuItems {
@@ -79,7 +80,7 @@ func MenuGroupItemsBuilder(dto *menu_group.CreateMenuGroupDTO) *[]domain.MenuGro
 	menuGroup := domain.ItemMenuGroup{
 		ID:             dto.ID,
 		BranchIds:      utils.ConvertStringIdsToObjectIds(utils.RemoveDuplicates[string](dto.BranchIds)),
-		Status:         utils.If(dto.Status != "", dto.Status, consts.MENU_GROUP_DEFUALT_STATUS).(string),
+		Status:         utils.If(dto.Status != "", strings.ToLower(dto.Status), consts.MENU_GROUP_DEFUALT_STATUS).(string),
 		Availabilities: AvailabilitiesBuilder(dto.Availabilities),
 	}
 	if dto.Categories != nil {
@@ -97,7 +98,7 @@ func MenuGroupItemsBuilder(dto *menu_group.CreateMenuGroupDTO) *[]domain.MenuGro
 					menuGroupItem.Price = item.Price
 					menuGroupItem.ModifierGroupIds = item.ModifierGroupIds
 					menuGroupItem.Tags = utils.If(item.Tags != nil, item.Tags, make([]string, 0)).([]string)
-					menuGroupItem.Status = utils.If(item.Status != "", item.Status, consts.MENU_GROUP_ITEM_DEFUALT_STATUS).(string)
+					menuGroupItem.Status = utils.If(item.Status != "", strings.ToLower(item.Status), consts.MENU_GROUP_ITEM_DEFUALT_STATUS).(string)
 					menuGroupItem.Image = item.Image
 					menuGroupItem.Category = domain.MenuGroupItemCategory{
 						ID: utils.ConvertStringIdToObjectId(category.ID),
@@ -105,7 +106,7 @@ func MenuGroupItemsBuilder(dto *menu_group.CreateMenuGroupDTO) *[]domain.MenuGro
 							En: category.Name.En,
 							Ar: category.Name.Ar,
 						},
-						Status: utils.If(category.Status != "", category.Status, consts.MENU_GROUP_CATEGORY_DEFUALT_STATUS).(string),
+						Status: utils.If(category.Status != "", strings.ToLower(category.Status), consts.MENU_GROUP_CATEGORY_DEFUALT_STATUS).(string),
 						Sort:   category.Sort,
 						Icon:   category.Icon,
 					}

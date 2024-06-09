@@ -1,4 +1,4 @@
-package usecase
+package menu_group
 
 import (
 	"context"

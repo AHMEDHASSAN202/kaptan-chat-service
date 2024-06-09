@@ -26,10 +26,37 @@ func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator
 	}
 	portal := e.Group("api/v1/portal/menu-group")
 	{
+		portal.GET("", handler.ListPortal)
 		portal.POST("", handler.Create)
 		portal.PUT("/:id", handler.Update)
 		portal.DELETE("/:id", handler.Delete)
 	}
+}
+
+func (a *MenuGroupHandler) ListPortal(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input menu_group.ListMenuGroupDTO
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	data, errResp := a.menuGroupUsecase.ListPortal(ctx, input)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.Success(c, map[string]interface{}{"menu_groups": data})
 }
 
 func (a *MenuGroupHandler) Create(c echo.Context) error {
