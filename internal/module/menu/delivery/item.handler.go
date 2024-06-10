@@ -29,16 +29,19 @@ func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustom
 	portal := e.Group("api/v1/portal/item")
 	{
 		portal.POST("", handler.Create)
+		portal.GET("", handler.List)
+		portal.GET("/:id", handler.FindOne)
 		portal.PUT("/:id", handler.Update)
+		portal.PUT("/:id/change_status", handler.ChangeStatus)
 		portal.DELETE("/:id", handler.Delete)
 	}
 }
 
 func (a *ItemHandler) Create(c echo.Context) error {
 	ctx := c.Request().Context()
-	//if ctx == nil {
-	//	ctx = context.Background()
-	//}
+	if ctx == nil {
+		ctx = context.Background()
+	}
 
 	var input []item.CreateItemDto
 	err := c.Bind(&input)
@@ -80,7 +83,7 @@ func (a *ItemHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator)
+	validationErr := input.Validate(ctx, a.validator, a.itemCustomValidator.ValidateNameIsUnique())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -92,6 +95,59 @@ func (a *ItemHandler) Update(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+
+func (a *ItemHandler) List(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+	}
+
+	var input item.ListItemsDto
+	binder := &echo.DefaultBinder{}
+	//bind header and query params
+	binder.BindHeaders(c, input)
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	items, errResp := a.itemUsecase.List(ctx, &input)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, items)
+}
+
+func (a *ItemHandler) FindOne(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+	}
+
+	item, errResp := a.itemUsecase.GetById(ctx, id)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, item)
 }
 
 func (a *ItemHandler) Delete(c echo.Context) error {
@@ -106,6 +162,36 @@ func (a *ItemHandler) Delete(c echo.Context) error {
 	}
 
 	errResp := a.itemUsecase.SoftDelete(ctx, id)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+func (a *ItemHandler) ChangeStatus(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+	}
+
+	var input item.ChangeItemStatusDto
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	input.Id = id
+	validationErr := input.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.itemUsecase.ChangeStatus(ctx, id, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}

@@ -102,7 +102,7 @@ func registerCustomValidation(c context.Context, validate *validator.Validate, c
 		validate.RegisterTranslation(tag.ValidationTag, GetTrans(c), func(ut ut.Translator) error {
 			return nil
 		}, func(ut ut.Translator, fe validator.FieldError) string {
-			return localization.GetTranslation(&c, tag.ValidationTag, nil, ut.Locale())
+			return localization.GetTranslation(&c, fe.Tag(), nil, ut.Locale())
 		})
 		validate.RegisterValidation(tag.ValidationTag, tag.RegisterValidationFunc)
 		fmt.Println("registerCustomValidation", tag.ValidationTag)

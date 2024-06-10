@@ -14,11 +14,11 @@ const TimeFormat = "15:04:05" // Example format (HH:MM:SS)
 func NewRegisterCustomValidator(c context.Context, validate *validator.Validate) {
 	//TODO: context.Background() should depend on the actual context of the request
 	registerCustomValidation(c, validate, CustomErrorTags{
-		ValidationTag:          localization.Timeformat,
-		RegisterValidationFunc: ValidateTimeFormat,
-	}, CustomErrorTags{
 		ValidationTag:          localization.Invalid_mongo_ids_validation_rule,
 		RegisterValidationFunc: ValidateIDsIsMongoObjectIds,
+	}, CustomErrorTags{
+		ValidationTag:          localization.Timeformat,
+		RegisterValidationFunc: ValidateTimeFormat,
 	})
 }
 func ValidateTimeFormat(fl validator.FieldLevel) bool {

@@ -60,9 +60,7 @@ other = "Item_name_is_unique_rules_validation_ar"
 
 [Invalid_mongo_ids_validation_rule]
 description = "Invalid mongo ids validation rule ar"
-one = "invalid id it should be objectId ar"
 other = "invalid id it should be objectId ar"
-few = "invalid id it should be objectId ar"
 
 [Timeformat]
 description = "time format rule validation"

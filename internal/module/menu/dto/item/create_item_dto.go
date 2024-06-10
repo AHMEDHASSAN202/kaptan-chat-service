@@ -8,10 +8,10 @@ import (
 	"samm/pkg/validators/localization"
 )
 
-type ItemAvailability struct {
-	Day  string `json:"day"`
-	From string `json:"from"`
-	To   string `json:"to"`
+type Availability struct {
+	Day  string `json:"day" validate:"required,oneof=mon tue wed thu fri sat sun"`
+	From string `json:"from" validate:"required,Timeformat"`
+	To   string `json:"to" validate:"required,Timeformat"`
 }
 type LocalizationText struct {
 	Ar string `json:"ar" validate:"required,min=3,Item_name_is_unique_rules_validation"`
@@ -27,13 +27,13 @@ type CreateItemDto struct {
 	AccountId         string               `json:"account_id"`
 	Name              LocalizationText     `json:"name" validate:"required"`
 	Desc              LocalizationTextDesc `json:"desc"`
-	Type              string               `json:"type"`
+	Type              string               `json:"type"validate:"required,oneof=product modifier"`
 	Min               int                  `json:"min"`
 	Max               int                  `json:"max"`
 	Calories          int                  `json:"calories" validate:"required"`
 	Price             float64              `json:"price" validate:"required"`
 	ModifierGroupsIds []string             `json:"modifier_groups_ids" validate:"Invalid_mongo_ids_validation_rule"`
-	Availabilities    []ItemAvailability   `json:"availabilities"`
+	Availabilities    []Availability       `json:"availabilities" validate:"dive"`
 	Tags              []string             `json:"tags"`
 	Image             string               `json:"image" validate:"required"`
 	Status            string               `json:"status" validate:"oneof=active inactive"`

@@ -12,6 +12,7 @@ func convertDtoArrToCorrespondingDomain(dto []item.CreateItemDto) []domain.Item 
 	itemDocs := make([]domain.Item, 0)
 	copier.Copy(&itemDocs, &dto)
 	for i, _ := range itemDocs {
+		itemDocs[i].AccountId = utils.ConvertStringIdToObjectId(dto[i].AccountId)
 		itemDocs[i].DeletedAt = nil
 		itemDocs[i].UpdatedAt = time.Now()
 		itemDocs[i].CreatedAt = time.Now()
