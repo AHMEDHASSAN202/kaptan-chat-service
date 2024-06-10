@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
 	"net/http"
+	"reflect"
 	"samm/pkg/validators/localization"
 	"strings"
 )
@@ -41,6 +42,10 @@ var (
 
 func Init() *validator.Validate {
 	validate := validator.New()
+	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		return GetFiledTagName(fld)
+	})
+
 	en := en.New()
 	ar := ar.New()
 	uni := ut.New(en, ar)
@@ -53,6 +58,29 @@ func Init() *validator.Validate {
 	//NewRegisterCustomValidator(validate)
 
 	return validate
+}
+
+func GetFiledTagName(fld reflect.StructField) string {
+	name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+	form_name := strings.SplitN(fld.Tag.Get("form"), ",", 2)[0]
+	header_name := strings.SplitN(fld.Tag.Get("header"), ",", 2)[0]
+	// skip if tag key says it should be ignored
+	if name == "-" {
+		return ""
+	}
+	if name == "" && form_name != "" {
+		if form_name == "-" {
+			return ""
+		}
+		return form_name
+	}
+	if name == "" && form_name == "" && header_name != "" {
+		if header_name == "-" {
+			return ""
+		}
+		return header_name
+	}
+	return name
 }
 func GetTrans(c context.Context) ut.Translator {
 	lang := c.Value("lang")
@@ -78,7 +106,6 @@ func GetFiledName(e validator.FieldError) string {
 			continue
 		}
 		filedName = filedName + s
-
 		if i != len(strings.Split(e.Namespace(), "."))-1 {
 			filedName = filedName + "."
 		}

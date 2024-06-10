@@ -27,13 +27,13 @@ type CreateItemDto struct {
 	AccountId         string               `json:"account_id"`
 	Name              LocalizationText     `json:"name" validate:"required"`
 	Desc              LocalizationTextDesc `json:"desc"`
-	Type              string               `json:"type"validate:"required,oneof=product modifier"`
+	Type              string               `json:"type" validate:"required,oneof=product modifier"`
 	Min               int                  `json:"min"`
 	Max               int                  `json:"max"`
 	Calories          int                  `json:"calories" validate:"required"`
 	Price             float64              `json:"price" validate:"required"`
 	ModifierGroupsIds []string             `json:"modifier_groups_ids" validate:"Invalid_mongo_ids_validation_rule"`
-	Availabilities    []Availability       `json:"availabilities" validate:"dive"`
+	Availabilities    []Availability       `json:"availabilities"`
 	Tags              []string             `json:"tags"`
 	Image             string               `json:"image" validate:"required"`
 	Status            string               `json:"status" validate:"oneof=active inactive"`
