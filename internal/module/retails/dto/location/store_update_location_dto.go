@@ -37,7 +37,8 @@ type StoreLocationDto struct {
 	City            City          `json:"city" validate:"required"`
 	Street          Name          `json:"street" validate:"required"`
 	Tags            string        `json:"tags" validate:"required"`
-	CoverImage      string        `json:"cover_image" validate:"required"`
+	CoverImage      string        `json:"cover_image"`
+	Logo            string        `json:"logo" `
 	Phone           string        `json:"phone" validate:"required"`
 	Lat             float64       `json:"lat" validate:"required,latitude"`
 	Lng             float64       `json:"lng" validate:"required,longitude"`

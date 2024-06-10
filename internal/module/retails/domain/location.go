@@ -46,6 +46,7 @@ type Location struct {
 	Street           Name               `json:"street" bson:"street"`
 	Tags             string             `json:"tags" bson:"tags"`
 	CoverImage       string             `json:"cover_image" bson:"cover_image"`
+	Logo             string             `json:"logo" bson:"logo"`
 	Open             bool               `json:"open" bson:"open"`
 	Phone            string             `json:"phone" bson:"phone"`
 	BranchSignature  string             `json:"branch_signature" bson:"branch_signature"`

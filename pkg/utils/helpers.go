@@ -1,9 +1,17 @@
 package utils
 
 import (
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
+	"io"
+	"os"
 	"reflect"
 )
 
@@ -165,4 +173,79 @@ func compareStructs(valA, valB reflect.Value, parentField string, differences []
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 6)
 	return string(bytes), err
+}
+
+func Decrypt(encryptionKey string, encryptedString string) (decrypted string, err error) {
+
+	if encryptionKey == "" {
+		encryptionKey = os.Getenv("ENCRYPTION_KEY")
+	}
+
+	key := []byte(encryptionKey)
+	ciphertext, _ := base64.StdEncoding.DecodeString(encryptedString)
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return "", err
+	}
+
+	if len(ciphertext) < aes.BlockSize {
+		return "", err
+	}
+
+	iv := ciphertext[:aes.BlockSize]
+	ciphertext = ciphertext[aes.BlockSize:]
+
+	// CBC mode always works in whole blocks.
+	if len(ciphertext)%aes.BlockSize != 0 {
+		return "", err
+	}
+
+	mode := cipher.NewCBCDecrypter(block, iv)
+
+	mode.CryptBlocks(ciphertext, ciphertext)
+	ciphertext = PKCS5UnPadding(ciphertext)
+	return string(ciphertext), nil
+}
+
+func Encrypt(encryptionKey string, plaintextString string) string {
+	if encryptionKey == "" {
+		encryptionKey = os.Getenv("ENCRYPTION_KEY")
+	}
+
+	fmt.Println(encryptionKey, plaintextString)
+	key := []byte(encryptionKey)
+	plaintext := []byte(plaintextString)
+	plaintext = PKCS5Padding(plaintext, 16)
+
+	if len(plaintext)%aes.BlockSize != 0 {
+		panic("plaintext is not a multiple of the block size")
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err)
+	}
+
+	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		panic(err)
+	}
+
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
+
+	return base64.StdEncoding.EncodeToString(ciphertext)
+}
+
+func PKCS5Padding(src []byte, blockSize int) []byte {
+	padding := blockSize - len(src)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(src, padtext...)
+}
+
+func PKCS5UnPadding(src []byte) []byte {
+	length := len(src)
+	unpadding := int(src[length-1])
+	return src[:(length - unpadding)]
 }

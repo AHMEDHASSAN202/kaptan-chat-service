@@ -1,6 +1,8 @@
 package location
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/jinzhu/copier"
 	"github.com/uber/h3-go/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -32,7 +34,8 @@ func LocationBuilder(payload *location.StoreLocationDto) *domain.Location {
 	locationDomain.Index = h3.LatLngToCell(latLng, consts.H3Resolution).String()
 
 	// Set Branch Signature
-	//locationDomain.BranchSignature = ""
+
+	locationDomain.BranchSignature = GenerateLocationSignature(payload)
 
 	locationDomain.CreatedAt = time.Now().UTC()
 	locationDomain.UpdatedAt = time.Now().UTC()
@@ -50,7 +53,7 @@ func UpdateLocationBuilder(payload *location.StoreLocationDto, locationDomain *d
 	}
 
 	// Set Branch Signature
-	//locationDomain.BranchSignature = ""
+	locationDomain.BranchSignature = GenerateLocationSignature(payload)
 
 	// Convert latitude and longitude to H3 index
 	latLng := h3.NewLatLng(payload.Lat, payload.Lng)
@@ -59,7 +62,25 @@ func UpdateLocationBuilder(payload *location.StoreLocationDto, locationDomain *d
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return locationDomain
 }
+func GenerateLocationSignature(payload *location.StoreLocationDto) string {
 
+	jsonBytes, err := json.Marshal(payload.Name)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	nameString := string(jsonBytes)
+
+	jsonBytes, err = json.Marshal(payload.Street)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	streetString := string(jsonBytes)
+
+	return utils.Encrypt("", nameString+streetString+payload.Logo+payload.CoverImage)
+
+}
 func domainBuilderToggleSnooze(dto *location.LocationToggleSnoozeDto, domainData *domain.Location) *domain.Location {
 	var snoozedTill time.Time
 	if dto.IsSnooze && dto.SnoozeMinutesInterval > 0 {

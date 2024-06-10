@@ -2,6 +2,7 @@ package main
 
 import (
 	"go.uber.org/fx"
+	"samm/internal/module/common"
 	"samm/internal/module/example"
 	"samm/internal/module/menu"
 	"samm/internal/module/retails"
@@ -31,6 +32,7 @@ func main() {
 			menu.Module,
 			database.Module,
 			retails.Module,
+			common.Module,
 			fx.Invoke(echo.RunServers, localization.InitLocalization),
 		),
 	).Run()
