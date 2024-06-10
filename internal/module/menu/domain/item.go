@@ -17,7 +17,7 @@ type ItemAvailability struct {
 
 type Item struct {
 	mgm.DefaultModel `bson:",inline"`
-	AccountId        string                   `json:"account_id" bson:"account_id"`
+	AccountId        primitive.ObjectID       `json:"account_id" bson:"account_id"`
 	Name             LocalizationText         `json:"name" bson:"name"`
 	Desc             LocalizationText         `json:"desc" bson:"desc"`
 	Type             string                   `json:"type" bson:"type"`
@@ -41,6 +41,7 @@ type ItemUseCase interface {
 	List(ctx context.Context, dto *item.ListItemsDto) ([]Item, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, id string, dto *item.ChangeItemStatusDto) validators.ErrorResponse
 	SoftDelete(ctx context.Context, id string) validators.ErrorResponse
+	CheckExists(ctx context.Context, accountId, name string) (bool, validators.ErrorResponse)
 }
 
 type ItemRepository interface {
@@ -50,4 +51,5 @@ type ItemRepository interface {
 	SoftDelete(ctx context.Context, id *primitive.ObjectID) error
 	ChangeStatus(ctx context.Context, id *primitive.ObjectID, status *item.ChangeItemStatusDto) error
 	Create(ctx context.Context, doc []Item) error
+	CheckExists(ctx context.Context, accountId, name string) (bool, error)
 }

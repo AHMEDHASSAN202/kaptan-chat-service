@@ -76,3 +76,11 @@ func (oRec *ItemUseCase) GetById(ctx context.Context, id string) (domain.Item, v
 	}
 	return items[0], validators.ErrorResponse{}
 }
+
+func (oRec *ItemUseCase) CheckExists(ctx context.Context, accountId, name string) (bool, validators.ErrorResponse) {
+	isExists, err := oRec.repo.CheckExists(ctx, accountId, name)
+	if err != nil {
+		return isExists, validators.GetErrorResponseFromErr(err)
+	}
+	return isExists, validators.ErrorResponse{}
+}

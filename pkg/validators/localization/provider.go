@@ -26,20 +26,29 @@ func InitLocalization() *i18n.Bundle {
 	return bundle
 }
 
-func GetTranslation(c *context.Context, errorCode string, TemplateData map[string]interface{}) string {
-	lang := (*c).Value("lang").(string)
-	loc := i18n.NewLocalizer(bundle, lang)
+func GetTranslation(c *context.Context, errorCode string, TemplateData map[string]interface{}, lang string) string {
+	loc := i18n.NewLocalizer(bundle, getLangParam(c, lang))
 	translation, err := loc.Localize(&i18n.LocalizeConfig{
 		MessageID:    errorCode,
 		TemplateData: TemplateData,
 	})
-	fmt.Println("ERROR -> ", err)
-	fmt.Printf(translation, lang, "GetTranslation")
-
 	if err != nil {
+		fmt.Println(err)
 		translation = "error_msg_not_found"
 	}
 	return translation
+}
+
+func getLangParam(c *context.Context, lang string) string {
+	if lang == "" {
+		langCtx, ok := (*c).Value("lang").(string)
+		if !ok {
+			lang = "en" //default value
+		} else {
+			lang = langCtx
+		}
+	}
+	return lang
 }
 
 // ErrorCode represents a single error code with its ID and description

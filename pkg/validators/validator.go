@@ -49,7 +49,7 @@ func Init() *validator.Validate {
 	en_translations.RegisterDefaultTranslations(validate, transEn)
 	ar_translations.RegisterDefaultTranslations(validate, transAr)
 
-	validate.RegisterValidation("timeformat", ValidateTimeFormat)
+	//NewRegisterCustomValidator(validate)
 
 	return validate
 }
@@ -72,6 +72,8 @@ type CustomErrorTags struct {
 
 func ValidateStruct(c context.Context, validate *validator.Validate, obj interface{}, customErrorTags ...CustomErrorTags) ErrorResponse {
 	registerCustomValidation(c, validate, customErrorTags...)
+	NewRegisterCustomValidator(c, validate)
+
 	err := validate.Struct(obj)
 	lang := c.Value("lang")
 	fmt.Println(lang)
@@ -100,9 +102,10 @@ func registerCustomValidation(c context.Context, validate *validator.Validate, c
 		validate.RegisterTranslation(tag.ValidationTag, GetTrans(c), func(ut ut.Translator) error {
 			return nil
 		}, func(ut ut.Translator, fe validator.FieldError) string {
-			return localization.GetTranslation(&c, tag.ValidationTag, nil)
+			return localization.GetTranslation(&c, tag.ValidationTag, nil, ut.Locale())
 		})
 		validate.RegisterValidation(tag.ValidationTag, tag.RegisterValidationFunc)
+		fmt.Println("registerCustomValidation", tag.ValidationTag)
 	}
 }
 
@@ -118,7 +121,7 @@ func GetErrorResponseFromErr(e error) ErrorResponse {
 }
 
 func GetErrorResponse(ctx *context.Context, code string, data map[string]interface{}) ErrorResponse {
-	message := localization.GetTranslation(ctx, code, data)
+	message := localization.GetTranslation(ctx, code, data, "")
 	return ErrorResponse{
 		ValidationErrors: nil,
 		IsError:          true,

@@ -22,8 +22,8 @@ type Brand struct {
 }
 type WorkingHour struct {
 	Day  string `json:"day"  validate:"required"`
-	From string `json:"from" validate:"required,timeformat"`
-	To   string `json:"to" validate:"required,timeformat"`
+	From string `json:"from" validate:"required,Timeformat"`
+	To   string `json:"to" validate:"required,Timeformat"`
 }
 type BankAccount struct {
 	AccountNumber string `json:"account_number" validate:"required"`

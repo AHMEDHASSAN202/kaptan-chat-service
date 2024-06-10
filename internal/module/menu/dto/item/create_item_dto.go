@@ -1,9 +1,8 @@
 package item
 
 import (
+	"context"
 	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
-	"samm/pkg/utils"
 	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
@@ -15,8 +14,8 @@ type ItemAvailability struct {
 	To   string `json:"to"`
 }
 type LocalizationText struct {
-	Ar string `json:"ar" validate:"required,min=3"`
-	En string `json:"en" validate:"required,min=3"`
+	Ar string `json:"ar" validate:"required,min=3,Item_name_is_unique_rules_validation"`
+	En string `json:"en" validate:"required,min=3,Item_name_is_unique_rules_validation"`
 }
 
 type LocalizationTextDesc struct {
@@ -33,7 +32,7 @@ type CreateItemDto struct {
 	Max               int                  `json:"max"`
 	Calories          int                  `json:"calories" validate:"required"`
 	Price             float64              `json:"price" validate:"required"`
-	ModifierGroupsIds []string             `json:"modifier_groups_ids" validate:"Modifier_groups_ids_rules"`
+	ModifierGroupsIds []string             `json:"modifier_groups_ids" validate:"Invalid_mongo_ids_validation_rule"`
 	Availabilities    []ItemAvailability   `json:"availabilities"`
 	Tags              []string             `json:"tags"`
 	Image             string               `json:"image" validate:"required"`
@@ -41,24 +40,10 @@ type CreateItemDto struct {
 	AdminDetails      []dto.AdminDetails   `json:"-"`
 }
 
-func (input *CreateItemDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
-	validateModifierGroupsExistsInDB := func(fl validator.FieldLevel) bool {
-		value := fl.Field().Interface().([]string)
-		isValidObjectIds := utils.ValidateIDsIsMongoObjectIds(fl)
-		if !isValidObjectIds {
-			return false
-		}
-		return existsIModifierGroup("db", value)
-	}
-
+func (input *CreateItemDto) Validate(ctx context.Context, validate *validator.Validate, validateNameIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {
 	// Register custom field-specific messages
-	ctx := c.Request().Context()
 	return validators.ValidateStruct(ctx, validate, input, validators.CustomErrorTags{
-		ValidationTag:          localization.Modifier_groups_ids_rules,
-		RegisterValidationFunc: validateModifierGroupsExistsInDB,
+		ValidationTag:          localization.Item_name_is_unique_rules_validation,
+		RegisterValidationFunc: validateNameIsUnique,
 	})
-}
-
-func existsIModifierGroup(db interface{}, value []string) bool {
-	return true
 }

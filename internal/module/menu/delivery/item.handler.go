@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/internal/module/menu/custom_validators"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
 	"samm/pkg/logger"
@@ -11,17 +12,19 @@ import (
 )
 
 type ItemHandler struct {
-	itemUsecase domain.ItemUseCase
-	validator   *validator.Validate
-	logger      logger.ILogger
+	itemUsecase         domain.ItemUseCase
+	itemCustomValidator custom_validators.ItemCustomValidator
+	validator           *validator.Validate
+	logger              logger.ILogger
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustomValidator custom_validators.ItemCustomValidator, validator *validator.Validate, logger logger.ILogger) {
 	handler := &ItemHandler{
-		itemUsecase: itemUsecase,
-		validator:   validator,
-		logger:      logger,
+		itemUsecase:         itemUsecase,
+		itemCustomValidator: itemCustomValidator,
+		validator:           validator,
+		logger:              logger,
 	}
 	portal := e.Group("api/v1/portal/item")
 	{
@@ -33,9 +36,9 @@ func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, validator 
 
 func (a *ItemHandler) Create(c echo.Context) error {
 	ctx := c.Request().Context()
-	if ctx == nil {
-		ctx = context.Background()
-	}
+	//if ctx == nil {
+	//	ctx = context.Background()
+	//}
 
 	var input []item.CreateItemDto
 	err := c.Bind(&input)
@@ -43,7 +46,7 @@ func (a *ItemHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 	for _, itemDoc := range input {
-		validationErr := itemDoc.Validate(c, a.validator)
+		validationErr := itemDoc.Validate(ctx, a.validator, a.itemCustomValidator.ValidateNameIsUnique())
 		if validationErr.IsError {
 			a.logger.Error(validationErr)
 			return validators.ErrorStatusUnprocessableEntity(c, validationErr)

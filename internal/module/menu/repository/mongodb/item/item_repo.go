@@ -2,6 +2,7 @@ package item
 
 import (
 	"context"
+	"fmt"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -71,8 +72,15 @@ func (i *itemRepo) ChangeStatus(ctx context.Context, id *primitive.ObjectID, dto
 
 func (i *itemRepo) List(ctx context.Context, query *item.ListItemsDto) ([]domain.Item, error) {
 	filter := bson.M{"$text": bson.M{
-		"$search": query.Query}}
+		"$search": query.Query}, "account_id": utils.ConvertStringIdToObjectId(query.AccountId)}
 	items := []domain.Item{}
 	err := i.itemCollection.SimpleFindWithCtx(ctx, &items, filter)
 	return items, err
+}
+
+func (i *itemRepo) CheckExists(ctx context.Context, accountId, name string) (bool, error) {
+	filter := bson.M{"$or": bson.A{bson.M{"name.ar": name}, bson.M{"name.en": name}}, "account_id": utils.ConvertStringIdToObjectId(accountId), "deleted_at": nil}
+	c, err := i.itemCollection.CountDocuments(ctx, filter)
+	fmt.Println(c)
+	return c > 0, err
 }
