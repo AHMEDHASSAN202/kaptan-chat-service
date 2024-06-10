@@ -9,7 +9,6 @@ import (
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type skuRepo struct {
@@ -36,16 +35,11 @@ func (i *skuRepo) Create(ctx context.Context, doc domain.SKU) error {
 
 func (i *skuRepo) List(ctx context.Context, query *sku.ListSKUDto) ([]domain.SKU, error) {
 	filter := bson.M{}
-	options := options.Find()
-	offset := (query.Page - 1) * query.Limit
-	options.SetLimit(query.Limit)
-	options.SetSkip(offset)
 	if query.Query != "" {
 		filter = bson.M{
 			"name": bson.M{"$regex": query.Query, "$options": "i"},
 		}
 	}
-
 	skus := []domain.SKU{}
 	err := i.skuCollection.SimpleFindWithCtx(ctx, &skus, filter)
 	return skus, err

@@ -4,5 +4,5 @@ import "samm/pkg/utils/dto"
 
 type ListModifierGroupsDto struct {
 	dto.Pagination
-	Query string `json:"query" form:"query"`
+	Query string `json:"query" form:"query" query:"query"`
 }
