@@ -4,11 +4,29 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"samm/pkg/validators"
+	"time"
 )
 
 type Name struct {
 	Ar string `json:"ar" validate:"required,min=3"`
 	En string `json:"en" validate:"required,min=3"`
+}
+
+type Country struct {
+	Id   string `json:"_id" validate:"required"`
+	Name struct {
+		Ar string `json:"ar" validate:"required"`
+		En string `json:"en" validate:"required"`
+	} `json:"name" validate:"required"`
+	Timezone    string `json:"timezone" validate:"required"`
+	Currency    string `json:"currency" validate:"required"`
+	PhonePrefix string `json:"phone_prefix" validate:"required"`
+}
+
+type PercentsDate struct {
+	From    time.Time `json:"from" validate:"datetime"`
+	To      time.Time `json:"to" validate:"datetime"`
+	Percent float64   ` json:"percent" validate:"number"`
 }
 
 type City struct {
@@ -33,21 +51,24 @@ type BankAccount struct {
 }
 
 type StoreLocationDto struct {
-	Name            Name          `json:"name" validate:"required"`
-	City            City          `json:"city" validate:"required"`
-	Street          Name          `json:"street" validate:"required"`
-	Tags            string        `json:"tags" validate:"required"`
-	CoverImage      string        `json:"cover_image"`
-	Logo            string        `json:"logo" `
-	Phone           string        `json:"phone" validate:"required"`
-	Lat             float64       `json:"lat" validate:"required,latitude"`
-	Lng             float64       `json:"lng" validate:"required,longitude"`
-	BrandDetails    Brand         `json:"brand_details" validate:"required" `
-	WorkingHour     []WorkingHour `json:"working_hour" validate:"required"`
-	PreparationTime int           `json:"preparation_time" validate:"required"`
-	AutoAccept      bool          `json:"auto_accept" `
-	BankAccount     BankAccount   `json:"bank_account" validate:"required"`
-	AccountId       string        `json:"account_id" validate:"required,mongodb"`
+	Name            Name           `json:"name" validate:"required"`
+	City            City           `json:"city" validate:"required"`
+	Street          Name           `json:"street" validate:"required"`
+	Tags            string         `json:"tags" validate:"required"`
+	CoverImage      string         `json:"cover_image"`
+	Logo            string         `json:"logo" `
+	Phone           string         `json:"phone" validate:"required"`
+	Lat             float64        `json:"lat" validate:"required,latitude"`
+	Lng             float64        `json:"lng" validate:"required,longitude"`
+	BrandDetails    Brand          `json:"brand_details" validate:"required" `
+	WorkingHour     []WorkingHour  `json:"working_hour" `
+	Percent         float64        ` json:"percent" validate:"required"`
+	PercentsDate    []PercentsDate `json:"percents_date"`
+	PreparationTime int            `json:"preparation_time" validate:"required"`
+	AutoAccept      bool           `json:"auto_accept" `
+	BankAccount     BankAccount    `json:"bank_account" validate:"required"`
+	AccountId       string         `json:"account_id" validate:"required,mongodb"`
+	Country         Country        `json:"country" validate:"required"`
 }
 
 func (payload *StoreLocationDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
