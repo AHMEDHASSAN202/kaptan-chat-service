@@ -36,5 +36,6 @@ type BrandRepository interface {
 	FindBrand(*context.Context, primitive.ObjectID) (*Brand, error)
 	GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) (*[]Brand, error)
 	List(ctx *context.Context, query *brand.ListBrandDto) (*[]Brand, *PaginationData, error)
-	SoftDelete(ctx *context.Context, id primitive.ObjectID) error
+	UpdateBrandAndLocations(doc *Brand) error
+	SoftDelete(doc *Brand) error
 }

@@ -77,7 +77,7 @@ func (l locationRepository) ListLocation(ctx context.Context, payload *location.
 
 	filter := bson.M{}
 	match := []bson.M{}
-	match = append(match, bson.M{"deleted_at": nil})
+	match = append(match, bson.M{"deleted_at": nil, "brand_details.is_active": true})
 
 	if payload.Query != "" {
 		filter = bson.M{
@@ -111,4 +111,20 @@ func (l locationRepository) ListLocation(ctx context.Context, payload *location.
 
 	return data, utils.PaginationResult{Page: payload.Page, TotalPages: int64(totalPages), TotalItems: totalItems}, err
 
+}
+
+func (i *locationRepository) UpdateBulkByBrand(ctx context.Context, brand domain.BrandDetails) error {
+	_, err := i.locationCollection.UpdateMany(ctx, bson.M{"brand_details._id": brand.Id}, bson.M{"$set": bson.M{"brand_details": brand}})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *locationRepository) SoftDeleteBulkByBrandId(ctx context.Context, brandId primitive.ObjectID) error {
+	_, err := i.locationCollection.UpdateMany(ctx, bson.M{"brand_details._id": brandId}, bson.M{"$set": bson.M{"deleted_at": time.Now()}})
+	if err != nil {
+		return err
+	}
+	return nil
 }

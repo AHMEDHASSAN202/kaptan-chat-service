@@ -16,9 +16,10 @@ type City struct {
 	Name Name   `json:"name" validate:"required"`
 }
 type Brand struct {
-	Id   string `json:"_id" validate:"required,mongodb"`
-	Name Name   `json:"name" validate:"required" `
-	Logo string `json:"logo" validate:"required"`
+	Id       string `json:"_id" validate:"required,mongodb"`
+	Name     Name   `json:"name" validate:"required" `
+	Logo     string `json:"logo" validate:"required"`
+	IsActive bool   `json:"is_active"`
 }
 type WorkingHour struct {
 	Day  string `json:"day"  validate:"required"`
@@ -36,7 +37,8 @@ type StoreLocationDto struct {
 	City            City          `json:"city" validate:"required"`
 	Street          Name          `json:"street" validate:"required"`
 	Tags            string        `json:"tags" validate:"required"`
-	CoverImage      string        `json:"cover_image" validate:"required"`
+	CoverImage      string        `json:"cover_image"`
+	Logo            string        `json:"logo" `
 	Phone           string        `json:"phone" validate:"required"`
 	Lat             float64       `json:"lat" validate:"required,latitude"`
 	Lng             float64       `json:"lng" validate:"required,longitude"`

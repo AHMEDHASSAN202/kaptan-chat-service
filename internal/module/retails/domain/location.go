@@ -19,9 +19,10 @@ type Coordinate struct {
 	Coordinates []float64 `json:"coordinates" bson:"coordinates"`
 }
 type BrandDetails struct {
-	Id   primitive.ObjectID `json:"_id" bson:"_id"`
-	Name Name               `json:"name" bson:"name"`
-	Logo string             `json:"logo" bson:"logo"`
+	Id       primitive.ObjectID `json:"_id" bson:"_id"`
+	Name     Name               `json:"name" bson:"name"`
+	Logo     string             `json:"logo" bson:"logo"`
+	IsActive bool               `json:"is_active" bson:"is_active"`
 }
 type WorkingHour struct {
 	Day  string `json:"day" bson:"day"`
@@ -45,6 +46,7 @@ type Location struct {
 	Street           Name               `json:"street" bson:"street"`
 	Tags             string             `json:"tags" bson:"tags"`
 	CoverImage       string             `json:"cover_image" bson:"cover_image"`
+	Logo             string             `json:"logo" bson:"logo"`
 	Open             bool               `json:"open" bson:"open"`
 	Phone            string             `json:"phone" bson:"phone"`
 	BranchSignature  string             `json:"branch_signature" bson:"branch_signature"`
@@ -81,4 +83,6 @@ type LocationRepository interface {
 	DeleteLocation(ctx context.Context, Id primitive.ObjectID) (err error)
 	DeleteLocationByAccountId(ctx context.Context, accountId primitive.ObjectID) (err error)
 	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult utils.PaginationResult, err error)
+	UpdateBulkByBrand(ctx context.Context, brand BrandDetails) error
+	SoftDeleteBulkByBrandId(ctx context.Context, brandId primitive.ObjectID) error
 }

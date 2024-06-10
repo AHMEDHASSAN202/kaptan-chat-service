@@ -11,6 +11,7 @@ import (
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+	"time"
 )
 
 type BrandUseCase struct {
@@ -40,9 +41,16 @@ func (oRec *BrandUseCase) Update(ctx *context.Context, dto *brand.UpdateBrandDto
 		return findBrandErr
 	}
 	doc := domainBuilderAtUpdate(dto, findBrand)
-	err := oRec.repo.Update(doc)
-	if err != nil {
-		return validators.GetErrorResponseFromErr(err)
+	if isAllowedToCascadeUpdates(findBrand, doc) {
+		err := oRec.repo.UpdateBrandAndLocations(doc)
+		if err != nil {
+			return validators.GetErrorResponseFromErr(err)
+		}
+	} else {
+		err := oRec.repo.Update(doc)
+		if err != nil {
+			return validators.GetErrorResponseFromErr(err)
+		}
 	}
 	return validators.ErrorResponse{}
 }
@@ -82,8 +90,13 @@ func (oRec *BrandUseCase) ChangeStatus(ctx *context.Context, dto *brand.ChangeBr
 }
 
 func (oRec *BrandUseCase) SoftDelete(ctx *context.Context, id string) validators.ErrorResponse {
-	idDoc := utils.ConvertStringIdToObjectId(id)
-	err := oRec.repo.SoftDelete(ctx, idDoc)
+	brand, err := oRec.repo.FindBrand(ctx, utils.ConvertStringIdToObjectId(id))
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	currentTime := time.Now()
+	brand.DeletedAt = &currentTime
+	err = oRec.repo.SoftDelete(brand)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
