@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"net/http"
 	"samm/pkg/validators/localization"
+	"strings"
 )
 
 type Message struct {
@@ -70,6 +71,21 @@ type CustomErrorTags struct {
 	RegisterValidationFunc func(fl validator.FieldLevel) bool
 }
 
+func GetFiledName(e validator.FieldError) string {
+	filedName := ""
+	for i, s := range strings.Split(e.Namespace(), ".") {
+		if i == 0 {
+			continue
+		}
+		filedName = filedName + s
+
+		if i != len(strings.Split(e.Namespace(), "."))-1 {
+			filedName = filedName + "."
+		}
+	}
+	return strings.ToLower(filedName)
+}
+
 func ValidateStruct(c context.Context, validate *validator.Validate, obj interface{}, customErrorTags ...CustomErrorTags) ErrorResponse {
 	registerCustomValidation(c, validate, customErrorTags...)
 	NewRegisterCustomValidator(c, validate)
@@ -81,11 +97,13 @@ func ValidateStruct(c context.Context, validate *validator.Validate, obj interfa
 		errs := err.(validator.ValidationErrors)
 		errMap := make(map[string][]string)
 		for _, e := range errs {
+
+			filedName := GetFiledName(e)
 			// can translate each error one at a time.
 			if lang == langEn {
-				errMap[e.Field()] = []string{e.Translate(transEn)}
+				errMap[filedName] = []string{e.Translate(transEn)}
 			} else {
-				errMap[e.Field()] = []string{e.Translate(transAr)}
+				errMap[filedName] = []string{e.Translate(transAr)}
 			}
 
 		}
