@@ -10,6 +10,17 @@ import (
 	"time"
 )
 
+type Country struct {
+	Id   string `json:"_id" bson:"_id"`
+	Name struct {
+		Ar string `json:"ar" bson:"ar"`
+		En string `json:"en" bson:"en"`
+	} `json:"name" bson:"name"`
+	Timezone    string `json:"timezone" bson:"timezone"`
+	Currency    string `json:"currency" bson:"currency"`
+	PhonePrefix string `json:"phone_prefix" bson:"phone_prefix"`
+}
+
 type City struct {
 	Id   primitive.ObjectID `json:"_id" bson:"id"`
 	Name Name               `json:"name" bson:"name"`
@@ -38,7 +49,11 @@ type AdminDetail struct {
 	AdminId   primitive.ObjectID `json:"admin_id" bson:"admin_id"`
 	UpdatedAt time.Time          `json:"updated_at" bson:"updated_at"`
 }
-
+type PercentsDate struct {
+	From    time.Time `json:"from" bson:"from"`
+	To      time.Time `json:"to" bson:"to"`
+	Percent float64   ` json:"percent" bson:"percent"`
+}
 type Location struct {
 	mgm.DefaultModel `bson:",inline"`
 	Name             Name               `json:"name" bson:"name"`
@@ -57,8 +72,11 @@ type Location struct {
 	PreparationTime  int                `json:"preparation_time" bson:"preparation_time"`
 	AutoAccept       bool               `json:"auto_accept" bson:"auto_accept"`
 	Status           string             `json:"status" bson:"status"`
+	Percent          float64            ` json:"percent" bson:"percent"`
+	PercentsDate     []PercentsDate     `json:"percents_date" bson:"percents_date"`
 	SnoozeTo         *time.Time         `json:"snooze_to" bson:"snooze_to"`
 	BankAccount      BankAccount        `json:"bank_account" bson:"bank_account"`
+	Country          Country            `json:"country" bson:"country"`
 	AccountId        primitive.ObjectID `json:"account_id" bson:"account_id"`
 	AdminDetails     []AdminDetail      `json:"admin_details" bson:"admin_details"`
 	DeletedAt        *time.Time         `json:"-" bson:"deleted_at"`
