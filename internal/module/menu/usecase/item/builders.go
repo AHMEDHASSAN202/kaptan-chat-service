@@ -26,6 +26,7 @@ func convertDtoToCorrespondingDomain(dto item.UpdateItemDto) domain.Item {
 	copier.Copy(&itemDoc, &dto)
 	itemDoc.DeletedAt = nil
 	itemDoc.UpdatedAt = time.Now()
+	itemDoc.AccountId = utils.ConvertStringIdToObjectId(dto.AccountId)
 	itemDoc.ModifierGroupIds = utils.ConvertStringIdsToObjectIds(dto.ModifierGroupsIds)
 	return itemDoc
 }

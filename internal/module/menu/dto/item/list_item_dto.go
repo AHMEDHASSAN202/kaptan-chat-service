@@ -9,8 +9,8 @@ import (
 
 type ListItemsDto struct {
 	dto.Pagination
-	Query     string `json:"query" form:"query"`
-	AccountId string `json:"account_id" form:"account_id" header:"account_id" validate:"required"`
+	Query     string `json:"query" query:"query"`
+	AccountId string `json:"account_id" query:"account_id" header:"account_id" validate:"required"`
 }
 
 func (input *ListItemsDto) Validate(ctx context.Context, validate *validator.Validate) validators.ErrorResponse {
