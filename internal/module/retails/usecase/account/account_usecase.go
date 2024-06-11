@@ -3,6 +3,7 @@ package account
 import (
 	"context"
 	"errors"
+	mongopagination "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/retails/domain"
@@ -108,7 +109,7 @@ func (l AccountUseCase) DeleteAccount(ctx context.Context, Id string) (err valid
 	return validators.ErrorResponse{}
 }
 
-func (l AccountUseCase) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult utils.PaginationResult, err validators.ErrorResponse) {
+func (l AccountUseCase) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse) {
 	results, paginationResult, errRe := l.repo.ListAccount(ctx, payload)
 	if errRe != nil {
 		return results, paginationResult, validators.GetErrorResponseFromErr(errRe)

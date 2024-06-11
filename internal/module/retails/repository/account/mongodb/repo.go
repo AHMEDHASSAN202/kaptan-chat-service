@@ -2,12 +2,11 @@ package mongodb
 
 import (
 	"context"
+	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"math"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/account"
 	"samm/pkg/utils"
@@ -68,35 +67,35 @@ func (l AccountRepository) DeleteAccount(ctx context.Context, Id primitive.Objec
 	return l.UpdateAccount(ctx, accountData)
 }
 
-func (l AccountRepository) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult utils.PaginationResult, err error) {
+func (l AccountRepository) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult *PaginationData, err error) {
+	models := make([]domain.Account, 0)
 
-	offset := (payload.Page - 1) * payload.Limit
-	findOptions := options.Find().SetLimit(payload.Limit).SetSkip(offset)
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.M{"deleted_at": nil},
+	}}}
 
-	filter := bson.M{}
-	match := []bson.M{}
-	match = append(match, bson.M{"deleted_at": nil})
 	if payload.Query != "" {
-		filter = bson.M{
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{
 			"$or": []bson.M{
 				{"name.ar": bson.M{"$regex": payload.Query, "$options": "i"}},
 				{"name.en": bson.M{"$regex": payload.Query, "$options": "i"}},
 				{"email": bson.M{"$regex": payload.Query, "$options": "i"}},
 			},
-		}
+		})
+
 	}
-	filter["$and"] = match
+	data, err := New(l.accountCollection.Collection).Context(ctx).Limit(payload.Limit).Page(payload.Page).Sort("created_at", -1).Aggregate(matching)
+	if data == nil || data.Data == nil {
+		return models, nil, err
+	}
 
-	// Query the collection for the total count of documents
-	collection := mgm.Coll(&domain.Account{})
-	totalItems, err := collection.CountDocuments(ctx, filter)
-
-	// Calculate total pages
-	totalPages := int(math.Ceil(float64(totalItems) / float64(payload.Limit)))
-
-	var data []domain.Account
-	err = l.accountCollection.SimpleFind(&data, filter, findOptions)
-
-	return data, utils.PaginationResult{Page: payload.Page, TotalPages: int64(totalPages), TotalItems: totalItems}, err
-
+	for _, raw := range data.Data {
+		model := domain.Account{}
+		errUnmarshal := bson.Unmarshal(raw, &model)
+		if errUnmarshal != nil {
+			break
+		}
+		models = append(models, model)
+	}
+	return models, &data.Pagination, err
 }
