@@ -249,3 +249,17 @@ func PKCS5UnPadding(src []byte) []byte {
 	unpadding := int(src[length-1])
 	return src[:(length - unpadding)]
 }
+
+func RemoveItemByValue[T comparable](slice []T, value T) []T {
+	newSlice := []T{}
+	for _, item := range slice {
+		if item != value {
+			newSlice = append(newSlice, item)
+		}
+	}
+	return newSlice
+}
+
+func RemoveItemByIndex[T any](slice []T, index int) []T {
+	return append(slice[:index], slice[index+1:]...)
+}

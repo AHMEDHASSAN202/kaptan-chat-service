@@ -6,13 +6,16 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/menu_group"
 	"samm/pkg/utils"
+	dto2 "samm/pkg/utils/dto"
 	"strings"
+	"time"
 )
 
-func MenuGroupBuilder(dto *menu_group.CreateMenuGroupDTO) (*domain.MenuGroup, *[]domain.MenuGroupItem) {
+func MenuGroupBuilder(dto *menu_group.CreateMenuGroupDTO, oldDocument *domain.MenuGroup) (*domain.MenuGroup, *[]domain.MenuGroupItem) {
 	menuGroupDomain := domain.MenuGroup{}
 	if dto.ID == primitive.NilObjectID || dto.ID.IsZero() {
 		dto.ID = primitive.NewObjectID()
+		menuGroupDomain.AdminDetails = []dto2.AdminDetails{dto.AdminDetails}
 	}
 	menuGroupDomain.ID = dto.ID
 	menuGroupDomain.AccountId = utils.ConvertStringIdToObjectId(dto.AccountId)
@@ -26,16 +29,20 @@ func MenuGroupBuilder(dto *menu_group.CreateMenuGroupDTO) (*domain.MenuGroup, *[
 	menuGroupDomain.Availabilities = AvailabilitiesBuilder(dto.Availabilities)
 	menuGroupDomain.Status = strings.ToLower(dto.Status)
 	items := MenuGroupItemsBuilder(dto)
+	if oldDocument != nil {
+		menuGroupDomain.CreatedAt = oldDocument.CreatedAt
+	}
 	return &menuGroupDomain, items
 }
 
 func CategoriesBuilder(categoriesInput *[]menu_group.CategoryDTO) []domain.Category {
 	categories := make([]domain.Category, 0)
 	if categoriesInput != nil && len(*categoriesInput) >= 1 {
-		for _, category := range *categoriesInput {
+		for i, category := range *categoriesInput {
 			cat := domain.Category{}
 			if category.ID == "" || utils.IsValidateObjectId(category.ID) {
 				category.ID = utils.ConvertObjectIdToStringId(primitive.NewObjectID())
+				(*categoriesInput)[i].ID = category.ID
 			}
 			cat.ID = utils.ConvertStringIdToObjectId(category.ID)
 			cat.Name.En = category.Name.En
@@ -96,6 +103,7 @@ func MenuGroupItemsBuilder(dto *menu_group.CreateMenuGroupDTO) *[]domain.MenuGro
 					menuGroupItem.Desc.Ar = item.Desc.Ar
 					menuGroupItem.Calories = item.Calories
 					menuGroupItem.Price = item.Price
+					menuGroupItem.Sort = item.Sort
 					menuGroupItem.ModifierGroupIds = item.ModifierGroupIds
 					menuGroupItem.Tags = utils.If(item.Tags != nil, item.Tags, make([]string, 0)).([]string)
 					menuGroupItem.Status = utils.If(item.Status != "", strings.ToLower(item.Status), consts.MENU_GROUP_ITEM_DEFUALT_STATUS).(string)
@@ -121,6 +129,11 @@ func MenuGroupItemsBuilder(dto *menu_group.CreateMenuGroupDTO) *[]domain.MenuGro
 						}
 					}
 					menuGroupItem.MenuGroup = menuGroup
+					if item.Id == "" || item.IsNew {
+						menuGroupItem.AdminDetails = []dto2.AdminDetails{dto.AdminDetails}
+						menuGroupItem.CreatedAt = time.Now().UTC()
+					}
+					menuGroupItem.UpdatedAt = time.Now().UTC()
 					items = append(items, menuGroupItem)
 				}
 			}

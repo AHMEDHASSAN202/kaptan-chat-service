@@ -2,6 +2,7 @@ package location
 
 import (
 	"context"
+	mongopagination "github.com/gobeam/mongo-go-pagination"
 	"samm/internal/module/retails/consts"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/location"
@@ -18,6 +19,19 @@ type LocationUseCase struct {
 func (l LocationUseCase) StoreLocation(ctx context.Context, payload *location.StoreLocationDto) (err validators.ErrorResponse) {
 
 	errRe := l.repo.StoreLocation(ctx, LocationBuilder(payload))
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+	return
+}
+func (l LocationUseCase) BulkStoreLocation(ctx context.Context, payload []location.StoreLocationDto) (err validators.ErrorResponse) {
+
+	data := make([]domain.Location, 0)
+	for _, itemDoc := range payload {
+		data = append(data, *LocationBuilder(&itemDoc))
+	}
+
+	errRe := l.repo.BulkStoreLocation(ctx, data)
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)
 	}
@@ -79,7 +93,7 @@ func (l LocationUseCase) DeleteLocationByAccountId(ctx context.Context, AccountI
 	return validators.ErrorResponse{}
 }
 
-func (l LocationUseCase) ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []domain.Location, paginationResult utils.PaginationResult, err validators.ErrorResponse) {
+func (l LocationUseCase) ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []domain.Location, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse) {
 	results, paginationResult, errRe := l.repo.ListLocation(ctx, payload)
 	if errRe != nil {
 		return results, paginationResult, validators.GetErrorResponseFromErr(errRe)

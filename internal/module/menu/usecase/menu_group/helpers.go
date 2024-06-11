@@ -7,6 +7,7 @@ import (
 	"samm/internal/module/menu/dto/menu_group"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 )
 
 func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_group.CreateMenuGroupDTO) validators.ErrorResponse {
@@ -15,8 +16,9 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 		for _, category := range dto.Categories {
 			if category.MenuItems != nil {
 				for _, menuItem := range category.MenuItems {
-					if !utils.Contains(itemIds, menuItem.ItemId) {
-						itemIds = append(itemIds, utils.ConvertStringIdToObjectId(menuItem.ItemId))
+					itemId := utils.ConvertStringIdToObjectId(menuItem.ItemId)
+					if !utils.Contains(itemIds, itemId) {
+						itemIds = append(itemIds, itemId)
 					}
 				}
 			}
@@ -46,6 +48,7 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 					menuGroupItem := menu_group.MenuItemDTO{}
 					if menuItem.Id == "" || !utils.IsValidateObjectId(menuItem.Id) {
 						menuItem.Id = utils.ConvertObjectIdToStringId(primitive.NewObjectID())
+						menuGroupItem.IsNew = true
 					}
 					menuGroupItem.Id = menuItem.Id
 					menuGroupItem.ItemId = utils.ConvertObjectIdToStringId(item.ID)
@@ -74,6 +77,18 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 				}
 			}
 		}
+	}
+	return validators.ErrorResponse{}
+}
+
+func (oRec *MenuGroupUseCase) AuthorizeMenuGroup(ctx *context.Context, menuGroup *domain.MenuGroup, accountId primitive.ObjectID) validators.ErrorResponse {
+	if menuGroup == nil || menuGroup.ID.IsZero() {
+		oRec.logger.Error("AuthorizeMenuGroup-> Error In menuGroup")
+		return validators.GetErrorResponse(ctx, localization.E1002, nil)
+	}
+	if !menuGroup.Authorized(accountId) {
+		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Menu Group -> ", menuGroup.ID)
+		return validators.GetErrorResponse(ctx, localization.E1006, nil)
 	}
 	return validators.ErrorResponse{}
 }

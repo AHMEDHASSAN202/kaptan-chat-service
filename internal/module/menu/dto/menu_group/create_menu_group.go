@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/pkg/utils"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 )
 
@@ -34,6 +35,7 @@ type MenuItemDTO struct {
 	Tags             []string                          `json:"tags"`
 	Image            string                            `json:"image"`
 	Status           string                            `json:"status" validate:"oneof=active inactive"`
+	IsNew            bool
 }
 
 type CategoryDTO struct {
@@ -59,6 +61,7 @@ type CreateMenuGroupDTO struct {
 	Categories     []CategoryDTO      `json:"categories" validate:"dive"`
 	Availabilities []AvailabilityDTO  `json:"availabilities" validate:"dive"`
 	Status         string             `json:"status" validate:"oneof=active inactive"`
+	AdminDetails   dto.AdminDetails   `json:"-"`
 }
 
 func (input *CreateMenuGroupDTO) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {

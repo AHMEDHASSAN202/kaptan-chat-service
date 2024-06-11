@@ -3,6 +3,7 @@ package account
 import (
 	"context"
 	"errors"
+	mongopagination "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/retails/domain"
@@ -31,6 +32,12 @@ func (l AccountUseCase) StoreAccount(ctx context.Context, payload *account.Store
 	accountDomain.Password = password
 	accountDomain.CreatedAt = time.Now()
 	accountDomain.UpdatedAt = time.Now()
+	accountDomain.Country.Id = payload.Country.Id
+	accountDomain.Country.PhonePrefix = payload.Country.PhonePrefix
+	accountDomain.Country.Currency = payload.Country.Currency
+	accountDomain.Country.Timezone = payload.Country.Timezone
+	accountDomain.Country.Name.Ar = payload.Country.Name.Ar
+	accountDomain.Country.Name.En = payload.Country.Name.En
 
 	errRe := l.repo.StoreAccount(ctx, &accountDomain)
 	if errRe != nil {
@@ -47,6 +54,12 @@ func (l AccountUseCase) UpdateAccount(ctx context.Context, id string, payload *a
 	accountDomain.Name.Ar = payload.Name.Ar
 	accountDomain.Name.En = payload.Name.En
 	accountDomain.Email = payload.Email
+	accountDomain.Country.Id = payload.Country.Id
+	accountDomain.Country.PhonePrefix = payload.Country.PhonePrefix
+	accountDomain.Country.Currency = payload.Country.Currency
+	accountDomain.Country.Timezone = payload.Country.Timezone
+	accountDomain.Country.Name.Ar = payload.Country.Name.Ar
+	accountDomain.Country.Name.En = payload.Country.Name.En
 
 	if payload.Password != "" {
 		password, er := utils.HashPassword(payload.Password)
@@ -70,7 +83,9 @@ func (l AccountUseCase) FindAccount(ctx context.Context, Id string) (account dom
 	}
 	return *domainAccount, validators.ErrorResponse{}
 }
-
+func (l AccountUseCase) CheckAccountEmail(ctx context.Context, email string, accountId string) bool {
+	return l.repo.CheckAccountEmail(ctx, email, accountId)
+}
 func (l AccountUseCase) DeleteAccount(ctx context.Context, Id string) (err validators.ErrorResponse) {
 
 	erre := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
@@ -94,7 +109,7 @@ func (l AccountUseCase) DeleteAccount(ctx context.Context, Id string) (err valid
 	return validators.ErrorResponse{}
 }
 
-func (l AccountUseCase) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult utils.PaginationResult, err validators.ErrorResponse) {
+func (l AccountUseCase) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse) {
 	results, paginationResult, errRe := l.repo.ListAccount(ctx, payload)
 	if errRe != nil {
 		return results, paginationResult, validators.GetErrorResponseFromErr(errRe)

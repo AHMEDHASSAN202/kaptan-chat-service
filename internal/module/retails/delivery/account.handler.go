@@ -3,6 +3,7 @@ package delivery
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/internal/module/retails/custom_validators"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/account"
 	"samm/pkg/logger"
@@ -10,17 +11,19 @@ import (
 )
 
 type AccountHandler struct {
-	accountUsecase domain.AccountUseCase
-	validator      *validator.Validate
-	logger         logger.ILogger
+	accountUsecase        domain.AccountUseCase
+	retailCustomValidator custom_validators.RetailCustomValidator
+	validator             *validator.Validate
+	logger                logger.ILogger
 }
 
 // InitUserController will initialize the article's HTTP controller
-func InitAccountController(e *echo.Echo, us domain.AccountUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitAccountController(e *echo.Echo, us domain.AccountUseCase, retailCustomValidator custom_validators.RetailCustomValidator, validator *validator.Validate, logger logger.ILogger) {
 	handler := &AccountHandler{
-		accountUsecase: us,
-		validator:      validator,
-		logger:         logger,
+		accountUsecase:        us,
+		retailCustomValidator: retailCustomValidator,
+		validator:             validator,
+		logger:                logger,
 	}
 	dashboard := e.Group("api/v1/admin/account")
 	dashboard.POST("", handler.StoreAccount)
@@ -38,7 +41,7 @@ func (a *AccountHandler) StoreAccount(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := payload.Validate(c, a.validator)
+	validationErr := payload.Validate(c, a.validator, a.retailCustomValidator.ValidateAccountEmailIsUnique(""))
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -59,13 +62,13 @@ func (a *AccountHandler) UpdateAccount(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	id := c.Param("id")
 
-	validationErr := payload.Validate(c, a.validator)
+	validationErr := payload.Validate(c, a.validator, a.retailCustomValidator.ValidateAccountEmailIsUnique(id))
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
-	id := c.Param("id")
 	errResp := a.accountUsecase.UpdateAccount(ctx, id, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)

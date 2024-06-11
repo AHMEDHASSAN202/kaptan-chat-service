@@ -58,6 +58,10 @@ other = "These features are not supported: {{.Feature}}"
 description = "Feature not supported"
 other = "Item_name_is_unique_rules_validation"
 
+[Account_Email_is_unique_rules_validation]
+description = "Email is Unique"
+other = "Email is Exists"
+
 [Timeformat]
 description = "time format rule validation"
 other = "time format is not valid"

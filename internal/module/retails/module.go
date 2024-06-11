@@ -2,6 +2,7 @@ package retails
 
 import (
 	"go.uber.org/fx"
+	"samm/internal/module/retails/custom_validators"
 	"samm/internal/module/retails/delivery"
 	account_repo "samm/internal/module/retails/repository/account/mongodb"
 	brand_repo "samm/internal/module/retails/repository/brand"
@@ -24,6 +25,7 @@ var Module = fx.Options(
 		brand_usecase.NewBrandUseCase,
 		account_repo.NewAccountMongoRepository,
 		account.NewAccountUseCase,
+		custom_validators.InitNewCustomValidators,
 	),
 	fx.Invoke(delivery.InitController, delivery.InitCuisineController, delivery.InitBrandController, delivery.InitAccountController),
 )
