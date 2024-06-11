@@ -121,7 +121,7 @@ func setFromEnv(cfg *Config) {
 
 	var port = defaultHTTPPort
 	if os.Getenv("PORT") != "" {
-		port = os.Getenv("PORT")
+		port = ":" + os.Getenv("PORT")
 	}
 	cfg.Echo.Port = port
 }
