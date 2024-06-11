@@ -134,7 +134,7 @@ func (r *menuGroupRepo) FindWithItems(ctx context.Context, menuGroupId primitive
 	cursor, err := mgm.Coll(&domain.MenuGroup{}).Aggregate(ctx, pipeline, options.Aggregate())
 	if err != nil {
 		r.logger.Error("menuGroupRepo -> FindWithItems -> ", err)
-		return &domainData, errors.New(localization.GetTranslation(&ctx, localization.E1000, nil))
+		return &domainData, errors.New(localization.GetTranslation(&ctx, localization.E1000, nil, ""))
 	}
 	defer cursor.Close(ctx)
 
@@ -145,7 +145,7 @@ func (r *menuGroupRepo) FindWithItems(ctx context.Context, menuGroupId primitive
 		}
 	} else {
 		r.logger.Error("menuGroupRepo -> FindWithItems -> ", cursor.Err())
-		return &domainData, errors.New(localization.GetTranslation(&ctx, localization.E1000, nil))
+		return &domainData, errors.New(localization.GetTranslation(&ctx, localization.E1000, nil, ""))
 	}
 
 	return &domainData, err
@@ -221,7 +221,7 @@ func (r *menuGroupRepo) ChangeCategoryStatus(ctx context.Context, model *domain.
 		}
 	}
 	if !exists {
-		return errors.New(localization.GetTranslation(&ctx, localization.E1000, nil))
+		return errors.New(localization.GetTranslation(&ctx, localization.E1000, nil, ""))
 	}
 	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
 		err := mgm.Coll(model).UpdateWithCtx(sc, model)
@@ -241,7 +241,7 @@ func (r *menuGroupRepo) DeleteCategory(ctx context.Context, model *domain.MenuGr
 	model.AdminDetails = utils.If(model.AdminDetails == nil, []dto.AdminDetails{adminDetails}, append(model.AdminDetails, adminDetails)).([]dto.AdminDetails)
 	var index *int
 	if model.Categories == nil {
-		return errors.New(localization.GetTranslation(&ctx, localization.E1002, nil))
+		return errors.New(localization.GetTranslation(&ctx, localization.E1002, nil, ""))
 	}
 	for i, category := range model.Categories {
 		if utils.ConvertObjectIdToStringId(category.ID) == input.EntityId {
@@ -250,7 +250,7 @@ func (r *menuGroupRepo) DeleteCategory(ctx context.Context, model *domain.MenuGr
 		}
 	}
 	if index == nil {
-		return errors.New(localization.GetTranslation(&ctx, localization.E1002, nil))
+		return errors.New(localization.GetTranslation(&ctx, localization.E1002, nil, ""))
 	}
 	model.Categories = utils.RemoveItemByIndex[domain.Category](model.Categories, *index)
 	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
@@ -281,7 +281,7 @@ func (r *menuGroupRepo) DeleteItem(ctx context.Context, model *domain.MenuGroup,
 		}
 	}
 	if !exists {
-		return errors.New(localization.GetTranslation(&ctx, localization.E1002, nil))
+		return errors.New(localization.GetTranslation(&ctx, localization.E1002, nil, ""))
 	}
 	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
 		err := mgm.Coll(model).UpdateWithCtx(sc, model)

@@ -49,3 +49,24 @@ other = "You have exceeded your quotas: {{.Quota}}"
 [E1012]
 description = "Feature not supported"
 other = "These features are not supported: {{.Feature}}"
+
+[Modifier_groups_ids_rules_validation]
+description = "Feature not supported"
+other = "These features are not supported: {{.Feature}}"
+
+[Item_name_is_unique_rules_validation]
+description = "Feature not supported"
+other = "Item_name_is_unique_rules_validation"
+
+[Account_Email_is_unique_rules_validation]
+description = "Email is Unique"
+other = "Email is Exists"
+
+[Timeformat]
+description = "time format rule validation"
+other = "time format is not valid"
+
+[Invalid_mongo_ids_validation_rule]
+description = "Invalid mongo ids validation rule"
+other = "invalid id it should be objectId"
+

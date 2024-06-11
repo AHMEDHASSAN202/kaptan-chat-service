@@ -41,17 +41,15 @@ func (a *CuisineHandler) Create(c echo.Context) error {
 		ctx = context.Background()
 	}
 
-	var input []cuisine.CreateCuisineDto
+	var input cuisine.CreateCuisineDto
 	err := c.Bind(&input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-	for _, itemDoc := range input {
-		validationErr := itemDoc.Validate(c, a.validator)
-		if validationErr.IsError {
-			a.logger.Error(validationErr)
-			return validators.ErrorStatusUnprocessableEntity(c, validationErr)
-		}
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
 	errResp := a.cuisineUsecase.Create(&ctx, &input)
@@ -112,7 +110,7 @@ func (a *CuisineHandler) List(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{"data": cuisines, "meta": paginationMeta})
+	return validators.SuccessResponse(c, map[string]interface{}{"docs": cuisines, "meta": paginationMeta})
 }
 
 func (a *CuisineHandler) Find(c echo.Context) error {

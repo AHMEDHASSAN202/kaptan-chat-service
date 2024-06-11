@@ -83,11 +83,11 @@ func (a *ModifierGroupHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	// validationErr := input.Validate(c, a.validator)
-	// if validationErr.IsError {
-	// 	a.logger.Error(validationErr)
-	// 	return validators.ErrorStatusUnprocessableEntity(c, validationErr)
-	// }
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
 
 	errResp := a.modifierGroupUsecase.Update(ctx, input)
 	if errResp.IsError {
@@ -129,12 +129,13 @@ func (a *ModifierGroupHandler) List(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	modifierGroups, errResp := a.modifierGroupUsecase.List(ctx, &input)
+	modiferGroupsWithPagination, errResp := a.modifierGroupUsecase.List(ctx, &input)
 	if errResp.IsError {
+		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, modifierGroups)
+	return validators.SuccessResponse(c, map[string]interface{}{"modifier_groups": modiferGroupsWithPagination})
 }
 
 func (a *ModifierGroupHandler) ChangeStatus(c echo.Context) error {

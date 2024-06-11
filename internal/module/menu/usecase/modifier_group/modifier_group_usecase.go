@@ -5,6 +5,7 @@ import (
 	builder "samm/internal/module/menu/builder/modifier_group"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/modifier_group"
+	"samm/internal/module/menu/responses"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	utilsDto "samm/pkg/utils/dto"
@@ -67,12 +68,14 @@ func (oRec *ModifierGroupUseCase) GetById(ctx context.Context, id string) (domai
 	return modifierGroups[0], validators.ErrorResponse{}
 }
 
-func (oRec *ModifierGroupUseCase) List(ctx context.Context, dto *modifier_group.ListModifierGroupsDto) ([]domain.ModifierGroup, validators.ErrorResponse) {
-	modifierGroups, err := oRec.repo.List(ctx, dto)
+func (oRec *ModifierGroupUseCase) List(ctx context.Context, dto *modifier_group.ListModifierGroupsDto) (interface{}, validators.ErrorResponse) {
+	modifierGroups, paginationResult, err := oRec.repo.List(ctx, dto)
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
-	return modifierGroups, validators.ErrorResponse{}
+
+	listResponse := responses.SetListResponse(modifierGroups, paginationResult)
+	return listResponse, validators.ErrorResponse{}
 }
 
 func (oRec *ModifierGroupUseCase) ChangeStatus(ctx context.Context, id string, dto *modifier_group.ChangeModifierGroupStatusDto) validators.ErrorResponse {

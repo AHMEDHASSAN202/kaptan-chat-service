@@ -1,6 +1,7 @@
 package menu
 
 import (
+	"samm/internal/module/menu/custom_validators"
 	"samm/internal/module/menu/delivery"
 	"samm/internal/module/menu/repository/mongodb/item"
 	menu_group2 "samm/internal/module/menu/repository/mongodb/menu_group"
@@ -27,6 +28,7 @@ var Module = fx.Options(
 		menu_group_item.NewMenuGroupItemRepository,
 		menu_group2.NewMenuGroupRepository,
 		menu_group.NewMenuGroupUseCase,
+		custom_validators.InitNewCustomValidatorsItem,
 	),
 	fx.Invoke(
 		delivery.InitMenuGroupController,

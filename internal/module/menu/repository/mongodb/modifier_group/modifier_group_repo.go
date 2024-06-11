@@ -9,11 +9,12 @@ import (
 	"samm/pkg/utils/dto"
 	"time"
 
+	. "github.com/gobeam/mongo-go-pagination"
+
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type modifierGroupRepo struct {
@@ -54,23 +55,35 @@ func (i *modifierGroupRepo) GetByIds(ctx context.Context, ids []primitive.Object
 	return modifierGroups, err
 }
 
-func (i *modifierGroupRepo) List(ctx context.Context, query *modifier_group.ListModifierGroupsDto) ([]domain.ModifierGroup, error) {
-	options := options.Find()
-	filter := bson.M{"deleted_at": nil}
-	offset := (query.Page - 1) * query.Limit
-	options.SetLimit(query.Limit)
-	options.SetSkip(offset)
-	if query.Query != "" {
-		filter = bson.M{
-			"$or": []bson.M{
-				{"name.ar": bson.M{"$regex": query.Query, "$options": "i"}},
-				{"name.en": bson.M{"$regex": query.Query, "$options": "i"}},
-			},
-		}
+func (i *modifierGroupRepo) List(ctx context.Context, dto *modifier_group.ListModifierGroupsDto) ([]domain.ModifierGroup, *PaginationData, error) {
+
+	models := make([]domain.ModifierGroup, 0)
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.D{{"deleted_at", nil}},
+	}}}
+
+	if dto.Query != "" {
+		pattern := ".*" + dto.Query + ".*"
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name.ar": bson.M{"$regex": pattern, "$options": "i"}}, {"name.en": bson.M{"$regex": pattern, "$options": "i"}}}})
 	}
-	modifierGroups := []domain.ModifierGroup{}
-	err := i.modifierGroupCollection.SimpleFind(&modifierGroups, filter, options)
-	return modifierGroups, err
+
+	data, err := New(i.modifierGroupCollection.Collection).Context(ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
+
+	if data == nil || data.Data == nil {
+		return models, nil, err
+	}
+
+	for _, raw := range data.Data {
+		model := domain.ModifierGroup{}
+		errUnmarshal := bson.Unmarshal(raw, &model)
+		if errUnmarshal != nil {
+			break
+		}
+		models = append(models, model)
+	}
+
+	return models, &data.Pagination, err
+
 }
 
 func (i *modifierGroupRepo) ChangeStatus(ctx context.Context, id *primitive.ObjectID, dto *modifier_group.ChangeModifierGroupStatusDto, adminDetails dto.AdminDetails) error {

@@ -31,7 +31,6 @@ func InitBrandController(e *echo.Echo, brandUsecase domain.BrandUseCase, validat
 		portal.GET("", handler.List)
 		portal.GET("/:id", handler.Find)
 		portal.PUT("/:id/status", handler.ChangeStatus)
-		portal.PUT("/:id/toggle-snooze", handler.ToggleSnooze)
 		portal.DELETE("/:id", handler.Delete)
 	}
 }
@@ -111,7 +110,7 @@ func (a *BrandHandler) List(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{"data": brands, "meta": paginationMeta})
+	return validators.SuccessResponse(c, map[string]interface{}{"docs": brands, "meta": paginationMeta})
 }
 
 func (a *BrandHandler) Find(c echo.Context) error {
@@ -159,39 +158,6 @@ func (a *BrandHandler) ChangeStatus(c echo.Context) error {
 	}
 
 	errResp := a.brandUsecase.ChangeStatus(&ctx, &input)
-	if errResp.IsError {
-		return validators.ErrorStatusBadRequest(c, errResp)
-	}
-
-	return validators.SuccessResponse(c, map[string]interface{}{})
-}
-
-func (a *BrandHandler) ToggleSnooze(c echo.Context) error {
-	ctx := c.Request().Context()
-	if ctx == nil {
-		ctx = context.Background()
-	}
-
-	id := c.Param("id")
-	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
-	}
-
-	var input brand.BrandToggleSnoozeDto
-	input.Id = utils.ConvertStringIdToObjectId(id)
-
-	err := c.Bind(&input)
-	if err != nil {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
-	}
-
-	validationErr := input.Validate(c, a.validator)
-	if validationErr.IsError {
-		a.logger.Error(validationErr)
-		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
-	}
-
-	errResp := a.brandUsecase.ToggleSnooze(&ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
