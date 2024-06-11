@@ -2,9 +2,11 @@ package item
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
+	"samm/internal/module/menu/responses"
+	responseItem "samm/internal/module/menu/responses/item"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -44,6 +46,9 @@ func (oRec *ItemUseCase) SoftDelete(ctx context.Context, id string) validators.E
 	idDoc := utils.ConvertStringIdToObjectId(id)
 	err := oRec.repo.SoftDelete(ctx, &idDoc)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return validators.GetErrorResponse(&ctx, localization.E1002, nil)
+		}
 		return validators.GetErrorResponseFromErr(err)
 	}
 	return validators.ErrorResponse{}
@@ -53,32 +58,37 @@ func (oRec *ItemUseCase) ChangeStatus(ctx context.Context, id string, dto *item.
 	idDoc := utils.ConvertStringIdToObjectId(id)
 	err := oRec.repo.ChangeStatus(ctx, &idDoc, dto)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return validators.GetErrorResponse(&ctx, localization.E1002, nil)
+		}
 		return validators.GetErrorResponseFromErr(err)
 	}
 	return validators.ErrorResponse{}
 }
 
-func (oRec *ItemUseCase) List(ctx context.Context, dto *item.ListItemsDto) ([]domain.Item, validators.ErrorResponse) {
-	items, err := oRec.repo.List(ctx, dto)
+func (oRec *ItemUseCase) List(ctx context.Context, dto *item.ListItemsDto) (*responses.ListResponse, validators.ErrorResponse) {
+	items, pgination, err := oRec.repo.List(ctx, dto)
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
+
+	return responses.SetListResponse(items, pgination), validators.ErrorResponse{}
+}
+
+func (oRec *ItemUseCase) GetById(ctx context.Context, id string) (responseItem.ItemResponse, validators.ErrorResponse) {
+	items, err := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(id))
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return responseItem.ItemResponse{}, validators.GetErrorResponse(&ctx, localization.E1002, nil)
+		}
+		return responseItem.ItemResponse{}, validators.GetErrorResponseFromErr(err)
+	}
+
 	return items, validators.ErrorResponse{}
 }
 
-func (oRec *ItemUseCase) GetById(ctx context.Context, id string) (domain.Item, validators.ErrorResponse) {
-	items, err := oRec.repo.GetByIds(ctx, []primitive.ObjectID{utils.ConvertStringIdToObjectId(id)})
-	if err != nil {
-		return domain.Item{}, validators.GetErrorResponseFromErr(err)
-	}
-	if len(items) <= 0 {
-		return domain.Item{}, validators.GetErrorResponse(&ctx, localization.E1002, nil)
-	}
-	return items[0], validators.ErrorResponse{}
-}
-
-func (oRec *ItemUseCase) CheckExists(ctx context.Context, accountId, name string) (bool, validators.ErrorResponse) {
-	isExists, err := oRec.repo.CheckExists(ctx, accountId, name)
+func (oRec *ItemUseCase) CheckExists(ctx context.Context, accountId, name string, exceptProductIds ...string) (bool, validators.ErrorResponse) {
+	isExists, err := oRec.repo.CheckExists(ctx, accountId, name, exceptProductIds...)
 	if err != nil {
 		return isExists, validators.GetErrorResponseFromErr(err)
 	}

@@ -103,16 +103,14 @@ func (a *ItemHandler) List(c echo.Context) error {
 		ctx = context.Background()
 	}
 
-	id := c.Param("id")
-	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
-	}
-
 	var input item.ListItemsDto
 	binder := &echo.DefaultBinder{}
 	//bind header and query params
-	binder.BindHeaders(c, input)
-	err := c.Bind(&input)
+	err := binder.BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	err = binder.BindQueryParams(c, &input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
