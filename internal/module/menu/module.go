@@ -1,6 +1,7 @@
 package menu
 
 import (
+	"go.uber.org/fx"
 	"samm/internal/module/menu/custom_validators"
 	"samm/internal/module/menu/delivery"
 	"samm/internal/module/menu/repository/mongodb/item"
@@ -12,8 +13,6 @@ import (
 	"samm/internal/module/menu/usecase/menu_group"
 	useCaseModifierGroup "samm/internal/module/menu/usecase/modifier_group"
 	useCaseSku "samm/internal/module/menu/usecase/sku"
-
-	"go.uber.org/fx"
 )
 
 // Module for controller database repository

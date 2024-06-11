@@ -56,7 +56,7 @@ func (l cuisineRepo) Find(ctx *context.Context, Id primitive.ObjectID) (*domain.
 
 func (i *cuisineRepo) GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) (*[]domain.Cuisine, error) {
 	var cuisines []domain.Cuisine
-	err := i.cuisineCollection.SimpleFind(&cuisines, bson.M{"_id": bson.M{"$in": *ids}})
+	err := i.cuisineCollection.SimpleFind(&cuisines, bson.M{"_id": bson.M{"$in": *ids}, "deleted_at": nil})
 	return &cuisines, err
 }
 

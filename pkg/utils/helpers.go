@@ -263,3 +263,18 @@ func RemoveItemByValue[T comparable](slice []T, value T) []T {
 func RemoveItemByIndex[T any](slice []T, index int) []T {
 	return append(slice[:index], slice[index+1:]...)
 }
+
+func ElementsDiff(src []string, des []string) []string {
+	desSet := make(map[string]struct{})
+	for _, elem := range des {
+		desSet[elem] = struct{}{}
+	}
+
+	var result []string
+	for _, elem := range src {
+		if _, found := desSet[elem]; !found {
+			result = append(result, elem)
+		}
+	}
+	return result
+}

@@ -1,10 +1,10 @@
 package brand
 
 import (
+	"context"
 	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
-	"samm/pkg/utils"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 )
 
 type Name struct {
@@ -17,20 +17,14 @@ type CreateBrandDto struct {
 	Logo        string   `json:"logo"`
 	IsActive    bool     `json:"is_active"`
 	SnoozedTill string   `json:"snoozed_till"`
-	CuisineIds  []string `json:"cuisine_ids" validate:"cuisine_ids_rule,dive"`
+	CuisineIds  []string `json:"cuisine_ids" validate:"Invalid_mongo_ids_validation_rule,Cuisine_id_is_exists_rules_validation"`
 }
 
-func (input *CreateBrandDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
-	validateModifierGroupsExistsInDB := func(fl validator.FieldLevel) bool {
-		value := fl.Field().Interface().([]string)
-		isValidObjectIds := utils.ValidateIDsIsMongoObjectIds(fl)
-		if !isValidObjectIds {
-			return false
-		}
-		return existsIModifierGroup("db", value)
-	}
-	validate.RegisterValidation("cuisine_ids_rule", validateModifierGroupsExistsInDB)
-	return validators.ValidateStruct(c.Request().Context(), validate, input)
+func (input *CreateBrandDto) Validate(ctx context.Context, validate *validator.Validate, validateCuisineExists func(fl validator.FieldLevel) bool) validators.ErrorResponse {
+	return validators.ValidateStruct(ctx, validate, input, validators.CustomErrorTags{
+		ValidationTag:          localization.Cuisine_id_is_exists_rules_validation,
+		RegisterValidationFunc: validateCuisineExists,
+	})
 }
 
 func existsIModifierGroup(db interface{}, value []string) bool {
