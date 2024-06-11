@@ -13,7 +13,6 @@ import (
 	"samm/pkg/database/mongodb"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
-	"time"
 )
 
 type itemRepo struct {
@@ -37,9 +36,12 @@ func NewItemRepository(dbs *mongo.Database, logger logger.ILogger) domain.ItemRe
 func (i *itemRepo) GetByIds(ctx context.Context, ids []primitive.ObjectID) ([]domain.Item, error) {
 	items := []domain.Item{}
 	filter := bson.M{"_id": bson.M{"$in": ids}, "deleted_at": nil}
-	err := i.itemCollection.SimpleFind(items, filter)
+	err := i.itemCollection.SimpleFind(&items, filter)
 	if err != nil {
 		return items, err
+	}
+	if len(items) <= 0 {
+		return items, mongo.ErrNoDocuments
 	}
 	return items, nil
 }
@@ -65,29 +67,25 @@ func (i *itemRepo) Create(ctx context.Context, doc []domain.Item) error {
 }
 
 func (i *itemRepo) Update(ctx context.Context, id *primitive.ObjectID, doc *domain.Item) error {
-	update := bson.M{"$set": doc}
-	_, err := i.itemCollection.UpdateByID(ctx, &id, update)
+	doc.ID = *id
+	err := i.itemCollection.UpdateWithCtx(ctx, doc)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (i *itemRepo) SoftDelete(ctx context.Context, id *primitive.ObjectID) error {
-	update := bson.M{"$set": bson.M{"deleted_at": time.Now()}}
-	filter := bson.M{"_id": bson.M{"_id": id, "deleted_at": nil}}
-	andUpdate := i.itemCollection.FindOneAndUpdate(ctx, filter, update)
-	if andUpdate.Err() != nil {
-		return andUpdate.Err()
+func (i *itemRepo) SoftDelete(ctx context.Context, doc *domain.Item) error {
+	err := i.itemCollection.UpdateWithCtx(ctx, doc)
+	if err != nil {
+		return err
 	}
 	return nil
 }
-func (i *itemRepo) ChangeStatus(ctx context.Context, id *primitive.ObjectID, dto *item.ChangeItemStatusDto) error {
-	update := bson.M{"$set": bson.M{"status": dto.Status, "admin_details": dto.AdminDetails}}
-	filter := bson.M{"_id": bson.M{"_id": id, "deleted_at": nil}}
-	andUpdate := i.itemCollection.FindOneAndUpdate(ctx, filter, update)
-	if andUpdate.Err() != nil {
-		return andUpdate.Err()
+func (i *itemRepo) ChangeStatus(ctx context.Context, doc *domain.Item) error {
+	err := i.itemCollection.UpdateWithCtx(ctx, doc)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -98,7 +96,6 @@ func (i *itemRepo) List(ctx context.Context, query *item.ListItemsDto) (items []
 		filter["$text"] = bson.M{
 			"$search": query.Query}
 	}
-	//err := i.itemCollection.SimpleFindWithCtx(ctx, &items, filter)
 	data, err := New(i.itemCollection.Collection).Context(ctx).Limit(query.Limit).Page(query.Page).Sort("_id", -1).Aggregate(bson.M{"$match": filter})
 
 	items = make([]domain.Item, 0)

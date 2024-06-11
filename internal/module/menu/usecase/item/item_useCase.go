@@ -2,6 +2,8 @@ package item
 
 import (
 	"context"
+	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
@@ -11,6 +13,7 @@ import (
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+	"time"
 )
 
 type ItemUseCase struct {
@@ -35,8 +38,17 @@ func (oRec *ItemUseCase) Create(ctx context.Context, dto []item.CreateItemDto) v
 
 func (oRec *ItemUseCase) Update(ctx context.Context, dto item.UpdateItemDto) validators.ErrorResponse {
 	id := utils.ConvertStringIdToObjectId(dto.Id)
-	doc := convertDtoToCorrespondingDomain(dto)
-	err := oRec.repo.Update(ctx, &id, &doc)
+	item, err := oRec.repo.GetByIds(ctx, []primitive.ObjectID{id})
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return validators.GetErrorResponse(&ctx, localization.E1002, nil)
+		}
+		return validators.GetErrorResponseFromErr(err)
+	}
+
+	convertDtoToCorrespondingDomain(dto, &item[0])
+	doc := &item[0]
+	err = oRec.repo.Update(ctx, &id, doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
@@ -44,11 +56,17 @@ func (oRec *ItemUseCase) Update(ctx context.Context, dto item.UpdateItemDto) val
 }
 func (oRec *ItemUseCase) SoftDelete(ctx context.Context, id string) validators.ErrorResponse {
 	idDoc := utils.ConvertStringIdToObjectId(id)
-	err := oRec.repo.SoftDelete(ctx, &idDoc)
-	if err != nil {
+	item, err := oRec.repo.GetByIds(ctx, []primitive.ObjectID{idDoc})
+	if err != nil || len(item) <= 0 {
 		if err == mongo.ErrNoDocuments {
 			return validators.GetErrorResponse(&ctx, localization.E1002, nil)
 		}
+		return validators.GetErrorResponseFromErr(err)
+	}
+	t := time.Now()
+	item[0].DeletedAt = &t
+	err = oRec.repo.SoftDelete(ctx, &item[0])
+	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
 	return validators.ErrorResponse{}
@@ -56,11 +74,18 @@ func (oRec *ItemUseCase) SoftDelete(ctx context.Context, id string) validators.E
 
 func (oRec *ItemUseCase) ChangeStatus(ctx context.Context, id string, dto *item.ChangeItemStatusDto) validators.ErrorResponse {
 	idDoc := utils.ConvertStringIdToObjectId(id)
-	err := oRec.repo.ChangeStatus(ctx, &idDoc, dto)
-	if err != nil {
+	item, err := oRec.repo.GetByIds(ctx, []primitive.ObjectID{idDoc})
+	fmt.Println(item, err)
+	if err != nil || len(item) <= 0 {
 		if err == mongo.ErrNoDocuments {
 			return validators.GetErrorResponse(&ctx, localization.E1002, nil)
 		}
+		return validators.GetErrorResponseFromErr(err)
+	}
+	item[0].Status = dto.Status
+	item[0].AdminDetails = append(item[0].AdminDetails, utils.StructSliceToMapSlice(dto.AdminDetails)...)
+	err = oRec.repo.ChangeStatus(ctx, &item[0])
+	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
 	return validators.ErrorResponse{}

@@ -53,8 +53,8 @@ type ItemRepository interface {
 	Find(ctx context.Context, id primitive.ObjectID) (responseItem.ItemResponse, error)
 	List(ctx context.Context, query *item.ListItemsDto) ([]Item, *mongopagination.PaginationData, error)
 	Update(ctx context.Context, id *primitive.ObjectID, doc *Item) error
-	SoftDelete(ctx context.Context, id *primitive.ObjectID) error
-	ChangeStatus(ctx context.Context, id *primitive.ObjectID, status *item.ChangeItemStatusDto) error
+	SoftDelete(ctx context.Context, doc *Item) error
+	ChangeStatus(ctx context.Context, doc *Item) error
 	Create(ctx context.Context, doc []Item) error
 	CheckExists(ctx context.Context, accountId, name string, exceptProductIds ...string) (bool, error)
 }

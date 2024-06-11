@@ -16,17 +16,16 @@ func convertDtoArrToCorrespondingDomain(dto []item.CreateItemDto) []domain.Item 
 		itemDocs[i].DeletedAt = nil
 		itemDocs[i].UpdatedAt = time.Now()
 		itemDocs[i].CreatedAt = time.Now()
+		itemDocs[i].AdminDetails = append(itemDocs[i].AdminDetails, utils.StructSliceToMapSlice(dto[i].AdminDetails)...)
 		itemDocs[i].ModifierGroupIds = utils.ConvertStringIdsToObjectIds(dto[i].ModifierGroupsIds)
-
 	}
 	return itemDocs
 }
-func convertDtoToCorrespondingDomain(dto item.UpdateItemDto) domain.Item {
-	itemDoc := domain.Item{}
+func convertDtoToCorrespondingDomain(dto item.UpdateItemDto, itemDoc *domain.Item) {
 	copier.Copy(&itemDoc, &dto)
 	itemDoc.DeletedAt = nil
 	itemDoc.UpdatedAt = time.Now()
 	itemDoc.AccountId = utils.ConvertStringIdToObjectId(dto.AccountId)
+	itemDoc.AdminDetails = append(itemDoc.AdminDetails, utils.StructSliceToMapSlice(dto.AdminDetails)...)
 	itemDoc.ModifierGroupIds = utils.ConvertStringIdsToObjectIds(dto.ModifierGroupsIds)
-	return itemDoc
 }
