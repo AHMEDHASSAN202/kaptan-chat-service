@@ -2,7 +2,6 @@ package custom_validators
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-playground/validator/v10"
 	"samm/internal/module/retails/domain"
 )
@@ -20,7 +19,6 @@ func InitNewCustomValidators(accountUseCase domain.AccountUseCase) RetailCustomV
 func (i *RetailCustomValidator) ValidateAccountEmailIsUnique(accountId string) func(fl validator.FieldLevel) bool {
 	return func(fl validator.FieldLevel) bool {
 		email := fl.Field().Interface().(string)
-		fmt.Println("Account Id => ", accountId)
 		isExists := i.accountUseCase.CheckAccountEmail(context.Background(), email, accountId)
 		return !isExists
 	}
