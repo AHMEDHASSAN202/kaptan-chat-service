@@ -23,6 +23,19 @@ func (l LocationUseCase) StoreLocation(ctx context.Context, payload *location.St
 	}
 	return
 }
+func (l LocationUseCase) BulkStoreLocation(ctx context.Context, payload []location.StoreLocationDto) (err validators.ErrorResponse) {
+
+	data := make([]domain.Location, 0)
+	for _, itemDoc := range payload {
+		data = append(data, *LocationBuilder(&itemDoc))
+	}
+
+	errRe := l.repo.BulkStoreLocation(ctx, data)
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+	return
+}
 
 func (l LocationUseCase) UpdateLocation(ctx context.Context, id string, payload *location.StoreLocationDto) (err validators.ErrorResponse) {
 	domainLocation, errRe := l.repo.FindLocation(ctx, utils.ConvertStringIdToObjectId(id))

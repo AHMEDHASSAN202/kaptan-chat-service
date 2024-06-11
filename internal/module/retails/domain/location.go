@@ -84,6 +84,7 @@ type Location struct {
 
 type LocationUseCase interface {
 	StoreLocation(ctx context.Context, payload *location.StoreLocationDto) (err validators.ErrorResponse)
+	BulkStoreLocation(ctx context.Context, payload []location.StoreLocationDto) (err validators.ErrorResponse)
 	UpdateLocation(ctx context.Context, id string, payload *location.StoreLocationDto) (err validators.ErrorResponse)
 	ToggleLocationStatus(ctx context.Context, id string) (err validators.ErrorResponse)
 	FindLocation(ctx context.Context, Id string) (location Location, err validators.ErrorResponse)
@@ -96,6 +97,7 @@ type LocationUseCase interface {
 
 type LocationRepository interface {
 	StoreLocation(ctx context.Context, location *Location) (err error)
+	BulkStoreLocation(ctx context.Context, data []Location) (err error)
 	UpdateLocation(ctx context.Context, location *Location) (err error)
 	FindLocation(ctx context.Context, Id primitive.ObjectID) (location *Location, err error)
 	DeleteLocation(ctx context.Context, Id primitive.ObjectID) (err error)

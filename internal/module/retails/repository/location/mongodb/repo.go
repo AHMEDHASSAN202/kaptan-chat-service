@@ -36,6 +36,14 @@ func (l locationRepository) StoreLocation(ctx context.Context, location *domain.
 	return nil
 
 }
+func (l locationRepository) BulkStoreLocation(ctx context.Context, data []domain.Location) (err error) {
+	_, err = mgm.Coll(&domain.Location{}).InsertMany(ctx, utils.ConvertArrStructToInterfaceArr(data))
+	if err != nil {
+		return err
+	}
+	return nil
+
+}
 
 func (l locationRepository) UpdateLocation(ctx context.Context, location *domain.Location) (err error) {
 	update := bson.M{"$set": location}
