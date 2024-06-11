@@ -7,7 +7,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/menu/domain"
+	"samm/internal/module/menu/dto/menu_group"
 	"samm/pkg/utils"
+	"samm/pkg/utils/dto"
 )
 
 type menuGroupItemRepo struct {
@@ -38,6 +40,49 @@ func (i *menuGroupItemRepo) CreateUpdateBulk(ctx context.Context, models *[]doma
 
 func (i *menuGroupItemRepo) DeleteBulkByGroupMenuId(ctx context.Context, groupMenuId primitive.ObjectID, exceptionIds []primitive.ObjectID) error {
 	_, err := i.menuGroupItemCollection.DeleteMany(ctx, bson.M{"menu_group._id": groupMenuId, "_id": bson.M{"$nin": utils.If(exceptionIds != nil, exceptionIds, make([]primitive.ObjectID, 0)).([]primitive.ObjectID)}})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *menuGroupItemRepo) ChangeMenuStatus(ctx context.Context, id primitive.ObjectID, dto *menu_group.ChangeMenuGroupStatusDto, adminDetails dto.AdminDetails) error {
+	update := bson.M{"$set": bson.M{"menu_group.status": dto.Status}, "$push": bson.M{"admin_details": adminDetails}}
+	_, err := i.menuGroupItemCollection.UpdateMany(ctx, bson.M{"menu_group._id": id}, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *menuGroupItemRepo) ChangeCategoryStatus(ctx context.Context, id primitive.ObjectID, dto *menu_group.ChangeMenuGroupStatusDto, adminDetails dto.AdminDetails) error {
+	update := bson.M{"$set": bson.M{"category.status": dto.Status}, "$push": bson.M{"admin_details": adminDetails}}
+	_, err := i.menuGroupItemCollection.UpdateMany(ctx, bson.M{"menu_group._id": id, "category._id": utils.ConvertStringIdToObjectId(dto.Id)}, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *menuGroupItemRepo) ChangeItemStatus(ctx context.Context, id primitive.ObjectID, dto *menu_group.ChangeMenuGroupStatusDto, adminDetails dto.AdminDetails) error {
+	update := bson.M{"$set": bson.M{"status": dto.Status}, "$push": bson.M{"admin_details": adminDetails}}
+	_, err := i.menuGroupItemCollection.UpdateOne(ctx, bson.M{"menu_group._id": id, "_id": utils.ConvertStringIdToObjectId(dto.Id)}, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *menuGroupItemRepo) DeleteByCategory(ctx context.Context, dto *menu_group.DeleteEntityFromMenuGroupDto) error {
+	_, err := i.menuGroupItemCollection.DeleteMany(ctx, bson.M{"menu_group._id": utils.ConvertStringIdToObjectId(dto.Id), "category._id": utils.ConvertStringIdToObjectId(dto.EntityId)})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *menuGroupItemRepo) Delete(ctx context.Context, dto *menu_group.DeleteEntityFromMenuGroupDto) error {
+	_, err := i.menuGroupItemCollection.DeleteOne(ctx, bson.M{"menu_group._id": utils.ConvertStringIdToObjectId(dto.Id), "_id": utils.ConvertStringIdToObjectId(dto.EntityId)})
 	if err != nil {
 		return err
 	}

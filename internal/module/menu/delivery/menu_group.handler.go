@@ -4,11 +4,13 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/internal/module/menu/consts"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/menu_group"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 )
 
 type MenuGroupHandler struct {
@@ -26,14 +28,17 @@ func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator
 	}
 	portal := e.Group("api/v1/portal/menu-group")
 	{
-		portal.GET("", handler.ListPortal)
+		portal.GET("", handler.List)
+		portal.GET("/:id", handler.Find)
 		portal.POST("", handler.Create)
 		portal.PUT("/:id", handler.Update)
 		portal.DELETE("/:id", handler.Delete)
+		portal.PUT("/:id/change-status", handler.ChangeStatus)
+		portal.DELETE("/:id/:entity/:entity_id", handler.DeleteEntity)
 	}
 }
 
-func (a *MenuGroupHandler) ListPortal(c echo.Context) error {
+func (a *MenuGroupHandler) List(c echo.Context) error {
 	ctx := c.Request().Context()
 	if ctx == nil {
 		ctx = context.Background()
@@ -51,12 +56,31 @@ func (a *MenuGroupHandler) ListPortal(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	data, errResp := a.menuGroupUsecase.ListPortal(ctx, input)
+	data, errResp := a.menuGroupUsecase.List(ctx, input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
 	return validators.Success(c, map[string]interface{}{"menu_groups": data})
+}
+
+func (a *MenuGroupHandler) Find(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
+	}
+
+	data, errResp := a.menuGroupUsecase.Find(ctx, utils.ConvertStringIdToObjectId(id))
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"menu_group": data})
 }
 
 func (a *MenuGroupHandler) Create(c echo.Context) error {
@@ -93,7 +117,7 @@ func (a *MenuGroupHandler) Update(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
 	}
 
 	var input menu_group.CreateMenuGroupDTO
@@ -126,10 +150,72 @@ func (a *MenuGroupHandler) Delete(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
 	}
 
 	errResp := a.menuGroupUsecase.Delete(ctx, utils.ConvertStringIdToObjectId(id))
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+
+func (a *MenuGroupHandler) ChangeStatus(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
+	}
+
+	var input menu_group.ChangeMenuGroupStatusDto
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if input.Id == "" {
+		input.Id = id
+		input.Entity = consts.MENU_CHANGE_STATUS_ENTITY
+	}
+
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.menuGroupUsecase.ChangeStatus(ctx, utils.ConvertStringIdToObjectId(id), &input)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+
+func (a *MenuGroupHandler) DeleteEntity(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input menu_group.DeleteEntityFromMenuGroupDto
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.menuGroupUsecase.DeleteEntity(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
