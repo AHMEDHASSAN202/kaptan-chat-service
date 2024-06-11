@@ -49,7 +49,14 @@ func (l AccountRepository) FindAccount(ctx context.Context, Id primitive.ObjectI
 
 	return &domainData, err
 }
-
+func (l AccountRepository) CheckAccountEmail(ctx context.Context, email string, accountId string) bool {
+	filter := bson.M{"deleted_at": nil, "email": email}
+	if accountId != "" {
+		filter = bson.M{"deleted_at": nil, "email": email, "_id": bson.M{"$ne": utils.ConvertStringIdToObjectId(accountId)}}
+	}
+	count, _ := l.accountCollection.CountDocuments(ctx, filter)
+	return count > 0
+}
 func (l AccountRepository) DeleteAccount(ctx context.Context, Id primitive.ObjectID) (err error) {
 	accountData, err := l.FindAccount(ctx, Id)
 	if err != nil {
