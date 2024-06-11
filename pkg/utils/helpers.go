@@ -293,3 +293,18 @@ func StructSliceToMapSlice(data interface{}) []map[string]interface{} {
 
 	return result
 }
+
+func ElementsDiff(src []string, des []string) []string {
+	desSet := make(map[string]struct{})
+	for _, elem := range des {
+		desSet[elem] = struct{}{}
+	}
+
+	var result []string
+	for _, elem := range src {
+		if _, found := desSet[elem]; !found {
+			result = append(result, elem)
+		}
+	}
+	return result
+}

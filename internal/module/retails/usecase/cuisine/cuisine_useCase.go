@@ -11,6 +11,7 @@ import (
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+	"strings"
 )
 
 type CuisineUseCase struct {
@@ -94,4 +95,22 @@ func (oRec *CuisineUseCase) GetById(ctx *context.Context, id string) (*domain.Cu
 	}
 
 	return &cuisinesVal[0], validators.ErrorResponse{}
+}
+
+func (oRec *CuisineUseCase) CheckExists(ctx *context.Context, ids []string) validators.ErrorResponse {
+	objIds := utils.ConvertStringIdsToObjectIds(ids)
+	cuisines, err := oRec.repo.GetByIds(ctx, &objIds)
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	if len(*cuisines) == 0 {
+		return validators.GetErrorResponseFromErr(errors.New(localization.E1002))
+	}
+	cuisineIds := getCuisinesIds(cuisines)
+	diffIds := utils.ElementsDiff(ids, cuisineIds)
+	if diffIds != nil && len(diffIds) > 0 {
+		oRec.logger.Error(strings.Join(diffIds, ", ") + " cuisine not exist")
+		return validators.GetErrorResponseFromErr(errors.New(localization.E1002))
+	}
+	return validators.ErrorResponse{}
 }

@@ -62,6 +62,10 @@ other = "Item_name_is_unique_rules_validation"
 description = "Email is Unique"
 other = "Email is Exists"
 
+[Cuisine_id_is_exists_rules_validation]
+description = "Cuisine Id Not Exist"
+other = "Cuisine_id_is_exists_rules_validation"
+
 [Timeformat]
 description = "time format rule validation"
 other = "time format is not valid"
