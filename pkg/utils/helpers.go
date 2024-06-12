@@ -44,6 +44,14 @@ func ConvertStringIdsToObjectIds(ids []string) []primitive.ObjectID {
 	return _ids
 }
 
+func ConvertObjectIdsToStringIds(ids []primitive.ObjectID) []string {
+	var _ids []string
+	for _, id := range ids {
+		_ids = append(_ids, ConvertObjectIdToStringId(id))
+	}
+	return _ids
+}
+
 func ConvertStringIdToObjectId(id string) primitive.ObjectID {
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
