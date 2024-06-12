@@ -49,7 +49,7 @@ func (a *BrandHandler) Create(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-	validationErr := input.Validate(ctx, a.validator, a.customValidator.ValidateCuisineIdsExists())
+	validationErr := input.Validate(ctx, a.validator, a.customValidator.ValidateCuisineIdsExists(&ctx))
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -103,10 +103,17 @@ func (a *BrandHandler) List(c echo.Context) error {
 	}
 
 	var input brand.ListBrandDto
-	_ = c.Bind(&input)
-	//if err != nil {
-	//	return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
-	//}
+	binder := &echo.DefaultBinder{}
+	//bind header and query params
+	err := binder.BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	err = binder.BindQueryParams(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
 	input.Pagination.SetDefault()
 	brands, paginationMeta, errResp := a.brandUsecase.List(&ctx, &input)
 	if errResp.IsError {

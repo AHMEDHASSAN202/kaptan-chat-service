@@ -17,7 +17,7 @@ type CreateBrandDto struct {
 	Logo        string   `json:"logo"`
 	IsActive    bool     `json:"is_active"`
 	SnoozedTill string   `json:"snoozed_till"`
-	CuisineIds  []string `json:"cuisine_ids" validate:"Invalid_mongo_ids_validation_rule,Cuisine_id_is_exists_rules_validation"`
+	CuisineIds  []string `json:"cuisine_ids" validate:"required,Invalid_mongo_ids_validation_rule,Cuisine_id_is_exists_rules_validation"`
 }
 
 func (input *CreateBrandDto) Validate(ctx context.Context, validate *validator.Validate, validateCuisineExists func(fl validator.FieldLevel) bool) validators.ErrorResponse {

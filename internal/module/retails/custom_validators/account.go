@@ -30,7 +30,7 @@ func (i *RetailCustomValidator) ValidateAccountEmailIsUnique(accountId string) f
 	}
 }
 
-func (i *RetailCustomValidator) ValidateCuisineIdsExists() func(fl validator.FieldLevel) bool {
+func (i *RetailCustomValidator) ValidateCuisineIdsExists(ctx *context.Context) func(fl validator.FieldLevel) bool {
 	return func(fl validator.FieldLevel) bool {
 		//val := fl.Field().Interface().(string)
 		brandDto, ok := fl.Top().Interface().(*brand.CreateBrandDto)
@@ -38,8 +38,7 @@ func (i *RetailCustomValidator) ValidateCuisineIdsExists() func(fl validator.Fie
 			i.logger.Error("Unexpected type, expected *item.CreateBrandDto")
 			return false
 		}
-		ctx := context.Background()
-		err := i.cuisineUsecase.CheckExists(&ctx, brandDto.CuisineIds)
+		err := i.cuisineUsecase.CheckExists(ctx, brandDto.CuisineIds)
 		if err.IsError {
 			i.logger.Error(err.ErrorMessageObject)
 			return false
