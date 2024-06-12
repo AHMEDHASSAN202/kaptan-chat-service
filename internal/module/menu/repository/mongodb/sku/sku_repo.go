@@ -44,3 +44,9 @@ func (i *skuRepo) List(ctx context.Context, query *sku.ListSKUDto) ([]domain.SKU
 	err := i.skuCollection.SimpleFindWithCtx(ctx, &skus, filter)
 	return skus, err
 }
+
+func (i *skuRepo) CheckExists(ctx context.Context, name string) (bool, error) {
+	filter := bson.M{"name": name}
+	c, err := i.skuCollection.CountDocuments(ctx, filter)
+	return c > 0, err
+}

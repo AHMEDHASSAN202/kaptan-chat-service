@@ -42,3 +42,11 @@ func (oRec *SKUUseCase) List(ctx context.Context, dto *sku.ListSKUDto) ([]domain
 	}
 	return skus, validators.ErrorResponse{}
 }
+
+func (oRec *SKUUseCase) CheckExists(ctx context.Context, name string) (bool, validators.ErrorResponse) {
+	isExists, err := oRec.repo.CheckExists(ctx, name)
+	if err != nil {
+		return isExists, validators.GetErrorResponseFromErr(err)
+	}
+	return isExists, validators.ErrorResponse{}
+}

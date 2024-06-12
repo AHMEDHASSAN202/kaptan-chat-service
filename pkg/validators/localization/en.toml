@@ -58,6 +58,10 @@ other = "These features are not supported: {{.Feature}}"
 description = "Feature not supported"
 other = "Item_name_is_unique_rules_validation"
 
+[SKU_name_is_unique_rules_validation]
+description = "Feature not supported"
+other = "This name is already exists, SKU name must be unique."
+
 [Account_Email_is_unique_rules_validation]
 description = "Email is Unique"
 other = "Email is Exists"

@@ -58,6 +58,10 @@ other = "يجب ان يكون objectId"
 description = "Feature not supported"
 other = "Item_name_is_unique_rules_validation_ar"
 
+[SKU_name_is_unique_rules_validation]
+description = "Feature not supported"
+other = "هذا الاسم موجود بالفعل، ويجب أن يكون اسم SKU فريدًا."
+
 [Account_Email_is_unique_rules_validation]
 description = "Feature not supported"
 other = "البريد الالكتروني مستخدم من قبل"

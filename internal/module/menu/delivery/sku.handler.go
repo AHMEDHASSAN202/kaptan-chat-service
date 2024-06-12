@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"context"
+	"samm/internal/module/menu/custom_validators"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/sku"
 	"samm/pkg/logger"
@@ -12,17 +13,19 @@ import (
 )
 
 type SKUHandler struct {
-	skuUsecase domain.SKUUseCase
-	validator  *validator.Validate
-	logger     logger.ILogger
+	skuUsecase         domain.SKUUseCase
+	skuCustomValidator custom_validators.SKUCustomValidator
+	validator          *validator.Validate
+	logger             logger.ILogger
 }
 
 // InitSKUController will initialize the article's HTTP controller
-func InitSKUController(e *echo.Echo, skuUsecase domain.SKUUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitSKUController(e *echo.Echo, skuUsecase domain.SKUUseCase, skuCustomValidator custom_validators.SKUCustomValidator, validator *validator.Validate, logger logger.ILogger) {
 	handler := &SKUHandler{
-		skuUsecase: skuUsecase,
-		validator:  validator,
-		logger:     logger,
+		skuUsecase:         skuUsecase,
+		skuCustomValidator: skuCustomValidator,
+		validator:          validator,
+		logger:             logger,
 	}
 	portal := e.Group("api/v1/portal/sku")
 	{
@@ -41,6 +44,12 @@ func (a *SKUHandler) Create(c echo.Context) error {
 	err := c.Bind(&input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(ctx, a.validator, a.skuCustomValidator.ValidateSKUIsUnique())
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
 	errResp := a.skuUsecase.Create(ctx, input)
