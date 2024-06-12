@@ -55,12 +55,12 @@ func (a *BrandHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	_, errResp := a.brandUsecase.Create(ctx, &input)
+	brand, errResp := a.brandUsecase.Create(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{"id": brand.ID})
 }
 
 func (a *BrandHandler) Update(c echo.Context) error {

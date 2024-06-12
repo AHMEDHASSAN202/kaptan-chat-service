@@ -53,12 +53,13 @@ func (a *CuisineHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	errResp := a.cuisineUsecase.Create(&ctx, &input)
+	cuisine, errResp := a.cuisineUsecase.Create(&ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{"id": cuisine.ID})
+
 }
 
 func (a *CuisineHandler) Update(c echo.Context) error {

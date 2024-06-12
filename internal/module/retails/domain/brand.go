@@ -30,7 +30,7 @@ type BrandUseCase interface {
 }
 
 type BrandRepository interface {
-	Create(ctx context.Context, doc *Brand) (*Brand, error)
+	Create(doc *Brand) error
 	Update(doc *Brand) error
 	FindBrand(*context.Context, primitive.ObjectID) (*Brand, error)
 	GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) (*[]Brand, error)
