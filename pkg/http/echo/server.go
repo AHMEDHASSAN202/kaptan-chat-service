@@ -26,7 +26,7 @@ func RunServers(lc fx.Lifecycle, log logger.ILogger, e *echo.Echo, ctx context.C
 
 			e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 				AllowOrigins: []string{"*"},
-				AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodPost, http.MethodDelete},
+				AllowMethods: []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodOptions, http.MethodPost, http.MethodDelete},
 				AllowHeaders: []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept},
 			}))
 			e.GET("/", func(c echo.Context) error {
