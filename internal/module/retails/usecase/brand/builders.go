@@ -2,10 +2,10 @@ package brand
 
 import (
 	"github.com/jinzhu/copier"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/brand"
 	"samm/pkg/utils"
-	"time"
 )
 
 var LocationBrandAtt = []string{"name.ar", "name.en", "logo", "is_active"}
@@ -13,9 +13,8 @@ var LocationBrandAtt = []string{"name.ar", "name.en", "logo", "is_active"}
 func domainBuilderAtCreate(dto *brand.CreateBrandDto) *domain.Brand {
 	brandDoc := domain.Brand{}
 	copier.Copy(&brandDoc, dto)
+	brandDoc.ID = primitive.NewObjectID()
 	brandDoc.CuisineIds = utils.ConvertStringIdsToObjectIds(dto.CuisineIds)
-	brandDoc.CreatedAt = time.Now().UTC()
-	brandDoc.UpdatedAt = time.Now().UTC()
 	return &brandDoc
 }
 

@@ -29,12 +29,12 @@ func NewBrandRepository(dbs *mongo.Database, locationRepo domain.LocationReposit
 	}
 }
 
-func (i *brandRepo) Create(ctx context.Context, doc *domain.Brand) (*domain.Brand, error) {
-	result, err := mgm.Coll(doc).InsertOne(ctx, doc)
+func (i *brandRepo) Create(doc *domain.Brand) (err error) {
+	err = mgm.Coll(doc).Create(doc)
 	if err != nil {
-		return nil, err
+		return
 	}
-	return i.FindBrand(&ctx, result.InsertedID.(primitive.ObjectID))
+	return
 }
 
 func (i *brandRepo) Update(doc *domain.Brand) error {

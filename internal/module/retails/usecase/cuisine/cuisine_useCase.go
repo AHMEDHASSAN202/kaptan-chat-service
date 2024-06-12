@@ -26,12 +26,13 @@ func NewCuisineUseCase(repo domain.CuisineRepository, logger logger.ILogger) dom
 	}
 }
 
-func (oRec *CuisineUseCase) Create(ctx *context.Context, dto *cuisine.CreateCuisineDto) validators.ErrorResponse {
-	err := oRec.repo.Create(convertDtoArrToCorrespondingDomain(dto))
+func (oRec *CuisineUseCase) Create(ctx *context.Context, dto *cuisine.CreateCuisineDto) (*domain.Cuisine, validators.ErrorResponse) {
+	doc := convertDtoArrToCorrespondingDomain(dto)
+	err := oRec.repo.Create(doc)
 	if err != nil {
-		return validators.GetErrorResponseFromErr(err)
+		return doc, validators.GetErrorResponseFromErr(err)
 	}
-	return validators.ErrorResponse{}
+	return doc, validators.ErrorResponse{}
 }
 
 func (oRec *CuisineUseCase) Update(ctx *context.Context, dto *cuisine.UpdateCuisineDto) validators.ErrorResponse {
