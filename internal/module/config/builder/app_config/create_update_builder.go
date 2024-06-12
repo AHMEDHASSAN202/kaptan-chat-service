@@ -1,4 +1,4 @@
-package builder
+package app_config
 
 import (
 	"samm/internal/module/config/domain"

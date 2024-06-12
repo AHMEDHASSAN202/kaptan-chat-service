@@ -10,11 +10,17 @@ import (
 )
 
 type CreateUpdateAppConfigDto struct {
-	Id           string             `json:"_"`
-	ForceUpdate  bool               `json:"force_update"`
-	Type         string             `json:"type" validate:"required,oneof=user merchant,App_type_is_unique_rules_validation"`
-	StartupImage string             `json:"stratup_image"`
-	AdminDetails []dto.AdminDetails `json:"-"`
+	Id                  string             `json:"_"`
+	Type                string             `json:"type" validate:"required,oneof=user merchant,App_type_is_unique_rules_validation"`
+	MinIOSVersion       int64              `json:"min_ios_version"`
+	AppStoreLink        string             `json:"app_store_link"`
+	MinAndroidVersion   int64              `json:"min_android_version"`
+	PlayStoreLink       string             `json:"play_store_link"`
+	MinHuaweiVersion    int64              `json:"min_huawei_version"`
+	AppGalleryLink      string             `json:"app_gallery_link"`
+	LocalizationVersion int64              `json:"localization_version"`
+	StartupImage        string             `json:"stratup_image"`
+	AdminDetails        []dto.AdminDetails `json:"-"`
 }
 
 func (input *CreateUpdateAppConfigDto) Validate(ctx context.Context, validate *validator.Validate, validateAppTypeUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {

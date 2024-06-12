@@ -2,9 +2,10 @@ package app_config
 
 import (
 	"context"
-	"samm/internal/module/config/builder"
+	builder "samm/internal/module/config/builder/app_config"
 	"samm/internal/module/config/domain"
 	"samm/internal/module/config/dto/app_config"
+	responses "samm/internal/module/config/responses/app_config"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	utilsDto "samm/pkg/utils/dto"
@@ -12,6 +13,7 @@ import (
 	"samm/pkg/validators/localization"
 	"time"
 
+	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -100,4 +102,41 @@ func (oRec *AppConfigUseCase) CheckExists(ctx context.Context, configType string
 		return isExists, validators.GetErrorResponseFromErr(err)
 	}
 	return isExists, validators.ErrorResponse{}
+}
+
+func (oRec *AppConfigUseCase) FindMobileConfig(ctx context.Context, dto app_config.FindMobileConfigDto) (responses.FindMobileConfigResponse, validators.ErrorResponse) {
+
+	var findMobileConfigResponse responses.FindMobileConfigResponse
+	doc, getByTypeErr := oRec.FindByType(ctx, dto.Type)
+	if getByTypeErr.IsError {
+		return findMobileConfigResponse, getByTypeErr
+	}
+
+	copier.Copy(&findMobileConfigResponse, doc)
+
+	switch dto.Platform {
+	case "ios":
+		findMobileConfigResponse.MinVersion = doc.MinIOSVersion
+		findMobileConfigResponse.AppLink = doc.AppStoreLink
+		if dto.Version < doc.MinIOSVersion {
+			findMobileConfigResponse.ForceUpdate = true
+		}
+	case "android":
+		findMobileConfigResponse.MinVersion = doc.MinAndroidVersion
+		findMobileConfigResponse.AppLink = doc.PlayStoreLink
+		if dto.Version < doc.MinAndroidVersion {
+			findMobileConfigResponse.ForceUpdate = true
+		}
+	case "huawei":
+		findMobileConfigResponse.MinVersion = doc.MinHuaweiVersion
+		findMobileConfigResponse.AppLink = doc.AppGalleryLink
+		if dto.Version < doc.MinHuaweiVersion {
+			findMobileConfigResponse.ForceUpdate = true
+		}
+	default:
+		break
+
+	}
+
+	return findMobileConfigResponse, validators.ErrorResponse{}
 }

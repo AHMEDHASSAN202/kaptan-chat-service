@@ -27,14 +27,19 @@ func InitAppConfigController(e *echo.Echo, appConfigUsecase domain.AppConfigUseC
 		validator:                validator,
 		logger:                   logger,
 	}
-	portal := e.Group("api/v1/admin/app-config")
+	admin := e.Group("api/v1/admin/app-config")
 	{
-		portal.POST("", handler.Create)
-		portal.PUT("/:id", handler.Update)
-		portal.GET("", handler.List)
-		portal.GET("/:id", handler.FindById)
-		portal.GET("/:type/by-config-type", handler.FindByType)
-		portal.DELETE("/:id", handler.Delete)
+		admin.POST("", handler.Create)
+		admin.PUT("/:id", handler.Update)
+		admin.GET("", handler.List)
+		admin.GET("/:id", handler.FindById)
+		admin.GET("/:type/by-config-type", handler.FindByType)
+		admin.DELETE("/:id", handler.Delete)
+	}
+
+	mobile := e.Group("api/v1/mobile")
+	{
+		mobile.GET("/config", handler.FindMobileConfig)
 	}
 }
 
@@ -173,4 +178,30 @@ func (a *AppConfigHandler) Delete(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+
+func (a *AppConfigHandler) FindMobileConfig(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input app_config.FindMobileConfigDto
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	mobileConfig, errResp := a.appConfigUsecase.FindMobileConfig(ctx, input)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"config": mobileConfig})
 }
