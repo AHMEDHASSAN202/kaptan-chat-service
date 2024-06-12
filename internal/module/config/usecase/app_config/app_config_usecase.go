@@ -2,6 +2,7 @@ package app_config
 
 import (
 	"context"
+	"samm/internal/module/config/builder"
 	"samm/internal/module/config/domain"
 	"samm/internal/module/config/dto/app_config"
 	"samm/pkg/logger"
@@ -11,7 +12,6 @@ import (
 	"samm/pkg/validators/localization"
 	"time"
 
-	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -29,10 +29,7 @@ func NewAppConfigUseCase(repo domain.AppConfigRepository, logger logger.ILogger)
 }
 
 func (oRec *AppConfigUseCase) Create(ctx context.Context, dto app_config.CreateUpdateAppConfigDto) validators.ErrorResponse {
-	var doc domain.AppConfig
-	copier.Copy(&doc, &dto)
-	doc.AdminDetails = make([]utilsDto.AdminDetails, 0)
-	doc.AdminDetails = append(doc.AdminDetails, utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Malhat", Operation: "Create", UpdatedAt: time.Now()})
+	doc := builder.ConvertDtoToCorrespondingDomain(dto, nil)
 	err := oRec.repo.Create(ctx, &doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
@@ -41,9 +38,12 @@ func (oRec *AppConfigUseCase) Create(ctx context.Context, dto app_config.CreateU
 }
 
 func (oRec *AppConfigUseCase) Update(ctx context.Context, dto app_config.CreateUpdateAppConfigDto) validators.ErrorResponse {
-	var doc domain.AppConfig
-	copier.Copy(&doc, &dto)
+	oldDoc, getByIdErr := oRec.FindById(ctx, dto.Id)
+	if getByIdErr.IsError {
+		return getByIdErr
+	}
 	id := utils.ConvertStringIdToObjectId(dto.Id)
+	doc := builder.ConvertDtoToCorrespondingDomain(dto, oldDoc)
 	err := oRec.repo.Update(ctx, id, &doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
@@ -92,4 +92,12 @@ func (oRec *AppConfigUseCase) SoftDelete(ctx context.Context, id string) validat
 		return validators.GetErrorResponseFromErr(err)
 	}
 	return validators.ErrorResponse{}
+}
+
+func (oRec *AppConfigUseCase) CheckExists(ctx context.Context, configType string, exceptIds ...string) (bool, validators.ErrorResponse) {
+	isExists, err := oRec.repo.CheckExists(ctx, configType, exceptIds...)
+	if err != nil {
+		return isExists, validators.GetErrorResponseFromErr(err)
+	}
+	return isExists, validators.ErrorResponse{}
 }

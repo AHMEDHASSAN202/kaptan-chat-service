@@ -5,6 +5,7 @@ import (
 	"samm/internal/module/config/domain"
 	"samm/internal/module/config/dto/app_config"
 	"samm/pkg/logger"
+	"samm/pkg/utils"
 	"samm/pkg/utils/dto"
 	"time"
 
@@ -78,4 +79,14 @@ func (i *appConfigRepo) SoftDelete(ctx context.Context, id primitive.ObjectID, a
 		return err
 	}
 	return nil
+}
+
+func (i *appConfigRepo) CheckExists(ctx context.Context, configType string, _exceptIds ...string) (bool, error) {
+	exceptIds := make([]string, 0)
+	for _, id := range _exceptIds {
+		exceptIds = append(exceptIds, id)
+	}
+	filter := bson.M{"type": configType, "deleted_at": nil, "_id": bson.M{"$nin": utils.ConvertStringIdsToObjectIds(exceptIds)}}
+	c, err := i.configCollection.CountDocuments(ctx, filter)
+	return c > 0, err
 }

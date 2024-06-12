@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"context"
+	"samm/internal/module/config/custom_validators"
 	"samm/internal/module/config/domain"
 	"samm/internal/module/config/dto/app_config"
 	"samm/pkg/logger"
@@ -12,17 +13,19 @@ import (
 )
 
 type AppConfigHandler struct {
-	appConfigUsecase domain.AppConfigUseCase
-	validator        *validator.Validate
-	logger           logger.ILogger
+	appConfigUsecase         domain.AppConfigUseCase
+	appConfigCustomValidator custom_validators.AppConfigCustomValidator
+	validator                *validator.Validate
+	logger                   logger.ILogger
 }
 
 // InitModifierGroupController will initialize the article's HTTP controller
-func InitAppConfigController(e *echo.Echo, appConfigUsecase domain.AppConfigUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitAppConfigController(e *echo.Echo, appConfigUsecase domain.AppConfigUseCase, appConfigCustomValidator custom_validators.AppConfigCustomValidator, validator *validator.Validate, logger logger.ILogger) {
 	handler := &AppConfigHandler{
-		appConfigUsecase: appConfigUsecase,
-		validator:        validator,
-		logger:           logger,
+		appConfigUsecase:         appConfigUsecase,
+		appConfigCustomValidator: appConfigCustomValidator,
+		validator:                validator,
+		logger:                   logger,
 	}
 	portal := e.Group("api/v1/admin/app-config")
 	{
@@ -48,7 +51,7 @@ func (a *AppConfigHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator)
+	validationErr := input.Validate(ctx, a.validator, a.appConfigCustomValidator.ValidateAppTypeIsUnique())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -80,7 +83,7 @@ func (a *AppConfigHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator)
+	validationErr := input.Validate(ctx, a.validator, a.appConfigCustomValidator.ValidateAppTypeIsUnique())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
