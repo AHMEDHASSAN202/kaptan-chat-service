@@ -49,13 +49,13 @@ func (a *BrandHandler) Create(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-	validationErr := input.Validate(ctx, a.validator, a.customValidator.ValidateCuisineIdsExists())
+	validationErr := input.Validate(ctx, a.validator, a.customValidator.ValidateCuisineIdsExists(input.CuisineIds))
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	errResp := a.brandUsecase.Create(&ctx, &input)
+	_, errResp := a.brandUsecase.Create(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
