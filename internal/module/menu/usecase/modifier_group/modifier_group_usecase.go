@@ -68,14 +68,13 @@ func (oRec *ModifierGroupUseCase) GetById(ctx context.Context, id string) (domai
 	return modifierGroups[0], validators.ErrorResponse{}
 }
 
-func (oRec *ModifierGroupUseCase) List(ctx context.Context, dto *modifier_group.ListModifierGroupsDto) (interface{}, validators.ErrorResponse) {
+func (oRec *ModifierGroupUseCase) List(ctx context.Context, dto *modifier_group.ListModifierGroupsDto) (*responses.ListResponse, validators.ErrorResponse) {
 	modifierGroups, paginationResult, err := oRec.repo.List(ctx, dto)
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
 
-	listResponse := responses.SetListResponse(modifierGroups, paginationResult)
-	return listResponse, validators.ErrorResponse{}
+	return responses.SetListResponse(modifierGroups, paginationResult), validators.ErrorResponse{}
 }
 
 func (oRec *ModifierGroupUseCase) ChangeStatus(ctx context.Context, id string, dto *modifier_group.ChangeModifierGroupStatusDto) validators.ErrorResponse {
