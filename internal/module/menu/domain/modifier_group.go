@@ -3,6 +3,7 @@ package domain
 import (
 	"context"
 	"samm/internal/module/menu/dto/modifier_group"
+	"samm/internal/module/menu/responses"
 	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"time"
@@ -30,7 +31,7 @@ type ModifierGroupUseCase interface {
 	Create(ctx context.Context, dto []modifier_group.CreateUpdateModifierGroupDto) validators.ErrorResponse
 	Update(ctx context.Context, dto modifier_group.CreateUpdateModifierGroupDto) validators.ErrorResponse
 	GetById(ctx context.Context, id string) (ModifierGroup, validators.ErrorResponse)
-	List(ctx context.Context, dto *modifier_group.ListModifierGroupsDto) (interface{}, validators.ErrorResponse)
+	List(ctx context.Context, dto *modifier_group.ListModifierGroupsDto) (*responses.ListResponse, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, id string, dto *modifier_group.ChangeModifierGroupStatusDto) validators.ErrorResponse
 	SoftDelete(ctx context.Context, id string) validators.ErrorResponse
 }

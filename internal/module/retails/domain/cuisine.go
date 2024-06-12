@@ -31,6 +31,7 @@ type CuisineUseCase interface {
 	List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*[]Cuisine, *PaginationData, validators.ErrorResponse)
 	ChangeStatus(ctx *context.Context, dto *cuisine.ChangeCuisineStatusDto) validators.ErrorResponse
 	SoftDelete(ctx *context.Context, id string) validators.ErrorResponse
+	CheckExists(ctx *context.Context, ids []string) validators.ErrorResponse
 }
 
 type CuisineRepository interface {

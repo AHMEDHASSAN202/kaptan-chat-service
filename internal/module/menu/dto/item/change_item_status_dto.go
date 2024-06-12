@@ -9,7 +9,7 @@ import (
 
 type ChangeItemStatusDto struct {
 	Id           string             `json:"_"`
-	Status       string             `json:"status" validate:"required"`
+	Status       string             `json:"status" validate:"required,oneof=active inactive"`
 	AdminDetails []dto.AdminDetails `json:"-"`
 }
 

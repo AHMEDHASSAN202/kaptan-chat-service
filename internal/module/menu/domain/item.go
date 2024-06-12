@@ -2,9 +2,13 @@ package domain
 
 import (
 	"context"
+	mongopagination "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/menu/dto/item"
+	"samm/internal/module/menu/responses"
+	responseItem "samm/internal/module/menu/responses/item"
+
 	"samm/pkg/validators"
 	"time"
 )
@@ -37,19 +41,20 @@ type Item struct {
 type ItemUseCase interface {
 	Create(ctx context.Context, dto []item.CreateItemDto) validators.ErrorResponse
 	Update(ctx context.Context, dto item.UpdateItemDto) validators.ErrorResponse
-	GetById(ctx context.Context, id string) (Item, validators.ErrorResponse)
-	List(ctx context.Context, dto *item.ListItemsDto) ([]Item, validators.ErrorResponse)
+	GetById(ctx context.Context, id string) (responseItem.ItemResponse, validators.ErrorResponse)
+	List(ctx context.Context, dto *item.ListItemsDto) (*responses.ListResponse, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, id string, dto *item.ChangeItemStatusDto) validators.ErrorResponse
 	SoftDelete(ctx context.Context, id string) validators.ErrorResponse
-	CheckExists(ctx context.Context, accountId, name string) (bool, validators.ErrorResponse)
+	CheckExists(ctx context.Context, accountId, name string, exceptProductIds ...string) (bool, validators.ErrorResponse)
 }
 
 type ItemRepository interface {
 	GetByIds(ctx context.Context, ids []primitive.ObjectID) ([]Item, error)
-	List(ctx context.Context, query *item.ListItemsDto) ([]Item, error)
+	Find(ctx context.Context, id primitive.ObjectID) (responseItem.ItemResponse, error)
+	List(ctx context.Context, query *item.ListItemsDto) ([]Item, *mongopagination.PaginationData, error)
 	Update(ctx context.Context, id *primitive.ObjectID, doc *Item) error
-	SoftDelete(ctx context.Context, id *primitive.ObjectID) error
-	ChangeStatus(ctx context.Context, id *primitive.ObjectID, status *item.ChangeItemStatusDto) error
+	SoftDelete(ctx context.Context, doc *Item) error
+	ChangeStatus(ctx context.Context, doc *Item) error
 	Create(ctx context.Context, doc []Item) error
-	CheckExists(ctx context.Context, accountId, name string) (bool, error)
+	CheckExists(ctx context.Context, accountId, name string, exceptProductIds ...string) (bool, error)
 }

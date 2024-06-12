@@ -2,7 +2,6 @@ package custom_validators
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-playground/validator/v10"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
@@ -22,13 +21,25 @@ func (i *ItemCustomValidator) ValidateNameIsUnique() func(fl validator.FieldLeve
 	return func(fl validator.FieldLevel) bool {
 		val := fl.Field().Interface().(string)
 		//read the value of the top struct to get accountId
-		itemDto, ok := fl.Top().Interface().(*item.CreateItemDto)
-		if !ok {
-			fmt.Println("Unexpected type, expected *item.CreateItemDto")
+		var accountId, itemId string
+
+		IitemDto := fl.Top().Interface()
+		switch fl.Top().Type().String() {
+		case "*item.CreateItemDto":
+			itemDto := IitemDto.(*item.CreateItemDto)
+			accountId = itemDto.AccountId
+			itemId = itemDto.Id
+
+		case "*item.UpdateItemDto":
+			itemDto := IitemDto.(*item.UpdateItemDto)
+			accountId = itemDto.AccountId
+			itemId = itemDto.Id
+
+		default:
 			return false
 		}
-		accountId := itemDto.AccountId
-		isExists, err := i.itemUsecase.CheckExists(context.Background(), accountId, val)
+
+		isExists, err := i.itemUsecase.CheckExists(context.Background(), accountId, val, itemId)
 		if err.IsError {
 			return false
 		}

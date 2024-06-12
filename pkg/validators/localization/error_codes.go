@@ -4,6 +4,7 @@ package localization
 
 const (
     Account_Email_is_unique_rules_validation = "Account_Email_is_unique_rules_validation" // Email is Unique
+    Cuisine_id_is_exists_rules_validation = "Cuisine_id_is_exists_rules_validation" // Cuisine Id Not Exist
     E1000 = "E1000" // Database layer error
     E1001 = "E1001" // Invalid input
     E1002 = "E1002" // Resource not found
@@ -20,5 +21,6 @@ const (
     Invalid_mongo_ids_validation_rule = "Invalid_mongo_ids_validation_rule" // Invalid mongo ids validation rule
     Item_name_is_unique_rules_validation = "Item_name_is_unique_rules_validation" // Feature not supported
     Modifier_groups_ids_rules_validation = "Modifier_groups_ids_rules_validation" // Feature not supported
+    SKU_name_is_unique_rules_validation = "SKU_name_is_unique_rules_validation" // Feature not supported
     Timeformat = "Timeformat" // time format rule validation
 )

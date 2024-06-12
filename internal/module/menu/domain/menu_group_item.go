@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/menu/dto/menu_group"
 	menu_group2 "samm/internal/module/menu/repository/structs/menu_group"
+	"samm/internal/module/menu/repository/structs/menu_group_item"
 	"samm/pkg/utils/dto"
 )
 
@@ -27,7 +28,7 @@ type ItemMenuGroup struct {
 type MenuGroupItem struct {
 	mgm.DefaultModel `bson:",inline"`
 	ItemId           primitive.ObjectID    `json:"item_id" bson:"item_id"`
-	AccountId        string                `json:"account_id" bson:"account_id"`
+	AccountId        primitive.ObjectID    `json:"account_id" bson:"account_id"`
 	Name             LocalizationText      `json:"name" bson:"name"`
 	Desc             LocalizationText      `json:"desc" bson:"desc"`
 	Calories         int                   `json:"calories" bson:"calories"`
@@ -45,6 +46,7 @@ type MenuGroupItem struct {
 
 type MenuGroupItemRepository interface {
 	CreateUpdateBulk(ctx context.Context, models *[]MenuGroupItem) error
+	SyncMenuItemsChanges(ctx context.Context, itemId menu_group_item.MenuGroupItemSyncItemModel) error
 	DeleteBulkByGroupMenuId(ctx context.Context, groupMenuId primitive.ObjectID, exceptionIds []primitive.ObjectID) error
 	ChangeMenuStatus(ctx context.Context, id primitive.ObjectID, dto *menu_group.ChangeMenuGroupStatusDto, adminDetails dto.AdminDetails) error
 	ChangeCategoryStatus(ctx context.Context, id primitive.ObjectID, dto *menu_group.ChangeMenuGroupStatusDto, adminDetails dto.AdminDetails) error

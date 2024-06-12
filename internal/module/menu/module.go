@@ -29,6 +29,7 @@ var Module = fx.Options(
 		menu_group2.NewMenuGroupRepository,
 		menu_group.NewMenuGroupUseCase,
 		custom_validators.InitNewCustomValidatorsItem,
+		custom_validators.InitNewCustomValidatorsSKU,
 	),
 	fx.Invoke(
 		delivery.InitMenuGroupController,

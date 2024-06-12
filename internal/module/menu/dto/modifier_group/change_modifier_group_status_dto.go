@@ -1,9 +1,20 @@
 package modifier_group
 
-import "samm/pkg/utils/dto"
+import (
+	"context"
+	"samm/pkg/utils/dto"
+	"samm/pkg/validators"
+
+	"github.com/go-playground/validator/v10"
+)
 
 type ChangeModifierGroupStatusDto struct {
 	Id           string             `json:"_"`
-	Status       string             `json:"status"`
+	Status       string             `json:"status" validate:"required,oneof=active inactive"`
 	AdminDetails []dto.AdminDetails `json:"-"`
+}
+
+func (input *ChangeModifierGroupStatusDto) Validate(ctx context.Context, validate *validator.Validate) validators.ErrorResponse {
+	// Register custom field-specific messages
+	return validators.ValidateStruct(ctx, validate, input)
 }

@@ -271,6 +271,52 @@ func RemoveItemByIndex[T any](slice []T, index int) []T {
 	return append(slice[:index], slice[index+1:]...)
 }
 
+func StructSliceToMapSlice(data interface{}) []map[string]interface{} {
+	dataValue := reflect.ValueOf(data)
+	if dataValue.Kind() != reflect.Slice {
+		return nil
+	}
+
+	sliceLen := dataValue.Len()
+	result := make([]map[string]interface{}, sliceLen)
+
+	for i := 0; i < sliceLen; i++ {
+		item := dataValue.Index(i)
+		if item.Kind() != reflect.Struct {
+			return nil
+		}
+
+		itemType := item.Type()
+		fieldCount := item.NumField()
+		itemMap := make(map[string]interface{}, fieldCount)
+
+		for j := 0; j < fieldCount; j++ {
+			field := itemType.Field(j)
+			fieldValue := item.Field(j)
+			itemMap[field.Name] = fieldValue.Interface()
+		}
+
+		result[i] = itemMap
+	}
+
+	return result
+}
+
+func ElementsDiff(src []string, des []string) []string {
+	desSet := make(map[string]struct{})
+	for _, elem := range des {
+		desSet[elem] = struct{}{}
+	}
+
+	var result []string
+	for _, elem := range src {
+		if _, found := desSet[elem]; !found {
+			result = append(result, elem)
+		}
+	}
+	return result
+}
+
 func GetDay(countryCode string) string {
 	timezones := map[string]string{"SA": "Asia/Riyadh", "AE": "Asia/Dubai", "EG": "Africa/Cairo", "FR": "Europe/Paris"}
 	timezone, exists := timezones[strings.ToUpper(countryCode)]

@@ -9,6 +9,7 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/menu_group"
 	menu_group2 "samm/internal/module/menu/repository/structs/menu_group"
+	"samm/internal/module/menu/repository/structs/menu_group_item"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/utils/dto"
@@ -34,6 +35,15 @@ func (i *menuGroupItemRepo) CreateUpdateBulk(ctx context.Context, models *[]doma
 		bulkOperations = append(bulkOperations, updateModel)
 	}
 	_, err := i.menuGroupItemCollection.BulkWrite(ctx, bulkOperations)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *menuGroupItemRepo) SyncMenuItemsChanges(ctx context.Context, itemDoc menu_group_item.MenuGroupItemSyncItemModel) error {
+	filter := bson.M{"item_id": itemDoc.ItemId}
+	_, err := i.menuGroupItemCollection.UpdateMany(ctx, filter, bson.M{"$set": itemDoc})
 	if err != nil {
 		return err
 	}

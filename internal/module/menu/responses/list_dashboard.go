@@ -15,7 +15,7 @@ func SetListResponse(docs interface{}, meta *mongopagination.PaginationData) *Li
 	if listResponse.Meta == nil {
 		listResponse.Meta = &mongopagination.PaginationData{}
 	}
-	if listResponse.Docs == nil {
+	if docs == nil {
 		listResponse.Docs = make([]interface{}, 0)
 	}
 	return &listResponse

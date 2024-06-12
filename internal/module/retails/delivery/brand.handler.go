@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/internal/module/retails/custom_validators"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/brand"
 	"samm/pkg/logger"
@@ -13,16 +14,18 @@ import (
 )
 
 type BrandHandler struct {
-	brandUsecase domain.BrandUseCase
-	validator    *validator.Validate
-	logger       logger.ILogger
+	brandUsecase    domain.BrandUseCase
+	validator       *validator.Validate
+	customValidator custom_validators.RetailCustomValidator
+	logger          logger.ILogger
 }
 
-func InitBrandController(e *echo.Echo, brandUsecase domain.BrandUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitBrandController(e *echo.Echo, brandUsecase domain.BrandUseCase, validator *validator.Validate, logger logger.ILogger, customValidator custom_validators.RetailCustomValidator) {
 	handler := &BrandHandler{
-		brandUsecase: brandUsecase,
-		validator:    validator,
-		logger:       logger,
+		brandUsecase:    brandUsecase,
+		validator:       validator,
+		logger:          logger,
+		customValidator: customValidator,
 	}
 	portal := e.Group("api/v1/admin/brand")
 	{
@@ -46,7 +49,7 @@ func (a *BrandHandler) Create(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-	validationErr := input.Validate(c, a.validator)
+	validationErr := input.Validate(ctx, a.validator, a.customValidator.ValidateCuisineIdsExists())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)

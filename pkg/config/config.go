@@ -119,7 +119,11 @@ func setFromEnv(cfg *Config) {
 
 	cfg.Environment = os.Getenv("APP_ENV")
 
-	cfg.Echo.Port = defaultHTTPPort
+	var port = defaultHTTPPort
+	if os.Getenv("PORT") != "" {
+		port = ":" + os.Getenv("PORT")
+	}
+	cfg.Echo.Port = port
 }
 
 func parseConfigFile(folder, env string) error {
