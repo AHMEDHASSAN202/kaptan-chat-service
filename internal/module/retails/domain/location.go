@@ -88,7 +88,7 @@ type Location struct {
 
 type LocationUseCase interface {
 	StoreLocation(ctx context.Context, payload *location.StoreLocationDto) (err validators.ErrorResponse)
-	BulkStoreLocation(ctx context.Context, payload []location.StoreLocationDto) (err validators.ErrorResponse)
+	BulkStoreLocation(ctx context.Context, payload location.StoreBulkLocationDto) (err validators.ErrorResponse)
 	UpdateLocation(ctx context.Context, id string, payload *location.StoreLocationDto) (err validators.ErrorResponse)
 	ToggleLocationStatus(ctx context.Context, id string) (err validators.ErrorResponse)
 	FindLocation(ctx context.Context, Id string) (location Location, err validators.ErrorResponse)

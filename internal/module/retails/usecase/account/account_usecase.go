@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/account"
+	"samm/internal/module/retails/dto/brand"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -66,13 +67,13 @@ func (l AccountUseCase) FindAccount(ctx context.Context, Id string) (account dom
 	if errRe != nil {
 		return *domainAccount, validators.GetErrorResponseFromErr(errRe)
 	}
-	//if len(domainAccount.AllowedBrandIds) > 0 {
-	//	dto := brand.ListBrandDto{
-	//		Ids: utils.ConvertObjectIdsToStringIds(domainAccount.AllowedBrandIds),
-	//	}
-	//	brandsDomain, _, _ := l.brandUseCase.List(&ctx, &dto)
-	//	domainAccount.Brands = *brandsDomain
-	//}
+	if len(domainAccount.AllowedBrandIds) > 0 {
+		dto := brand.ListBrandDto{
+			Ids: utils.ConvertObjectIdsToStringIds(domainAccount.AllowedBrandIds),
+		}
+		brandsDomain, _, _ := l.brandUseCase.List(&ctx, &dto)
+		domainAccount.Brands = *brandsDomain
+	}
 	return *domainAccount, validators.ErrorResponse{}
 }
 func (l AccountUseCase) CheckAccountEmail(ctx context.Context, email string, accountId string) bool {
