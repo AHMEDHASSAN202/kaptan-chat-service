@@ -62,6 +62,10 @@ other = "Item_name_is_unique_rules_validation"
 description = "Feature not supported"
 other = "This name is already exists, SKU name must be unique."
 
+[App_type_is_unique_rules_validation]
+description = "Feature not supported"
+other = "There is already config exists for this app type."
+
 [Account_Email_is_unique_rules_validation]
 description = "Email is Unique"
 other = "Email is Exists"

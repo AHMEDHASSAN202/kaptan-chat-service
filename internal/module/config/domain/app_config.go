@@ -28,6 +28,7 @@ type AppConfigUseCase interface {
 	FindByType(ctx context.Context, configType string) (*AppConfig, validators.ErrorResponse)
 	List(ctx context.Context, dto app_config.ListAppConfigDto) ([]AppConfig, validators.ErrorResponse)
 	SoftDelete(ctx context.Context, id string) validators.ErrorResponse
+	CheckExists(ctx context.Context, appType string, exceptIds ...string) (bool, validators.ErrorResponse)
 }
 
 type AppConfigRepository interface {
@@ -37,4 +38,5 @@ type AppConfigRepository interface {
 	FindByType(ctx context.Context, configType string) (*AppConfig, error)
 	List(ctx context.Context, dto app_config.ListAppConfigDto) ([]AppConfig, error)
 	SoftDelete(ctx context.Context, id primitive.ObjectID, adminDetails utilsDto.AdminDetails) error
+	CheckExists(ctx context.Context, configType string, exceptIds ...string) (bool, error)
 }

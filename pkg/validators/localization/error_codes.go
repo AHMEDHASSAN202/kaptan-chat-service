@@ -4,6 +4,7 @@ package localization
 
 const (
     Account_Email_is_unique_rules_validation = "Account_Email_is_unique_rules_validation" // Email is Unique
+    App_type_is_unique_rules_validation = "App_type_is_unique_rules_validation" // Feature not supported
     Cuisine_id_is_exists_rules_validation = "Cuisine_id_is_exists_rules_validation" // Cuisine Id Not Exist
     E1000 = "E1000" // Database layer error
     E1001 = "E1001" // Invalid input

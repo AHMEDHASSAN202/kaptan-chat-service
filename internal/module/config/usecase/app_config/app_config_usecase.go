@@ -93,3 +93,11 @@ func (oRec *AppConfigUseCase) SoftDelete(ctx context.Context, id string) validat
 	}
 	return validators.ErrorResponse{}
 }
+
+func (oRec *AppConfigUseCase) CheckExists(ctx context.Context, configType string, exceptIds ...string) (bool, validators.ErrorResponse) {
+	isExists, err := oRec.repo.CheckExists(ctx, configType, exceptIds...)
+	if err != nil {
+		return isExists, validators.GetErrorResponseFromErr(err)
+	}
+	return isExists, validators.ErrorResponse{}
+}
