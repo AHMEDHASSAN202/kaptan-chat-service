@@ -1,0 +1,123 @@
+package menu_group_item
+
+import (
+	"go.mongodb.org/mongo-driver/bson"
+	"samm/pkg/utils"
+	"strings"
+	"time"
+)
+
+func AddAvailabilityQuery(countryId, field string) bson.M {
+	currentTime := time.Now().UTC().Format(utils.DefaultTimeFormat)
+	currentDay := utils.GetDay(countryId)
+	return bson.M{
+		"$expr": bson.M{
+			"$or": bson.A{
+				bson.M{"$ne": bson.A{field, nil}},
+				bson.M{"$ne": bson.A{field, make([]interface{}, 0)}},
+				bson.D{{"$gt", bson.A{
+					bson.D{
+						{"$size", bson.D{
+							{"$filter", bson.D{
+								{"input", field},
+								{"as", "hours"},
+								{"cond", bson.D{
+									{"$and", bson.A{
+										bson.D{
+											{"$eq", bson.A{
+												"$$hours.day", strings.ToLower(currentDay),
+											}},
+										},
+										bson.D{
+											{"$lte", bson.A{
+												"$$hours.from",
+												currentTime,
+											}},
+										},
+										bson.D{
+											{"$gte", bson.A{
+												"$$hours.to",
+												currentTime,
+											}},
+										},
+										bson.D{
+											{"$gte", bson.A{
+												"$$hours.to",
+												"$$hours.from",
+											}},
+										},
+									}},
+								}},
+							}},
+						}},
+					},
+					0,
+				}}},
+				bson.D{{"$gt", bson.A{
+					bson.D{
+						{"$size", bson.D{
+							{"$filter", bson.D{
+								{"input", field},
+								{"as", "hours"},
+								{"cond", bson.D{
+									{"$and", bson.A{
+										bson.D{
+											{"$eq", bson.A{
+												"$$hours.day", strings.ToLower(currentDay),
+											}},
+										},
+										bson.D{
+											{"$gte", bson.A{
+												currentTime,
+												"$$hours.from",
+											}},
+										},
+										bson.D{
+											{"$gte", bson.A{
+												"$$hours.from",
+												"$$hours.to",
+											}},
+										},
+									}},
+								}},
+							}},
+						}},
+					},
+					0,
+				}}},
+				bson.D{{"$gt", bson.A{
+					bson.D{
+						{"$size", bson.D{
+							{"$filter", bson.D{
+								{"input", field},
+								{"as", "hours"},
+								{"cond", bson.D{
+									{"$and", bson.A{
+										bson.D{
+											{"$eq", bson.A{
+												"$$hours.day", strings.ToLower(currentDay),
+											}},
+										},
+										bson.D{
+											{"$lte", bson.A{
+												currentTime,
+												"$$hours.to",
+											}},
+										},
+										bson.D{
+											{"$gte", bson.A{
+												"$$hours.from",
+												"$$hours.to",
+											}},
+										},
+									}},
+								}},
+							}},
+						}},
+					},
+					0,
+				}}},
+			},
+		},
+	}
+}

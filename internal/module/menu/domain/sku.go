@@ -18,9 +18,11 @@ type SKU struct {
 type SKUUseCase interface {
 	Create(ctx context.Context, dto sku.CreateSKUDto) validators.ErrorResponse
 	List(ctx context.Context, dto *sku.ListSKUDto) ([]SKU, validators.ErrorResponse)
+	CheckExists(ctx context.Context, name string) (bool, validators.ErrorResponse)
 }
 
 type SKURepository interface {
 	Create(ctx context.Context, doc SKU) error
 	List(ctx context.Context, query *sku.ListSKUDto) ([]SKU, error)
+	CheckExists(ctx context.Context, name string) (bool, error)
 }

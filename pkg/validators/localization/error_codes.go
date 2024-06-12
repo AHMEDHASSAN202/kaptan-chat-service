@@ -21,5 +21,6 @@ const (
     Invalid_mongo_ids_validation_rule = "Invalid_mongo_ids_validation_rule" // Invalid mongo ids validation rule
     Item_name_is_unique_rules_validation = "Item_name_is_unique_rules_validation" // Feature not supported
     Modifier_groups_ids_rules_validation = "Modifier_groups_ids_rules_validation" // Feature not supported
+    SKU_name_is_unique_rules_validation = "SKU_name_is_unique_rules_validation" // Feature not supported
     Timeformat = "Timeformat" // time format rule validation
 )
