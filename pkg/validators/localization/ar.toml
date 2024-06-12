@@ -66,6 +66,10 @@ other = "هذا الاسم موجود بالفعل، ويجب أن يكون اس
 description = "Feature not supported"
 other = "البريد الالكتروني مستخدم من قبل"
 
+[Cuisine_id_is_exists_rules_validation]
+description = "Feature not supported"
+other = "بعض المطابخ غير موجودة"
+
 [Invalid_mongo_ids_validation_rule]
 description = "Invalid mongo ids validation rule ar"
 other = "invalid id it should be objectId ar"
