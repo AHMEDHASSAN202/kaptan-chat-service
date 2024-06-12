@@ -3,24 +3,28 @@ package item
 import (
 	"context"
 	. "github.com/gobeam/mongo-go-pagination"
+	"github.com/jinzhu/copier"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
+	"samm/internal/module/menu/repository/structs/menu_group_item"
 	responseItem "samm/internal/module/menu/responses/item"
 	"samm/pkg/database/mongodb"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
+	"time"
 )
 
 type itemRepo struct {
-	itemCollection *mgm.Collection
-	logger         logger.ILogger
+	itemCollection    *mgm.Collection
+	logger            logger.ILogger
+	menuGroupItemRepo domain.MenuGroupItemRepository
 }
 
-func NewItemRepository(dbs *mongo.Database, logger logger.ILogger) domain.ItemRepository {
+func NewItemRepository(dbs *mongo.Database, logger logger.ILogger, menuGroupItemRepo domain.MenuGroupItemRepository) domain.ItemRepository {
 	itemCollection := mgm.Coll(&domain.Item{})
 	//text search menu cuisine
 	mongodb.CreateIndex(itemCollection.Collection, false, bson.E{"name.ar", mongodb.IndexType.Text}, bson.E{"name.en", mongodb.IndexType.Text}, bson.E{"tags", mongodb.IndexType.Text},
@@ -28,8 +32,9 @@ func NewItemRepository(dbs *mongo.Database, logger logger.ILogger) domain.ItemRe
 	//make sure there are no duplicated menu cuisine
 	mongodb.CreateIndex(itemCollection.Collection, true, bson.E{"name.ar", mongodb.IndexType.Asc}, bson.E{"name.en", mongodb.IndexType.Asc}, bson.E{"account_id", mongodb.IndexType.Asc}, bson.E{"deleted_at", mongodb.IndexType.Asc})
 	return &itemRepo{
-		itemCollection: itemCollection,
-		logger:         logger,
+		itemCollection:    itemCollection,
+		logger:            logger,
+		menuGroupItemRepo: menuGroupItemRepo,
 	}
 }
 
@@ -67,24 +72,78 @@ func (i *itemRepo) Create(ctx context.Context, doc []domain.Item) error {
 }
 
 func (i *itemRepo) Update(ctx context.Context, id *primitive.ObjectID, doc *domain.Item) error {
-	doc.ID = *id
-	err := i.itemCollection.UpdateWithCtx(ctx, doc)
+	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+		doc.ID = *id
+		err := i.itemCollection.UpdateWithCtx(sc, doc)
+		if err != nil {
+			i.logger.Error("ItemRepository -> Update -> ", err)
+			return err
+		}
+		menuGroupItem := menu_group_item.MenuGroupItemSyncItemModel{}
+		copier.Copy(&menuGroupItem, &doc)
+		menuGroupItem.UpdatedAt = time.Now()
+		menuGroupItem.ItemId = *id
+		err = i.menuGroupItemRepo.SyncMenuItemsChanges(sc, menuGroupItem)
+		if err != nil {
+			i.logger.Error("ItemRepository -> SyncMenuItemsChanges -> ", err)
+			return err
+		}
+		return session.CommitTransaction(sc)
+	})
+
 	if err != nil {
+		i.logger.Error("ItemRepository -> transaction error in update item -> ", err)
 		return err
 	}
 	return nil
 }
 
 func (i *itemRepo) SoftDelete(ctx context.Context, doc *domain.Item) error {
-	err := i.itemCollection.UpdateWithCtx(ctx, doc)
+	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+		err := i.itemCollection.UpdateWithCtx(ctx, doc)
+		if err != nil {
+			i.logger.Error("ItemRepository -> SoftDelete -> ", err)
+			return err
+		}
+		menuGroupItem := menu_group_item.MenuGroupItemSyncItemModel{}
+		copier.Copy(&menuGroupItem, &doc)
+		menuGroupItem.UpdatedAt = time.Now()
+		menuGroupItem.ItemId = doc.ID
+		err = i.menuGroupItemRepo.SyncMenuItemsChanges(sc, menuGroupItem)
+		if err != nil {
+			i.logger.Error("ItemRepository -> SyncMenuItemsChanges -> ", err)
+			return err
+		}
+		return session.CommitTransaction(sc)
+	})
+
 	if err != nil {
+		i.logger.Error("ItemRepository -> transaction error in update item -> ", err)
 		return err
 	}
 	return nil
 }
 func (i *itemRepo) ChangeStatus(ctx context.Context, doc *domain.Item) error {
-	err := i.itemCollection.UpdateWithCtx(ctx, doc)
+	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+		err := i.itemCollection.UpdateWithCtx(ctx, doc)
+		if err != nil {
+			i.logger.Error("ItemRepository -> ChangeStatus -> ", err)
+			return err
+		}
+		menuGroupItem := menu_group_item.MenuGroupItemSyncItemModel{}
+		copier.Copy(&menuGroupItem, &doc)
+		menuGroupItem.UpdatedAt = time.Now()
+		menuGroupItem.ItemId = doc.ID
+		err = i.menuGroupItemRepo.SyncMenuItemsChanges(sc, menuGroupItem)
+		if err != nil {
+			i.logger.Error("ItemRepository -> SyncMenuItemsChanges -> ", err)
+			return err
+		}
+		return session.CommitTransaction(sc)
+	})
+
 	if err != nil {
+		i.logger.Error("ItemRepository -> transaction error in update item -> ", err)
 		return err
 	}
 	return nil
