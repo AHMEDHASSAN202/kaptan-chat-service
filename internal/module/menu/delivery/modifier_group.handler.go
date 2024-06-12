@@ -155,6 +155,12 @@ func (a *ModifierGroupHandler) ChangeStatus(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
+	validationErr := input.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
 	errResp := a.modifierGroupUsecase.ChangeStatus(ctx, id, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
