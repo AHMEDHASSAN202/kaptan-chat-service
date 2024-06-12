@@ -60,7 +60,7 @@ func (a *BrandHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{"id": brand.ID})
+	return validators.SuccessResponse(c, map[string]interface{}{"brand": brand})
 }
 
 func (a *BrandHandler) Update(c echo.Context) error {

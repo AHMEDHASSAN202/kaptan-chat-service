@@ -16,9 +16,8 @@ type Account struct {
 	Email            string               `json:"email" bson:"email"`
 	Password         string               `json:"-" bson:"password"`
 	AllowedBrandIds  []primitive.ObjectID `json:"allowed_brand_ids" bson:"allowed_brand_ids"`
-
-	Country   Country    `json:"country" bson:"country"`
-	DeletedAt *time.Time `json:"-" bson:"deleted_at"`
+	Country          Country              `json:"country" bson:"country"`
+	DeletedAt        *time.Time           `json:"-" bson:"deleted_at"`
 }
 
 type AccountUseCase interface {

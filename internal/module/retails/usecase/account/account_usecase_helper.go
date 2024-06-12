@@ -22,6 +22,7 @@ func CreateAccountBuilder(payload *account.StoreAccountDto) domain.Account {
 	accountDomain.Country.Timezone = payload.Country.Timezone
 	accountDomain.Country.Name.Ar = payload.Country.Name.Ar
 	accountDomain.Country.Name.En = payload.Country.Name.En
+	accountDomain.AllowedBrandIds = utils.ConvertStringIdsToObjectIds(payload.AllowedBrandIds)
 
 	return accountDomain
 }

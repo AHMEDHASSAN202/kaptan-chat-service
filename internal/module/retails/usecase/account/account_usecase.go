@@ -5,7 +5,6 @@ import (
 	"errors"
 	mongopagination "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/account"
@@ -24,27 +23,9 @@ type AccountUseCase struct {
 
 func (l AccountUseCase) StoreAccount(ctx context.Context, payload *account.StoreAccountDto) (err validators.ErrorResponse) {
 	accountDomain := CreateAccountBuilder(payload)
-	accountDomain.AllowedBrandIds = utils.ConvertStringIdsToObjectIds(payload.AllowedBrandIds)
-
-	erre := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
-		// Create Brand if Exists
-		if payload.Brand != nil {
-			domainBrand, errRe := l.brandUseCase.Create(sc, payload.Brand)
-			if errRe.IsError {
-				return errors.New(err.ErrorMessageObject.Text)
-			}
-			accountDomain.AllowedBrandIds = []primitive.ObjectID{domainBrand.ID}
-		}
-
-		// Delete Locations
-		errRe := l.repo.StoreAccount(sc, &accountDomain)
-		if errRe != nil {
-			return errRe
-		}
-		return session.CommitTransaction(sc)
-	})
-	if erre != nil {
-		return validators.GetErrorResponseFromErr(erre)
+	errRe := l.repo.StoreAccount(ctx, &accountDomain)
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
 	}
 	return validators.ErrorResponse{}
 }

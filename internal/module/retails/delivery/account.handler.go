@@ -40,11 +40,8 @@ func (a *AccountHandler) StoreAccount(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-	var cuisineids []string
-	if payload.Brand != nil {
-		cuisineids = payload.Brand.CuisineIds
-	}
-	validationErr := payload.Validate(c, a.validator, a.retailCustomValidator.ValidateAccountEmailIsUnique(""), a.retailCustomValidator.ValidateCuisineIdsExists(cuisineids))
+
+	validationErr := payload.Validate(c, a.validator, a.retailCustomValidator.ValidateAccountEmailIsUnique(""))
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
