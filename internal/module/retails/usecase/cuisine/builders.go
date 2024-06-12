@@ -15,6 +15,7 @@ func convertDtoArrToCorrespondingDomain(dto *cuisine.CreateCuisineDto) *domain.C
 func domainBuilderAtUpdate(dto *cuisine.UpdateCuisineDto, domainData *domain.Cuisine) *domain.Cuisine {
 	var cuisineDoc domain.Cuisine
 	copier.Copy(&cuisineDoc, dto)
+	cuisineDoc.ID = utils.ConvertStringIdToObjectId(dto.Id)
 	return &cuisineDoc
 }
 

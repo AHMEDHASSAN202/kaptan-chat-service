@@ -59,7 +59,7 @@ type Location struct {
 	Name             Name               `json:"name" bson:"name"`
 	City             City               `json:"city" bson:"city"`
 	Street           Name               `json:"street" bson:"street"`
-	Tags             string             `json:"tags" bson:"tags"`
+	Tags             []string           `json:"tags" bson:"tags"`
 	CoverImage       string             `json:"cover_image" bson:"cover_image"`
 	Logo             string             `json:"logo" bson:"logo"`
 	Open             bool               `json:"open" bson:"open"`

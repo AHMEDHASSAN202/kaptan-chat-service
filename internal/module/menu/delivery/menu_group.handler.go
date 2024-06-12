@@ -36,6 +36,11 @@ func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator
 		portal.PUT("/:id/change-status", handler.ChangeStatus)
 		portal.DELETE("/:id/:entity/:entity_id", handler.DeleteEntity)
 	}
+
+	mobile := e.Group("api/v1/menu-group")
+	{
+		mobile.GET("/item", handler.MobileGetMenuGroupItems)
+	}
 }
 
 func (a *MenuGroupHandler) List(c echo.Context) error {
@@ -221,4 +226,30 @@ func (a *MenuGroupHandler) DeleteEntity(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+
+func (a *MenuGroupHandler) MobileGetMenuGroupItems(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input menu_group.GetMenuGroupItemDTO
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	data, errResp := a.menuGroupUsecase.MobileGetMenuGroupItems(ctx, input)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"menu_group_items": data})
 }

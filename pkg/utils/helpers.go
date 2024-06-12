@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,7 +14,13 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"samm/pkg/logger"
+	"strings"
+	"time"
 )
+
+const DefaultTimeFormat = "15:04:05"
+const DefaultHourTimeFormat = "15:04"
 
 // RemoveDuplicates removes duplicate values from a slice.
 // T must be a comparable type.
@@ -263,6 +270,7 @@ func RemoveItemByValue[T comparable](slice []T, value T) []T {
 func RemoveItemByIndex[T any](slice []T, index int) []T {
 	return append(slice[:index], slice[index+1:]...)
 }
+
 func StructSliceToMapSlice(data interface{}) []map[string]interface{} {
 	dataValue := reflect.ValueOf(data)
 	if dataValue.Kind() != reflect.Slice {
@@ -307,4 +315,26 @@ func ElementsDiff(src []string, des []string) []string {
 		}
 	}
 	return result
+}
+
+func GetDay(countryCode string) string {
+	timezones := map[string]string{"SA": "Asia/Riyadh", "AE": "Asia/Dubai", "EG": "Africa/Cairo", "FR": "Europe/Paris"}
+	timezone, exists := timezones[strings.ToUpper(countryCode)]
+	if !exists {
+		timezone = "Asia/Riyadh"
+	}
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		logger.Logger.Error(nil, err)
+		return strings.ToLower(time.Now().UTC().Weekday().String())
+	}
+	now := time.Now().In(loc)
+	currentDay := now.Weekday()
+	day := currentDay.String()
+	return strings.ToLower(day)
+}
+
+func PrintAsJson(v interface{}) {
+	strByte, _ := json.Marshal(v)
+	println(string(strByte))
 }
