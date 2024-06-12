@@ -28,7 +28,7 @@ func LocationBuilder(payload *location.StoreLocationDto) *domain.Location {
 	}
 
 	locationDomain.Status = consts.LocationStatusInActive
-
+ 
 	// Convert latitude and longitude to H3 index
 	latLng := h3.NewLatLng(payload.Lat, payload.Lng)
 	locationDomain.Index = h3.LatLngToCell(latLng, consts.H3Resolution).String()
