@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"samm/internal/module/retails/domain"
@@ -112,14 +111,12 @@ func (a *CuisineHandler) List(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-	fmt.Print("input===>", input.Query)
 	input.Pagination.SetDefault()
-	cuisines, paginationMeta, errResp := a.cuisineUsecase.List(&ctx, &input)
+	res, errResp := a.cuisineUsecase.List(&ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
-
-	return validators.SuccessResponse(c, map[string]interface{}{"docs": cuisines, "meta": paginationMeta})
+	return validators.SuccessResponse(c, res)
 }
 
 func (a *CuisineHandler) Find(c echo.Context) error {

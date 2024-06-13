@@ -115,12 +115,12 @@ func (a *BrandHandler) List(c echo.Context) error {
 	}
 
 	input.Pagination.SetDefault()
-	brands, paginationMeta, errResp := a.brandUsecase.List(&ctx, &input)
+	brands, errResp := a.brandUsecase.List(&ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{"docs": brands, "meta": paginationMeta})
+	return validators.SuccessResponse(c, brands)
 }
 
 func (a *BrandHandler) Find(c echo.Context) error {

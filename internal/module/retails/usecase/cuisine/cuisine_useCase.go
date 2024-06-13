@@ -2,11 +2,11 @@ package cuisine
 
 import (
 	"context"
-	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/cuisine"
+	"samm/internal/module/retails/responses"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -64,13 +64,12 @@ func (oRec *CuisineUseCase) ChangeStatus(ctx *context.Context, dto *cuisine.Chan
 	return validators.ErrorResponse{}
 }
 
-func (oRec *CuisineUseCase) List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (cuisines *[]domain.Cuisine, paginationMeta *PaginationData, err validators.ErrorResponse) {
+func (oRec *CuisineUseCase) List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse) {
 	cuisines, paginationMeta, resErr := oRec.repo.List(ctx, dto)
 	if resErr != nil {
-		err = validators.GetErrorResponseFromErr(resErr)
-		return
+		return nil, validators.GetErrorResponseFromErr(resErr)
 	}
-	return
+	return responses.SetListResponse(cuisines, paginationMeta), validators.ErrorResponse{}
 }
 
 func (oRec *CuisineUseCase) Find(ctx *context.Context, id string) (*domain.Cuisine, validators.ErrorResponse) {
