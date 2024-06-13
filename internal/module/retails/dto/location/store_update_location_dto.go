@@ -40,9 +40,10 @@ type Brand struct {
 	IsActive bool   `json:"is_active"`
 }
 type WorkingHour struct {
-	Day  string `json:"day"  validate:"required"`
-	From string `json:"from" validate:"required,Timeformat"`
-	To   string `json:"to" validate:"required,Timeformat"`
+	Day       string `json:"day"  validate:"required"`
+	From      string `json:"from" validate:"required_if=IsFullDay false,Timeformat"`
+	To        string `json:"to" validate:"required_if=IsFullDay false,Timeformat"`
+	IsFullDay bool   `json:"is_full_day" `
 }
 type BankAccount struct {
 	AccountNumber string `json:"account_number" validate:"required"`
@@ -51,24 +52,26 @@ type BankAccount struct {
 }
 
 type StoreLocationDto struct {
-	Name            Name           `json:"name" validate:"required"`
-	City            City           `json:"city" validate:"required"`
-	Street          Name           `json:"street" validate:"required"`
-	Tags            string         `json:"tags" validate:"required"`
-	CoverImage      string         `json:"cover_image"`
-	Logo            string         `json:"logo" `
-	Phone           string         `json:"phone" validate:"required"`
-	Lat             float64        `json:"lat" validate:"required,latitude"`
-	Lng             float64        `json:"lng" validate:"required,longitude"`
-	BrandDetails    Brand          `json:"brand_details" validate:"required" `
-	WorkingHour     []WorkingHour  `json:"working_hour" `
-	Percent         float64        ` json:"percent" validate:"required"`
-	PercentsDate    []PercentsDate `json:"percents_date"`
-	PreparationTime int            `json:"preparation_time" validate:"required"`
-	AutoAccept      bool           `json:"auto_accept" `
-	BankAccount     BankAccount    `json:"bank_account" validate:"required"`
-	AccountId       string         `json:"account_id" validate:"required,mongodb"`
-	Country         Country        `json:"country" validate:"required"`
+	Name               Name           `json:"name" validate:"required"`
+	City               City           `json:"city" validate:"required"`
+	Street             Name           `json:"street" validate:"required"`
+	Tags               []string       `json:"tags" validate:"required"`
+	CoverImage         string         `json:"cover_image"`
+	Logo               string         `json:"logo" `
+	Phone              string         `json:"phone" validate:"required"`
+	Lat                float64        `json:"lat" validate:"required,latitude"`
+	Lng                float64        `json:"lng" validate:"required,longitude"`
+	BrandDetails       Brand          `json:"brand_details" validate:"required" `
+	WorkingHour        []WorkingHour  `json:"working_hour" `
+	WorkingHourEid     []WorkingHour  `json:"working_hour_eid"`
+	WorkingHourRamadan []WorkingHour  `json:"working_hour_ramadan"`
+	Percent            float64        ` json:"percent" validate:"required"`
+	PercentsDate       []PercentsDate `json:"percents_date"`
+	PreparationTime    int            `json:"preparation_time" validate:"required"`
+	AutoAccept         bool           `json:"auto_accept" `
+	BankAccount        BankAccount    `json:"bank_account" validate:"required"`
+	AccountId          string         `json:"account_id" validate:"required,mongodb"`
+	Country            Country        `json:"country" validate:"required"`
 }
 
 func (payload *StoreLocationDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {

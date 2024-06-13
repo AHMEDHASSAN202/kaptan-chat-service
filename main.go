@@ -1,8 +1,8 @@
 package main
 
 import (
-	"go.uber.org/fx"
 	"samm/internal/module/common"
+	appConfig "samm/internal/module/config"
 	"samm/internal/module/example"
 	"samm/internal/module/menu"
 	"samm/internal/module/retails"
@@ -15,6 +15,8 @@ import (
 	"samm/pkg/logger"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+
+	"go.uber.org/fx"
 )
 
 func main() {
@@ -32,6 +34,7 @@ func main() {
 			menu.Module,
 			database.Module,
 			retails.Module,
+			appConfig.Module,
 			common.Module,
 			fx.Invoke(echo.RunServers, localization.InitLocalization),
 		),

@@ -26,13 +26,13 @@ func NewBrandUseCase(repo domain.BrandRepository, logger logger.ILogger) domain.
 	}
 }
 
-func (oRec *BrandUseCase) Create(ctx *context.Context, dto *brand.CreateBrandDto) validators.ErrorResponse {
+func (oRec *BrandUseCase) Create(ctx context.Context, dto *brand.CreateBrandDto) (*domain.Brand, validators.ErrorResponse) {
 	doc := domainBuilderAtCreate(dto)
 	err := oRec.repo.Create(doc)
 	if err != nil {
-		return validators.GetErrorResponseFromErr(err)
+		return doc, validators.GetErrorResponseFromErr(err)
 	}
-	return validators.ErrorResponse{}
+	return doc, validators.ErrorResponse{}
 }
 
 func (oRec *BrandUseCase) Update(ctx *context.Context, dto *brand.UpdateBrandDto) validators.ErrorResponse {

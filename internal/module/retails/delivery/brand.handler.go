@@ -49,18 +49,18 @@ func (a *BrandHandler) Create(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-	validationErr := input.Validate(ctx, a.validator, a.customValidator.ValidateCuisineIdsExists())
+	validationErr := input.Validate(ctx, a.validator, a.customValidator.ValidateCuisineIdsExists(input.CuisineIds))
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	errResp := a.brandUsecase.Create(&ctx, &input)
+	brand, errResp := a.brandUsecase.Create(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{"brand": brand})
 }
 
 func (a *BrandHandler) Update(c echo.Context) error {
@@ -103,10 +103,17 @@ func (a *BrandHandler) List(c echo.Context) error {
 	}
 
 	var input brand.ListBrandDto
-	_ = c.Bind(&input)
-	//if err != nil {
-	//	return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
-	//}
+	binder := &echo.DefaultBinder{}
+	//bind header and query params
+	err := binder.BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	err = binder.BindQueryParams(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
 	input.Pagination.SetDefault()
 	brands, paginationMeta, errResp := a.brandUsecase.List(&ctx, &input)
 	if errResp.IsError {

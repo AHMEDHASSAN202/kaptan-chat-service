@@ -41,6 +41,45 @@ func LocationBuilder(payload *location.StoreLocationDto) *domain.Location {
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return &locationDomain
 }
+func LocationBulkBuilder(payload location.LocationDto, dto location.StoreBulkLocationDto) *domain.Location {
+	var locationDomain domain.Location
+	copier.Copy(&locationDomain, payload)
+
+	locationDomain.ID = primitive.NewObjectID()
+	locationDomain.City.Id = utils.ConvertStringIdToObjectId(payload.City.Id)
+	locationDomain.BrandDetails.Id = utils.ConvertStringIdToObjectId(dto.BrandDetails.Id)
+	locationDomain.AccountId = utils.ConvertStringIdToObjectId(dto.AccountId)
+	locationDomain.Coordinate = domain.Coordinate{
+		Type:        "Point",
+		Coordinates: []float64{payload.Lng, payload.Lat},
+	}
+	locationDomain.Country.Id = dto.Country.Id
+	locationDomain.Country.Currency = dto.Country.Currency
+	locationDomain.Country.Name.Ar = dto.Country.Name.Ar
+	locationDomain.Country.Name.En = dto.Country.Name.En
+	locationDomain.Country.PhonePrefix = dto.Country.PhonePrefix
+	locationDomain.Country.Timezone = dto.Country.Timezone
+
+	locationDomain.BrandDetails.Id = utils.ConvertStringIdToObjectId(dto.BrandDetails.Id)
+	locationDomain.BrandDetails.Name.Ar = dto.BrandDetails.Name.Ar
+	locationDomain.BrandDetails.Name.En = dto.BrandDetails.Name.En
+	locationDomain.BrandDetails.Logo = dto.BrandDetails.Logo
+	locationDomain.BrandDetails.IsActive = dto.BrandDetails.IsActive
+
+	locationDomain.Status = consts.LocationStatusInActive
+
+	// Convert latitude and longitude to H3 index
+	latLng := h3.NewLatLng(payload.Lat, payload.Lng)
+	locationDomain.Index = h3.LatLngToCell(latLng, consts.H3Resolution).String()
+
+	// Set Branch Signature
+
+	locationDomain.BranchSignature = GenerateLocationBulkSignature(payload)
+
+	locationDomain.CreatedAt = time.Now().UTC()
+	locationDomain.UpdatedAt = time.Now().UTC()
+	return &locationDomain
+}
 func UpdateLocationBuilder(payload *location.StoreLocationDto, locationDomain *domain.Location) *domain.Location {
 
 	copier.Copy(&locationDomain, payload)
@@ -63,6 +102,25 @@ func UpdateLocationBuilder(payload *location.StoreLocationDto, locationDomain *d
 	return locationDomain
 }
 func GenerateLocationSignature(payload *location.StoreLocationDto) string {
+
+	jsonBytes, err := json.Marshal(payload.Name)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	nameString := string(jsonBytes)
+
+	jsonBytes, err = json.Marshal(payload.Street)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	streetString := string(jsonBytes)
+
+	return utils.Encrypt("", nameString+streetString+payload.Logo+payload.CoverImage)
+
+}
+func GenerateLocationBulkSignature(payload location.LocationDto) string {
 
 	jsonBytes, err := json.Marshal(payload.Name)
 	if err != nil {

@@ -15,13 +15,12 @@ type Brand struct {
 	Name             Name                 `json:"name" validate:"required"`
 	Logo             string               `json:"logo" bson:"logo"`
 	IsActive         bool                 `json:"is_active" bson:"is_active"`
-	SnoozedTill      string               `json:"snoozed_till" bson:"snoozed_till"`
 	CuisineIds       []primitive.ObjectID `json:"cuisine_ids" validate:"cuisine_ids_rule"`
 	DeletedAt        *time.Time           `json:"deleted_at" bson:"deleted_at"`
 }
 
 type BrandUseCase interface {
-	Create(ctx *context.Context, dto *brand.CreateBrandDto) validators.ErrorResponse
+	Create(ctx context.Context, dto *brand.CreateBrandDto) (*Brand, validators.ErrorResponse)
 	Update(ctx *context.Context, dto *brand.UpdateBrandDto) validators.ErrorResponse
 	Find(ctx *context.Context, id string) (*Brand, validators.ErrorResponse)
 	GetById(ctx *context.Context, id string) (*Brand, validators.ErrorResponse)

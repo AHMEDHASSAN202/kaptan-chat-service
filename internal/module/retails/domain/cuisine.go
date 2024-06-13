@@ -24,7 +24,7 @@ type Cuisine struct {
 }
 
 type CuisineUseCase interface {
-	Create(ctx *context.Context, dto *cuisine.CreateCuisineDto) validators.ErrorResponse
+	Create(ctx *context.Context, dto *cuisine.CreateCuisineDto) (*Cuisine, validators.ErrorResponse)
 	Update(ctx *context.Context, dto *cuisine.UpdateCuisineDto) validators.ErrorResponse
 	Find(ctx *context.Context, id string) (*Cuisine, validators.ErrorResponse)
 	GetById(ctx *context.Context, id string) (*Cuisine, validators.ErrorResponse)

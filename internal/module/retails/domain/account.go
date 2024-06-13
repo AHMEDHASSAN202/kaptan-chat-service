@@ -12,11 +12,13 @@ import (
 
 type Account struct {
 	mgm.DefaultModel `bson:",inline"`
-	Name             Name       `json:"name" bson:"name"`
-	Email            string     `json:"email" bson:"email"`
-	Password         string     `json:"-" bson:"password"`
-	Country          Country    `json:"country" bson:"country"`
-	DeletedAt        *time.Time `json:"-" bson:"deleted_at"`
+	Name             Name                 `json:"name" bson:"name"`
+	Email            string               `json:"email" bson:"email"`
+	Password         string               `json:"-" bson:"password"`
+	AllowedBrandIds  []primitive.ObjectID `json:"allowed_brand_ids" bson:"allowed_brand_ids"`
+	Country          Country              `json:"country" bson:"country"`
+	Brands           []Brand              `json:"brands" bson:"-"`
+	DeletedAt        *time.Time           `json:"-" bson:"deleted_at"`
 }
 
 type AccountUseCase interface {

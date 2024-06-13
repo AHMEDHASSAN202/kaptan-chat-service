@@ -11,6 +11,7 @@ import (
 	"samm/internal/module/retails/dto/brand"
 	"samm/pkg/database/mongodb"
 	"samm/pkg/logger"
+	"samm/pkg/utils"
 )
 
 type brandRepo struct {
@@ -29,12 +30,12 @@ func NewBrandRepository(dbs *mongo.Database, locationRepo domain.LocationReposit
 	}
 }
 
-func (i *brandRepo) Create(doc *domain.Brand) error {
-	err := mgm.Coll(doc).Create(doc)
+func (i *brandRepo) Create(doc *domain.Brand) (err error) {
+	err = mgm.Coll(doc).Create(doc)
 	if err != nil {
-		return err
+		return
 	}
-	return nil
+	return
 }
 
 func (i *brandRepo) Update(doc *domain.Brand) error {
@@ -102,6 +103,10 @@ func (i *brandRepo) List(ctx *context.Context, dto *brand.ListBrandDto) (brandsR
 	if dto.Query != "" {
 		pattern := ".*" + dto.Query + ".*"
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name.ar": bson.M{"$regex": pattern, "$options": "i"}}, {"name.en": bson.M{"$regex": pattern, "$options": "i"}}}})
+	}
+	if len(dto.Ids) > 0 && dto.Ids[0] != "" {
+		ids := utils.ConvertStringIdsToObjectIds(dto.Ids)
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"_id": bson.M{"$in": ids}})
 	}
 
 	data, err := New(i.brandCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
