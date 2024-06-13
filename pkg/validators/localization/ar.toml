@@ -75,4 +75,6 @@ description = "time format rule validation"
 other = "تنسيق الوقت غير صحيح"
 
 
-
+[Modifier_items_cant_contains_modifier_group]
+description = "Modifier items cant contains modifier group"
+other = "لا يمكن أن تحتوي عناصر الاختيار على مجموعة اختيارات"

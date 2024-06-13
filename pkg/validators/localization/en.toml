@@ -78,3 +78,7 @@ other = "time format is not valid"
 description = "Invalid mongo ids validation rule"
 other = "invalid id it should be objectId"
 
+[Modifier_items_cant_contains_modifier_group]
+description = "Modifier items cant contains modifier group"
+other = "Modifier items cant contains modifier group"
+

@@ -19,7 +19,7 @@ type UpdateItemDto struct {
 	Max               int                  `json:"max"`
 	Calories          int                  `json:"calories" validate:"required"`
 	Price             float64              `json:"price" validate:"required"`
-	ModifierGroupsIds []string             `json:"modifier_groups_ids" validate:"Invalid_mongo_ids_validation_rule"`
+	ModifierGroupsIds []string             `json:"modifier_groups_ids" validate:"Invalid_mongo_ids_validation_rule,Modifier_items_cant_contains_modifier_group"`
 	Availabilities    []Availability       `json:"availabilities"`
 	Tags              []string             `json:"tags"`
 	Image             string               `json:"image" validate:"required"`
@@ -32,5 +32,8 @@ func (input *UpdateItemDto) Validate(ctx context.Context, validate *validator.Va
 	return validators.ValidateStruct(ctx, validate, input, validators.CustomErrorTags{
 		ValidationTag:          localization.Item_name_is_unique_rules_validation,
 		RegisterValidationFunc: validateNameIsUnique,
+	}, validators.CustomErrorTags{
+		ValidationTag:          localization.Modifier_items_cant_contains_modifier_group,
+		RegisterValidationFunc: ModifierItemsCantContainsModifierGroup,
 	})
 }

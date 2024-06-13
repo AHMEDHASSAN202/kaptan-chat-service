@@ -150,7 +150,6 @@ func registerCustomValidation(c context.Context, validate *validator.Validate, c
 			return localization.GetTranslation(&c, fe.Tag(), nil, ut.Locale())
 		})
 		validate.RegisterValidation(tag.ValidationTag, tag.RegisterValidationFunc)
-		fmt.Println("registerCustomValidation", tag.ValidationTag)
 	}
 }
 
