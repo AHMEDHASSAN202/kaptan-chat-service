@@ -13,6 +13,8 @@ import (
 	"samm/pkg/validators/localization"
 )
 
+const AccountId = "666580eee476b942058b7fff"
+
 type MenuGroupHandler struct {
 	menuGroupUsecase domain.MenuGroupUseCase
 	validator        *validator.Validate
@@ -51,6 +53,7 @@ func (a *MenuGroupHandler) List(c echo.Context) error {
 	}
 
 	var input menu_group.ListMenuGroupDTO
+	input.AccountId = AccountId
 	err := c.Bind(&input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
@@ -96,6 +99,7 @@ func (a *MenuGroupHandler) Create(c echo.Context) error {
 	}
 
 	var input menu_group.CreateMenuGroupDTO
+	input.AccountId = AccountId
 	err := c.Bind(&input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
@@ -127,6 +131,7 @@ func (a *MenuGroupHandler) Update(c echo.Context) error {
 	}
 
 	var input menu_group.CreateMenuGroupDTO
+	input.AccountId = AccountId
 	input.ID = utils.ConvertStringIdToObjectId(id)
 
 	err := c.Bind(&input)
