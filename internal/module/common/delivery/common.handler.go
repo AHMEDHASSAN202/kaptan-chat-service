@@ -84,7 +84,7 @@ func (a *CommonHandler) Upload(c echo.Context) error {
 	//	return err
 	//}
 
-	return validators.SuccessResponse(c, map[string]interface{}{"data": uploadedFiles})
+	return validators.SuccessResponse(c, uploadedFiles)
 	//if err := c.Bind(data); err != nil {
 	//	return err
 	//}
