@@ -30,6 +30,7 @@ type (
 	Config struct {
 		Environment  string
 		Mongo        MongoConfig
+		AwsConfig    AwsConfig
 		HTTP         HTTPConfig
 		Echo         echoserver.EchoConfig
 		Limiter      LimiterConfig
@@ -63,6 +64,13 @@ type (
 		Burst int
 		TTL   time.Duration
 	}
+	AwsConfig struct {
+		AccessKey  string
+		SecretKey  string
+		Region     string
+		EndPoint   string
+		BucketName string
+	}
 )
 
 // Init populates Config struct with values from config file
@@ -70,7 +78,7 @@ type (
 func Init() (*Config, *MongoConfig,
 	*HTTPConfig,
 	*echoserver.EchoConfig,
-	*LimiterConfig,
+	*LimiterConfig, *AwsConfig,
 	logger.LoggerConfig, error) {
 	configsDir := "pkg/config/configs"
 	populateDefaults()
@@ -79,17 +87,17 @@ func Init() (*Config, *MongoConfig,
 		logrus.Info("Error  from load env. this mean the application load on the cloud not from a file.")
 	}
 	if err := parseConfigFile(configsDir, os.Getenv("APP_ENV")); err != nil {
-		return nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
+		return nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
 	}
 
 	var cfg Config
 	if err := unmarshal(&cfg); err != nil {
-		return nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
+		return nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
 	}
 
 	setFromEnv(&cfg)
 
-	return &cfg, &cfg.Mongo, &cfg.HTTP, &cfg.Echo, &cfg.Limiter, cfg.LoggerConfig, nil
+	return &cfg, &cfg.Mongo, &cfg.HTTP, &cfg.Echo, &cfg.Limiter, &cfg.AwsConfig, cfg.LoggerConfig, nil
 }
 
 func unmarshal(cfg *Config) error {
@@ -118,6 +126,12 @@ func setFromEnv(cfg *Config) {
 	cfg.HTTP.Host = os.Getenv("HTTP_HOST")
 
 	cfg.Environment = os.Getenv("APP_ENV")
+
+	cfg.AwsConfig.AccessKey = os.Getenv("AWS_ACCESS_KEY")
+	cfg.AwsConfig.SecretKey = os.Getenv("AWS_SECRET_ID")
+	cfg.AwsConfig.Region = os.Getenv("AWS_REGION")
+	cfg.AwsConfig.BucketName = os.Getenv("AWS_BUCKET_NAME")
+	cfg.AwsConfig.EndPoint = os.Getenv("AWS_END_POINT")
 
 	var port = defaultHTTPPort
 	if os.Getenv("PORT") != "" {

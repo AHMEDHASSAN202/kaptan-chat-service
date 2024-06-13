@@ -2,24 +2,36 @@ package common
 
 import (
 	"context"
+	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"mime/multipart"
+	"path/filepath"
 	"samm/internal/module/common/domain"
 	location "samm/internal/module/common/dto"
+	"samm/pkg/config"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
 )
 
 const tag = "CommonUseCase "
 
-func NewCommonUseCase(repo domain.CommonRepository, logger logger.ILogger) domain.CommonUseCase {
+func NewCommonUseCase(repo domain.CommonRepository, logger logger.ILogger, awsS3 *s3.Client,
+	awsConfig *config.AwsConfig) domain.CommonUseCase {
 	return &CommonUseCase{
-		repo:   repo,
-		logger: logger,
+		repo:      repo,
+		logger:    logger,
+		awsS3:     awsS3,
+		awsConfig: awsConfig,
 	}
 }
 
 type CommonUseCase struct {
-	repo   domain.CommonRepository
-	logger logger.ILogger
+	repo      domain.CommonRepository
+	logger    logger.ILogger
+	awsS3     *s3.Client
+	awsConfig *config.AwsConfig
 }
 
 func (l CommonUseCase) ListCities(ctx context.Context, payload *location.ListCitiesDto) (data interface{}, err validators.ErrorResponse) {
@@ -31,4 +43,31 @@ func (l CommonUseCase) ListCountries(ctx context.Context) (data interface{}, err
 
 	return CountriesBuilder(), validators.ErrorResponse{}
 
+}
+func (l CommonUseCase) UploadFile(ctx context.Context, file *multipart.FileHeader, filePath string) (string, validators.ErrorResponse) {
+
+	src, err := file.Open()
+	if err != nil {
+		fmt.Println(err, "Open")
+		return "", validators.GetErrorResponseFromErr(err)
+	}
+	defer src.Close()
+
+	uploader := manager.NewUploader(l.awsS3)
+
+	uploaderResp, err := uploader.Upload(ctx, &s3.PutObjectInput{
+
+		Bucket: aws.String(l.awsConfig.BucketName),
+
+		Key: aws.String(filepath.Join(filePath, filepath.Base(file.Filename))),
+
+		Body: src,
+	})
+
+	if err != nil {
+		fmt.Println("Error uploading file:", err)
+		return "", validators.GetErrorResponseFromErr(err)
+
+	}
+	return uploaderResp.Location, validators.ErrorResponse{}
 }

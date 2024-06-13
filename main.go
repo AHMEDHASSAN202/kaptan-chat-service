@@ -6,6 +6,7 @@ import (
 	"samm/internal/module/example"
 	"samm/internal/module/menu"
 	"samm/internal/module/retails"
+	"samm/pkg/aws"
 	"samm/pkg/config"
 	"samm/pkg/database"
 	"samm/pkg/http"
@@ -29,6 +30,7 @@ func main() {
 				echoserver.NewEchoServer,
 				httpclient.NewHttpClient,
 				validators.Init,
+				aws.Init,
 			),
 			example.Module,
 			menu.Module,
