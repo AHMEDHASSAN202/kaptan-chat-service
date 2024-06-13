@@ -13,6 +13,8 @@ import (
 	"samm/pkg/config"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
+	"strconv"
+	"time"
 )
 
 const tag = "CommonUseCase "
@@ -59,7 +61,7 @@ func (l CommonUseCase) UploadFile(ctx context.Context, file *multipart.FileHeade
 
 		Bucket: aws.String(l.awsConfig.BucketName),
 
-		Key: aws.String(filepath.Join(filePath, filepath.Base(file.Filename))),
+		Key: aws.String(filepath.Join(filePath, strconv.Itoa(int(time.Now().Unix()))+filepath.Base(file.Filename))),
 
 		Body: src,
 	})

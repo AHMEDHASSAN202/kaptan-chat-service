@@ -61,8 +61,7 @@ func (a *CommonHandler) Upload(c echo.Context) error {
 		return err
 	}
 	files := form.File["files"]
-	uploadedFiles := []string{}
-	uploadedFilesRelPath := []string{}
+	uploadedFiles := []map[string]string{}
 	data := location.UploadFile{}
 	err = c.Bind(&data)
 	if err != nil {
@@ -77,8 +76,7 @@ func (a *CommonHandler) Upload(c echo.Context) error {
 			a.logger.Error(errResp)
 			return validators.ErrorStatusBadRequest(c, errResp)
 		}
-		uploadedFiles = append(uploadedFiles, location)
-		uploadedFilesRelPath = append(uploadedFilesRelPath, getRelPath(location))
+		uploadedFiles = append(uploadedFiles, map[string]string{"fullPath": location, "relPath": getRelPath(location)})
 	}
 	//file, err := c.FormFile("file")
 	//if err != nil {
@@ -86,7 +84,7 @@ func (a *CommonHandler) Upload(c echo.Context) error {
 	//	return err
 	//}
 
-	return validators.SuccessResponse(c, map[string]interface{}{"data": map[string][]string{"fullPath": uploadedFiles, "relPath": uploadedFilesRelPath}})
+	return validators.SuccessResponse(c, map[string]interface{}{"data": uploadedFiles})
 	//if err := c.Bind(data); err != nil {
 	//	return err
 	//}
