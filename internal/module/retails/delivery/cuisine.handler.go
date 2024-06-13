@@ -69,7 +69,7 @@ func (a *CuisineHandler) Update(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil, nil))
 	}
 
 	var input cuisine.UpdateCuisineDto
@@ -127,7 +127,7 @@ func (a *CuisineHandler) Find(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil, nil))
 	}
 
 	cuisine, errResp := a.cuisineUsecase.Find(&ctx, id)
@@ -146,7 +146,7 @@ func (a *CuisineHandler) ChangeStatus(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	var input cuisine.ChangeCuisineStatusDto
@@ -179,7 +179,7 @@ func (a *CuisineHandler) Delete(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil, nil))
 	}
 
 	errResp := a.cuisineUsecase.SoftDelete(&ctx, id)

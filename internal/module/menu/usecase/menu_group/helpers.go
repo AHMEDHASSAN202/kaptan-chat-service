@@ -3,6 +3,7 @@ package menu_group
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"net/http"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/menu_group"
 	"samm/pkg/utils"
@@ -28,7 +29,7 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 	items, err := oRec.itemRepo.GetByIds(ctx, itemIds)
 	if err != nil || items == nil {
 		oRec.logger.Error(err)
-		return validators.GetErrorResponse(&ctx, "E1000", nil)
+		return validators.GetErrorResponse(&ctx, "E1000", nil, nil)
 	}
 
 	itemsMap := map[string]domain.Item{}
@@ -37,7 +38,7 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 	}
 
 	if len(itemsMap) != len(itemIds) {
-		return validators.GetErrorResponse(&ctx, "E1001", nil)
+		return validators.GetErrorResponse(&ctx, "E1001", nil, nil)
 	}
 
 	if dto.Categories != nil {
@@ -84,11 +85,11 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 func (oRec *MenuGroupUseCase) AuthorizeMenuGroup(ctx *context.Context, menuGroup *domain.MenuGroup, accountId primitive.ObjectID) validators.ErrorResponse {
 	if menuGroup == nil || menuGroup.ID.IsZero() {
 		oRec.logger.Error("AuthorizeMenuGroup-> Error In menuGroup")
-		return validators.GetErrorResponse(ctx, localization.E1002, nil)
+		return validators.GetErrorResponse(ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 	if !menuGroup.Authorized(accountId) {
 		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Menu Group -> ", menuGroup.ID)
-		return validators.GetErrorResponse(ctx, localization.E1006, nil)
+		return validators.GetErrorResponse(ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 	return validators.ErrorResponse{}
 }
