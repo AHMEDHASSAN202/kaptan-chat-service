@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"io/ioutil"
 	"mime/multipart"
 	"path/filepath"
 	"samm/internal/module/common/domain"
@@ -45,6 +46,31 @@ func (l CommonUseCase) ListCountries(ctx context.Context) (data interface{}, err
 
 	return CountriesBuilder(), validators.ErrorResponse{}
 
+}
+func (l CommonUseCase) ReadFile(ctx context.Context, objectKey string) (string, validators.ErrorResponse) {
+	bucketName := l.awsConfig.BucketName
+	fmt.Println(objectKey, bucketName)
+	objectKey = "phase 1.jpg"
+	getObjectOutput, err := l.awsS3.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: &bucketName,
+		Key:    &objectKey,
+	})
+
+	if err != nil {
+		fmt.Println(err, "GetObject", objectKey)
+		return "", validators.GetErrorResponseFromErr(err)
+	}
+
+	body, err := ioutil.ReadAll(getObjectOutput.Body)
+
+	if err != nil {
+		fmt.Println(err, "ReadAll")
+		return "", validators.GetErrorResponseFromErr(err)
+
+	}
+
+	defer getObjectOutput.Body.Close()
+	return string(body), validators.ErrorResponse{}
 }
 func (l CommonUseCase) UploadFile(ctx context.Context, file *multipart.FileHeader, filePath string) (string, validators.ErrorResponse) {
 
