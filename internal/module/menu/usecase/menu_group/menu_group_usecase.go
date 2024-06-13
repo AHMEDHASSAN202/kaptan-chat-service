@@ -56,7 +56,7 @@ func (oRec *MenuGroupUseCase) Update(ctx context.Context, dto *menu_group.Create
 	menuGroup, errFind := oRec.repo.Find(ctx, dto.ID)
 	if errFind != nil {
 		oRec.logger.Error("MenuGroupUseCase -> Update -> ", errFind)
-		return "", validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
+		return "", validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
 	authorized := oRec.AuthorizeMenuGroup(&ctx, menuGroup, utils.ConvertStringIdToObjectId(dto.AccountId))
