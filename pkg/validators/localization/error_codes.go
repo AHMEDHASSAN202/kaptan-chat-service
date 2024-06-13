@@ -9,6 +9,7 @@ const (
     E1000 = "E1000" // Database layer error
     E1001 = "E1001" // Invalid input
     E1002 = "E1002" // Resource not found
+    E1002Item = "E1002Item" // Menu item not found
     E1003 = "E1003" // Operation not permitted
     E1004 = "E1004" // Internal server error
     E1005 = "E1005" // Service unavailable

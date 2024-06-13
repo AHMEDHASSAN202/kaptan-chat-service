@@ -7,12 +7,12 @@ import (
 	"samm/pkg/validators"
 )
 
-type GetMenuGroupItemsDTO struct {
-	Query    string `json:"query" form:"query" query:"query"`
+type GetMenuGroupItemDTO struct {
+	ID       string `param:"id" validate:"required,mongodb"`
 	BranchId string `param:"branch_id" validate:"required,mongodb"`
 	dto.MobileHeaders
 }
 
-func (input *GetMenuGroupItemsDTO) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
+func (input *GetMenuGroupItemDTO) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
 	return validators.ValidateStruct(c.Request().Context(), validate, input)
 }
