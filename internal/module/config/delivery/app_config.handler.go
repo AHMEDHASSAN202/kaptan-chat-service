@@ -2,9 +2,11 @@ package delivery
 
 import (
 	"context"
+	"samm/internal/module/config/consts"
 	"samm/internal/module/config/custom_validators"
 	"samm/internal/module/config/domain"
 	"samm/internal/module/config/dto/app_config"
+	"samm/pkg/app_localization"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
 
@@ -17,15 +19,20 @@ type AppConfigHandler struct {
 	appConfigCustomValidator custom_validators.AppConfigCustomValidator
 	validator                *validator.Validate
 	logger                   logger.ILogger
+	localizationData         map[string]interface{}
 }
 
-// InitModifierGroupController will initialize the article's HTTP controller
+// InitAppConfigController will initialize the article's HTTP controller
 func InitAppConfigController(e *echo.Echo, appConfigUsecase domain.AppConfigUseCase, appConfigCustomValidator custom_validators.AppConfigCustomValidator, validator *validator.Validate, logger logger.ILogger) {
+	// Get Localization Data
+	localizationData := app_localization.ReadLocalizationFiles(consts.USER_APP)
+
 	handler := &AppConfigHandler{
 		appConfigUsecase:         appConfigUsecase,
 		appConfigCustomValidator: appConfigCustomValidator,
 		validator:                validator,
 		logger:                   logger,
+		localizationData:         localizationData,
 	}
 	admin := e.Group("api/v1/admin/app-config")
 	{
@@ -40,6 +47,7 @@ func InitAppConfigController(e *echo.Echo, appConfigUsecase domain.AppConfigUseC
 	mobile := e.Group("api/v1/mobile")
 	{
 		mobile.GET("/config", handler.FindMobileConfig)
+		mobile.GET("/app-localization", handler.GetAppLocalization)
 	}
 }
 
@@ -204,4 +212,8 @@ func (a *AppConfigHandler) FindMobileConfig(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{"config": mobileConfig})
+}
+
+func (a *AppConfigHandler) GetAppLocalization(c echo.Context) error {
+	return validators.SuccessResponse(c, map[string]interface{}{"localization": a.localizationData})
 }
