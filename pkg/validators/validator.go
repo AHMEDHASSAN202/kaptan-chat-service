@@ -176,10 +176,6 @@ func GetErrorResponse(ctx *context.Context, code string, data map[string]interfa
 	}
 }
 
-func Success(c echo.Context, data any) error {
-	c.JSON(http.StatusOK, data)
-	return nil
-}
 func SuccessResponse(c echo.Context, data any) error {
 	if data == nil {
 		data = make(map[string]interface{})
