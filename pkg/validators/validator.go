@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"net/http"
 	"reflect"
+	"samm/pkg/utils"
 	"samm/pkg/validators/localization"
 	"strings"
 )
@@ -26,6 +27,7 @@ type ErrorResponse struct {
 	ValidationErrors   map[string][]string `json:"validation_errors"`
 	IsError            bool                `json:"-"`
 	ErrorMessageObject *Message            `json:"message"`
+	StatusCode         int                 `json:"-"`
 }
 type Response struct {
 	Data    interface{} `json:"data"`
@@ -164,7 +166,7 @@ func GetErrorResponseFromErr(e error) ErrorResponse {
 	}
 }
 
-func GetErrorResponse(ctx *context.Context, code string, data map[string]interface{}) ErrorResponse {
+func GetErrorResponse(ctx *context.Context, code string, data map[string]interface{}, statusCode *int) ErrorResponse {
 	message := localization.GetTranslation(ctx, code, data, "")
 	return ErrorResponse{
 		ValidationErrors: nil,
@@ -173,6 +175,7 @@ func GetErrorResponse(ctx *context.Context, code string, data map[string]interfa
 			Text: message,
 			Code: code,
 		},
+		StatusCode: utils.If(statusCode == nil, 0, *statusCode).(int),
 	}
 }
 
@@ -184,6 +187,14 @@ func SuccessResponse(c echo.Context, data any) error {
 	res := Response{Status: true, Message: "Success", Data: data}
 	c.JSON(http.StatusOK, res)
 	return nil
+}
+
+func ErrorResp(c echo.Context, validationErr ErrorResponse) error {
+	if validationErr.StatusCode == 0 {
+		validationErr.StatusCode = http.StatusBadRequest
+	}
+	c.JSON(validationErr.StatusCode, validationErr)
+	return errors.New("ErrorStatusUnprocessableEntity")
 }
 
 func ErrorStatusUnprocessableEntity(c echo.Context, validationErr ErrorResponse) error {

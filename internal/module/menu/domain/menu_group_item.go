@@ -53,5 +53,6 @@ type MenuGroupItemRepository interface {
 	ChangeItemStatus(ctx context.Context, id primitive.ObjectID, dto *menu_group.ChangeMenuGroupStatusDto, adminDetails dto.AdminDetails) error
 	DeleteByCategory(ctx context.Context, dto *menu_group.DeleteEntityFromMenuGroupDto) error
 	Delete(ctx context.Context, dto *menu_group.DeleteEntityFromMenuGroupDto) error
-	MobileGetMenuGroupItems(ctx context.Context, dto *menu_group.GetMenuGroupItemDTO) (*[]menu_group2.MobileGetMenuGroupItems, error)
+	MobileGetMenuGroupItems(ctx context.Context, dto *menu_group.GetMenuGroupItemsDTO) (*[]menu_group2.MobileGetMenuGroupItems, error)
+	MobileGetMenuGroupItem(ctx context.Context, dto *menu_group.GetMenuGroupItemDTO) (*menu_group2.MobileGetItem, error)
 }

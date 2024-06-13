@@ -71,7 +71,7 @@ func (a *BrandHandler) Update(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil, nil))
 	}
 
 	var input brand.UpdateBrandDto
@@ -131,7 +131,7 @@ func (a *BrandHandler) Find(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil, nil))
 	}
 
 	brand, errResp := a.brandUsecase.Find(&ctx, id)
@@ -150,7 +150,7 @@ func (a *BrandHandler) ChangeStatus(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	var input brand.ChangeBrandStatusDto
@@ -183,7 +183,7 @@ func (a *BrandHandler) Delete(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil, nil))
 	}
 
 	errResp := a.brandUsecase.SoftDelete(&ctx, id)

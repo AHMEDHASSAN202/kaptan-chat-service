@@ -3,6 +3,7 @@ package menu_group_item
 import (
 	"context"
 	"github.com/kamva/mgm/v3"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -13,16 +14,19 @@ import (
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/utils/dto"
+	"samm/pkg/validators/localization"
 )
 
 type menuGroupItemRepo struct {
 	menuGroupItemCollection *mgm.Collection
+	logger                  logger.ILogger
 }
 
-func NewMenuGroupItemRepository(dbs *mongo.Database) domain.MenuGroupItemRepository {
+func NewMenuGroupItemRepository(dbs *mongo.Database, log logger.ILogger) domain.MenuGroupItemRepository {
 	menuGroupItemCollection := mgm.Coll(&domain.MenuGroupItem{})
 	return &menuGroupItemRepo{
 		menuGroupItemCollection: menuGroupItemCollection,
+		logger:                  log,
 	}
 }
 
@@ -101,7 +105,7 @@ func (i *menuGroupItemRepo) Delete(ctx context.Context, dto *menu_group.DeleteEn
 	return nil
 }
 
-func (i *menuGroupItemRepo) MobileGetMenuGroupItems(ctx context.Context, dto *menu_group.GetMenuGroupItemDTO) (*[]menu_group2.MobileGetMenuGroupItems, error) {
+func (i *menuGroupItemRepo) MobileGetMenuGroupItems(ctx context.Context, dto *menu_group.GetMenuGroupItemsDTO) (*[]menu_group2.MobileGetMenuGroupItems, error) {
 	var pipeline []interface{}
 
 	matching := bson.M{
@@ -163,14 +167,78 @@ func (i *menuGroupItemRepo) MobileGetMenuGroupItems(ctx context.Context, dto *me
 
 	cursor, err := i.menuGroupItemCollection.Aggregate(ctx, pipeline)
 	if err != nil {
-		logger.Logger.Error("menuGroupItemRepo -> MobileGetMenuGroupItems -> ", err)
+		i.logger.Error("menuGroupItemRepo -> MobileGetMenuGroupItems -> ", err)
 		return &items, err
 	}
 
 	if err = cursor.All(ctx, &items); err != nil {
-		logger.Logger.Error("menuGroupItemRepo -> MobileGetMenuGroupItems -> ", err)
+		i.logger.Error("menuGroupItemRepo -> MobileGetMenuGroupItems -> ", err)
 		return &items, err
 	}
 
 	return &items, nil
+}
+
+func (i *menuGroupItemRepo) MobileGetMenuGroupItem(ctx context.Context, dto *menu_group.GetMenuGroupItemDTO) (*menu_group2.MobileGetItem, error) {
+	var pipeline []interface{}
+
+	matching := bson.M{
+		"$match": bson.M{"$and": []interface{}{
+			bson.D{{"_id", utils.ConvertStringIdToObjectId(dto.ID)}},
+			bson.D{{"menu_group.branch_ids", utils.ConvertStringIdToObjectId(dto.BranchId)}},
+			bson.D{{"menu_group.status", "active"}},
+			bson.D{{"category.status", "active"}},
+			bson.D{{"status", "active"}},
+			AddAvailabilityQuery(dto.CountryId, "$menu_group.availabilities"),
+			AddAvailabilityQuery(dto.CountryId, "$availabilities"),
+		}},
+	}
+
+	modifierGroupLookup := bson.M{
+		"$lookup": bson.M{
+			"from":         "modifier_groups",
+			"localField":   "modifier_group_ids",
+			"foreignField": "_id",
+			"pipeline": []bson.M{
+				{"$match": bson.M{"status": "active", "deleted_at": nil}},
+			},
+			"as": "modifier_groups",
+		},
+	}
+
+	addonsLookup := bson.M{
+		"$lookup": bson.M{
+			"from":         "items",
+			"localField":   "modifier_groups.product_ids",
+			"foreignField": "_id",
+			"pipeline": []bson.M{
+				{"$match": bson.M{"status": "active", "deleted_at": nil}},
+			},
+			"as": "addons",
+		},
+	}
+
+	limit := bson.M{"$limit": 1}
+
+	pipeline = append(pipeline, matching, modifierGroupLookup, addonsLookup, limit)
+
+	item := menu_group2.MobileGetItem{}
+
+	cursor, errDB := i.menuGroupItemCollection.Aggregate(ctx, pipeline)
+	if errDB != nil {
+		i.logger.Error("menuGroupItemRepo -> MobileGetMenuGroupItem -> ", errDB)
+		return &item, errDB
+	}
+
+	if cursor.Next(ctx) {
+		if err := cursor.Decode(&item); err != nil {
+			i.logger.Error("menuGroupItemRepo -> MobileGetMenuGroupItem -> Decode -> ", err)
+			return &item, err
+		}
+	} else {
+		i.logger.Error("menuGroupRepo -> MobileGetMenuGroupItem -> ", cursor.Err())
+		return &item, errors.New(localization.GetTranslation(&ctx, localization.E1000, nil, ""))
+	}
+
+	return &item, nil
 }

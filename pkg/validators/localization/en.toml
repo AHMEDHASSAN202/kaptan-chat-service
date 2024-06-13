@@ -86,3 +86,7 @@ other = "invalid id it should be objectId"
 description = "Modifier items cant contains modifier group"
 other = "Modifier items cant contains modifier group"
 
+[E1002Item]
+description = "Menu item not found"
+other = "The menu item was not found or is currently unavailable. Please check back later."
+

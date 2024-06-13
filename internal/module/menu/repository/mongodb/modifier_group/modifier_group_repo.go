@@ -25,6 +25,7 @@ func NewModifierGroupRepository(dbs *mongo.Database) domain.ModifierGroupReposit
 	modifierGroupCollection := mgm.Coll(&domain.ModifierGroup{})
 	//text search modifier group
 	mongodb.CreateIndex(modifierGroupCollection.Collection, false, bson.E{"name.ar", mongodb.IndexType.Text}, bson.E{"name.en", mongodb.IndexType.Text})
+	mongodb.CreateIndex(modifierGroupCollection.Collection, false, bson.E{"status", mongodb.IndexType.Asc}, bson.E{"deleted_at", mongodb.IndexType.Asc})
 	//make sure there are no duplicated modifier group
 	mongodb.CreateIndex(modifierGroupCollection.Collection, true, bson.E{"name.ar", mongodb.IndexType.Asc}, bson.E{"name.en", mongodb.IndexType.Asc}, bson.E{"account_id", mongodb.IndexType.Asc}, bson.E{"deleted_at", mongodb.IndexType.Asc})
 	return &modifierGroupRepo{

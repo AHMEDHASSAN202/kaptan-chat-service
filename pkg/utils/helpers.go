@@ -354,3 +354,8 @@ func IsNil(i interface{}) bool {
 	v := reflect.ValueOf(i)
 	return v.Kind() == reflect.Ptr && v.IsNil()
 }
+
+func GetAsPointer[T any](p T) *T {
+	v := &p
+	return v
+}
