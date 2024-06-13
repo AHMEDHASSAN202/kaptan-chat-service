@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"samm/internal/module/retails/consts"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/location"
 	"samm/pkg/utils"
@@ -136,4 +137,76 @@ func (i *locationRepository) SoftDeleteBulkByBrandId(ctx context.Context, brandI
 		return err
 	}
 	return nil
+}
+
+func (l locationRepository) ListMobileLocation(ctx context.Context, payload *location.ListLocationMobileDto) (locations []domain.LocationMobile, paginationResult *PaginationData, err error) {
+	models := make([]domain.LocationMobile, 0)
+	var pipeline []interface{}
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.M{"deleted_at": nil},
+		bson.M{"country._id": payload.MobileHeaders.CountryId},
+		bson.M{"brand_details.is_active": true},
+		bson.M{"status": consts.LocationStatusActive},
+	}}}
+
+	if payload.Query != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{
+			"$or": []bson.M{
+				{"name.ar": bson.M{"$regex": payload.Query, "$options": "i"}},
+				{"name.en": bson.M{"$regex": payload.Query, "$options": "i"}},
+				{"tags": bson.M{"$regex": payload.Query, "$options": "i"}},
+				{"phone": bson.M{"$regex": payload.Query, "$options": "i"}},
+			},
+		})
+	}
+	if payload.BrandId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{
+			"brand_details._id": utils.ConvertStringIdToObjectId(payload.BrandId),
+		})
+	}
+
+	pipeline = append(pipeline, matching)
+	pipeline = append(pipeline, bson.M{
+		"$project": bson.M{
+			"name":             1,
+			"city":             1,
+			"street":           1,
+			"cover_image":      1,
+			"logo":             1,
+			"phone":            1,
+			"coordinate":       1,
+			"brand_details":    1,
+			"preparation_time": 1,
+			"country":          1,
+		},
+	})
+
+	data, err := New(l.locationCollection.Collection).Context(ctx).Limit(payload.Limit).Page(payload.Page).Sort("created_at", -1).Aggregate(pipeline...)
+	if data == nil || data.Data == nil {
+		return models, nil, err
+	}
+
+	for _, raw := range data.Data {
+		model := domain.LocationMobile{}
+		errUnmarshal := bson.Unmarshal(raw, &model)
+		if errUnmarshal != nil {
+			break
+		}
+		models = append(models, model)
+	}
+	return models, &data.Pagination, err
+
+}
+
+func (l locationRepository) FindMobileLocation(ctx context.Context, Id primitive.ObjectID) (location *domain.LocationMobile, err error) {
+	domainData := domain.LocationMobile{}
+	filter := bson.M{
+		"deleted_at":              nil,
+		"brand_details.is_active": true,
+		"status":                  consts.LocationStatusActive,
+		"_id":                     Id,
+	}
+	err = l.locationCollection.FirstWithCtx(ctx, filter, &domainData)
+
+	return &domainData, err
 }

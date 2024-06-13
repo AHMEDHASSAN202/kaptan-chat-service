@@ -16,6 +16,15 @@ type LocationUseCase struct {
 	logger logger.ILogger
 }
 
+const tag = " LocationUseCase "
+
+func NewLocationUseCase(repo domain.LocationRepository, logger logger.ILogger) domain.LocationUseCase {
+	return &LocationUseCase{
+		repo:   repo,
+		logger: logger,
+	}
+}
+
 func (l LocationUseCase) StoreLocation(ctx context.Context, payload *location.StoreLocationDto) (err validators.ErrorResponse) {
 
 	errRe := l.repo.StoreLocation(ctx, LocationBuilder(payload))
@@ -101,6 +110,7 @@ func (l LocationUseCase) ListLocation(ctx context.Context, payload *location.Lis
 	return results, paginationResult, validators.ErrorResponse{}
 
 }
+
 func (l *LocationUseCase) ToggleSnooze(ctx context.Context, dto *location.LocationToggleSnoozeDto) validators.ErrorResponse {
 	locationDomain, err := l.repo.FindLocation(ctx, dto.Id)
 	if err != nil {
@@ -114,11 +124,19 @@ func (l *LocationUseCase) ToggleSnooze(ctx context.Context, dto *location.Locati
 	return validators.ErrorResponse{}
 }
 
-const tag = " LocationUseCase "
+func (l LocationUseCase) ListMobileLocation(ctx context.Context, payload *location.ListLocationMobileDto) (locations []domain.LocationMobile, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse) {
 
-func NewLocationUseCase(repo domain.LocationRepository, logger logger.ILogger) domain.LocationUseCase {
-	return &LocationUseCase{
-		repo:   repo,
-		logger: logger,
+	results, paginationResult, errRe := l.repo.ListMobileLocation(ctx, payload)
+	if errRe != nil {
+		return results, paginationResult, validators.GetErrorResponseFromErr(errRe)
 	}
+	return results, paginationResult, validators.ErrorResponse{}
+
+}
+func (l LocationUseCase) FindMobileLocation(ctx context.Context, Id string) (location domain.LocationMobile, err validators.ErrorResponse) {
+	domainLocation, errRe := l.repo.FindMobileLocation(ctx, utils.ConvertStringIdToObjectId(Id))
+	if errRe != nil {
+		return *domainLocation, validators.GetErrorResponseFromErr(errRe)
+	}
+	return *domainLocation, validators.ErrorResponse{}
 }
