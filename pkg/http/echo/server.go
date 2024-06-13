@@ -23,6 +23,7 @@ func RunServers(lc fx.Lifecycle, log logger.ILogger, e *echo.Echo, ctx context.C
 				}
 			}()
 			e.Use(echomiddleware.AppendLangMiddleware)
+			e.Use(echomiddleware.ServerHeader)
 
 			e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 				AllowOrigins: []string{"*"},
