@@ -209,7 +209,11 @@ func (a *LocationHandler) FindMobileLocation(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
-	data, errResp := a.locationUsecase.FindMobileLocation(ctx, id)
+
+	var payload location.FindLocationMobileDto
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+	data, errResp := a.locationUsecase.FindMobileLocation(ctx, id, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)

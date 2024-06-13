@@ -10,6 +10,7 @@ import (
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/location"
 	"samm/pkg/utils"
+	"strings"
 	"time"
 )
 
@@ -36,7 +37,9 @@ func LocationBuilder(payload *location.StoreLocationDto) *domain.Location {
 	// Set Branch Signature
 
 	locationDomain.BranchSignature = GenerateLocationSignature(payload)
-
+	locationDomain.WorkingHour = mapWorkingHours(locationDomain.WorkingHour)
+	locationDomain.WorkingHourEid = mapWorkingHours(locationDomain.WorkingHourEid)
+	locationDomain.WorkingHourRamadan = mapWorkingHours(locationDomain.WorkingHourRamadan)
 	locationDomain.CreatedAt = time.Now().UTC()
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return &locationDomain
@@ -65,7 +68,9 @@ func LocationBulkBuilder(payload location.LocationDto, dto location.StoreBulkLoc
 	locationDomain.BrandDetails.Name.En = dto.BrandDetails.Name.En
 	locationDomain.BrandDetails.Logo = dto.BrandDetails.Logo
 	locationDomain.BrandDetails.IsActive = dto.BrandDetails.IsActive
-
+	locationDomain.WorkingHour = mapWorkingHours(locationDomain.WorkingHour)
+	locationDomain.WorkingHourEid = mapWorkingHours(locationDomain.WorkingHourEid)
+	locationDomain.WorkingHourRamadan = mapWorkingHours(locationDomain.WorkingHourRamadan)
 	locationDomain.Status = consts.LocationStatusInActive
 
 	// Convert latitude and longitude to H3 index
@@ -97,6 +102,9 @@ func UpdateLocationBuilder(payload *location.StoreLocationDto, locationDomain *d
 	// Convert latitude and longitude to H3 index
 	latLng := h3.NewLatLng(payload.Lat, payload.Lng)
 	locationDomain.Index = h3.LatLngToCell(latLng, consts.H3Resolution).String()
+	locationDomain.WorkingHour = mapWorkingHours(locationDomain.WorkingHour)
+	locationDomain.WorkingHourEid = mapWorkingHours(locationDomain.WorkingHourEid)
+	locationDomain.WorkingHourRamadan = mapWorkingHours(locationDomain.WorkingHourRamadan)
 
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return locationDomain
@@ -147,4 +155,12 @@ func domainBuilderToggleSnooze(dto *location.LocationToggleSnoozeDto, domainData
 	domainData.UpdatedAt = time.Now()
 	domainData.SnoozeTo = &snoozedTill
 	return domainData
+}
+func mapWorkingHours(workingHours []domain.WorkingHour) []domain.WorkingHour {
+	items := make([]domain.WorkingHour, 0)
+	for _, hour := range workingHours {
+		hour.Day = strings.ToLower(hour.Day)
+		items = append(items, hour)
+	}
+	return items
 }

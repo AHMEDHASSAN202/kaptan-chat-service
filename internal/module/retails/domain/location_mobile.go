@@ -2,19 +2,73 @@ package domain
 
 import (
 	"github.com/kamva/mgm/v3"
+	"time"
 )
+
+type Status struct {
+	SnoozeTo string `json:"snooze_to"`
+	Status   string `json:"status" bson:"status"`
+	Meta     Meta   `json:"meta" bson:"meta"`
+}
+type Meta struct {
+	NameEN string `json:"name_en" bson:"name_en"`
+	NameAr string `json:"name_ar" bson:"name_ar"`
+	Color  string `json:"color" bson:"color"`
+}
 
 type LocationMobile struct {
 	mgm.DefaultModel `bson:",inline"`
-	Name             Name   `json:"name" bson:"name"`
-	City             City   `json:"city" bson:"city"`
-	Street           Name   `json:"street" bson:"street"`
-	CoverImage       string `json:"cover_image" bson:"cover_image"`
-	Logo             string `json:"logo" bson:"logo"`
-	// Open Status
-	Phone           string       `json:"phone" bson:"phone"`
-	Coordinate      Coordinate   `json:"coordinate" bson:"coordinate"`
-	BrandDetails    BrandDetails `json:"brand_details" bson:"brand_details"`
-	PreparationTime int          `json:"preparation_time" bson:"preparation_time"`
-	Country         Country      `json:"country" bson:"country"`
+	Name             Name         `json:"name" bson:"name"`
+	City             City         `json:"city" bson:"city"`
+	Street           Name         `json:"street" bson:"street"`
+	CoverImage       string       `json:"cover_image" bson:"cover_image"`
+	Logo             string       `json:"logo" bson:"logo"`
+	SnoozeTo         *time.Time   `json:"snooze_to" bson:"snooze_to"`
+	IsOpen           bool         `json:"is_open" bson:"is_open"`
+	Phone            string       `json:"phone" bson:"phone"`
+	Coordinate       Coordinate   `json:"coordinate" bson:"coordinate"`
+	BrandDetails     BrandDetails `json:"brand_details" bson:"brand_details"`
+	PreparationTime  int          `json:"preparation_time" bson:"preparation_time"`
+	Country          Country      `json:"country" bson:"country"`
+	Status           Status       `json:"status" bson:"-"`
+}
+
+func (payload *LocationMobile) SetOpenStatus() {
+	open := payload.IsOpen
+	now := time.Now().UTC()
+
+	if open {
+		payload.Status = Status{
+			SnoozeTo: "",
+			Status:   "open",
+			Meta: Meta{
+				NameEN: "Open",
+				NameAr: "مفتوح",
+				Color:  "",
+			},
+		}
+	} else {
+		payload.Status = Status{
+			SnoozeTo: "",
+			Status:   "closed",
+			Meta: Meta{
+				NameEN: "Closed",
+				NameAr: "مغلق",
+				Color:  "",
+			},
+		}
+	}
+
+	if payload.SnoozeTo != nil && now.Before(*payload.SnoozeTo) {
+		payload.Status = Status{
+			SnoozeTo: "",
+			Status:   "busy",
+			Meta: Meta{
+				NameEN: "Busy",
+				NameAr: "مشغول",
+				Color:  "",
+			},
+		}
+	}
+
 }

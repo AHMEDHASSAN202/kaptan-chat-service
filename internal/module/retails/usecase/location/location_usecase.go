@@ -133,8 +133,8 @@ func (l LocationUseCase) ListMobileLocation(ctx context.Context, payload *locati
 	return results, paginationResult, validators.ErrorResponse{}
 
 }
-func (l LocationUseCase) FindMobileLocation(ctx context.Context, Id string) (location domain.LocationMobile, err validators.ErrorResponse) {
-	domainLocation, errRe := l.repo.FindMobileLocation(ctx, utils.ConvertStringIdToObjectId(Id))
+func (l LocationUseCase) FindMobileLocation(ctx context.Context, Id string, payload *location.FindLocationMobileDto) (location domain.LocationMobile, err validators.ErrorResponse) {
+	domainLocation, errRe := l.repo.FindMobileLocation(ctx, utils.ConvertStringIdToObjectId(Id), payload)
 	if errRe != nil {
 		return *domainLocation, validators.GetErrorResponseFromErr(errRe)
 	}

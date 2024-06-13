@@ -99,7 +99,7 @@ type LocationUseCase interface {
 	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse)
 
 	ListMobileLocation(ctx context.Context, payload *location.ListLocationMobileDto) (locations []LocationMobile, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse)
-	FindMobileLocation(ctx context.Context, Id string) (location LocationMobile, err validators.ErrorResponse)
+	FindMobileLocation(ctx context.Context, Id string, payload *location.FindLocationMobileDto) (location LocationMobile, err validators.ErrorResponse)
 }
 
 type LocationRepository interface {
@@ -114,5 +114,5 @@ type LocationRepository interface {
 	SoftDeleteBulkByBrandId(ctx context.Context, brandId primitive.ObjectID) error
 
 	ListMobileLocation(ctx context.Context, payload *location.ListLocationMobileDto) (locations []LocationMobile, paginationResult *mongopagination.PaginationData, err error)
-	FindMobileLocation(ctx context.Context, Id primitive.ObjectID) (location *LocationMobile, err error)
+	FindMobileLocation(ctx context.Context, Id primitive.ObjectID, payload *location.FindLocationMobileDto) (location *LocationMobile, err error)
 }

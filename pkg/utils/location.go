@@ -1,5 +1,10 @@
 package utils
 
+import (
+	"strings"
+	"time"
+)
+
 type Point struct {
 	Lat float64
 	Lng float64
@@ -181,4 +186,20 @@ func GetCountryFromLatLng(lat float64, lng float64) string {
 		return "EG"
 	}
 	return "SA"
+}
+
+func GetDayByCountry(countryCode string) string {
+	timezones := map[string]string{"SA": "Asia/Riyadh", "EG": "Africa/Cairo"}
+	timezone, exists := timezones[strings.ToUpper(countryCode)]
+	if !exists {
+		timezone = "Asia/Riyadh"
+	}
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return strings.ToLower(time.Now().UTC().Weekday().String())
+	}
+	now := time.Now().In(loc)
+	currentDay := now.Weekday()
+	day := currentDay.String()
+	return strings.ToLower(day)
 }
