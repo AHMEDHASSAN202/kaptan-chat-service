@@ -65,7 +65,7 @@ type StoreLocationDto struct {
 	WorkingHour        []WorkingHour  `json:"working_hour" `
 	WorkingHourEid     []WorkingHour  `json:"working_hour_eid"`
 	WorkingHourRamadan []WorkingHour  `json:"working_hour_ramadan"`
-	Percent            float64        ` json:"percent" validate:"required"`
+	Percent            float64        `json:"percent" `
 	PercentsDate       []PercentsDate `json:"percents_date"`
 	PreparationTime    int            `json:"preparation_time" validate:"required"`
 	AutoAccept         bool           `json:"auto_accept" `
