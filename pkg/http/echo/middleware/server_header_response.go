@@ -5,10 +5,11 @@ import (
 	"os"
 )
 
+const HEADER_NAME = "STORAGE-URL"
+const HEADER_NAME_ENV = "STORAGE_URL"
+
 func ServerHeader(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		HEADER_NAME := "STORAGE-URL"
-		HEADER_NAME_ENV := "STORAGE_URL"
 		browseUrl := os.Getenv(HEADER_NAME_ENV)
 		c.Response().Header().Set(HEADER_NAME, browseUrl)
 		return next(c)
