@@ -2,11 +2,11 @@ package brand
 
 import (
 	"context"
-	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/brand"
+	"samm/internal/module/retails/responses"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -67,13 +67,12 @@ func (oRec *BrandUseCase) Find(ctx *context.Context, id string) (*domain.Brand, 
 	return brand, validators.ErrorResponse{}
 }
 
-func (oRec *BrandUseCase) List(ctx *context.Context, dto *brand.ListBrandDto) (brands *[]domain.Brand, paginationMeta *PaginationData, err validators.ErrorResponse) {
+func (oRec *BrandUseCase) List(ctx *context.Context, dto *brand.ListBrandDto) (*responses.ListResponse, validators.ErrorResponse) {
 	brands, paginationMeta, resErr := oRec.repo.List(ctx, dto)
 	if resErr != nil {
-		err = validators.GetErrorResponseFromErr(resErr)
-		return
+		return nil, validators.GetErrorResponseFromErr(resErr)
 	}
-	return
+	return responses.SetListResponse(brands, paginationMeta), validators.ErrorResponse{}
 }
 
 func (oRec *BrandUseCase) ChangeStatus(ctx *context.Context, dto *brand.ChangeBrandStatusDto) validators.ErrorResponse {
