@@ -86,7 +86,7 @@ func (a *AppConfigHandler) Update(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil, nil))
 	}
 
 	var input app_config.CreateUpdateAppConfigDto
@@ -118,7 +118,7 @@ func (a *AppConfigHandler) FindById(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil, nil))
 	}
 
 	config, errResp := a.appConfigUsecase.FindById(ctx, id)
@@ -137,7 +137,7 @@ func (a *AppConfigHandler) FindByType(c echo.Context) error {
 
 	configType := c.Param("type")
 	if configType == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil, nil))
 	}
 
 	config, errResp := a.appConfigUsecase.FindByType(ctx, configType)
@@ -177,7 +177,7 @@ func (a *AppConfigHandler) Delete(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil, nil))
 	}
 
 	errResp := a.appConfigUsecase.SoftDelete(ctx, id)

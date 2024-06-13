@@ -6,6 +6,7 @@ import (
 	"samm/internal/module/menu/dto/modifier_group"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -72,7 +73,7 @@ func (a *ModifierGroupHandler) Update(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	var input modifier_group.CreateUpdateModifierGroupDto
@@ -105,7 +106,7 @@ func (a *ModifierGroupHandler) Find(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	modifierGroup, errResp := a.modifierGroupUsecase.GetById(ctx, id)
@@ -146,7 +147,7 @@ func (a *ModifierGroupHandler) ChangeStatus(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	var input modifier_group.ChangeModifierGroupStatusDto
@@ -177,7 +178,7 @@ func (a *ModifierGroupHandler) Delete(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	errResp := a.modifierGroupUsecase.SoftDelete(ctx, id)

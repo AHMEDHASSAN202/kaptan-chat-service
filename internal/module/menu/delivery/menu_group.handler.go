@@ -13,6 +13,8 @@ import (
 	"samm/pkg/validators/localization"
 )
 
+const AccountId = "666580eee476b942058b7fff"
+
 type MenuGroupHandler struct {
 	menuGroupUsecase domain.MenuGroupUseCase
 	validator        *validator.Validate
@@ -51,6 +53,7 @@ func (a *MenuGroupHandler) List(c echo.Context) error {
 	}
 
 	var input menu_group.ListMenuGroupDTO
+	input.AccountId = AccountId
 	err := c.Bind(&input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
@@ -78,12 +81,12 @@ func (a *MenuGroupHandler) Find(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	data, errResp := a.menuGroupUsecase.Find(ctx, utils.ConvertStringIdToObjectId(id))
 	if errResp.IsError {
-		return validators.ErrorStatusBadRequest(c, errResp)
+		return validators.ErrorResp(c, errResp)
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{"menu_group": data})
@@ -96,6 +99,7 @@ func (a *MenuGroupHandler) Create(c echo.Context) error {
 	}
 
 	var input menu_group.CreateMenuGroupDTO
+	input.AccountId = AccountId
 	err := c.Bind(&input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
@@ -109,7 +113,7 @@ func (a *MenuGroupHandler) Create(c echo.Context) error {
 
 	id, errResp := a.menuGroupUsecase.Create(ctx, &input)
 	if errResp.IsError {
-		return validators.ErrorStatusBadRequest(c, errResp)
+		return validators.ErrorResp(c, errResp)
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{"id": id})
@@ -123,10 +127,11 @@ func (a *MenuGroupHandler) Update(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	var input menu_group.CreateMenuGroupDTO
+	input.AccountId = AccountId
 	input.ID = utils.ConvertStringIdToObjectId(id)
 
 	err := c.Bind(&input)
@@ -142,7 +147,7 @@ func (a *MenuGroupHandler) Update(c echo.Context) error {
 
 	id, errResp := a.menuGroupUsecase.Update(ctx, &input)
 	if errResp.IsError {
-		return validators.ErrorStatusBadRequest(c, errResp)
+		return validators.ErrorResp(c, errResp)
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{"id": id})
@@ -156,12 +161,12 @@ func (a *MenuGroupHandler) Delete(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	errResp := a.menuGroupUsecase.Delete(ctx, utils.ConvertStringIdToObjectId(id))
 	if errResp.IsError {
-		return validators.ErrorStatusBadRequest(c, errResp)
+		return validators.ErrorResp(c, errResp)
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{})
@@ -175,7 +180,7 @@ func (a *MenuGroupHandler) ChangeStatus(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	var input menu_group.ChangeMenuGroupStatusDto
@@ -197,7 +202,7 @@ func (a *MenuGroupHandler) ChangeStatus(c echo.Context) error {
 
 	errResp := a.menuGroupUsecase.ChangeStatus(ctx, utils.ConvertStringIdToObjectId(id), &input)
 	if errResp.IsError {
-		return validators.ErrorStatusBadRequest(c, errResp)
+		return validators.ErrorResp(c, errResp)
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{})
@@ -223,7 +228,7 @@ func (a *MenuGroupHandler) DeleteEntity(c echo.Context) error {
 
 	errResp := a.menuGroupUsecase.DeleteEntity(ctx, &input)
 	if errResp.IsError {
-		return validators.ErrorStatusBadRequest(c, errResp)
+		return validators.ErrorResp(c, errResp)
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{})
@@ -249,7 +254,7 @@ func (a *MenuGroupHandler) MobileGetMenuGroupItems(c echo.Context) error {
 
 	data, errResp := a.menuGroupUsecase.MobileGetMenuGroupItems(ctx, input)
 	if errResp.IsError {
-		return validators.ErrorStatusBadRequest(c, errResp)
+		return validators.ErrorResp(c, errResp)
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{"menu_group_items": data})
@@ -275,7 +280,7 @@ func (a *MenuGroupHandler) MobileGetMenuGroupItem(c echo.Context) error {
 
 	data, errResp := a.menuGroupUsecase.MobileGetMenuGroupItem(ctx, input)
 	if errResp.IsError {
-		return validators.ErrorStatusBadRequest(c, errResp)
+		return validators.ErrorResp(c, errResp)
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{"menu_group_item": data})
