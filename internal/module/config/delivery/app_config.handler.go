@@ -2,8 +2,11 @@ package delivery
 
 import (
 	"context"
+	"samm/internal/module/config/consts"
+	"samm/internal/module/config/custom_validators"
 	"samm/internal/module/config/domain"
 	"samm/internal/module/config/dto/app_config"
+	"samm/pkg/app_localization"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
 
@@ -12,26 +15,39 @@ import (
 )
 
 type AppConfigHandler struct {
-	appConfigUsecase domain.AppConfigUseCase
-	validator        *validator.Validate
-	logger           logger.ILogger
+	appConfigUsecase         domain.AppConfigUseCase
+	appConfigCustomValidator custom_validators.AppConfigCustomValidator
+	validator                *validator.Validate
+	logger                   logger.ILogger
+	localizationData         map[string]interface{}
 }
 
-// InitModifierGroupController will initialize the article's HTTP controller
-func InitAppConfigController(e *echo.Echo, appConfigUsecase domain.AppConfigUseCase, validator *validator.Validate, logger logger.ILogger) {
+// InitAppConfigController will initialize the article's HTTP controller
+func InitAppConfigController(e *echo.Echo, appConfigUsecase domain.AppConfigUseCase, appConfigCustomValidator custom_validators.AppConfigCustomValidator, validator *validator.Validate, logger logger.ILogger) {
+	// Get Localization Data
+	localizationData := app_localization.ReadLocalizationFiles(consts.USER_APP)
+
 	handler := &AppConfigHandler{
-		appConfigUsecase: appConfigUsecase,
-		validator:        validator,
-		logger:           logger,
+		appConfigUsecase:         appConfigUsecase,
+		appConfigCustomValidator: appConfigCustomValidator,
+		validator:                validator,
+		logger:                   logger,
+		localizationData:         localizationData,
 	}
-	portal := e.Group("api/v1/admin/app-config")
+	admin := e.Group("api/v1/admin/app-config")
 	{
-		portal.POST("", handler.Create)
-		portal.PUT("/:id", handler.Update)
-		portal.GET("", handler.List)
-		portal.GET("/:id", handler.FindById)
-		portal.GET("/:type/by-config-type", handler.FindByType)
-		portal.DELETE("/:id", handler.Delete)
+		admin.POST("", handler.Create)
+		admin.PUT("/:id", handler.Update)
+		admin.GET("", handler.List)
+		admin.GET("/:id", handler.FindById)
+		admin.GET("/:type/by-config-type", handler.FindByType)
+		admin.DELETE("/:id", handler.Delete)
+	}
+
+	mobile := e.Group("api/v1/mobile")
+	{
+		mobile.GET("/config", handler.FindMobileConfig)
+		mobile.GET("/app-localization", handler.GetAppLocalization)
 	}
 }
 
@@ -48,7 +64,7 @@ func (a *AppConfigHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator)
+	validationErr := input.Validate(ctx, a.validator, a.appConfigCustomValidator.ValidateAppTypeIsUnique())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -80,7 +96,7 @@ func (a *AppConfigHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator)
+	validationErr := input.Validate(ctx, a.validator, a.appConfigCustomValidator.ValidateAppTypeIsUnique())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -170,4 +186,34 @@ func (a *AppConfigHandler) Delete(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+
+func (a *AppConfigHandler) FindMobileConfig(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input app_config.FindMobileConfigDto
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	mobileConfig, errResp := a.appConfigUsecase.FindMobileConfig(ctx, input)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"config": mobileConfig})
+}
+
+func (a *AppConfigHandler) GetAppLocalization(c echo.Context) error {
+	return validators.SuccessResponse(c, map[string]interface{}{"localization": a.localizationData})
 }

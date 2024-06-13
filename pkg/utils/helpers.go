@@ -44,6 +44,14 @@ func ConvertStringIdsToObjectIds(ids []string) []primitive.ObjectID {
 	return _ids
 }
 
+func ConvertObjectIdsToStringIds(ids []primitive.ObjectID) []string {
+	var _ids []string
+	for _, id := range ids {
+		_ids = append(_ids, ConvertObjectIdToStringId(id))
+	}
+	return _ids
+}
+
 func ConvertStringIdToObjectId(id string) primitive.ObjectID {
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -337,4 +345,12 @@ func GetDay(countryCode string) string {
 func PrintAsJson(v interface{}) {
 	strByte, _ := json.Marshal(v)
 	println(string(strByte))
+}
+
+func IsNil(i interface{}) bool {
+	if i == nil {
+		return true
+	}
+	v := reflect.ValueOf(i)
+	return v.Kind() == reflect.Ptr && v.IsNil()
 }

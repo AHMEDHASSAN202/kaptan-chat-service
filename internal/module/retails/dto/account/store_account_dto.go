@@ -23,10 +23,12 @@ type Country struct {
 }
 
 type StoreAccountDto struct {
-	Name     Name    `json:"name" validate:"required"`
-	Email    string  `json:"email" validate:"required,email,Account_Email_is_unique_rules_validation"`
-	Password string  `json:"password" validate:"required"`
-	Country  Country `json:"country" validate:"required"`
+	Name            Name     `json:"name" validate:"required"`
+	Email           string   `json:"email" validate:"required,email,Account_Email_is_unique_rules_validation"`
+	Password        string   `json:"password" validate:"required"`
+	ConfirmPassword string   `json:"password_confirmation" validate:"required,eqfield=Password"`
+	Country         Country  `json:"country" validate:"required"`
+	AllowedBrandIds []string `json:"allowed_brand_ids" validate:"required,min=1"`
 }
 
 func (payload *StoreAccountDto) Validate(c echo.Context, validate *validator.Validate, validateAccountEmailIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {

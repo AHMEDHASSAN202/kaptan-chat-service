@@ -57,7 +57,7 @@ func (a *SKUHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *SKUHandler) List(c echo.Context) error {
@@ -78,5 +78,5 @@ func (a *SKUHandler) List(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, modifierGroups)
+	return validators.SuccessResponse(c, modifierGroups)
 }

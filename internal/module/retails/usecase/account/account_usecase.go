@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/account"
+	"samm/internal/module/retails/dto/brand"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -17,33 +18,17 @@ import (
 type AccountUseCase struct {
 	repo            domain.AccountRepository
 	locationUseCase domain.LocationUseCase
+	brandUseCase    domain.BrandUseCase
 	logger          logger.ILogger
 }
 
 func (l AccountUseCase) StoreAccount(ctx context.Context, payload *account.StoreAccountDto) (err validators.ErrorResponse) {
-	accountDomain := domain.Account{}
-	accountDomain.Name.Ar = payload.Name.Ar
-	accountDomain.Name.En = payload.Name.En
-	accountDomain.Email = payload.Email
-	password, er := utils.HashPassword(payload.Password)
-	if er != nil {
-		return validators.GetErrorResponseFromErr(er)
-	}
-	accountDomain.Password = password
-	accountDomain.CreatedAt = time.Now()
-	accountDomain.UpdatedAt = time.Now()
-	accountDomain.Country.Id = payload.Country.Id
-	accountDomain.Country.PhonePrefix = payload.Country.PhonePrefix
-	accountDomain.Country.Currency = payload.Country.Currency
-	accountDomain.Country.Timezone = payload.Country.Timezone
-	accountDomain.Country.Name.Ar = payload.Country.Name.Ar
-	accountDomain.Country.Name.En = payload.Country.Name.En
-
+	accountDomain := CreateAccountBuilder(payload)
 	errRe := l.repo.StoreAccount(ctx, &accountDomain)
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)
 	}
-	return
+	return validators.ErrorResponse{}
 }
 
 func (l AccountUseCase) UpdateAccount(ctx context.Context, id string, payload *account.UpdateAccountDto) (err validators.ErrorResponse) {
@@ -60,6 +45,7 @@ func (l AccountUseCase) UpdateAccount(ctx context.Context, id string, payload *a
 	accountDomain.Country.Timezone = payload.Country.Timezone
 	accountDomain.Country.Name.Ar = payload.Country.Name.Ar
 	accountDomain.Country.Name.En = payload.Country.Name.En
+	accountDomain.AllowedBrandIds = utils.ConvertStringIdsToObjectIds(payload.AllowedBrandIds)
 
 	if payload.Password != "" {
 		password, er := utils.HashPassword(payload.Password)
@@ -80,6 +66,14 @@ func (l AccountUseCase) FindAccount(ctx context.Context, Id string) (account dom
 	domainAccount, errRe := l.repo.FindAccount(ctx, utils.ConvertStringIdToObjectId(Id))
 	if errRe != nil {
 		return *domainAccount, validators.GetErrorResponseFromErr(errRe)
+	}
+	if len(domainAccount.AllowedBrandIds) > 0 {
+		dto := brand.ListBrandDto{
+			Ids: utils.ConvertObjectIdsToStringIds(domainAccount.AllowedBrandIds),
+		}
+		brandsRes, _ := l.brandUseCase.List(&ctx, &dto)
+		brands := brandsRes.Docs.(*[]domain.Brand)
+		domainAccount.Brands = *brands
 	}
 	return *domainAccount, validators.ErrorResponse{}
 }
@@ -120,9 +114,10 @@ func (l AccountUseCase) ListAccount(ctx context.Context, payload *account.ListAc
 
 const tag = " AccountUseCase "
 
-func NewAccountUseCase(repo domain.AccountRepository, locationUseCase domain.LocationUseCase, logger logger.ILogger) domain.AccountUseCase {
+func NewAccountUseCase(repo domain.AccountRepository, brandUseCase domain.BrandUseCase, locationUseCase domain.LocationUseCase, logger logger.ILogger) domain.AccountUseCase {
 	return &AccountUseCase{
 		repo:            repo,
+		brandUseCase:    brandUseCase,
 		locationUseCase: locationUseCase,
 		logger:          logger,
 	}

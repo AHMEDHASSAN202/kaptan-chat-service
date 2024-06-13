@@ -67,7 +67,7 @@ func (a *MenuGroupHandler) List(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
-	return validators.Success(c, map[string]interface{}{"menu_groups": data})
+	return validators.SuccessResponse(c, map[string]interface{}{"menu_groups": data})
 }
 
 func (a *MenuGroupHandler) Find(c echo.Context) error {

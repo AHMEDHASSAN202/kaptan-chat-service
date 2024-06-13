@@ -150,7 +150,6 @@ func registerCustomValidation(c context.Context, validate *validator.Validate, c
 			return localization.GetTranslation(&c, fe.Tag(), nil, ut.Locale())
 		})
 		validate.RegisterValidation(tag.ValidationTag, tag.RegisterValidationFunc)
-		fmt.Println("registerCustomValidation", tag.ValidationTag)
 	}
 }
 
@@ -177,10 +176,6 @@ func GetErrorResponse(ctx *context.Context, code string, data map[string]interfa
 	}
 }
 
-func Success(c echo.Context, data any) error {
-	c.JSON(http.StatusOK, data)
-	return nil
-}
 func SuccessResponse(c echo.Context, data any) error {
 	if data == nil {
 		data = make(map[string]interface{})

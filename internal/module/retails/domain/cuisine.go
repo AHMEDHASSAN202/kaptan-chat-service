@@ -6,6 +6,7 @@ import (
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/retails/dto/cuisine"
+	"samm/internal/module/retails/responses"
 	"samm/pkg/validators"
 	"time"
 )
@@ -24,11 +25,11 @@ type Cuisine struct {
 }
 
 type CuisineUseCase interface {
-	Create(ctx *context.Context, dto *cuisine.CreateCuisineDto) validators.ErrorResponse
+	Create(ctx *context.Context, dto *cuisine.CreateCuisineDto) (*Cuisine, validators.ErrorResponse)
 	Update(ctx *context.Context, dto *cuisine.UpdateCuisineDto) validators.ErrorResponse
 	Find(ctx *context.Context, id string) (*Cuisine, validators.ErrorResponse)
 	GetById(ctx *context.Context, id string) (*Cuisine, validators.ErrorResponse)
-	List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*[]Cuisine, *PaginationData, validators.ErrorResponse)
+	List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse)
 	ChangeStatus(ctx *context.Context, dto *cuisine.ChangeCuisineStatusDto) validators.ErrorResponse
 	SoftDelete(ctx *context.Context, id string) validators.ErrorResponse
 	CheckExists(ctx *context.Context, ids []string) validators.ErrorResponse

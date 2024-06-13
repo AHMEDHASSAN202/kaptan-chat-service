@@ -60,18 +60,16 @@ func (a *LocationHandler) StoreLocation(c echo.Context) error {
 func (a *LocationHandler) BulkStoreLocation(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	var payload []location.StoreLocationDto
+	var payload location.StoreBulkLocationDto
 	err := c.Bind(&payload)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	for _, itemDoc := range payload {
-		validationErr := itemDoc.Validate(c, a.validator)
-		if validationErr.IsError {
-			a.logger.Error(validationErr)
-			return validators.ErrorStatusUnprocessableEntity(c, validationErr)
-		}
+	validationErr := payload.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
 	errResp := a.locationUsecase.BulkStoreLocation(ctx, payload)

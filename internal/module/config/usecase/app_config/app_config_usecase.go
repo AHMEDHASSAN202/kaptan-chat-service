@@ -2,8 +2,10 @@ package app_config
 
 import (
 	"context"
+	builder "samm/internal/module/config/builder/app_config"
 	"samm/internal/module/config/domain"
 	"samm/internal/module/config/dto/app_config"
+	responses "samm/internal/module/config/responses/app_config"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	utilsDto "samm/pkg/utils/dto"
@@ -29,10 +31,7 @@ func NewAppConfigUseCase(repo domain.AppConfigRepository, logger logger.ILogger)
 }
 
 func (oRec *AppConfigUseCase) Create(ctx context.Context, dto app_config.CreateUpdateAppConfigDto) validators.ErrorResponse {
-	var doc domain.AppConfig
-	copier.Copy(&doc, &dto)
-	doc.AdminDetails = make([]utilsDto.AdminDetails, 0)
-	doc.AdminDetails = append(doc.AdminDetails, utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Malhat", Operation: "Create", UpdatedAt: time.Now()})
+	doc := builder.ConvertDtoToCorrespondingDomain(dto, nil)
 	err := oRec.repo.Create(ctx, &doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
@@ -41,9 +40,12 @@ func (oRec *AppConfigUseCase) Create(ctx context.Context, dto app_config.CreateU
 }
 
 func (oRec *AppConfigUseCase) Update(ctx context.Context, dto app_config.CreateUpdateAppConfigDto) validators.ErrorResponse {
-	var doc domain.AppConfig
-	copier.Copy(&doc, &dto)
+	oldDoc, getByIdErr := oRec.FindById(ctx, dto.Id)
+	if getByIdErr.IsError {
+		return getByIdErr
+	}
 	id := utils.ConvertStringIdToObjectId(dto.Id)
+	doc := builder.ConvertDtoToCorrespondingDomain(dto, oldDoc)
 	err := oRec.repo.Update(ctx, id, &doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
@@ -92,4 +94,49 @@ func (oRec *AppConfigUseCase) SoftDelete(ctx context.Context, id string) validat
 		return validators.GetErrorResponseFromErr(err)
 	}
 	return validators.ErrorResponse{}
+}
+
+func (oRec *AppConfigUseCase) CheckExists(ctx context.Context, configType string, exceptIds ...string) (bool, validators.ErrorResponse) {
+	isExists, err := oRec.repo.CheckExists(ctx, configType, exceptIds...)
+	if err != nil {
+		return isExists, validators.GetErrorResponseFromErr(err)
+	}
+	return isExists, validators.ErrorResponse{}
+}
+
+func (oRec *AppConfigUseCase) FindMobileConfig(ctx context.Context, dto app_config.FindMobileConfigDto) (responses.FindMobileConfigResponse, validators.ErrorResponse) {
+
+	var findMobileConfigResponse responses.FindMobileConfigResponse
+	doc, getByTypeErr := oRec.FindByType(ctx, dto.Type)
+	if getByTypeErr.IsError {
+		return findMobileConfigResponse, getByTypeErr
+	}
+
+	copier.Copy(&findMobileConfigResponse, doc)
+
+	switch dto.Platform {
+	case "ios":
+		findMobileConfigResponse.MinVersion = doc.MinIOSVersion
+		findMobileConfigResponse.AppLink = doc.AppStoreLink
+		if dto.Version < doc.MinIOSVersion {
+			findMobileConfigResponse.ForceUpdate = true
+		}
+	case "android":
+		findMobileConfigResponse.MinVersion = doc.MinAndroidVersion
+		findMobileConfigResponse.AppLink = doc.PlayStoreLink
+		if dto.Version < doc.MinAndroidVersion {
+			findMobileConfigResponse.ForceUpdate = true
+		}
+	case "huawei":
+		findMobileConfigResponse.MinVersion = doc.MinHuaweiVersion
+		findMobileConfigResponse.AppLink = doc.AppGalleryLink
+		if dto.Version < doc.MinHuaweiVersion {
+			findMobileConfigResponse.ForceUpdate = true
+		}
+	default:
+		break
+
+	}
+
+	return findMobileConfigResponse, validators.ErrorResponse{}
 }
