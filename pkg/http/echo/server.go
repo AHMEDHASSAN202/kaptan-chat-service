@@ -29,7 +29,7 @@ func RunServers(lc fx.Lifecycle, log logger.ILogger, e *echo.Echo, ctx context.C
 				AllowOrigins:  []string{"*"},
 				AllowMethods:  []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodOptions, http.MethodPost, http.MethodDelete},
 				AllowHeaders:  []string{"*"},
-				ExposeHeaders: []string{"HEADER_NAME"},
+				ExposeHeaders: []string{echomiddleware.HEADER_NAME},
 			}))
 			e.GET("/", func(c echo.Context) error {
 				return c.String(http.StatusOK, "working fine")
