@@ -74,5 +74,6 @@ other = "invalid id it should be objectId ar"
 description = "time format rule validation"
 other = "تنسيق الوقت غير صحيح"
 
-
-
+[E1002Item]
+description = "Menu item not found"
+other = "لم يتم العثور على عنصر القائمة أو أنه غير متوفر حاليًا. يرجى التحقق مرة أخرى في وقت لاحق"

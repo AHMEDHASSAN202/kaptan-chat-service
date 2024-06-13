@@ -47,7 +47,8 @@ type MenuGroupUseCase interface {
 	Find(ctx context.Context, id primitive.ObjectID) (interface{}, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, id primitive.ObjectID, input *menu_group.ChangeMenuGroupStatusDto) validators.ErrorResponse
 	DeleteEntity(ctx context.Context, input *menu_group.DeleteEntityFromMenuGroupDto) validators.ErrorResponse
-	MobileGetMenuGroupItems(ctx context.Context, dto menu_group.GetMenuGroupItemDTO) (interface{}, validators.ErrorResponse)
+	MobileGetMenuGroupItems(ctx context.Context, dto menu_group.GetMenuGroupItemsDTO) (interface{}, validators.ErrorResponse)
+	MobileGetMenuGroupItem(ctx context.Context, dto menu_group.GetMenuGroupItemDTO) (interface{}, validators.ErrorResponse)
 }
 
 type MenuGroupRepository interface {

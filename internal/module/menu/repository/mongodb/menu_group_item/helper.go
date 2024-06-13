@@ -2,6 +2,8 @@ package menu_group_item
 
 import (
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"samm/pkg/database/mongodb"
 	"samm/pkg/utils"
 	"strings"
 	"time"
@@ -120,4 +122,24 @@ func AddAvailabilityQuery(countryId, field string) bson.M {
 			},
 		},
 	}
+}
+
+func createIndexes(collection *mongo.Collection) {
+	mongodb.CreateIndex(collection, false,
+		bson.E{"menu_group._id", mongodb.IndexType.Asc},
+		bson.E{"category._id", mongodb.IndexType.Asc},
+	)
+
+	mongodb.CreateIndex(collection, false,
+		bson.E{"menu_group.branch_ids", mongodb.IndexType.Asc},
+		bson.E{"menu_group.status", mongodb.IndexType.Asc},
+		bson.E{"category.status", mongodb.IndexType.Asc},
+		bson.E{"category.sort", mongodb.IndexType.Asc},
+		bson.E{"category._id", mongodb.IndexType.Asc},
+		bson.E{"status", mongodb.IndexType.Asc},
+		bson.E{"sort", mongodb.IndexType.Asc},
+		bson.E{"modifier_group_ids", mongodb.IndexType.Asc},
+		bson.E{"name.ar", mongodb.IndexType.Text},
+		bson.E{"name.en", mongodb.IndexType.Text},
+	)
 }

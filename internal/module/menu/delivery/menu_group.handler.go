@@ -37,9 +37,10 @@ func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator
 		portal.DELETE("/:id/:entity/:entity_id", handler.DeleteEntity)
 	}
 
-	mobile := e.Group("api/v1/menu-group")
+	mobile := e.Group("api/v1/menu-group/:branch_id")
 	{
 		mobile.GET("/item", handler.MobileGetMenuGroupItems)
+		mobile.GET("/item/:id", handler.MobileGetMenuGroupItem)
 	}
 }
 
@@ -234,7 +235,7 @@ func (a *MenuGroupHandler) MobileGetMenuGroupItems(c echo.Context) error {
 		ctx = context.Background()
 	}
 
-	var input menu_group.GetMenuGroupItemDTO
+	var input menu_group.GetMenuGroupItemsDTO
 	err := c.Bind(&input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
@@ -252,4 +253,30 @@ func (a *MenuGroupHandler) MobileGetMenuGroupItems(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{"menu_group_items": data})
+}
+
+func (a *MenuGroupHandler) MobileGetMenuGroupItem(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input menu_group.GetMenuGroupItemDTO
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	data, errResp := a.menuGroupUsecase.MobileGetMenuGroupItem(ctx, input)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"menu_group_item": data})
 }
