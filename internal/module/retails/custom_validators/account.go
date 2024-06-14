@@ -2,6 +2,7 @@ package custom_validators
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"samm/internal/module/retails/domain"
 	"samm/pkg/logger"
@@ -37,6 +38,7 @@ func (i *RetailCustomValidator) ValidateCuisineIdsExists(cuisineIds []string) fu
 		//	i.logger.Error("Unexpected type, expected *item.CreateBrandDto")
 		//	return false
 		//}
+		fmt.Println("cuisineIds=> ", cuisineIds)
 		ctx := context.Background()
 		err := i.cuisineUsecase.CheckExists(&ctx, cuisineIds)
 		if err.IsError {
