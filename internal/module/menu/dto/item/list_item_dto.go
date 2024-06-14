@@ -10,6 +10,7 @@ import (
 type ListItemsDto struct {
 	dto.Pagination
 	Query     string `json:"query" query:"query"`
+	Type      string `json:"type" query:"type" validate:"omitempty,oneof=product modifier"`
 	AccountId string `json:"account_id" query:"account_id" header:"account_id" validate:"required"`
 }
 
