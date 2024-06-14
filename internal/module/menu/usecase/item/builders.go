@@ -14,6 +14,9 @@ func convertDtoArrToCorrespondingDomain(dto []item.CreateItemDto) []domain.Item 
 	for i, _ := range itemDocs {
 		itemDocs[i].AccountId = utils.ConvertStringIdToObjectId(dto[i].AccountId)
 		itemDocs[i].DeletedAt = nil
+		if dto[i].SKU != "" {
+			itemDocs[i].SKU = utils.ConvertStringIdToObjectId(dto[i].SKU)
+		}
 		itemDocs[i].UpdatedAt = time.Now()
 		itemDocs[i].CreatedAt = time.Now()
 		itemDocs[i].AdminDetails = append(itemDocs[i].AdminDetails, utils.StructSliceToMapSlice(dto[i].AdminDetails)...)
@@ -24,6 +27,9 @@ func convertDtoArrToCorrespondingDomain(dto []item.CreateItemDto) []domain.Item 
 func convertDtoToCorrespondingDomain(dto item.UpdateItemDto, itemDoc *domain.Item) {
 	copier.Copy(&itemDoc, &dto)
 	itemDoc.DeletedAt = nil
+	if dto.SKU != "" {
+		itemDoc.SKU = utils.ConvertStringIdToObjectId(dto.SKU)
+	}
 	itemDoc.UpdatedAt = time.Now()
 	itemDoc.AccountId = utils.ConvertStringIdToObjectId(dto.AccountId)
 	itemDoc.AdminDetails = append(itemDoc.AdminDetails, utils.StructSliceToMapSlice(dto.AdminDetails)...)

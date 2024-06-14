@@ -35,6 +35,7 @@ type CreateItemDto struct {
 	ModifierGroupsIds []string             `json:"modifier_groups_ids" validate:"Invalid_mongo_ids_validation_rule,Modifier_items_cant_contains_modifier_group"`
 	Availabilities    []Availability       `json:"availabilities"`
 	Tags              []string             `json:"tags"`
+	SKU               string               `json:"sku"`
 	Image             string               `json:"image" validate:"required"`
 	Status            string               `json:"status" validate:"oneof=active inactive"`
 	AdminDetails      []dto.AdminDetails   `json:"-"`
