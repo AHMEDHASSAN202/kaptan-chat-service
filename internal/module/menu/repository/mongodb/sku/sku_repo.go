@@ -5,6 +5,7 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/sku"
 	"samm/pkg/database/mongodb"
+	"time"
 
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -25,6 +26,20 @@ func NewSkuRepository(dbs *mongo.Database) domain.SKURepository {
 	}
 }
 
+func (i *skuRepo) CreateBulk(ctx context.Context, skus []string) error {
+	var bulkOperations []mongo.WriteModel
+	for _, sku := range skus {
+		filter := bson.M{"name": sku}
+		update := bson.M{"$set": bson.M{"updated_at": time.Now()}, "$setOnInsert": bson.M{"created_at": time.Now()}}
+		updateModel := mongo.NewUpdateOneModel().SetFilter(filter).SetUpsert(true).SetUpdate(update)
+		bulkOperations = append(bulkOperations, updateModel)
+	}
+	_, err := i.skuCollection.BulkWrite(ctx, bulkOperations)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (i *skuRepo) Create(ctx context.Context, doc domain.SKU) error {
 	_, err := i.skuCollection.InsertOne(ctx, doc)
 	if err != nil {
@@ -32,7 +47,6 @@ func (i *skuRepo) Create(ctx context.Context, doc domain.SKU) error {
 	}
 	return nil
 }
-
 func (i *skuRepo) List(ctx context.Context, query *sku.ListSKUDto) ([]domain.SKU, error) {
 	filter := bson.M{}
 	if query.Query != "" {

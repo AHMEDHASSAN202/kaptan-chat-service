@@ -59,13 +59,7 @@ func (i *itemRepo) Find(ctx context.Context, id primitive.ObjectID) (responseIte
 		"localField":   "modifier_groups_ids",
 		"foreignField": "_id",
 		"as":           "modifier_groups_ids",
-	}}, bson.M{"$lookup": bson.M{
-		"from":         "skus",
-		"localField":   "sku",
-		"foreignField": "_id",
-		"as":           "sku_details",
-		"pipeline":     bson.A{bson.M{"$project": bson.M{"name": 1}}},
-	}}, bson.M{"$addFields": bson.M{"sku_details": bson.M{"$first": "$sku_details"}}})
+	}})
 	return items, err
 }
 

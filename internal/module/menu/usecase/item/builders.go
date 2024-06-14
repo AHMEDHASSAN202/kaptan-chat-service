@@ -15,7 +15,7 @@ func convertDtoArrToCorrespondingDomain(dto []item.CreateItemDto) []domain.Item 
 		itemDocs[i].AccountId = utils.ConvertStringIdToObjectId(dto[i].AccountId)
 		itemDocs[i].DeletedAt = nil
 		if dto[i].SKU != "" {
-			itemDocs[i].SKU = utils.ConvertStringIdToObjectId(dto[i].SKU)
+			itemDocs[i].SKU = dto[i].SKU
 		}
 		itemDocs[i].UpdatedAt = time.Now()
 		itemDocs[i].CreatedAt = time.Now()
@@ -28,7 +28,7 @@ func convertDtoToCorrespondingDomain(dto item.UpdateItemDto, itemDoc *domain.Ite
 	copier.Copy(&itemDoc, &dto)
 	itemDoc.DeletedAt = nil
 	if dto.SKU != "" {
-		itemDoc.SKU = utils.ConvertStringIdToObjectId(dto.SKU)
+		itemDoc.SKU = dto.SKU
 	}
 	itemDoc.UpdatedAt = time.Now()
 	itemDoc.AccountId = utils.ConvertStringIdToObjectId(dto.AccountId)

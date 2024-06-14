@@ -17,14 +17,16 @@ import (
 )
 
 type ItemUseCase struct {
-	repo   domain.ItemRepository
-	logger logger.ILogger
+	repo       domain.ItemRepository
+	logger     logger.ILogger
+	skuUsecase domain.SKUUseCase
 }
 
-func NewItemUseCase(repo domain.ItemRepository, logger logger.ILogger) domain.ItemUseCase {
+func NewItemUseCase(repo domain.ItemRepository, logger logger.ILogger, skuUsecase domain.SKUUseCase) domain.ItemUseCase {
 	return &ItemUseCase{
-		repo:   repo,
-		logger: logger,
+		repo:       repo,
+		logger:     logger,
+		skuUsecase: skuUsecase,
 	}
 }
 
@@ -32,6 +34,16 @@ func (oRec *ItemUseCase) Create(ctx context.Context, dto []item.CreateItemDto) v
 	err := oRec.repo.Create(ctx, convertDtoArrToCorrespondingDomain(dto))
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
+	}
+
+	//create sku
+	skus := make([]string, 0)
+	for _, i := range dto {
+		skus = append(skus, i.SKU)
+	}
+	errResp := oRec.skuUsecase.CreateBulk(ctx, skus)
+	if errResp.IsError {
+		oRec.logger.Error("itemuseCase", "createSku", errResp.ErrorMessageObject)
 	}
 	return validators.ErrorResponse{}
 }
@@ -51,6 +63,11 @@ func (oRec *ItemUseCase) Update(ctx context.Context, dto item.UpdateItemDto) val
 	err = oRec.repo.Update(ctx, &id, doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
+	}
+	//create sku
+	errResp := oRec.skuUsecase.CreateBulk(ctx, []string{dto.SKU})
+	if errResp.IsError {
+		oRec.logger.Error("itemuseCase", "createSku", errResp.ErrorMessageObject)
 	}
 	return validators.ErrorResponse{}
 }

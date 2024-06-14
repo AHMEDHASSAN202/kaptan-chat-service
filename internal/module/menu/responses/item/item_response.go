@@ -43,7 +43,6 @@ type ItemResponse struct {
 	Image            string                   `json:"image" bson:"image"`
 	AdminDetails     []map[string]interface{} `json:"admin_details" bson:"admin_details"`
 	Status           string                   `json:"status" bson:"status"`
-	SkuDetails       SkuDetails               `json:"sku_details" bson:"sku_details"`
-	SKU              primitive.ObjectID       `json:"sku"`
+	SKU              string                   `json:"sku"`
 	DeletedAt        *time.Time               `json:"deleted_at" bson:"deleted_at"`
 }
