@@ -6,6 +6,7 @@ import (
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/retails/dto/brand"
+	"samm/internal/module/retails/responses"
 	"samm/pkg/validators"
 	"time"
 )
@@ -24,7 +25,7 @@ type BrandUseCase interface {
 	Update(ctx *context.Context, dto *brand.UpdateBrandDto) validators.ErrorResponse
 	Find(ctx *context.Context, id string) (*Brand, validators.ErrorResponse)
 	GetById(ctx *context.Context, id string) (*Brand, validators.ErrorResponse)
-	List(ctx *context.Context, dto *brand.ListBrandDto) (*[]Brand, *PaginationData, validators.ErrorResponse)
+	List(ctx *context.Context, dto *brand.ListBrandDto) (*responses.ListResponse, validators.ErrorResponse)
 	ChangeStatus(ctx *context.Context, dto *brand.ChangeBrandStatusDto) validators.ErrorResponse
 	SoftDelete(ctx *context.Context, id string) validators.ErrorResponse
 }

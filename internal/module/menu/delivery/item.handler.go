@@ -9,6 +9,7 @@ import (
 	"samm/internal/module/menu/dto/item"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 )
 
 type ItemHandler struct {
@@ -72,7 +73,7 @@ func (a *ItemHandler) Update(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	var input item.UpdateItemDto
@@ -137,7 +138,7 @@ func (a *ItemHandler) FindOne(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	item, errResp := a.itemUsecase.GetById(ctx, id)
@@ -156,7 +157,7 @@ func (a *ItemHandler) Delete(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	errResp := a.itemUsecase.SoftDelete(ctx, id)
@@ -174,7 +175,7 @@ func (a *ItemHandler) ChangeStatus(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	var input item.ChangeItemStatusDto

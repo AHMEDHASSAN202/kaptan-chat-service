@@ -27,6 +27,7 @@ type menuGroupRepo struct {
 
 func NewMenuGroupRepository(dbs *mongo.Database, menuGroupItemRepo domain.MenuGroupItemRepository, log logger.ILogger) domain.MenuGroupRepository {
 	menuGroupCollection := mgm.Coll(&domain.MenuGroup{})
+	createIndexes(menuGroupCollection.Collection)
 	return &menuGroupRepo{
 		menuGroupCollection: menuGroupCollection,
 		menuGroupItemRepo:   menuGroupItemRepo,

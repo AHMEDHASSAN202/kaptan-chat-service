@@ -27,6 +27,7 @@ type Item struct {
 	Type             string                   `json:"type" bson:"type"`
 	Min              int                      `json:"min" bson:"min"`
 	Max              int                      `json:"max" bson:"max"`
+	SKU              string                   `json:"sku" bson:"sku,omitempty"`
 	Calories         int                      `json:"calories" bson:"calories"`
 	Price            float64                  `json:"price" bson:"price"`
 	ModifierGroupIds []primitive.ObjectID     `json:"modifier_groups_ids" bson:"modifier_groups_ids"`

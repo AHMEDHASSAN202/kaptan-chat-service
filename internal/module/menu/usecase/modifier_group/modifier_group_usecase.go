@@ -63,7 +63,7 @@ func (oRec *ModifierGroupUseCase) GetById(ctx context.Context, id string) (domai
 		return domain.ModifierGroup{}, validators.GetErrorResponseFromErr(err)
 	}
 	if len(modifierGroups) <= 0 {
-		return domain.ModifierGroup{}, validators.GetErrorResponse(&ctx, localization.E1002, nil)
+		return domain.ModifierGroup{}, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 	}
 	return modifierGroups[0], validators.ErrorResponse{}
 }

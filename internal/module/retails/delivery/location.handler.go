@@ -164,7 +164,7 @@ func (a *LocationHandler) ToggleSnooze(c echo.Context) error {
 
 	id := c.Param("id")
 	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil))
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
 	var input location.LocationToggleSnoozeDto

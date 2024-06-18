@@ -97,6 +97,7 @@ func MenuGroupItemsBuilder(dto *menu_group.CreateMenuGroupDTO) *[]domain.MenuGro
 					menuGroupItem := domain.MenuGroupItem{}
 					menuGroupItem.ID = utils.If(item.Id != "", utils.ConvertStringIdToObjectId(item.Id), primitive.NewObjectID()).(primitive.ObjectID)
 					menuGroupItem.ItemId = utils.ConvertStringIdToObjectId(item.ItemId)
+					menuGroupItem.AccountId = utils.ConvertStringIdToObjectId(dto.AccountId)
 					menuGroupItem.Name.En = item.Name.En
 					menuGroupItem.Name.Ar = item.Name.Ar
 					menuGroupItem.Desc.En = item.Desc.En

@@ -17,14 +17,16 @@ import (
 )
 
 type ItemUseCase struct {
-	repo   domain.ItemRepository
-	logger logger.ILogger
+	repo       domain.ItemRepository
+	logger     logger.ILogger
+	skuUsecase domain.SKUUseCase
 }
 
-func NewItemUseCase(repo domain.ItemRepository, logger logger.ILogger) domain.ItemUseCase {
+func NewItemUseCase(repo domain.ItemRepository, logger logger.ILogger, skuUsecase domain.SKUUseCase) domain.ItemUseCase {
 	return &ItemUseCase{
-		repo:   repo,
-		logger: logger,
+		repo:       repo,
+		logger:     logger,
+		skuUsecase: skuUsecase,
 	}
 }
 
@@ -32,6 +34,16 @@ func (oRec *ItemUseCase) Create(ctx context.Context, dto []item.CreateItemDto) v
 	err := oRec.repo.Create(ctx, convertDtoArrToCorrespondingDomain(dto))
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
+	}
+
+	//create sku
+	skus := make([]string, 0)
+	for _, i := range dto {
+		skus = append(skus, i.SKU)
+	}
+	errResp := oRec.skuUsecase.CreateBulk(ctx, skus)
+	if errResp.IsError {
+		oRec.logger.Error("itemuseCase", "createSku", errResp.ErrorMessageObject)
 	}
 	return validators.ErrorResponse{}
 }
@@ -41,7 +53,7 @@ func (oRec *ItemUseCase) Update(ctx context.Context, dto item.UpdateItemDto) val
 	item, err := oRec.repo.GetByIds(ctx, []primitive.ObjectID{id})
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return validators.GetErrorResponse(&ctx, localization.E1002, nil)
+			return validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 		}
 		return validators.GetErrorResponseFromErr(err)
 	}
@@ -52,6 +64,11 @@ func (oRec *ItemUseCase) Update(ctx context.Context, dto item.UpdateItemDto) val
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
+	//create sku
+	errResp := oRec.skuUsecase.CreateBulk(ctx, []string{dto.SKU})
+	if errResp.IsError {
+		oRec.logger.Error("itemuseCase", "createSku", errResp.ErrorMessageObject)
+	}
 	return validators.ErrorResponse{}
 }
 func (oRec *ItemUseCase) SoftDelete(ctx context.Context, id string) validators.ErrorResponse {
@@ -59,7 +76,7 @@ func (oRec *ItemUseCase) SoftDelete(ctx context.Context, id string) validators.E
 	item, err := oRec.repo.GetByIds(ctx, []primitive.ObjectID{idDoc})
 	if err != nil || len(item) <= 0 {
 		if err == mongo.ErrNoDocuments {
-			return validators.GetErrorResponse(&ctx, localization.E1002, nil)
+			return validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 		}
 		return validators.GetErrorResponseFromErr(err)
 	}
@@ -78,7 +95,7 @@ func (oRec *ItemUseCase) ChangeStatus(ctx context.Context, id string, dto *item.
 	fmt.Println(item, err)
 	if err != nil || len(item) <= 0 {
 		if err == mongo.ErrNoDocuments {
-			return validators.GetErrorResponse(&ctx, localization.E1002, nil)
+			return validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 		}
 		return validators.GetErrorResponseFromErr(err)
 	}
@@ -104,7 +121,7 @@ func (oRec *ItemUseCase) GetById(ctx context.Context, id string) (responseItem.I
 	items, err := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(id))
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return responseItem.ItemResponse{}, validators.GetErrorResponse(&ctx, localization.E1002, nil)
+			return responseItem.ItemResponse{}, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 		}
 		return responseItem.ItemResponse{}, validators.GetErrorResponseFromErr(err)
 	}

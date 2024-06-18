@@ -3,6 +3,7 @@ package menu_group
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"net/http"
 	menu_group2 "samm/internal/module/menu/builder/menu_group/dashboard"
 	"samm/internal/module/menu/consts"
 	"samm/internal/module/menu/domain"
@@ -45,7 +46,7 @@ func (oRec *MenuGroupUseCase) Create(ctx context.Context, dto *menu_group.Create
 	menuGroup, errCreate := oRec.repo.Create(ctx, menuGroupDomain, menuGroupItems)
 	if errCreate != nil {
 		oRec.logger.Error("MenuGroupUseCase -> Create -> ", errCreate)
-		return "", validators.GetErrorResponse(&ctx, localization.E1000, nil)
+		return "", validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
 	}
 
 	return utils.ConvertObjectIdToStringId(menuGroup.ID), validators.ErrorResponse{}
@@ -55,7 +56,7 @@ func (oRec *MenuGroupUseCase) Update(ctx context.Context, dto *menu_group.Create
 	menuGroup, errFind := oRec.repo.Find(ctx, dto.ID)
 	if errFind != nil {
 		oRec.logger.Error("MenuGroupUseCase -> Update -> ", errFind)
-		return "", validators.GetErrorResponse(&ctx, localization.E1002, nil)
+		return "", validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
 	authorized := oRec.AuthorizeMenuGroup(&ctx, menuGroup, utils.ConvertStringIdToObjectId(dto.AccountId))
@@ -75,7 +76,7 @@ func (oRec *MenuGroupUseCase) Update(ctx context.Context, dto *menu_group.Create
 	menuGroup, errCreate := oRec.repo.Update(ctx, menuGroupDomain, menuGroupItems)
 	if errCreate != nil {
 		oRec.logger.Error("MenuGroupUseCase -> Update -> ", errCreate)
-		return "", validators.GetErrorResponse(&ctx, localization.E1000, nil)
+		return "", validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
 	}
 
 	return utils.ConvertObjectIdToStringId(menuGroup.ID), validators.ErrorResponse{}
@@ -85,7 +86,7 @@ func (oRec *MenuGroupUseCase) Delete(ctx context.Context, menuGroupId primitive.
 	menuGroup, err := oRec.repo.Find(ctx, menuGroupId)
 	if err != nil {
 		oRec.logger.Error("MenuGroupUseCase -> Delete -> ", err)
-		return validators.GetErrorResponse(&ctx, localization.E1002, nil)
+		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
 	accountId := menuGroup.AccountId //todo We need to get the accountId from auth
@@ -97,7 +98,7 @@ func (oRec *MenuGroupUseCase) Delete(ctx context.Context, menuGroupId primitive.
 	err = oRec.repo.Delete(ctx, menuGroup)
 	if err != nil {
 		oRec.logger.Error("MenuGroupUseCase -> Delete -> ", err)
-		return validators.GetErrorResponse(&ctx, localization.E1000, nil)
+		return validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
 	}
 
 	return validators.ErrorResponse{}
@@ -109,7 +110,7 @@ func (oRec *MenuGroupUseCase) List(ctx context.Context, dto menu_group.ListMenuG
 	listResponse := responses.SetListResponse(data, pagination)
 	if err != nil {
 		oRec.logger.Error("MenuGroupUseCase -> ListPortal -> ", err)
-		return listResponse, validators.GetErrorResponse(&ctx, localization.E1000, nil)
+		return listResponse, validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
 	}
 	return listResponse, validators.ErrorResponse{}
 }
@@ -119,7 +120,7 @@ func (oRec *MenuGroupUseCase) Find(ctx context.Context, id primitive.ObjectID) (
 	menuGroup = menu_group2.FindMenuGroupBuilder(menuGroup)
 	if err != nil {
 		oRec.logger.Error("MenuGroupUseCase -> Find -> ", err)
-		return menuGroup, validators.GetErrorResponse(&ctx, localization.E1002, nil)
+		return menuGroup, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
 	accountId := menuGroup.AccountId //todo We need to get the accountId from auth
@@ -137,7 +138,7 @@ func (oRec *MenuGroupUseCase) ChangeStatus(ctx context.Context, id primitive.Obj
 	model, errFind := oRec.repo.Find(ctx, id)
 	if errFind != nil {
 		oRec.logger.Error("MenuGroupUseCase -> Find -> ChangeStatus -> ", errFind)
-		return validators.GetErrorResponse(&ctx, localization.E1002, nil)
+		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
 	accountId := model.AccountId //todo We need to get the accountId from auth
@@ -160,7 +161,7 @@ func (oRec *MenuGroupUseCase) ChangeStatus(ctx context.Context, id primitive.Obj
 	}
 
 	if err != nil {
-		return validators.GetErrorResponse(&ctx, localization.E1002, nil)
+		return validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 	}
 
 	return validators.ErrorResponse{}
@@ -170,7 +171,7 @@ func (oRec *MenuGroupUseCase) DeleteEntity(ctx context.Context, input *menu_grou
 	model, errFind := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(input.Id))
 	if errFind != nil {
 		oRec.logger.Error("MenuGroupUseCase -> Find -> DeleteEntity -> ", errFind)
-		return validators.GetErrorResponse(&ctx, localization.E1002, nil)
+		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
 	accountId := model.AccountId //todo We need to get the accountId from auth
@@ -191,7 +192,7 @@ func (oRec *MenuGroupUseCase) DeleteEntity(ctx context.Context, input *menu_grou
 	}
 
 	if err != nil {
-		return validators.GetErrorResponse(&ctx, localization.E1002, nil)
+		return validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 	}
 
 	return validators.ErrorResponse{}

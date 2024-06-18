@@ -9,6 +9,7 @@ const (
     E1000 = "E1000" // Database layer error
     E1001 = "E1001" // Invalid input
     E1002 = "E1002" // Resource not found
+    E1002Item = "E1002Item" // Menu item not found
     E1003 = "E1003" // Operation not permitted
     E1004 = "E1004" // Internal server error
     E1005 = "E1005" // Service unavailable
@@ -22,6 +23,7 @@ const (
     Invalid_mongo_ids_validation_rule = "Invalid_mongo_ids_validation_rule" // Invalid mongo ids validation rule
     Item_name_is_unique_rules_validation = "Item_name_is_unique_rules_validation" // Feature not supported
     Modifier_groups_ids_rules_validation = "Modifier_groups_ids_rules_validation" // Feature not supported
+    Modifier_items_cant_contains_modifier_group = "Modifier_items_cant_contains_modifier_group" // Modifier items cant contains modifier group
     SKU_name_is_unique_rules_validation = "SKU_name_is_unique_rules_validation" // Feature not supported
     Timeformat = "Timeformat" // time format rule validation
 )

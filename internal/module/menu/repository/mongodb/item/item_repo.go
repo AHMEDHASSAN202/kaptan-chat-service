@@ -64,8 +64,16 @@ func (i *itemRepo) Find(ctx context.Context, id primitive.ObjectID) (responseIte
 }
 
 func (i *itemRepo) Create(ctx context.Context, doc []domain.Item) error {
-	_, err := i.itemCollection.InsertMany(ctx, utils.ConvertArrStructToInterfaceArr(doc))
+	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+
+		_, err := i.itemCollection.InsertMany(sc, utils.ConvertArrStructToInterfaceArr(doc))
+		if err != nil {
+			return err
+		}
+		return session.CommitTransaction(sc)
+	})
 	if err != nil {
+		i.logger.Error("Create -> transaction error in Create item -> ", err)
 		return err
 	}
 	return nil
@@ -154,6 +162,9 @@ func (i *itemRepo) List(ctx context.Context, query *item.ListItemsDto) (items []
 	if query.Query != "" {
 		filter["$text"] = bson.M{
 			"$search": query.Query}
+	}
+	if query.Type != "" {
+		filter["type"] = query.Type
 	}
 	data, err := New(i.itemCollection.Collection).Context(ctx).Limit(query.Limit).Page(query.Page).Sort("_id", -1).Aggregate(bson.M{"$match": filter})
 

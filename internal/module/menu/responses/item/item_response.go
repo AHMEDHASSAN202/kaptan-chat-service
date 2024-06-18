@@ -22,6 +22,11 @@ type LocalizationTextDesc struct {
 	En string `json:"en"`
 }
 
+type SkuDetails struct {
+	Name string `bson:"name" json:"name"`
+	Id   string `bson:"_id" json:"_id"`
+}
+
 type ItemResponse struct {
 	mgm.DefaultModel `bson:",inline"`
 	AccountId        primitive.ObjectID       `json:"account_id" bson:"account_id"`
@@ -38,5 +43,6 @@ type ItemResponse struct {
 	Image            string                   `json:"image" bson:"image"`
 	AdminDetails     []map[string]interface{} `json:"admin_details" bson:"admin_details"`
 	Status           string                   `json:"status" bson:"status"`
+	SKU              string                   `json:"sku"`
 	DeletedAt        *time.Time               `json:"deleted_at" bson:"deleted_at"`
 }

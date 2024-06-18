@@ -35,6 +35,14 @@ func (oRec *SKUUseCase) Create(ctx context.Context, dto sku.CreateSKUDto) valida
 	return validators.ErrorResponse{}
 }
 
+func (oRec *SKUUseCase) CreateBulk(ctx context.Context, skus []string) validators.ErrorResponse {
+	err := oRec.repo.CreateBulk(ctx, skus)
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	return validators.ErrorResponse{}
+}
+
 func (oRec *SKUUseCase) List(ctx context.Context, dto *sku.ListSKUDto) ([]domain.SKU, validators.ErrorResponse) {
 	skus, err := oRec.repo.List(ctx, dto)
 	if err != nil {
