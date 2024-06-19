@@ -178,7 +178,7 @@ func (l locationRepository) ListMobileLocation(ctx context.Context, payload *loc
 	}
 
 	if payload.CuisineIds != nil && len(payload.CuisineIds) > 0 && payload.CuisineIds[0] != "" {
-		matching["$and"] = append(matching["$and"].([]bson.D), bson.D{{"brand_details.cuisineids._id", bson.M{"$in": utils.ConvertStringIdsToObjectIds(payload.CuisineIds)}}})
+		matching["$and"] = append(matching["$and"].([]bson.D), bson.D{{"brand_details.cuisines._id", bson.M{"$in": utils.ConvertStringIdsToObjectIds(payload.CuisineIds)}}})
 	}
 	currentTime := time.Now().UTC().Format("15:04:05")
 	currentDay := utils.GetDayByCountry(payload.CountryId)

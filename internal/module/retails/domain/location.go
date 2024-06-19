@@ -21,6 +21,13 @@ type Country struct {
 	PhonePrefix string `json:"phone_prefix" bson:"phone_prefix"`
 }
 
+type CuisineDetails struct {
+	mgm.DefaultModel `bson:",inline"`
+	Name             Name   `json:"name" bson:"name"`
+	Logo             string `json:"logo" bson:"logo"`
+	IsHidden         bool   `json:"is_hidden" bson:"is_hidden"`
+}
+
 type City struct {
 	Id   primitive.ObjectID `json:"_id" bson:"id"`
 	Name Name               `json:"name" bson:"name"`
@@ -34,6 +41,7 @@ type BrandDetails struct {
 	Name     Name               `json:"name" bson:"name"`
 	Logo     string             `json:"logo" bson:"logo"`
 	IsActive bool               `json:"is_active" bson:"is_active"`
+	Cuisines []CuisineDetails   `json:"cuisines" bson:"cuisines"`
 }
 type WorkingHour struct {
 	Day       string `json:"day" bson:"day"`

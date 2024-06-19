@@ -114,3 +114,14 @@ func (oRec *BrandUseCase) GetById(ctx *context.Context, id string) (*domain.Bran
 
 	return &brandsVal[0], validators.ErrorResponse{}
 }
+func (oRec *BrandUseCase) FindWithCuisines(ctx *context.Context, id string) (*domain.Brand, validators.ErrorResponse) {
+	brandItem, err := oRec.repo.FindWithCuisines(ctx, utils.ConvertStringIdToObjectId(id))
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	if brandItem == nil {
+		return nil, validators.GetErrorResponseFromErr(errors.New(localization.E1002))
+	}
+
+	return brandItem, validators.ErrorResponse{}
+}
