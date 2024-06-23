@@ -105,7 +105,6 @@ type LocationUseCase interface {
 	DeleteLocation(ctx context.Context, Id string) (err validators.ErrorResponse)
 	DeleteLocationByAccountId(ctx context.Context, accountId string) (err validators.ErrorResponse)
 	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse)
-
 	ListMobileLocation(ctx context.Context, payload *location.ListLocationMobileDto) (locations []LocationMobile, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse)
 	FindMobileLocation(ctx context.Context, Id string, payload *location.FindLocationMobileDto) (location LocationMobile, err validators.ErrorResponse)
 }

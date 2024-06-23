@@ -36,9 +36,14 @@ type BrandRepository interface {
 	Create(doc *Brand) error
 	Update(doc *Brand) error
 	FindBrand(*context.Context, primitive.ObjectID) (*Brand, error)
-	FindWithCuisines(*context.Context, primitive.ObjectID) (*Brand, error)
+	FindWithCuisines(context.Context, primitive.ObjectID) (*Brand, error)
 	GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) (*[]Brand, error)
 	List(ctx *context.Context, query *brand.ListBrandDto) (*[]Brand, *PaginationData, error)
 	UpdateBrandAndLocations(doc *Brand) error
 	SoftDelete(doc *Brand) error
 }
+
+//func (model *Brand) Updated(ctx context.Context, result *mongo.UpdateResult) error {
+
+//	return nil
+//}

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	. "github.com/gobeam/mongo-go-pagination"
+	"github.com/jinzhu/copier"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -66,12 +67,9 @@ func (i *brandRepo) UpdateBrandAndLocations(doc *domain.Brand) error {
 		if err != nil {
 			return err
 		}
-		brandDetails := domain.BrandDetails{
-			Id:       doc.ID,
-			Name:     doc.Name,
-			Logo:     doc.Logo,
-			IsActive: doc.IsActive,
-		}
+		brandDomain, _ := i.FindWithCuisines(sc, doc.ID)
+		var brandDetails domain.BrandDetails
+		copier.Copy(&brandDetails, brandDomain)
 		err = i.locationRepo.UpdateBulkByBrand(sc, brandDetails)
 		if err != nil {
 			return err
@@ -132,20 +130,20 @@ func (i *brandRepo) List(ctx *context.Context, dto *brand.ListBrandDto) (brandsR
 	return
 }
 
-func (i brandRepo) FindWithCuisines(ctx *context.Context, Id primitive.ObjectID) (*domain.Brand, error) {
+func (i brandRepo) FindWithCuisines(ctx context.Context, Id primitive.ObjectID) (*domain.Brand, error) {
 	var domainData domain.Brand
 	var filters []bson.M
 	filters = append(filters, bson.M{"$match": bson.M{"_id": Id, "deleted_at": nil}})
 	filters = append(filters, bson.M{"$lookup": bson.M{"from": "cuisines", "localField": "cuisineids", "foreignField": "_id", "as": "cuisines"}})
 
-	data, err := i.brandCollection.Aggregate(*ctx, filters)
+	data, err := i.brandCollection.Aggregate(ctx, filters)
 
 	if err != nil {
 		return nil, err
 	}
 	var tempData []bson.Raw
 
-	if err = data.All(*ctx, &tempData); err != nil {
+	if err = data.All(ctx, &tempData); err != nil {
 		return nil, err
 	}
 

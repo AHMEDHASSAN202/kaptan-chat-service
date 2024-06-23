@@ -82,7 +82,7 @@ func (a *BrandHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator)
+	validationErr := input.Validate(c, a.validator, a.customValidator.ValidateCuisineIdsExists(input.CuisineIds))
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
