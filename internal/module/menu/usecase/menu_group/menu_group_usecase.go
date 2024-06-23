@@ -8,6 +8,7 @@ import (
 	"samm/internal/module/menu/consts"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/menu_group"
+	"samm/internal/module/menu/external"
 	"samm/internal/module/menu/responses"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
@@ -22,14 +23,16 @@ type MenuGroupUseCase struct {
 	menuGroupItemRepo domain.MenuGroupItemRepository
 	itemRepo          domain.ItemRepository
 	logger            logger.ILogger
+	extService        external.ExtService
 }
 
-func NewMenuGroupUseCase(repo domain.MenuGroupRepository, itemRepo domain.ItemRepository, menuGroupItemRepo domain.MenuGroupItemRepository, logger logger.ILogger) domain.MenuGroupUseCase {
+func NewMenuGroupUseCase(repo domain.MenuGroupRepository, itemRepo domain.ItemRepository, menuGroupItemRepo domain.MenuGroupItemRepository, logger logger.ILogger, extService external.ExtService) domain.MenuGroupUseCase {
 	return &MenuGroupUseCase{
 		repo:              repo,
 		logger:            logger,
 		menuGroupItemRepo: menuGroupItemRepo,
 		itemRepo:          itemRepo,
+		extService:        extService,
 	}
 }
 
@@ -130,6 +133,13 @@ func (oRec *MenuGroupUseCase) Find(ctx context.Context, id primitive.ObjectID) (
 	if authorized.IsError {
 		return menuGroup, authorized
 	}
+
+	branches, errBranches := oRec.extService.RetailsIService.GetBranchesByIds(ctx, utils.ConvertObjectIdsToStringIds(menuGroup.BranchIds))
+	if errBranches.IsError {
+		oRec.logger.Error("MenuGroupUseCase -> Find -> errBranches -> ", err)
+		return menuGroup, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
+	}
+	menu_group2.PopulateBranches(menuGroup, branches)
 
 	return menuGroup, validators.ErrorResponse{}
 }
