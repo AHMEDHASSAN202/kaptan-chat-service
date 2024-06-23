@@ -118,6 +118,7 @@ type LocationRepository interface {
 	DeleteLocationByAccountId(ctx context.Context, accountId primitive.ObjectID) (err error)
 	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult *mongopagination.PaginationData, err error)
 	UpdateBulkByBrand(ctx context.Context, brand BrandDetails) error
+	UpdateBulkByBrandCuisine(ctx context.Context, cuisine CuisineDetails) error
 	SoftDeleteBulkByBrandId(ctx context.Context, brandId primitive.ObjectID) error
 
 	ListMobileLocation(ctx context.Context, payload *location.ListLocationMobileDto) (locations []LocationMobile, paginationResult *mongopagination.PaginationData, err error)

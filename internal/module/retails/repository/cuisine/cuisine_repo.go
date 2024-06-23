@@ -3,6 +3,7 @@ package cuisine
 import (
 	"context"
 	. "github.com/gobeam/mongo-go-pagination"
+	"github.com/jinzhu/copier"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,10 +16,11 @@ import (
 
 type cuisineRepo struct {
 	cuisineCollection *mgm.Collection
+	locationRepo      domain.LocationRepository
 	logger            logger.ILogger
 }
 
-func NewCuisineRepository(dbs *mongo.Database, log logger.ILogger) domain.CuisineRepository {
+func NewCuisineRepository(dbs *mongo.Database, locationRepo domain.LocationRepository, log logger.ILogger) domain.CuisineRepository {
 	cuisineCollection := mgm.Coll(&domain.Cuisine{})
 	//text search menu cuisine
 	//mongodb.CreateIndex(cuisineCollection.Collection, false, bson.E{"name.ar", mongodb.IndexType.Text}, bson.E{"name.en", mongodb.IndexType.Text}, bson.E{"tags", mongodb.IndexType.Text},
@@ -27,6 +29,7 @@ func NewCuisineRepository(dbs *mongo.Database, log logger.ILogger) domain.Cuisin
 	//mongodb.CreateIndex(cuisineCollection.Collection, true, bson.E{"name.ar", mongodb.IndexType.Asc}, bson.E{"name.en", mongodb.IndexType.Asc}, bson.E{"account_id", mongodb.IndexType.Asc}, bson.E{"deleted_at", mongodb.IndexType.Asc})
 	return &cuisineRepo{
 		cuisineCollection: cuisineCollection,
+		locationRepo:      locationRepo,
 		logger:            log,
 	}
 }
@@ -45,6 +48,23 @@ func (i *cuisineRepo) Update(doc *domain.Cuisine) error {
 		return err
 	}
 	return nil
+}
+
+func (i *cuisineRepo) UpdateCuisineAndLocations(doc *domain.Cuisine) error {
+	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+		err := i.cuisineCollection.UpdateWithCtx(sc, doc)
+		if err != nil {
+			return err
+		}
+		var cuisineDetails domain.CuisineDetails
+		copier.Copy(&cuisineDetails, doc)
+		err = i.locationRepo.UpdateBulkByBrandCuisine(sc, cuisineDetails)
+		if err != nil {
+			return err
+		}
+		return session.CommitTransaction(sc)
+	})
+	return err
 }
 
 func (l cuisineRepo) Find(ctx *context.Context, Id primitive.ObjectID) (*domain.Cuisine, error) {

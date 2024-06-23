@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"samm/internal/module/retails/consts"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/location"
@@ -129,6 +130,17 @@ func (l locationRepository) ListLocation(ctx context.Context, payload *location.
 
 func (i *locationRepository) UpdateBulkByBrand(ctx context.Context, brand domain.BrandDetails) error {
 	_, err := i.locationCollection.UpdateMany(ctx, bson.M{"brand_details._id": brand.Id}, bson.M{"$set": bson.M{"brand_details": brand}})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (i *locationRepository) UpdateBulkByBrandCuisine(ctx context.Context, cuisine domain.CuisineDetails) error {
+
+	arrayFilters := options.Update().SetArrayFilters(options.ArrayFilters{
+		Filters: []interface{}{bson.M{"elem._id": cuisine.ID}},
+	})
+	_, err := i.locationCollection.UpdateMany(ctx, bson.M{"brand_details.cuisines._id": cuisine.ID}, bson.M{"$set": bson.M{"brand_details.cuisines.$[elem]": cuisine}}, arrayFilters)
 	if err != nil {
 		return err
 	}
