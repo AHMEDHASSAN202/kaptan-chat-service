@@ -111,6 +111,11 @@ func (l locationRepository) ListLocation(ctx context.Context, payload *location.
 			"brand_details._id": utils.ConvertStringIdToObjectId(payload.BrandId),
 		})
 	}
+	if len(payload.Ids) > 0 && payload.Ids[0] != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{
+			"_id": bson.M{"$in": utils.ConvertStringIdsToObjectIds(payload.Ids)},
+		})
+	}
 	data, err := New(l.locationCollection.Collection).Context(ctx).Limit(payload.Limit).Page(payload.Page).Sort("created_at", -1).Aggregate(matching)
 	if data == nil || data.Data == nil {
 		return models, nil, err
