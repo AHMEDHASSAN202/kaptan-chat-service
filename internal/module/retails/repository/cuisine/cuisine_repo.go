@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/cuisine"
+	"samm/pkg/database/mongodb"
 	"samm/pkg/logger"
 	"time"
 )
@@ -20,11 +21,7 @@ type cuisineRepo struct {
 
 func NewCuisineRepository(dbs *mongo.Database, log logger.ILogger) domain.CuisineRepository {
 	cuisineCollection := mgm.Coll(&domain.Cuisine{})
-	//text search menu cuisine
-	//mongodb.CreateIndex(cuisineCollection.Collection, false, bson.E{"name.ar", mongodb.IndexType.Text}, bson.E{"name.en", mongodb.IndexType.Text}, bson.E{"tags", mongodb.IndexType.Text},
-	//	bson.E{"desc.ar", mongodb.IndexType.Text}, bson.E{"desc.en", mongodb.IndexType.Text})
-	//make sure there are no duplicated menu cuisine
-	//mongodb.CreateIndex(cuisineCollection.Collection, true, bson.E{"name.ar", mongodb.IndexType.Asc}, bson.E{"name.en", mongodb.IndexType.Asc}, bson.E{"account_id", mongodb.IndexType.Asc}, bson.E{"deleted_at", mongodb.IndexType.Asc})
+	mongodb.CreateIndex(cuisineCollection.Collection, false, bson.E{"name.ar", mongodb.IndexType.Text}, bson.E{"name.en", mongodb.IndexType.Text})
 	return &cuisineRepo{
 		cuisineCollection: cuisineCollection,
 		logger:            log,
