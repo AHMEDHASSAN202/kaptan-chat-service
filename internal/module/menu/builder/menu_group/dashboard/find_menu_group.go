@@ -1,6 +1,8 @@
 package dashboard
 
 import (
+	"github.com/jinzhu/copier"
+	"samm/internal/module/menu/external/retails/responses"
 	"samm/internal/module/menu/repository/structs/menu_group"
 	"samm/pkg/utils"
 )
@@ -19,4 +21,8 @@ func FindMenuGroupBuilder(model *menu_group.FindMenuGroupWithItems) *menu_group.
 	}
 	model.Categories = categories
 	return model
+}
+
+func PopulateBranches(model *menu_group.FindMenuGroupWithItems, branches []responses.BranchByIdResp) {
+	copier.Copy(&model.Branches, branches)
 }
