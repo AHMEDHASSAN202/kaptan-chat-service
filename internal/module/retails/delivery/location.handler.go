@@ -196,7 +196,7 @@ func (a *LocationHandler) ListMobileLocation(c echo.Context) error {
 	b := &echo.DefaultBinder{}
 	b.BindHeaders(c, &payload)
 
-	payload.Pagination.SetDefault()
+	payload.SetDefault()
 
 	result, paginationResult, errResp := a.locationUsecase.ListMobileLocation(ctx, &payload)
 	if errResp.IsError {

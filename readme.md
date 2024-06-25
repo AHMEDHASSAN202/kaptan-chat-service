@@ -1,17 +1,30 @@
-his document outlines key points regarding the role
+# SAMM Project General Open Challenge
 
-### Samm project general open challenge
+This document outlines key points regarding the role.
 
-- [ ] auto create module with command line.
-- [ ] restrict access to repo layer between modules
-- [ ] handle migration scripts
-- [ ] handle RBAC https://casbin.org/docs/get-started, https://klotzandrew.com/blog/authorization-with-casbin
+## Tasks
 
+- [ ] **Auto Create Module with Command Line**  
+  Command: `go run ./pkg/cmd/module_setup.go -new_module='ModuleName' -new_module_path='NewModulePath' -root_module='WholeProjectModuleRoot'`
 
+- [ ] **Restrict Access to Repo Layer Between Modules**
 
-### extra points
-- [ ] logging capabilities logrus/zap/...
-- [ ] add local cache library (create abstarcted method to be replaced with redis server)
-- [ ] add event bus for internal (only inside the module)
-- [ ] add message queue for whole project
-    
+- [ ] **Handle Migration Scripts**
+
+- [ ] **Handle RBAC**  
+  Refer to:  
+  [Casbin Get Started](https://casbin.org/docs/get-started)  
+  [Authorization with Casbin](https://klotzandrew.com/blog/authorization-with-casbin)
+
+## Extra Points
+
+- [ ] **Logging Capabilities**  
+  Utilize logrus/zap/...
+
+- [ ] **Add Local Cache Library**  
+  Create abstracted method to be replaced with Redis server
+
+- [ ] **Add Event Bus for Internal Communication**  
+  Only inside the module
+
+- [ ] **Add Message Queue for Whole Project**
