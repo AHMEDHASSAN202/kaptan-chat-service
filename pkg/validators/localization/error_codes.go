@@ -20,6 +20,7 @@ const (
     E1010 = "E1010" // Conflict
     E1011 = "E1011" // Quota exceeded
     E1012 = "E1012" // Feature not supported
+    Email_is_unique_rules_validation = "Email_is_unique_rules_validation" // Email is Unique
     Invalid_mongo_ids_validation_rule = "Invalid_mongo_ids_validation_rule" // Invalid mongo ids validation rule
     Item_name_is_unique_rules_validation = "Item_name_is_unique_rules_validation" // Feature not supported
     Modifier_groups_ids_rules_validation = "Modifier_groups_ids_rules_validation" // Feature not supported
