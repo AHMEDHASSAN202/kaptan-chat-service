@@ -6,4 +6,4 @@ buildpacks:
   - heroku/go
 
 env:
-  GO_VERSION: "1.21.5" # Specify your Go version here
+  GO_VERSION: "1.21.11" # Specify your Go version here
