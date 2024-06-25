@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 	"io"
+	"math"
 	"os"
 	"reflect"
 	"samm/pkg/logger"
@@ -358,4 +359,27 @@ func IsNil(i interface{}) bool {
 func GetAsPointer[T any](p T) *T {
 	v := &p
 	return v
+}
+
+func Distance(lt1, lng1, lt2, lng2 float64) float64 {
+	lat1 := degreesToRadians(lt1)
+	lon1 := degreesToRadians(lng1)
+	lat2 := degreesToRadians(lt2)
+	lon2 := degreesToRadians(lng2)
+
+	// Earth radius in kilometers
+	const earthRadius = 6371.0
+
+	distance := math.Acos(math.Sin(lat1)*math.Sin(lat2)+math.Cos(lat1)*
+		math.Cos(lat2)*math.Cos(lon2-lon1)) * earthRadius
+
+	if math.IsNaN(distance) {
+		return 0
+	}
+
+	return distance
+}
+
+func degreesToRadians(degrees float64) float64 {
+	return degrees * (math.Pi / 180)
 }

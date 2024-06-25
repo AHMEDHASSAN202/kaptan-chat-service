@@ -5,7 +5,6 @@ import (
 	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"github.com/pkg/errors"
-	"github.com/uber/h3-go/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -13,9 +12,9 @@ import (
 	"samm/internal/module/retails/consts"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/location"
+	"samm/pkg/database/mongodb"
 	"samm/pkg/utils"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -27,6 +26,22 @@ const mongoLocationRepositoryTag = "LocationMongoRepository"
 
 func NewLocationMongoRepository(dbs *mongo.Database) domain.LocationRepository {
 	locationDbCollection := mgm.Coll(&domain.Location{})
+
+	mongodb.CreateIndex(locationDbCollection.Collection, false,
+		bson.E{"status", mongodb.IndexType.Asc},
+		bson.E{"brand_details.is_active", mongodb.IndexType.Asc},
+		bson.E{"brand_details._id", mongodb.IndexType.Asc},
+		bson.E{"brand_details.cuisines._id", mongodb.IndexType.Asc},
+		bson.E{"country._id", mongodb.IndexType.Asc},
+		bson.E{"coordinate", mongodb.IndexType.Spatial},
+		bson.E{"deleted_at", mongodb.IndexType.Asc})
+
+	mongodb.CreateIndex(locationDbCollection.Collection, false,
+		bson.E{"status", mongodb.IndexType.Asc},
+		bson.E{"brand_details.is_active", mongodb.IndexType.Asc},
+		bson.E{"country._id", mongodb.IndexType.Asc},
+		bson.E{"coordinate", mongodb.IndexType.Spatial},
+		bson.E{"deleted_at", mongodb.IndexType.Asc})
 
 	return &locationRepository{
 		locationCollection: locationDbCollection,
@@ -166,224 +181,56 @@ func (l locationRepository) ListMobileLocation(ctx context.Context, payload *loc
 	latPoint, _ := strconv.ParseFloat(payload.MobileHeaders.Lat, 64)
 	lngPoint, _ := strconv.ParseFloat(payload.MobileHeaders.Lng, 64)
 
-	latLng := h3.NewLatLng(latPoint, lngPoint)
-	index := h3.LatLngToCell(latLng, consts.H3Resolution).String()
 	var pipeline []interface{}
-	matching := bson.M{"$match": bson.M{"$and": []interface{}{
-		bson.M{"deleted_at": nil},
-		bson.M{"index": index},
-		bson.M{"country._id": payload.MobileHeaders.CountryId},
-		bson.M{"brand_details.is_active": true},
-		bson.M{"status": consts.LocationStatusActive},
-	}}}
-
+	matching := bson.M{"$and": []bson.D{
+		{{"deleted_at", nil}},
+		{{"country._id", payload.MobileHeaders.CountryId}},
+		{{"brand_details.is_active", true}},
+		{{"status", consts.LocationStatusActive}},
+	}}
 	if payload.Query != "" {
-		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{
-			"$or": []bson.M{
-				{"name.ar": bson.M{"$regex": payload.Query, "$options": "i"}},
-				{"name.en": bson.M{"$regex": payload.Query, "$options": "i"}},
-				{"tags": bson.M{"$regex": payload.Query, "$options": "i"}},
-				{"phone": bson.M{"$regex": payload.Query, "$options": "i"}},
-			},
-		})
+		matching["$and"] = append(matching["$and"].([]bson.D), bson.D{
+			{
+				"$or", []bson.M{
+					{"name.ar": bson.M{"$regex": payload.Query, "$options": "i"}},
+					{"name.en": bson.M{"$regex": payload.Query, "$options": "i"}},
+					{"tags": bson.M{"$regex": payload.Query, "$options": "i"}},
+					{"phone": bson.M{"$regex": payload.Query, "$options": "i"}},
+				},
+			}})
 	}
 
 	if payload.BrandId != "" {
-		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{
-			"brand_details._id": utils.ConvertStringIdToObjectId(payload.BrandId),
-		})
+		matching["$and"] = append(matching["$and"].([]bson.D), bson.D{
+			{"brand_details._id", utils.ConvertStringIdToObjectId(payload.BrandId)}})
 	}
 
 	if payload.CuisineIds != nil && len(payload.CuisineIds) > 0 && payload.CuisineIds[0] != "" {
 		matching["$and"] = append(matching["$and"].([]bson.D), bson.D{{"brand_details.cuisines._id", bson.M{"$in": utils.ConvertStringIdsToObjectIds(payload.CuisineIds)}}})
 	}
-	currentTime := time.Now().UTC().Format("15:04:05")
-	currentDay := utils.GetDayByCountry(payload.CountryId)
-	pipeline = append(pipeline,
-		bson.M{
-			"$addFields": bson.D{
-				{"is_open", bson.D{
-					{"$cond", bson.A{
-						bson.D{
-							{"$or", bson.A{
-								bson.D{
-									{"$and", bson.A{
-										bson.D{{"$gt", bson.A{
-											bson.D{
-												{"$size", bson.D{
-													{"$filter", bson.D{
-														{"input", "$working_hour"},
-														{"as", "hours"},
-														{"cond", bson.D{
-															{"$and", bson.A{
-																bson.D{
-																	{"$eq", bson.A{
-																		"$$hours.day", strings.ToLower(currentDay),
-																	}},
-																},
-																bson.D{
-																	{"$lte", bson.A{
-																		"$$hours.from",
-																		currentTime,
-																	}},
-																},
-																bson.D{
-																	{"$gte", bson.A{
-																		"$$hours.to",
-																		currentTime,
-																	}},
-																},
-																bson.D{
-																	{"$gte", bson.A{
-																		"$$hours.to",
-																		"$$hours.from",
-																	}},
-																},
-															}},
-														}},
-													}},
-												}},
-											},
-											0,
-										}}},
-										bson.D{
-											{"$eq", bson.A{
-												"$open",
-												true,
-											}}},
-									},
-									},
-								},
-								bson.D{
-									{"$and", bson.A{
-										bson.D{{"$gt", bson.A{
-											bson.D{
-												{"$size", bson.D{
-													{"$filter", bson.D{
-														{"input", "$working_hour"},
-														{"as", "hours"},
-														{"cond", bson.D{
-															{"$and", bson.A{
-																bson.D{
-																	{"$eq", bson.A{
-																		"$$hours.day", strings.ToLower(currentDay),
-																	}},
-																},
-																bson.D{
-																	{"$gte", bson.A{
-																		currentTime,
-																		"$$hours.from",
-																	}},
-																},
-																bson.D{
-																	{"$gte", bson.A{
-																		"$$hours.from",
-																		"$$hours.to",
-																	}},
-																},
-															}},
-														}},
-													}},
-												}},
-											},
-											0,
-										}}},
-										bson.D{
-											{"$eq", bson.A{
-												"$open",
-												true,
-											}}},
-									},
-									},
-								},
-								bson.D{
-									{"$and", bson.A{
-										bson.D{{"$gt", bson.A{
-											bson.D{
-												{"$size", bson.D{
-													{"$filter", bson.D{
-														{"input", "$working_hour"},
-														{"as", "hours"},
-														{"cond", bson.D{
-															{"$and", bson.A{
-																bson.D{
-																	{"$eq", bson.A{
-																		"$$hours.day", strings.ToLower(currentDay),
-																	}},
-																},
-																bson.D{
-																	{"$lte", bson.A{
-																		currentTime,
-																		"$$hours.to",
-																	}},
-																},
-																bson.D{
-																	{"$gte", bson.A{
-																		"$$hours.from",
-																		"$$hours.to",
-																	}},
-																},
-															}},
-														}},
-													}},
-												}},
-											},
-											0,
-										}}},
-										bson.D{
-											{"$eq", bson.A{
-												"$open",
-												true,
-											}}},
-									},
-									},
-								},
-								bson.D{
-									{"$and", bson.A{
-										bson.D{{"$gt", bson.A{
-											bson.D{
-												{"$size", bson.D{
-													{"$filter", bson.D{
-														{"input", "$working_hour"},
-														{"as", "hours"},
-														{"cond", bson.D{
-															{"$and", bson.A{
-																bson.D{
-																	{"$eq", bson.A{
-																		"$$hours.day", strings.ToLower(currentDay),
-																	}},
-																},
-																bson.D{
-																	{"$eq", bson.A{
-																		"$$hours.is_full_day", true,
-																	}},
-																},
-															}},
-														}},
-													}},
-												}},
-											},
-											0,
-										}}},
-										bson.D{
-											{"$eq", bson.A{
-												"$open",
-												true,
-											}}},
-									},
-									},
-								},
-							}},
-						},
-						true,
-						false,
-					}},
-				}},
-			},
-		},
-	)
 
-	pipeline = append(pipeline, matching)
+	nearbyStage := bson.M{"$geoNear": bson.M{
+		"near": bson.M{
+			"coordinates": []float64{
+				lngPoint,
+				latPoint,
+			},
+			"type": "Point",
+		},
+		"key":                "coordinate",
+		"maxDistance":        payload.Distance * 1000,
+		"spherical":          true,
+		"distanceMultiplier": 0.001,
+		"distanceField":      "distance",
+		"query":              matching,
+	}}
+	pipeline = append(pipeline, nearbyStage)
+
+	pipeline = append(pipeline,
+		AddIsOpenFieldPipeline(payload.CountryId),
+	)
+	pipeline = append(pipeline, bson.M{"$sort": bson.M{"is_open": -1}})
+
 	pipeline = append(pipeline, bson.M{
 		"$project": bson.M{
 			"name":             1,
@@ -397,6 +244,7 @@ func (l locationRepository) ListMobileLocation(ctx context.Context, payload *loc
 			"preparation_time": 1,
 			"country":          1,
 			"is_open":          1,
+			"distance":         1,
 		},
 	})
 
@@ -428,196 +276,19 @@ func (l locationRepository) FindMobileLocation(ctx context.Context, Id primitive
 		bson.M{"status": consts.LocationStatusActive},
 	}}}
 	pipeline = append(pipeline, matching)
-	currentTime := time.Now().UTC().Format("15:04:05")
-	currentDay := utils.GetDayByCountry(payload.CountryId)
 
 	pipeline = append(pipeline,
-		bson.M{
-			"$addFields": bson.D{
-				{"is_open", bson.D{
-					{"$cond", bson.A{
-						bson.D{
-							{"$or", bson.A{
-								bson.D{
-									{"$and", bson.A{
-										bson.D{{"$gt", bson.A{
-											bson.D{
-												{"$size", bson.D{
-													{"$filter", bson.D{
-														{"input", "$working_hour"},
-														{"as", "hours"},
-														{"cond", bson.D{
-															{"$and", bson.A{
-																bson.D{
-																	{"$eq", bson.A{
-																		"$$hours.day", strings.ToLower(currentDay),
-																	}},
-																},
-																bson.D{
-																	{"$lte", bson.A{
-																		"$$hours.from",
-																		currentTime,
-																	}},
-																},
-																bson.D{
-																	{"$gte", bson.A{
-																		"$$hours.to",
-																		currentTime,
-																	}},
-																},
-																bson.D{
-																	{"$gte", bson.A{
-																		"$$hours.to",
-																		"$$hours.from",
-																	}},
-																},
-															}},
-														}},
-													}},
-												}},
-											},
-											0,
-										}}},
-										bson.D{
-											{"$eq", bson.A{
-												"$open",
-												true,
-											}}},
-									},
-									},
-								},
-								bson.D{
-									{"$and", bson.A{
-										bson.D{{"$gt", bson.A{
-											bson.D{
-												{"$size", bson.D{
-													{"$filter", bson.D{
-														{"input", "$working_hour"},
-														{"as", "hours"},
-														{"cond", bson.D{
-															{"$and", bson.A{
-																bson.D{
-																	{"$eq", bson.A{
-																		"$$hours.day", strings.ToLower(currentDay),
-																	}},
-																},
-																bson.D{
-																	{"$gte", bson.A{
-																		currentTime,
-																		"$$hours.from",
-																	}},
-																},
-																bson.D{
-																	{"$gte", bson.A{
-																		"$$hours.from",
-																		"$$hours.to",
-																	}},
-																},
-															}},
-														}},
-													}},
-												}},
-											},
-											0,
-										}}},
-										bson.D{
-											{"$eq", bson.A{
-												"$open",
-												true,
-											}}},
-									},
-									},
-								},
-								bson.D{
-									{"$and", bson.A{
-										bson.D{{"$gt", bson.A{
-											bson.D{
-												{"$size", bson.D{
-													{"$filter", bson.D{
-														{"input", "$working_hour"},
-														{"as", "hours"},
-														{"cond", bson.D{
-															{"$and", bson.A{
-																bson.D{
-																	{"$eq", bson.A{
-																		"$$hours.day", strings.ToLower(currentDay),
-																	}},
-																},
-																bson.D{
-																	{"$lte", bson.A{
-																		currentTime,
-																		"$$hours.to",
-																	}},
-																},
-																bson.D{
-																	{"$gte", bson.A{
-																		"$$hours.from",
-																		"$$hours.to",
-																	}},
-																},
-															}},
-														}},
-													}},
-												}},
-											},
-											0,
-										}}},
-										bson.D{
-											{"$eq", bson.A{
-												"$open",
-												true,
-											}}},
-									},
-									},
-								},
-								bson.D{
-									{"$and", bson.A{
-										bson.D{{"$gt", bson.A{
-											bson.D{
-												{"$size", bson.D{
-													{"$filter", bson.D{
-														{"input", "$working_hour"},
-														{"as", "hours"},
-														{"cond", bson.D{
-															{"$and", bson.A{
-																bson.D{
-																	{"$eq", bson.A{
-																		"$$hours.day", strings.ToLower(currentDay),
-																	}},
-																},
-																bson.D{
-																	{"$eq", bson.A{
-																		"$$hours.is_full_day", true,
-																	}},
-																},
-															}},
-														}},
-													}},
-												}},
-											},
-											0,
-										}}},
-										bson.D{
-											{"$eq", bson.A{
-												"$open",
-												true,
-											}}},
-									},
-									},
-								},
-							}},
-						},
-						true,
-						false,
-					}},
-				}},
-			},
-		},
+		AddIsOpenFieldPipeline(payload.CountryId),
 	)
 	exists, err := l.locationCollection.SimpleAggregateFirstWithCtx(ctx, domainData, pipeline...)
 	if !exists {
 		return domainData, errors.New("Not Found")
 	}
 	domainData.SetOpenStatus()
+
+	latPoint, _ := strconv.ParseFloat(payload.MobileHeaders.Lat, 64)
+	lngPoint, _ := strconv.ParseFloat(payload.MobileHeaders.Lng, 64)
+	domainData.SetDistance(latPoint, lngPoint)
+	//domainData.SetNextEvent()
 	return domainData, err
 }
