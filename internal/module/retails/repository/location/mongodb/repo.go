@@ -261,6 +261,7 @@ func (l locationRepository) ListMobileLocation(ctx context.Context, payload *loc
 		if errUnmarshal != nil {
 			break
 		}
+		model.WorkingHour = make([]domain.WorkingHour, 0)
 		model.SetOpenStatus()
 		models = append(models, model)
 	}
@@ -291,6 +292,5 @@ func (l locationRepository) FindMobileLocation(ctx context.Context, Id primitive
 	latPoint, _ := strconv.ParseFloat(payload.MobileHeaders.Lat, 64)
 	lngPoint, _ := strconv.ParseFloat(payload.MobileHeaders.Lng, 64)
 	domainData.SetDistance(latPoint, lngPoint)
-	//domainData.SetNextEvent()
 	return domainData, err
 }
