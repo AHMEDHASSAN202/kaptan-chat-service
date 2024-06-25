@@ -3,6 +3,7 @@ package menu
 import (
 	"samm/internal/module/menu/custom_validators"
 	"samm/internal/module/menu/delivery"
+	"samm/internal/module/menu/external"
 	"samm/internal/module/menu/repository/mongodb/item"
 	menu_group2 "samm/internal/module/menu/repository/mongodb/menu_group"
 	"samm/internal/module/menu/repository/mongodb/menu_group_item"
@@ -19,6 +20,7 @@ import (
 // Module for controller database repository
 var Module = fx.Options(
 	fx.Provide(
+		external.NewExternalService,
 		item.NewItemRepository,
 		useCaseItem.NewItemUseCase,
 		useCaseModifierGroup.NewModifierGroupUseCase,
