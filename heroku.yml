@@ -1,0 +1,14 @@
+build:
+  docker:
+    web: Dockerfile
+
+buildpacks:
+  - heroku/go
+
+env:
+  GO_VERSION: "1.21.11" # Specify your Go version here
+
+formation:
+  web:
+    quantity: 1
+    size: standard-1x
