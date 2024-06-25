@@ -1,6 +1,10 @@
+# build:
+#   docker:
+#     web: Dockerfile
+
 build:
-  docker:
-    web: Dockerfile
+  languages:
+    - go
 
 buildpacks:
   - heroku/go
