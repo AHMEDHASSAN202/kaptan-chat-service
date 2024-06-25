@@ -412,10 +412,12 @@ func (l locationRepository) ListMobileLocation(ctx context.Context, payload *loc
 			"preparation_time": 1,
 			"country":          1,
 			"is_open":          1,
+			"created_at":       1,
+			"updated_at":       1,
 		},
 	})
 
-	data, err := New(l.locationCollection.Collection).Context(ctx).Limit(payload.Limit).Page(payload.Page).Sort("created_at", -1).Aggregate(pipeline...)
+	data, err := New(l.locationCollection.Collection).Context(ctx).Limit(payload.Limit).Page(payload.Page).Aggregate(pipeline...)
 	if data == nil || data.Data == nil {
 		return models, nil, err
 	}
