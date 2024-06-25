@@ -681,7 +681,7 @@ var Module = fx.Options(
 	return nil
 }
 
-func main() {
+func mainTemp() {
 	// Define the root directory for the module and the folders to be created.
 	getNewModuleName := flag.String("new_module", "", "")
 	getNewModulePath := flag.String("new_module_path", "", "")
