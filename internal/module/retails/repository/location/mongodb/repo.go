@@ -5,7 +5,6 @@ import (
 	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"github.com/pkg/errors"
-	"github.com/uber/h3-go/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -166,12 +165,26 @@ func (l locationRepository) ListMobileLocation(ctx context.Context, payload *loc
 	latPoint, _ := strconv.ParseFloat(payload.MobileHeaders.Lat, 64)
 	lngPoint, _ := strconv.ParseFloat(payload.MobileHeaders.Lng, 64)
 
-	latLng := h3.NewLatLng(latPoint, lngPoint)
-	index := h3.LatLngToCell(latLng, consts.H3Resolution).String()
+	//latLng := h3.NewLatLng(latPoint, lngPoint)
+	//index := h3.LatLngToCell(latLng, consts.H3Resolution).String()
+	//index = "883e60cee5fffff"
 	var pipeline []interface{}
+
+	geoNearStage := bson.M{
+		"$geoNear": bson.M{
+			"near": bson.M{
+				"type":        "Point",
+				"coordinates": bson.A{latPoint, lngPoint},
+			},
+			"distanceField": "distance",
+			"maxDistance":   consts.MaxDistanceInMeters,
+			"spherical":     true,
+		},
+	}
+
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
 		bson.M{"deleted_at": nil},
-		bson.M{"index": index},
+		//bson.M{"index": index},
 		bson.M{"country._id": payload.MobileHeaders.CountryId},
 		bson.M{"brand_details.is_active": true},
 		bson.M{"status": consts.LocationStatusActive},
@@ -197,6 +210,9 @@ func (l locationRepository) ListMobileLocation(ctx context.Context, payload *loc
 	if payload.CuisineIds != nil && len(payload.CuisineIds) > 0 && payload.CuisineIds[0] != "" {
 		matching["$and"] = append(matching["$and"].([]bson.D), bson.D{{"brand_details.cuisines._id", bson.M{"$in": utils.ConvertStringIdsToObjectIds(payload.CuisineIds)}}})
 	}
+
+	pipeline = append(pipeline, geoNearStage)
+	pipeline = append(pipeline, matching)
 	currentTime := time.Now().UTC().Format("15:04:05")
 	currentDay := utils.GetDayByCountry(payload.CountryId)
 	pipeline = append(pipeline,
@@ -383,7 +399,6 @@ func (l locationRepository) ListMobileLocation(ctx context.Context, payload *loc
 		},
 	)
 
-	pipeline = append(pipeline, matching)
 	pipeline = append(pipeline, bson.M{
 		"$project": bson.M{
 			"name":             1,
