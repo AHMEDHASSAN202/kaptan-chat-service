@@ -12,6 +12,7 @@ type DeleteEntityFromMenuGroupDto struct {
 	EntityId     string             `param:"entity_id" validate:"required,mongodb"`
 	Entity       string             `param:"entity" validate:"oneof=category item"`
 	AdminDetails []dto.AdminDetails `json:"-"`
+	dto.PortalHeaders
 }
 
 func (input *DeleteEntityFromMenuGroupDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {

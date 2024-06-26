@@ -11,5 +11,5 @@ type AdminHeaders struct {
 }
 
 type PortalHeaders struct {
-	AccountId string `header:"Account-Id" validate:"required"`
+	AccountId string `header:"Account-Id" validate:"required,mongodb"`
 }

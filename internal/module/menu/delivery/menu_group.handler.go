@@ -13,8 +13,6 @@ import (
 	"samm/pkg/validators/localization"
 )
 
-const AccountId = "666580eee476b942058b7fff"
-
 type MenuGroupHandler struct {
 	menuGroupUsecase domain.MenuGroupUseCase
 	validator        *validator.Validate
@@ -53,9 +51,11 @@ func (a *MenuGroupHandler) List(c echo.Context) error {
 	}
 
 	var input menu_group.ListMenuGroupDTO
-	input.AccountId = AccountId
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -65,7 +65,7 @@ func (a *MenuGroupHandler) List(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	data, errResp := a.menuGroupUsecase.List(ctx, input)
+	data, errResp := a.menuGroupUsecase.List(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
@@ -79,12 +79,22 @@ func (a *MenuGroupHandler) Find(c echo.Context) error {
 		ctx = context.Background()
 	}
 
-	id := c.Param("id")
-	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
+	var input menu_group.FindMenuGroupDTO
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	data, errResp := a.menuGroupUsecase.Find(ctx, utils.ConvertStringIdToObjectId(id))
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	data, errResp := a.menuGroupUsecase.Find(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
@@ -99,9 +109,11 @@ func (a *MenuGroupHandler) Create(c echo.Context) error {
 	}
 
 	var input menu_group.CreateMenuGroupDTO
-	input.AccountId = AccountId
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -131,11 +143,13 @@ func (a *MenuGroupHandler) Update(c echo.Context) error {
 	}
 
 	var input menu_group.CreateMenuGroupDTO
-	input.AccountId = AccountId
 	input.ID = utils.ConvertStringIdToObjectId(id)
 
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -159,12 +173,22 @@ func (a *MenuGroupHandler) Delete(c echo.Context) error {
 		ctx = context.Background()
 	}
 
-	id := c.Param("id")
-	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
+	var input menu_group.FindMenuGroupDTO
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	errResp := a.menuGroupUsecase.Delete(ctx, utils.ConvertStringIdToObjectId(id))
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.menuGroupUsecase.Delete(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
@@ -184,8 +208,11 @@ func (a *MenuGroupHandler) ChangeStatus(c echo.Context) error {
 	}
 
 	var input menu_group.ChangeMenuGroupStatusDto
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -215,8 +242,11 @@ func (a *MenuGroupHandler) DeleteEntity(c echo.Context) error {
 	}
 
 	var input menu_group.DeleteEntityFromMenuGroupDto
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -241,8 +271,11 @@ func (a *MenuGroupHandler) MobileGetMenuGroupItems(c echo.Context) error {
 	}
 
 	var input menu_group.GetMenuGroupItemsDTO
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -267,8 +300,11 @@ func (a *MenuGroupHandler) MobileGetMenuGroupItem(c echo.Context) error {
 	}
 
 	var input menu_group.GetMenuGroupItemDTO
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
