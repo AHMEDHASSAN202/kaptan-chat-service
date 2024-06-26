@@ -12,6 +12,7 @@ type ChangeMenuGroupStatusDto struct {
 	Entity       string             `json:"entity" validate:"oneof=menu category item"`
 	Status       string             `json:"status" validate:"oneof=active inactive"`
 	AdminDetails []dto.AdminDetails `json:"-"`
+	dto.PortalHeaders
 }
 
 func (input *ChangeMenuGroupStatusDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {

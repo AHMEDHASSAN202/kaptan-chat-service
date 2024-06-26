@@ -69,3 +69,7 @@ func (l UserUseCase) ListUser(ctx context.Context, payload *user.ListUserDto) (u
 	return results, paginationResult, validators.ErrorResponse{}
 
 }
+
+func (l UserUseCase) UserEmailExists(ctx context.Context, email string, accountId string) bool {
+	return l.repo.UserEmailExists(ctx, email, accountId)
+}

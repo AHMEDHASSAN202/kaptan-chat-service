@@ -34,6 +34,7 @@ type UserUseCase interface {
 	FindUser(ctx context.Context, Id string) (user User, err validators.ErrorResponse)
 	DeleteUser(ctx context.Context, Id string) (err validators.ErrorResponse)
 	ListUser(ctx context.Context, payload *user.ListUserDto) (users []User, paginationResult utils.PaginationResult, err validators.ErrorResponse)
+	UserEmailExists(ctx context.Context, email string, accountId string) bool
 }
 
 type UserRepository interface {
@@ -42,4 +43,5 @@ type UserRepository interface {
 	FindUser(ctx context.Context, Id primitive.ObjectID) (user *User, err error)
 	DeleteUser(ctx context.Context, Id primitive.ObjectID) (err error)
 	ListUser(ctx context.Context, payload *user.ListUserDto) (locations []User, paginationResult utils.PaginationResult, err error)
+	UserEmailExists(ctx context.Context, email string, userId string) bool
 }

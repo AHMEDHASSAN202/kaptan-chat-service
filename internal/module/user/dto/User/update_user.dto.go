@@ -4,6 +4,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 )
 
 type UpdateUserProfileDto struct {
@@ -17,6 +18,9 @@ type UpdateUserProfileDto struct {
 	ImageURL    string `json:"image_url" validate:"omitempty,url"`
 }
 
-func (payload *UpdateUserProfileDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
-	return validators.ValidateStruct(c.Request().Context(), validate, payload)
+func (payload *UpdateUserProfileDto) Validate(c echo.Context, validate *validator.Validate, validateUserEmailIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {
+	return validators.ValidateStruct(c.Request().Context(), validate, payload, validators.CustomErrorTags{
+		ValidationTag:          localization.User_Email_is_unique_rules_validation,
+		RegisterValidationFunc: validateUserEmailIsUnique,
+	})
 }

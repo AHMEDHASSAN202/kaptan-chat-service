@@ -1,0 +1,132 @@
+package admin
+
+import (
+	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"net/http"
+	builder "samm/internal/module/admin/builder/admin"
+	"samm/internal/module/admin/domain"
+	dto "samm/internal/module/admin/dto/admin"
+	"samm/internal/module/admin/responses"
+	"samm/internal/module/menu/external"
+	"samm/pkg/logger"
+	"samm/pkg/utils"
+	utilsDto "samm/pkg/utils/dto"
+	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
+	"time"
+)
+
+type AdminUseCase struct {
+	repo       domain.AdminRepository
+	logger     logger.ILogger
+	extService external.ExtService
+}
+
+func NewAdminUseCase(repo domain.AdminRepository, logger logger.ILogger, extService external.ExtService) domain.AdminUseCase {
+	return &AdminUseCase{
+		repo:       repo,
+		logger:     logger,
+		extService: extService,
+	}
+}
+
+func (oRec *AdminUseCase) Create(ctx context.Context, input *dto.CreateAdminDTO) (string, validators.ErrorResponse) {
+	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Create Admin", UpdatedAt: time.Now()}
+	adminDomain, err := builder.CreateUpdateAdminBuilder(nil, input)
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> Create -> ", err)
+		return "", validators.GetErrorResponse(&ctx, localization.E1001, nil, nil)
+	}
+
+	menuGroup, errCreate := oRec.repo.Create(ctx, adminDomain)
+	if errCreate != nil {
+		oRec.logger.Error("AdminUseCase -> Create -> ", errCreate)
+		return "", validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
+	}
+	return utils.ConvertObjectIdToStringId(menuGroup.ID), validators.ErrorResponse{}
+}
+
+func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO) (string, validators.ErrorResponse) {
+	admin, errFind := oRec.repo.Find(ctx, input.ID)
+	if errFind != nil {
+		oRec.logger.Error("AdminUseCase -> Update -> ", errFind)
+		return "", validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Update Admin", UpdatedAt: time.Now()}
+	adminDomain, err := builder.CreateUpdateAdminBuilder(admin, input)
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> Update -> ", err)
+	}
+
+	menuGroup, errCreate := oRec.repo.Update(ctx, adminDomain)
+	if errCreate != nil {
+		oRec.logger.Error("AdminUseCase -> Update -> ", errCreate)
+		return "", validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
+	}
+
+	return utils.ConvertObjectIdToStringId(menuGroup.ID), validators.ErrorResponse{}
+}
+
+func (oRec *AdminUseCase) Delete(ctx context.Context, adminId primitive.ObjectID) validators.ErrorResponse {
+	admin, err := oRec.repo.Find(ctx, adminId)
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> Delete -> ", err)
+		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Delete Admin", UpdatedAt: time.Now()}
+	err = oRec.repo.Delete(ctx, admin, adminDetails)
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> Delete -> ", err)
+		return validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
+	}
+
+	return validators.ErrorResponse{}
+}
+
+func (oRec *AdminUseCase) List(ctx context.Context, input *dto.ListAdminDTO) (interface{}, validators.ErrorResponse) {
+	list, pagination, err := oRec.repo.List(ctx, input)
+	data := builder.ListAdminBuilder(&list)
+	listResponse := responses.SetListResponse(data, pagination)
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> List -> ", err)
+		return listResponse, validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
+	}
+	return listResponse, validators.ErrorResponse{}
+}
+
+func (oRec *AdminUseCase) Find(ctx context.Context, adminId primitive.ObjectID) (interface{}, validators.ErrorResponse) {
+	admin, err := oRec.repo.Find(ctx, adminId)
+	adminResp := builder.FindAdminBuilder(admin)
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> Find -> ", err)
+		return adminResp, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+	return adminResp, validators.ErrorResponse{}
+}
+
+func (oRec *AdminUseCase) ChangeStatus(ctx context.Context, input *dto.ChangeAdminStatusDto) validators.ErrorResponse {
+	admin, errFind := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(input.Id))
+	if errFind != nil {
+		oRec.logger.Error("AdminUseCase -> Find -> ChangeStatus -> ", errFind)
+		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Change Admin Status", UpdatedAt: time.Now()}
+	err := oRec.repo.ChangeStatus(ctx, admin, input, adminDetails)
+	if err != nil {
+		return validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
+	}
+
+	return validators.ErrorResponse{}
+}
+
+func (oRec *AdminUseCase) CheckEmailExists(ctx context.Context, name string, adminId primitive.ObjectID) (bool, validators.ErrorResponse) {
+	isExists, err := oRec.repo.CheckEmailExists(ctx, name, adminId)
+	if err != nil {
+		return isExists, validators.GetErrorResponseFromErr(err)
+	}
+	return isExists, validators.ErrorResponse{}
+}

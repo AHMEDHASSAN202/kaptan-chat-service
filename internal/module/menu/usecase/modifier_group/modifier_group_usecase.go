@@ -2,10 +2,12 @@ package modifier_group
 
 import (
 	"context"
+	"github.com/jinzhu/copier"
 	builder "samm/internal/module/menu/builder/modifier_group"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/modifier_group"
 	"samm/internal/module/menu/responses"
+	modifier_group_resp "samm/internal/module/menu/responses/modifier_group"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	utilsDto "samm/pkg/utils/dto"
@@ -49,7 +51,9 @@ func (oRec *ModifierGroupUseCase) Update(ctx context.Context, dto modifier_group
 		return getByIdErr
 	}
 	id := utils.ConvertStringIdToObjectId(dto.Id)
-	doc := builder.ConvertDtoToCorrespondingDomain(dto, &oldDoc)
+	modifierGroup := domain.ModifierGroup{}
+	copier.Copy(&modifierGroup, &oldDoc)
+	doc := builder.ConvertDtoToCorrespondingDomain(dto, &modifierGroup)
 	err := oRec.repo.Update(ctx, &id, &doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
@@ -57,15 +61,19 @@ func (oRec *ModifierGroupUseCase) Update(ctx context.Context, dto modifier_group
 	return validators.ErrorResponse{}
 }
 
-func (oRec *ModifierGroupUseCase) GetById(ctx context.Context, id string) (domain.ModifierGroup, validators.ErrorResponse) {
+func (oRec *ModifierGroupUseCase) GetById(ctx context.Context, id string) (modifier_group_resp.ModifierGroupResp, validators.ErrorResponse) {
 	modifierGroups, err := oRec.repo.GetByIds(ctx, []primitive.ObjectID{utils.ConvertStringIdToObjectId(id)})
 	if err != nil {
-		return domain.ModifierGroup{}, validators.GetErrorResponseFromErr(err)
+		return modifier_group_resp.ModifierGroupResp{}, validators.GetErrorResponseFromErr(err)
 	}
 	if len(modifierGroups) <= 0 {
-		return domain.ModifierGroup{}, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
+		return modifier_group_resp.ModifierGroupResp{}, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 	}
-	return modifierGroups[0], validators.ErrorResponse{}
+	modifierGroupsResp := modifierGroups[0]
+	if modifierGroupsResp.Products == nil {
+		modifierGroupsResp.Products = make([]map[string]any, 0)
+	}
+	return modifierGroupsResp, validators.ErrorResponse{}
 }
 
 func (oRec *ModifierGroupUseCase) List(ctx context.Context, dto *modifier_group.ListModifierGroupsDto) (*responses.ListResponse, validators.ErrorResponse) {

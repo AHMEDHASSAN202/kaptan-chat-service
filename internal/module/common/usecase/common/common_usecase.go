@@ -1,13 +1,17 @@
 package common
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"io"
 	"io/ioutil"
 	"mime/multipart"
+	"os"
 	"path/filepath"
 	"samm/internal/module/common/domain"
 	location "samm/internal/module/common/dto"
@@ -40,6 +44,46 @@ type CommonUseCase struct {
 func (l CommonUseCase) ListCities(ctx context.Context, payload *location.ListCitiesDto) (data interface{}, err validators.ErrorResponse) {
 
 	return CitiesBuilder(payload), validators.ErrorResponse{}
+
+}
+func (l CommonUseCase) ListAssets(ctx context.Context, hasColors, hasBrands bool) (data interface{}, errResp validators.ErrorResponse) {
+	assetResult := make(map[string]any)
+	if hasBrands {
+		pwd, _ := os.Getwd()
+		carBrandsFile, err := os.Open(pwd + "/internal/module/common/consts/car_brands.json")
+		if err != nil {
+			l.logger.Error(err)
+		}
+
+		defer carBrandsFile.Close()
+		reader := bufio.NewReader(carBrandsFile)
+		content, err := io.ReadAll(reader)
+		if err != nil {
+			l.logger.Error(err)
+		}
+
+		var carBrandsResult []map[string]interface{}
+		json.Unmarshal(content, &carBrandsResult)
+		assetResult["carBrands"] = carBrandsResult
+	}
+	if hasColors {
+		pwd, _ := os.Getwd()
+		carColorsFile, err := os.Open(pwd + "/internal/module/common/consts/car_colors.json")
+		if err != nil {
+			l.logger.Error(err)
+		}
+
+		defer carColorsFile.Close()
+		reader := bufio.NewReader(carColorsFile)
+		content, err := io.ReadAll(reader)
+		if err != nil {
+			l.logger.Error(err)
+		}
+		var carColorsResult []map[string]interface{}
+		json.Unmarshal(content, &carColorsResult)
+		assetResult["carColors"] = carColorsResult
+	}
+	return assetResult, validators.ErrorResponse{}
 
 }
 func (l CommonUseCase) ListCountries(ctx context.Context) (data interface{}, err validators.ErrorResponse) {

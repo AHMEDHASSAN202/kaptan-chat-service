@@ -3,6 +3,7 @@ package delivery
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/internal/module/user/custom_validators"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
 	"samm/pkg/logger"
@@ -10,9 +11,10 @@ import (
 )
 
 type UserHandler struct {
-	userUsecase domain.UserUseCase
-	validator   *validator.Validate
-	logger      logger.ILogger
+	userUsecase         domain.UserUseCase
+	validator           *validator.Validate
+	userCustomValidator custom_validators.UserCustomValidator
+	logger              logger.ILogger
 }
 
 // InitUserController will initialize the article's HTTP controller
@@ -65,7 +67,7 @@ func (a *UserHandler) UpdateUserProfile(c echo.Context) error {
 	// get user id from auth middleware
 	id := c.Param("id")
 	payload.ID = id
-	validationErr := payload.Validate(c, a.validator)
+	validationErr := payload.Validate(c, a.validator, a.userCustomValidator.ValidateUserEmailIsUnique(payload.ID))
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)

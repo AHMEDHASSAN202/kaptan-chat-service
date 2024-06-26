@@ -94,3 +94,11 @@ func (l UserRepository) ListUser(ctx context.Context, payload *user.ListUserDto)
 
 }
 
+func (l UserRepository) UserEmailExists(ctx context.Context, email string, userId string) bool {
+	filter := bson.M{"deleted_at": nil, "email": email}
+	if userId != "" {
+		filter = bson.M{"deleted_at": nil, "email": email, "_id": bson.M{"$ne": utils.ConvertStringIdToObjectId(userId)}}
+	}
+	count, _ := l.userCollection.CountDocuments(ctx, filter)
+	return count > 0
+}
