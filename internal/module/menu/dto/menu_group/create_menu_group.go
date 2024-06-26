@@ -55,13 +55,13 @@ type AvailabilityDTO struct {
 
 type CreateMenuGroupDTO struct {
 	ID             primitive.ObjectID `json:"-"`
-	AccountId      string             `json:"account_id" validate:"mongodb"`
 	Name           LocalizationText   `json:"name" validate:"required"`
 	BranchIds      []string           `json:"branch_ids" validate:"branch_ids_rules"`
 	Categories     []CategoryDTO      `json:"categories" validate:"dive"`
 	Availabilities []AvailabilityDTO  `json:"availabilities" validate:"dive"`
 	Status         string             `json:"status" validate:"oneof=active inactive"`
 	AdminDetails   dto.AdminDetails   `json:"-"`
+	dto.PortalHeaders
 }
 
 func (input *CreateMenuGroupDTO) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {

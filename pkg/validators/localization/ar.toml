@@ -93,3 +93,7 @@ other = "لم يتم العثور على عنصر القائمة أو أنه غ�
 [Email_is_unique_rules_validation]
 description = "البريد الالكتروني مستخدم من قبل"
 other = "البريد الالكتروني مستخدم من قبل"
+
+[Password_required_if_id_is_zero]
+description = "password is a required field"
+other = "كلمه المرور مطلوبه"

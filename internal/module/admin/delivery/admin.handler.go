@@ -101,7 +101,7 @@ func (a *AdminHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique())
+	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -134,7 +134,7 @@ func (a *AdminHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique())
+	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
