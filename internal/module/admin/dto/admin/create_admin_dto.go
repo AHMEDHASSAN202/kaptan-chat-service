@@ -11,17 +11,18 @@ import (
 )
 
 type CreateAdminDTO struct {
-	ID           primitive.ObjectID `json:"-"`
-	Name         string             `json:"name" validate:"required,min=3"`
-	Email        string             `json:"email" validate:"required,Email_is_unique_rules_validation"`
-	Status       string             `json:"status" validate:"oneof=active inactive"`
-	Password     string             `json:"password" validate:"Password_required_if_id_is_zero,omitempty,min=8"`
-	Type         string             `json:"type" validate:"required,oneof=admin portal"`
-	Role         string             `json:"role" validate:"required"`
-	Permissions  []string           `json:"permissions" validate:"required"`
-	CountryIds   []string           `json:"country_ids" validate:"required,country_ids"`
-	AccountId    string             `json:"account_id" validate:"required_if=Type portal"`
-	AdminDetails dto.AdminDetails   `json:"-"`
+	ID              primitive.ObjectID `json:"-"`
+	Name            string             `json:"name" validate:"required,min=3"`
+	Email           string             `json:"email" validate:"required,Email_is_unique_rules_validation"`
+	Status          string             `json:"status" validate:"oneof=active inactive"`
+	Password        string             `json:"password" validate:"Password_required_if_id_is_zero,omitempty,min=8"`
+	ConfirmPassword string             `json:"password_confirmation" validate:"required_with=Password,eqfield=Password"`
+	Type            string             `json:"type" validate:"required,oneof=admin portal"`
+	Role            string             `json:"role" validate:"required"`
+	Permissions     []string           `json:"permissions" validate:"required"`
+	CountryIds      []string           `json:"country_ids" validate:"required,country_ids"`
+	AccountId       string             `json:"account_id" validate:"required_if=Type portal"`
+	AdminDetails    dto.AdminDetails   `json:"-"`
 }
 
 func (input *CreateAdminDTO) Validate(c echo.Context, validate *validator.Validate, validateEmailIsUnique func(fl validator.FieldLevel) bool, passwordRequiredIfIdIsZero func(fl validator.FieldLevel) bool) validators.ErrorResponse {
