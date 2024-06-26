@@ -18,12 +18,14 @@ type Brand struct {
 	IsActive         bool                 `json:"is_active" bson:"is_active"`
 	CuisineIds       []primitive.ObjectID `json:"cuisine_ids" validate:"cuisine_ids_rule"`
 	DeletedAt        *time.Time           `json:"deleted_at" bson:"deleted_at"`
+	Cuisines         *[]Cuisine           `json:"cuisines" bson:"cuisines"`
 }
 
 type BrandUseCase interface {
 	Create(ctx context.Context, dto *brand.CreateBrandDto) (*Brand, validators.ErrorResponse)
 	Update(ctx *context.Context, dto *brand.UpdateBrandDto) validators.ErrorResponse
 	Find(ctx *context.Context, id string) (*Brand, validators.ErrorResponse)
+	FindWithCuisines(ctx *context.Context, id string) (*Brand, validators.ErrorResponse)
 	GetById(ctx *context.Context, id string) (*Brand, validators.ErrorResponse)
 	List(ctx *context.Context, dto *brand.ListBrandDto) (*responses.ListResponse, validators.ErrorResponse)
 	ChangeStatus(ctx *context.Context, dto *brand.ChangeBrandStatusDto) validators.ErrorResponse
@@ -34,8 +36,14 @@ type BrandRepository interface {
 	Create(doc *Brand) error
 	Update(doc *Brand) error
 	FindBrand(*context.Context, primitive.ObjectID) (*Brand, error)
+	FindWithCuisines(context.Context, primitive.ObjectID) (*Brand, error)
 	GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) (*[]Brand, error)
 	List(ctx *context.Context, query *brand.ListBrandDto) (*[]Brand, *PaginationData, error)
 	UpdateBrandAndLocations(doc *Brand) error
 	SoftDelete(doc *Brand) error
 }
+
+//func (model *Brand) Updated(ctx context.Context, result *mongo.UpdateResult) error {
+
+//	return nil
+//}

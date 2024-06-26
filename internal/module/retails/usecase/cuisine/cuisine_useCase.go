@@ -41,7 +41,7 @@ func (oRec *CuisineUseCase) Update(ctx *context.Context, dto *cuisine.UpdateCuis
 		return findCuisineErr
 	}
 	doc := domainBuilderAtUpdate(dto, findCuisine)
-	err := oRec.repo.Update(doc)
+	err := oRec.repo.UpdateCuisineAndLocations(doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}

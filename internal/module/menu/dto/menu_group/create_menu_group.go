@@ -41,7 +41,7 @@ type MenuItemDTO struct {
 type CategoryDTO struct {
 	ID        string           `json:"id"`
 	Name      LocalizationText `json:"name" validate:"required"`
-	Icon      string           `json:"icon" validate:"required,url"`
+	Icon      string           `json:"icon"`
 	Sort      int              `json:"sort" validate:"required"`
 	Status    string           `json:"status" validate:"oneof=active inactive"`
 	MenuItems []MenuItemDTO    `json:"menu_items" validate:"dive"`

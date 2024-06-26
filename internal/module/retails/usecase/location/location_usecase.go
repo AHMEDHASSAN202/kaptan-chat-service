@@ -12,13 +12,24 @@ import (
 )
 
 type LocationUseCase struct {
-	repo   domain.LocationRepository
-	logger logger.ILogger
+	repo         domain.LocationRepository
+	brandUseCase domain.BrandUseCase
+	logger       logger.ILogger
+}
+
+const tag = " LocationUseCase "
+
+func NewLocationUseCase(repo domain.LocationRepository, brandUseCase domain.BrandUseCase, logger logger.ILogger) domain.LocationUseCase {
+	return &LocationUseCase{
+		repo:         repo,
+		brandUseCase: brandUseCase,
+		logger:       logger,
+	}
 }
 
 func (l LocationUseCase) StoreLocation(ctx context.Context, payload *location.StoreLocationDto) (err validators.ErrorResponse) {
 
-	errRe := l.repo.StoreLocation(ctx, LocationBuilder(payload))
+	errRe := l.repo.StoreLocation(ctx, LocationBuilder(ctx, payload, l))
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)
 	}
@@ -28,7 +39,7 @@ func (l LocationUseCase) BulkStoreLocation(ctx context.Context, payload location
 
 	data := make([]domain.Location, 0)
 	for _, itemDoc := range payload.Locations {
-		data = append(data, *LocationBulkBuilder(itemDoc, payload))
+		data = append(data, *LocationBulkBuilder(ctx, itemDoc, payload, l))
 	}
 
 	errRe := l.repo.BulkStoreLocation(ctx, data)
@@ -44,7 +55,7 @@ func (l LocationUseCase) UpdateLocation(ctx context.Context, id string, payload 
 		return validators.GetErrorResponseFromErr(errRe)
 	}
 
-	errRe = l.repo.UpdateLocation(ctx, UpdateLocationBuilder(payload, domainLocation))
+	errRe = l.repo.UpdateLocation(ctx, UpdateLocationBuilder(ctx, payload, domainLocation, l))
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)
 	}
@@ -101,6 +112,7 @@ func (l LocationUseCase) ListLocation(ctx context.Context, payload *location.Lis
 	return results, paginationResult, validators.ErrorResponse{}
 
 }
+
 func (l *LocationUseCase) ToggleSnooze(ctx context.Context, dto *location.LocationToggleSnoozeDto) validators.ErrorResponse {
 	locationDomain, err := l.repo.FindLocation(ctx, dto.Id)
 	if err != nil {
@@ -114,11 +126,19 @@ func (l *LocationUseCase) ToggleSnooze(ctx context.Context, dto *location.Locati
 	return validators.ErrorResponse{}
 }
 
-const tag = " LocationUseCase "
+func (l LocationUseCase) ListMobileLocation(ctx context.Context, payload *location.ListLocationMobileDto) (locations []domain.LocationMobile, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse) {
 
-func NewLocationUseCase(repo domain.LocationRepository, logger logger.ILogger) domain.LocationUseCase {
-	return &LocationUseCase{
-		repo:   repo,
-		logger: logger,
+	results, paginationResult, errRe := l.repo.ListMobileLocation(ctx, payload)
+	if errRe != nil {
+		return results, paginationResult, validators.GetErrorResponseFromErr(errRe)
 	}
+	return results, paginationResult, validators.ErrorResponse{}
+
+}
+func (l LocationUseCase) FindMobileLocation(ctx context.Context, Id string, payload *location.FindLocationMobileDto) (location domain.LocationMobile, err validators.ErrorResponse) {
+	domainLocation, errRe := l.repo.FindMobileLocation(ctx, utils.ConvertStringIdToObjectId(Id), payload)
+	if errRe != nil {
+		return *domainLocation, validators.GetErrorResponseFromErr(errRe)
+	}
+	return *domainLocation, validators.ErrorResponse{}
 }

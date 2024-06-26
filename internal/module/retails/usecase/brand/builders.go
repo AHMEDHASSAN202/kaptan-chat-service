@@ -34,8 +34,11 @@ func domainBuilderChangeStatus(dto *brand.ChangeBrandStatusDto, domainData *doma
 }
 
 func isAllowedToCascadeUpdates(old *domain.Brand, new *domain.Brand) bool {
-	if old.Name.Ar != new.Name.Ar || old.Name.En != new.Name.En || old.Logo != new.Logo || old.IsActive != new.IsActive {
-		return true
-	}
-	return false
+
+	return true
+
+	//if old.Name.Ar != new.Name.Ar || old.Name.En != new.Name.En || old.Logo != new.Logo || old.IsActive != new.IsActive {
+	//	return true
+	//}
+	//return false
 }

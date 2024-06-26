@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/location"
+	echomiddleware "samm/pkg/http/echo/middleware"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -34,6 +35,13 @@ func InitController(e *echo.Echo, us domain.LocationUseCase, validator *validato
 	dashboard.PUT("/:id/toggle-snooze", handler.ToggleSnooze)
 	dashboard.GET("/:id", handler.FindLocation)
 	dashboard.DELETE("/:id", handler.DeleteLocation)
+
+	mobile := e.Group("api/v1/mobile/location")
+	mobile.Use(echomiddleware.AppendCountryMiddleware)
+	mobile.GET("", handler.ListMobileLocation)
+	mobile.GET("/search", handler.SearchMobileLocation)
+	mobile.GET("/:id", handler.FindMobileLocation)
+
 }
 func (a *LocationHandler) StoreLocation(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -180,4 +188,52 @@ func (a *LocationHandler) ToggleSnooze(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+
+func (a *LocationHandler) ListMobileLocation(c echo.Context) error {
+	ctx := c.Request().Context()
+	var payload location.ListLocationMobileDto
+	_ = c.Bind(&payload)
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+
+	payload.SetDefault()
+
+	result, paginationResult, errResp := a.locationUsecase.ListMobileLocation(ctx, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"data": result, "meta": paginationResult})
+}
+func (a *LocationHandler) SearchMobileLocation(c echo.Context) error {
+	ctx := c.Request().Context()
+	var payload location.ListLocationMobileDto
+	_ = c.Bind(&payload)
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+
+	payload.SetDefault()
+
+	result, paginationResult, errResp := a.locationUsecase.ListMobileLocation(ctx, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"data": result, "meta": paginationResult})
+}
+func (a *LocationHandler) FindMobileLocation(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id := c.Param("id")
+
+	var payload location.FindLocationMobileDto
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+	data, errResp := a.locationUsecase.FindMobileLocation(ctx, id, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"location": data})
 }

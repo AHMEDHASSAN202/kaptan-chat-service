@@ -21,6 +21,13 @@ type Country struct {
 	PhonePrefix string `json:"phone_prefix" bson:"phone_prefix"`
 }
 
+type CuisineDetails struct {
+	mgm.DefaultModel `bson:",inline"`
+	Name             Name   `json:"name" bson:"name"`
+	Logo             string `json:"logo" bson:"logo"`
+	IsHidden         bool   `json:"is_hidden" bson:"is_hidden"`
+}
+
 type City struct {
 	Id   primitive.ObjectID `json:"_id" bson:"id"`
 	Name Name               `json:"name" bson:"name"`
@@ -34,6 +41,7 @@ type BrandDetails struct {
 	Name     Name               `json:"name" bson:"name"`
 	Logo     string             `json:"logo" bson:"logo"`
 	IsActive bool               `json:"is_active" bson:"is_active"`
+	Cuisines []CuisineDetails   `json:"cuisines" bson:"cuisines"`
 }
 type WorkingHour struct {
 	Day       string `json:"day" bson:"day"`
@@ -97,6 +105,8 @@ type LocationUseCase interface {
 	DeleteLocation(ctx context.Context, Id string) (err validators.ErrorResponse)
 	DeleteLocationByAccountId(ctx context.Context, accountId string) (err validators.ErrorResponse)
 	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse)
+	ListMobileLocation(ctx context.Context, payload *location.ListLocationMobileDto) (locations []LocationMobile, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse)
+	FindMobileLocation(ctx context.Context, Id string, payload *location.FindLocationMobileDto) (location LocationMobile, err validators.ErrorResponse)
 }
 
 type LocationRepository interface {
@@ -108,5 +118,9 @@ type LocationRepository interface {
 	DeleteLocationByAccountId(ctx context.Context, accountId primitive.ObjectID) (err error)
 	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult *mongopagination.PaginationData, err error)
 	UpdateBulkByBrand(ctx context.Context, brand BrandDetails) error
+	UpdateBulkByBrandCuisine(ctx context.Context, cuisine CuisineDetails) error
 	SoftDeleteBulkByBrandId(ctx context.Context, brandId primitive.ObjectID) error
+
+	ListMobileLocation(ctx context.Context, payload *location.ListLocationMobileDto) (locations []LocationMobile, paginationResult *mongopagination.PaginationData, err error)
+	FindMobileLocation(ctx context.Context, Id primitive.ObjectID, payload *location.FindLocationMobileDto) (location *LocationMobile, err error)
 }

@@ -38,6 +38,7 @@ type CuisineUseCase interface {
 type CuisineRepository interface {
 	Create(doc *Cuisine) error
 	Update(doc *Cuisine) error
+	UpdateCuisineAndLocations(doc *Cuisine) error
 	Find(ctx *context.Context, Id primitive.ObjectID) (*Cuisine, error)
 	GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) (*[]Cuisine, error)
 	List(ctx *context.Context, query *cuisine.ListCuisinesDto) (*[]Cuisine, *PaginationData, error)

@@ -1,6 +1,7 @@
 package location
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/jinzhu/copier"
@@ -10,14 +11,20 @@ import (
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/location"
 	"samm/pkg/utils"
+	"strings"
 	"time"
 )
 
-func LocationBuilder(payload *location.StoreLocationDto) *domain.Location {
+func LocationBuilder(ctx context.Context, payload *location.StoreLocationDto, l LocationUseCase) *domain.Location {
 	var locationDomain domain.Location
+	var brandDetails domain.BrandDetails
 
 	copier.Copy(&locationDomain, payload)
 
+	// Set Brand Details
+	brandDomain, _ := l.brandUseCase.FindWithCuisines(&ctx, payload.BrandDetails.Id)
+	copier.Copy(&brandDetails, brandDomain)
+	locationDomain.BrandDetails = brandDetails
 	locationDomain.ID = primitive.NewObjectID()
 	locationDomain.City.Id = utils.ConvertStringIdToObjectId(payload.City.Id)
 	locationDomain.BrandDetails.Id = utils.ConvertStringIdToObjectId(payload.BrandDetails.Id)
@@ -36,13 +43,17 @@ func LocationBuilder(payload *location.StoreLocationDto) *domain.Location {
 	// Set Branch Signature
 
 	locationDomain.BranchSignature = GenerateLocationSignature(payload)
-
+	locationDomain.WorkingHour = mapWorkingHours(locationDomain.WorkingHour)
+	locationDomain.WorkingHourEid = mapWorkingHours(locationDomain.WorkingHourEid)
+	locationDomain.WorkingHourRamadan = mapWorkingHours(locationDomain.WorkingHourRamadan)
 	locationDomain.CreatedAt = time.Now().UTC()
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return &locationDomain
 }
-func LocationBulkBuilder(payload location.LocationDto, dto location.StoreBulkLocationDto) *domain.Location {
+func LocationBulkBuilder(ctx context.Context, payload location.LocationDto, dto location.StoreBulkLocationDto, l LocationUseCase) *domain.Location {
 	var locationDomain domain.Location
+	var brandDetails domain.BrandDetails
+
 	copier.Copy(&locationDomain, payload)
 
 	locationDomain.ID = primitive.NewObjectID()
@@ -60,12 +71,14 @@ func LocationBulkBuilder(payload location.LocationDto, dto location.StoreBulkLoc
 	locationDomain.Country.PhonePrefix = dto.Country.PhonePrefix
 	locationDomain.Country.Timezone = dto.Country.Timezone
 
-	locationDomain.BrandDetails.Id = utils.ConvertStringIdToObjectId(dto.BrandDetails.Id)
-	locationDomain.BrandDetails.Name.Ar = dto.BrandDetails.Name.Ar
-	locationDomain.BrandDetails.Name.En = dto.BrandDetails.Name.En
-	locationDomain.BrandDetails.Logo = dto.BrandDetails.Logo
-	locationDomain.BrandDetails.IsActive = dto.BrandDetails.IsActive
+	// Set Brand Details
+	brandDomain, _ := l.brandUseCase.FindWithCuisines(&ctx, dto.BrandDetails.Id)
+	copier.Copy(&brandDetails, brandDomain)
+	locationDomain.BrandDetails = brandDetails
 
+	locationDomain.WorkingHour = mapWorkingHours(locationDomain.WorkingHour)
+	locationDomain.WorkingHourEid = mapWorkingHours(locationDomain.WorkingHourEid)
+	locationDomain.WorkingHourRamadan = mapWorkingHours(locationDomain.WorkingHourRamadan)
 	locationDomain.Status = consts.LocationStatusInActive
 
 	// Convert latitude and longitude to H3 index
@@ -80,9 +93,16 @@ func LocationBulkBuilder(payload location.LocationDto, dto location.StoreBulkLoc
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return &locationDomain
 }
-func UpdateLocationBuilder(payload *location.StoreLocationDto, locationDomain *domain.Location) *domain.Location {
+func UpdateLocationBuilder(ctx context.Context, payload *location.StoreLocationDto, locationDomain *domain.Location, l LocationUseCase) *domain.Location {
+	var brandDetails domain.BrandDetails
 
 	copier.Copy(&locationDomain, payload)
+
+	// Set Brand Details
+	brandDomain, _ := l.brandUseCase.FindWithCuisines(&ctx, payload.BrandDetails.Id)
+	copier.Copy(&brandDetails, brandDomain)
+	locationDomain.BrandDetails = brandDetails
+
 	locationDomain.City.Id = utils.ConvertStringIdToObjectId(payload.City.Id)
 	locationDomain.BrandDetails.Id = utils.ConvertStringIdToObjectId(payload.BrandDetails.Id)
 	locationDomain.AccountId = utils.ConvertStringIdToObjectId(payload.AccountId)
@@ -97,6 +117,9 @@ func UpdateLocationBuilder(payload *location.StoreLocationDto, locationDomain *d
 	// Convert latitude and longitude to H3 index
 	latLng := h3.NewLatLng(payload.Lat, payload.Lng)
 	locationDomain.Index = h3.LatLngToCell(latLng, consts.H3Resolution).String()
+	locationDomain.WorkingHour = mapWorkingHours(locationDomain.WorkingHour)
+	locationDomain.WorkingHourEid = mapWorkingHours(locationDomain.WorkingHourEid)
+	locationDomain.WorkingHourRamadan = mapWorkingHours(locationDomain.WorkingHourRamadan)
 
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return locationDomain
@@ -147,4 +170,12 @@ func domainBuilderToggleSnooze(dto *location.LocationToggleSnoozeDto, domainData
 	domainData.UpdatedAt = time.Now()
 	domainData.SnoozeTo = &snoozedTill
 	return domainData
+}
+func mapWorkingHours(workingHours []domain.WorkingHour) []domain.WorkingHour {
+	items := make([]domain.WorkingHour, 0)
+	for _, hour := range workingHours {
+		hour.Day = strings.ToLower(hour.Day)
+		items = append(items, hour)
+	}
+	return items
 }
