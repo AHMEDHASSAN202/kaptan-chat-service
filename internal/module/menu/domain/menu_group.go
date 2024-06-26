@@ -42,9 +42,9 @@ type MenuGroup struct {
 type MenuGroupUseCase interface {
 	Create(ctx context.Context, dto *menu_group.CreateMenuGroupDTO) (string, validators.ErrorResponse)
 	Update(ctx context.Context, dto *menu_group.CreateMenuGroupDTO) (string, validators.ErrorResponse)
-	Delete(ctx context.Context, menuGroupId primitive.ObjectID) validators.ErrorResponse
-	List(ctx context.Context, dto menu_group.ListMenuGroupDTO) (interface{}, validators.ErrorResponse)
-	Find(ctx context.Context, id primitive.ObjectID) (interface{}, validators.ErrorResponse)
+	Delete(ctx context.Context, dto *menu_group.FindMenuGroupDTO) validators.ErrorResponse
+	List(ctx context.Context, dto *menu_group.ListMenuGroupDTO) (interface{}, validators.ErrorResponse)
+	Find(ctx context.Context, dto *menu_group.FindMenuGroupDTO) (interface{}, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, id primitive.ObjectID, input *menu_group.ChangeMenuGroupStatusDto) validators.ErrorResponse
 	DeleteEntity(ctx context.Context, input *menu_group.DeleteEntityFromMenuGroupDto) validators.ErrorResponse
 	MobileGetMenuGroupItems(ctx context.Context, dto menu_group.GetMenuGroupItemsDTO) (interface{}, validators.ErrorResponse)
