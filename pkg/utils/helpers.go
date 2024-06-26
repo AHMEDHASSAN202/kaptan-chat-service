@@ -132,6 +132,19 @@ func ValidateIDsIsMongoObjectIds(fl validator.FieldLevel) bool {
 	return true
 }
 
+func ValidateCountryIds(fl validator.FieldLevel) bool {
+	countryIDs := fl.Field().Interface().([]string)
+	if len(countryIDs) == 0 {
+		return false
+	}
+	for _, country := range countryIDs {
+		if !Contains(Countries, strings.ToUpper(country)) {
+			return false
+		}
+	}
+	return true
+}
+
 // DiffStructs returns a map of field names and their differing values between two structs.
 func DiffStructs(a, b interface{}) []string {
 	differences := make([]string, 0)
@@ -359,6 +372,26 @@ func IsNil(i interface{}) bool {
 func GetAsPointer[T any](p T) *T {
 	v := &p
 	return v
+}
+
+func ArrayToUpper(i []string) []string {
+	ii := make([]string, 0)
+	if i != nil {
+		for _, s := range i {
+			ii = append(ii, strings.ToUpper(s))
+		}
+	}
+	return ii
+}
+
+func ArrayToLower(i []string) []string {
+	ii := make([]string, 0)
+	if i != nil {
+		for _, s := range i {
+			ii = append(ii, strings.ToLower(s))
+		}
+	}
+	return ii
 }
 
 func Distance(lt1, lng1, lt2, lng2 float64) float64 {

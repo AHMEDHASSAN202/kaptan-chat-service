@@ -1,6 +1,7 @@
 package main
 
 import (
+	"samm/internal/module/admin"
 	"samm/internal/module/common"
 	appConfig "samm/internal/module/config"
 	"samm/internal/module/example"
@@ -36,6 +37,7 @@ func main() {
 			menu.Module,
 			database.Module,
 			retails.Module,
+			admin.Module,
 			appConfig.Module,
 			common.Module,
 			fx.Invoke(echo.RunServers, localization.InitLocalization),

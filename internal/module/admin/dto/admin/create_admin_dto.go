@@ -1,0 +1,33 @@
+package admin
+
+import (
+	"github.com/go-playground/validator/v10"
+	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"samm/pkg/utils"
+	"samm/pkg/utils/dto"
+	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
+)
+
+type CreateAdminDTO struct {
+	ID           primitive.ObjectID `json:"-"`
+	Name         string             `json:"name" validate:"required,min=3"`
+	Email        string             `json:"email" validate:"required,Email_is_unique_rules_validation"`
+	Status       string             `json:"status" validate:"oneof=active inactive"`
+	Password     string             `json:"password" validate:"required,min=8"`
+	Type         string             `json:"type" validate:"required,oneof=admin portal"`
+	Role         string             `json:"role" validate:"required"`
+	Permissions  []string           `json:"permissions" validate:"required"`
+	CountryIds   []string           `json:"country_ids" validate:"required,country_ids"`
+	AccountId    string             `json:"account_id" validate:"required_if=Type portal"`
+	AdminDetails dto.AdminDetails   `json:"-"`
+}
+
+func (input *CreateAdminDTO) Validate(c echo.Context, validate *validator.Validate, validateEmailIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {
+	validate.RegisterValidation("country_ids", utils.ValidateCountryIds)
+	return validators.ValidateStruct(c.Request().Context(), validate, input, validators.CustomErrorTags{
+		ValidationTag:          localization.Email_is_unique_rules_validation,
+		RegisterValidationFunc: validateEmailIsUnique,
+	})
+}

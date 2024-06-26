@@ -90,3 +90,6 @@ other = "Modifier items cant contains modifier group"
 description = "Menu item not found"
 other = "The menu item was not found or is currently unavailable. Please check back later."
 
+[Email_is_unique_rules_validation]
+description = "Email is Unique"
+other = "Email is Exists"
