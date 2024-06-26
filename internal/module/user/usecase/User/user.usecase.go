@@ -32,12 +32,13 @@ func (l UserUseCase) StoreUser(ctx context.Context, payload *user.CreateUserDto)
 	return
 }
 
-func (l UserUseCase) UpdateUser(ctx context.Context, id string, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse) {
-	userDomain, errRe := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(id))
+func (l UserUseCase) UpdateUserProfile(ctx context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse) {
+	userDomain, errRe := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(payload.ID))
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)
 	}
-	errRe = l.repo.UpdateUser(ctx, userDomain)
+	updatedUserDomain := domainBuilderAtUpdateProfile(payload, userDomain)
+	errRe = l.repo.UpdateUser(ctx, updatedUserDomain)
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)
 	}

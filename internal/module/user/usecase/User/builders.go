@@ -3,16 +3,16 @@ package user
 import (
 	"github.com/jinzhu/copier"
 	"samm/internal/module/user/domain"
-	user "samm/internal/module/user/dto/User"
+	"samm/internal/module/user/dto/user"
 	"samm/pkg/utils"
+	"time"
 )
 
-func domainBuilderAtUpdate(dto *user.UpdateUserProfileDto, domainData *domain.User) *domain.User {
-	userDoc := domain.User{}
-	copier.Copy(&userDoc, dto)
-	userDoc.ID = utils.ConvertStringIdToObjectId(dto.ID)
-	userDoc.CreatedAt = domainData.CreatedAt
-	return &userDoc
+func domainBuilderAtUpdateProfile(dto *user.UpdateUserProfileDto, domainData *domain.User) *domain.User {
+	copier.Copy(&domainData, dto)
+	domainData.ID = utils.ConvertStringIdToObjectId(dto.ID)
+	domainData.UpdatedAt = time.Now()
+	return domainData
 }
 
 //func domainBuilderChangeStatus(dto *brand.ChangeBrandStatusDto, domainData *domain.Brand) *domain.Brand {

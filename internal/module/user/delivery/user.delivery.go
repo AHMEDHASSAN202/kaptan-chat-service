@@ -25,9 +25,11 @@ func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validato
 	dashboard := e.Group("api/v1/admin/user")
 	dashboard.POST("", handler.StoreUser)
 	dashboard.GET("", handler.ListUser)
-	dashboard.PUT("/:id", handler.UpdateUser)
-	dashboard.GET("/:id", handler.FindUser)
 	dashboard.DELETE("/:id", handler.DeleteUser)
+
+	mobile := e.Group("api/v1/mobile/user")
+	mobile.PUT("/:id", handler.UpdateUserProfile)
+	mobile.GET("/:id", handler.GetUserProfile)
 }
 func (a *UserHandler) StoreUser(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -51,7 +53,7 @@ func (a *UserHandler) StoreUser(c echo.Context) error {
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{})
 }
-func (a *UserHandler) UpdateUser(c echo.Context) error {
+func (a *UserHandler) UpdateUserProfile(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var payload user.UpdateUserProfileDto
@@ -60,20 +62,23 @@ func (a *UserHandler) UpdateUser(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
+	// get user id from auth middleware
+	id := c.Param("id")
+	payload.ID = id
 	validationErr := payload.Validate(c, a.validator)
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
-	id := c.Param("id")
-	errResp := a.userUsecase.UpdateUser(ctx, id, &payload)
+
+	errResp := a.userUsecase.UpdateUserProfile(ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{})
 }
-func (a *UserHandler) FindUser(c echo.Context) error {
+func (a *UserHandler) GetUserProfile(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")

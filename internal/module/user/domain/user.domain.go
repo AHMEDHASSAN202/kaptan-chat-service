@@ -17,9 +17,9 @@ type User struct {
 	PhoneNumber      string     `json:"phone_number" bson:"phone_number"`
 	Email            string     `json:"email" bson:"email"`
 	Gender           string     `json:"gender" bson:"gender"`
-	Dob              time.Time  `json:"dob" bson:"dob"`
+	Dob              string     `json:"dob" bson:"dob"`
 	Otp              string     `json:"otp" bson:"otp"`
-	ExpiryOtpDate    time.Time  `json:"expiry_otp_date" bson:"expiry_otp_date"`
+	ExpiryOtpDate    *time.Time `json:"expiry_otp_date" bson:"expiry_otp_date"`
 	OtpCounter       int        `json:"otp_counter" bson:"otp_counter"`
 	ImageURL         string     `json:"image_url" bson:"image_url"`
 	Country          string     `json:"country" bson:"country"`
@@ -30,7 +30,7 @@ type User struct {
 
 type UserUseCase interface {
 	StoreUser(ctx context.Context, payload *user.CreateUserDto) (err validators.ErrorResponse)
-	UpdateUser(ctx context.Context, id string, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse)
+	UpdateUserProfile(ctx context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse)
 	FindUser(ctx context.Context, Id string) (user User, err validators.ErrorResponse)
 	DeleteUser(ctx context.Context, Id string) (err validators.ErrorResponse)
 	ListUser(ctx context.Context, payload *user.ListUserDto) (users []User, paginationResult utils.PaginationResult, err validators.ErrorResponse)

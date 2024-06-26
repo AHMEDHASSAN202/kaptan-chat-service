@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"reflect"
+	"regexp"
 	"samm/pkg/utils"
 	"samm/pkg/validators/localization"
 	"time"
@@ -19,6 +20,9 @@ func NewRegisterCustomValidator(c context.Context, validate *validator.Validate)
 	}, CustomErrorTags{
 		ValidationTag:          localization.Timeformat,
 		RegisterValidationFunc: ValidateTimeFormat,
+	}, CustomErrorTags{
+		ValidationTag:          localization.PhoneNumberValidator,
+		RegisterValidationFunc: PhoneNumberValidator,
 	})
 }
 func ValidateTimeFormat(fl validator.FieldLevel) bool {
@@ -47,4 +51,11 @@ func ValidateIDsIsMongoObjectIds(fl validator.FieldLevel) bool {
 	}
 
 	return true
+}
+
+func PhoneNumberValidator(fl validator.FieldLevel) bool {
+	// Define a regular expression for validating phone numbers
+	regex := regexp.MustCompile(`^\d{4,15}$`)
+	phoneNumber := fl.Field().String()
+	return regex.MatchString(phoneNumber)
 }

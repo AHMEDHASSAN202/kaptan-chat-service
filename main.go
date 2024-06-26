@@ -6,6 +6,7 @@ import (
 	"samm/internal/module/example"
 	"samm/internal/module/menu"
 	"samm/internal/module/retails"
+	"samm/internal/module/user"
 	"samm/pkg/aws"
 	"samm/pkg/config"
 	"samm/pkg/database"
@@ -38,6 +39,7 @@ func main() {
 			retails.Module,
 			appConfig.Module,
 			common.Module,
+			user.Module,
 			fx.Invoke(echo.RunServers, localization.InitLocalization),
 		),
 	).Run()
