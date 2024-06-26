@@ -5,6 +5,7 @@ import (
 	appConfig "samm/internal/module/config"
 	"samm/internal/module/example"
 	"samm/internal/module/menu"
+	"samm/internal/module/payment"
 	"samm/internal/module/retails"
 	"samm/pkg/aws"
 	"samm/pkg/config"
@@ -38,6 +39,7 @@ func main() {
 			retails.Module,
 			appConfig.Module,
 			common.Module,
+			payment.Module,
 			fx.Invoke(echo.RunServers, localization.InitLocalization),
 		),
 	).Run()

@@ -383,3 +383,17 @@ func Distance(lt1, lng1, lt2, lng2 float64) float64 {
 func degreesToRadians(degrees float64) float64 {
 	return degrees * (math.Pi / 180)
 }
+func MaskCard(creditCardNumber string) string {
+	if len(creditCardNumber) < 15 {
+		return "Invalid credit card number"
+	}
+
+	lastFourDigits := creditCardNumber[len(creditCardNumber)-4:]
+
+	prefix := creditCardNumber[:len(creditCardNumber)-4]
+	padding := strings.Repeat("*", len(prefix))
+
+	maskedCreditCard := padding + lastFourDigits
+
+	return maskedCreditCard
+}
