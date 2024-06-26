@@ -4,6 +4,7 @@ import (
 	"context"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/modifier_group"
+	modifier_group_resp "samm/internal/module/menu/responses/modifier_group"
 	"samm/pkg/database/mongodb"
 	"samm/pkg/utils"
 	"samm/pkg/utils/dto"
@@ -19,10 +20,12 @@ import (
 
 type modifierGroupRepo struct {
 	modifierGroupCollection *mgm.Collection
+	itemCollection          *mgm.Collection
 }
 
 func NewModifierGroupRepository(dbs *mongo.Database) domain.ModifierGroupRepository {
 	modifierGroupCollection := mgm.Coll(&domain.ModifierGroup{})
+	itemCollection := mgm.Coll(&domain.Item{})
 	//text search modifier group
 	mongodb.CreateIndex(modifierGroupCollection.Collection, false, bson.E{"name.ar", mongodb.IndexType.Text}, bson.E{"name.en", mongodb.IndexType.Text})
 	mongodb.CreateIndex(modifierGroupCollection.Collection, false, bson.E{"status", mongodb.IndexType.Asc}, bson.E{"deleted_at", mongodb.IndexType.Asc})
@@ -30,6 +33,7 @@ func NewModifierGroupRepository(dbs *mongo.Database) domain.ModifierGroupReposit
 	mongodb.CreateIndex(modifierGroupCollection.Collection, true, bson.E{"name.ar", mongodb.IndexType.Asc}, bson.E{"name.en", mongodb.IndexType.Asc}, bson.E{"account_id", mongodb.IndexType.Asc}, bson.E{"deleted_at", mongodb.IndexType.Asc})
 	return &modifierGroupRepo{
 		modifierGroupCollection: modifierGroupCollection,
+		itemCollection:          itemCollection,
 	}
 }
 
@@ -50,14 +54,14 @@ func (i *modifierGroupRepo) Update(ctx context.Context, id *primitive.ObjectID, 
 	return nil
 }
 
-func (i *modifierGroupRepo) GetByIds(ctx context.Context, ids []primitive.ObjectID) ([]domain.ModifierGroup, error) {
-	modifierGroups := []domain.ModifierGroup{}
-	err := i.modifierGroupCollection.SimpleFind(&modifierGroups, bson.M{"_id": bson.M{"$in": ids}})
+func (i *modifierGroupRepo) GetByIds(ctx context.Context, ids []primitive.ObjectID) ([]modifier_group_resp.ModifierGroupResp, error) {
+	modifierGroups := []modifier_group_resp.ModifierGroupResp{}
+	err := i.modifierGroupCollection.SimpleAggregate(&modifierGroups, bson.M{"$match": bson.M{"_id": bson.M{"$in": ids}}}, bson.M{"$lookup": bson.M{"foreignField": "_id", "as": "products", "from": i.itemCollection.Name(), "localField": "product_ids", "pipeline": bson.A{bson.M{"$project": bson.M{"name": 1, "min": 1, "max": 1, "desc": 1, "image": 1}}}}})
+	//err := i.modifierGroupCollection.SimpleFind(&modifierGroups, bson.M{"_id": bson.M{"$in": ids}})
 	return modifierGroups, err
 }
 
 func (i *modifierGroupRepo) List(ctx context.Context, dto *modifier_group.ListModifierGroupsDto) ([]domain.ModifierGroup, *PaginationData, error) {
-
 	models := make([]domain.ModifierGroup, 0)
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
 		bson.D{{"deleted_at", nil}},
