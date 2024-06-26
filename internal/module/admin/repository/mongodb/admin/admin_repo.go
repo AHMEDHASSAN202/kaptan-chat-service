@@ -57,11 +57,16 @@ func (r *adminRepo) Delete(ctx context.Context, domainData *domain.Admin, adminD
 
 func (r *adminRepo) Find(ctx context.Context, adminId primitive.ObjectID) (*domain.Admin, error) {
 	domainData := domain.Admin{}
-	err := mgm.Coll(&domain.Admin{}).FindByID(adminId, &domainData)
-	if err != nil {
+	result := mgm.Coll(&domain.Admin{}).FindOne(ctx, bson.M{"_id": adminId, "deleted_at": nil})
+	if err := result.Err(); err != nil {
 		r.logger.Error("adminRepo -> Find -> ", err)
+		return &domainData, err
 	}
-	return &domainData, err
+	if err := result.Decode(&domainData); err != nil {
+		r.logger.Error("adminRepo -> Find -> ", err)
+		return &domainData, err
+	}
+	return &domainData, nil
 }
 
 func (r *adminRepo) List(ctx context.Context, dto *admin.ListAdminDTO) ([]domain.Admin, *PaginationData, error) {
