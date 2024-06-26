@@ -36,3 +36,16 @@ func (i *AdminCustomValidator) ValidateEmailIsUnique() func(fl validator.FieldLe
 		return !isExists
 	}
 }
+
+func (i *AdminCustomValidator) PasswordRequiredIfIdIsZero() func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
+		dto, ok := fl.Top().Interface().(*admin.CreateAdminDTO)
+		if !ok {
+			return false
+		}
+		if dto.ID.IsZero() && fl.Field().String() == "" {
+			return false
+		}
+		return true
+	}
+}

@@ -15,7 +15,7 @@ type CreateAdminDTO struct {
 	Name         string             `json:"name" validate:"required,min=3"`
 	Email        string             `json:"email" validate:"required,Email_is_unique_rules_validation"`
 	Status       string             `json:"status" validate:"oneof=active inactive"`
-	Password     string             `json:"password" validate:"required,min=8"`
+	Password     string             `json:"password" validate:"Password_required_if_id_is_zero,omitempty,min=8"`
 	Type         string             `json:"type" validate:"required,oneof=admin portal"`
 	Role         string             `json:"role" validate:"required"`
 	Permissions  []string           `json:"permissions" validate:"required"`
@@ -24,10 +24,14 @@ type CreateAdminDTO struct {
 	AdminDetails dto.AdminDetails   `json:"-"`
 }
 
-func (input *CreateAdminDTO) Validate(c echo.Context, validate *validator.Validate, validateEmailIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {
+func (input *CreateAdminDTO) Validate(c echo.Context, validate *validator.Validate, validateEmailIsUnique func(fl validator.FieldLevel) bool, passwordRequiredIfIdIsZero func(fl validator.FieldLevel) bool) validators.ErrorResponse {
 	validate.RegisterValidation("country_ids", utils.ValidateCountryIds)
 	return validators.ValidateStruct(c.Request().Context(), validate, input, validators.CustomErrorTags{
 		ValidationTag:          localization.Email_is_unique_rules_validation,
 		RegisterValidationFunc: validateEmailIsUnique,
-	})
+	},
+		validators.CustomErrorTags{
+			ValidationTag:          localization.Password_required_if_id_is_zero,
+			RegisterValidationFunc: passwordRequiredIfIdIsZero,
+		})
 }

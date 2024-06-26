@@ -93,3 +93,7 @@ other = "The menu item was not found or is currently unavailable. Please check b
 [Email_is_unique_rules_validation]
 description = "Email is Unique"
 other = "Email is Exists"
+
+[Password_required_if_id_is_zero]
+description = "password is a required field"
+other = "password is a required field"

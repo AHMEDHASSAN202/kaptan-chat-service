@@ -33,7 +33,12 @@ func NewAdminUseCase(repo domain.AdminRepository, logger logger.ILogger, extServ
 
 func (oRec *AdminUseCase) Create(ctx context.Context, input *dto.CreateAdminDTO) (string, validators.ErrorResponse) {
 	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Create Admin", UpdatedAt: time.Now()}
-	adminDomain := builder.CreateUpdateAdminBuilder(nil, input)
+	adminDomain, err := builder.CreateUpdateAdminBuilder(nil, input)
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> Create -> ", err)
+		return "", validators.GetErrorResponse(&ctx, localization.E1001, nil, nil)
+	}
+
 	menuGroup, errCreate := oRec.repo.Create(ctx, adminDomain)
 	if errCreate != nil {
 		oRec.logger.Error("AdminUseCase -> Create -> ", errCreate)
@@ -50,7 +55,11 @@ func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO)
 	}
 
 	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Update Admin", UpdatedAt: time.Now()}
-	adminDomain := builder.CreateUpdateAdminBuilder(admin, input)
+	adminDomain, err := builder.CreateUpdateAdminBuilder(admin, input)
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> Update -> ", err)
+	}
+
 	menuGroup, errCreate := oRec.repo.Update(ctx, adminDomain)
 	if errCreate != nil {
 		oRec.logger.Error("AdminUseCase -> Update -> ", errCreate)
