@@ -121,8 +121,9 @@ func ValidateStruct(c context.Context, validate *validator.Validate, obj interfa
 
 	err := validate.Struct(obj)
 	lang := c.Value("lang")
-	fmt.Println(lang)
+	fmt.Println("lang: ", lang)
 	if err != nil {
+		fmt.Println("err: ", err)
 		errs := err.(validator.ValidationErrors)
 		errMap := make(map[string][]string)
 		for _, e := range errs {

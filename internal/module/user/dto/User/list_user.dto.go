@@ -6,5 +6,6 @@ import (
 
 type ListUserDto struct {
 	dto.Pagination
-	Query string `query:"query"`
+	Query  string `query:"query"`
+	Status string `query:"status"`
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
+	"samm/internal/module/user/responses"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -61,15 +62,14 @@ func (l UserUseCase) DeleteUser(ctx context.Context, Id string) (err validators.
 	return validators.ErrorResponse{}
 }
 
-func (l UserUseCase) ListUser(ctx context.Context, payload *user.ListUserDto) (users []domain.User, paginationResult utils.PaginationResult, err validators.ErrorResponse) {
-	results, paginationResult, errRe := l.repo.ListUser(ctx, payload)
-	if errRe != nil {
-		return results, paginationResult, validators.GetErrorResponseFromErr(errRe)
+func (oRec *UserUseCase) List(ctx *context.Context, dto *user.ListUserDto) (*responses.ListResponse, validators.ErrorResponse) {
+	brands, paginationMeta, resErr := oRec.repo.List(ctx, dto)
+	if resErr != nil {
+		return nil, validators.GetErrorResponseFromErr(resErr)
 	}
-	return results, paginationResult, validators.ErrorResponse{}
-
+	return responses.SetListResponse(brands, paginationMeta), validators.ErrorResponse{}
 }
 
-func (l UserUseCase) UserEmailExists(ctx context.Context, email string, accountId string) bool {
-	return l.repo.UserEmailExists(ctx, email, accountId)
+func (l UserUseCase) UserEmailExists(ctx context.Context, email, userId string) bool {
+	return l.repo.UserEmailExists(ctx, email, userId)
 }

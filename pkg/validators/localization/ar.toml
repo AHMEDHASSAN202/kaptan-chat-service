@@ -97,3 +97,8 @@ other = "البريد الالكتروني مستخدم من قبل"
 [Password_required_if_id_is_zero]
 description = "password is a required field"
 other = "كلمه المرور مطلوبه"
+
+
+[PhoneNumber_rule_validation]
+description = "رقم التليفون خطآ"
+other = "رقم التليفون خطآ"

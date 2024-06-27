@@ -97,3 +97,7 @@ other = "Email is Exists"
 [Password_required_if_id_is_zero]
 description = "password is a required field"
 other = "password is a required field"
+
+[PhoneNumber_rule_validation]
+description = "PhoneNumber is Wrong"
+other = "PhoneNumber is Wrong"

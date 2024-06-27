@@ -2,10 +2,11 @@ package domain
 
 import (
 	"context"
+	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/user/dto/user"
-	"samm/pkg/utils"
+	"samm/internal/module/user/responses"
 	"samm/pkg/validators"
 	"time"
 )
@@ -33,8 +34,8 @@ type UserUseCase interface {
 	UpdateUserProfile(ctx context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse)
 	FindUser(ctx context.Context, Id string) (user User, err validators.ErrorResponse)
 	DeleteUser(ctx context.Context, Id string) (err validators.ErrorResponse)
-	ListUser(ctx context.Context, payload *user.ListUserDto) (users []User, paginationResult utils.PaginationResult, err validators.ErrorResponse)
-	UserEmailExists(ctx context.Context, email string, accountId string) bool
+	List(ctx *context.Context, dto *user.ListUserDto) (*responses.ListResponse, validators.ErrorResponse)
+	UserEmailExists(ctx context.Context, email, userId string) bool
 }
 
 type UserRepository interface {
@@ -42,6 +43,6 @@ type UserRepository interface {
 	UpdateUser(ctx context.Context, user *User) (err error)
 	FindUser(ctx context.Context, Id primitive.ObjectID) (user *User, err error)
 	DeleteUser(ctx context.Context, Id primitive.ObjectID) (err error)
-	ListUser(ctx context.Context, payload *user.ListUserDto) (locations []User, paginationResult utils.PaginationResult, err error)
-	UserEmailExists(ctx context.Context, email string, userId string) bool
+	List(ctx *context.Context, dto *user.ListUserDto) (usersRes *[]User, paginationMeta *PaginationData, err error)
+	UserEmailExists(ctx context.Context, email, userId string) bool
 }

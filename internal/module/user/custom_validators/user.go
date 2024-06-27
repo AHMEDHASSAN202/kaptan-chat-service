@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"samm/internal/module/user/domain"
+	"samm/internal/module/user/dto/user"
 	"samm/pkg/logger"
 )
 
@@ -19,9 +20,14 @@ func InitNewCustomValidatorsForUser(userUseCase domain.UserUseCase, log logger.I
 	}
 }
 
-func (i *UserCustomValidator) ValidateUserEmailIsUnique(userId string) func(fl validator.FieldLevel) bool {
+func (i *UserCustomValidator) ValidateUserEmailIsUnique() func(fl validator.FieldLevel) bool {
 	return func(fl validator.FieldLevel) bool {
 		email := fl.Field().Interface().(string)
+		profile, ok := fl.Top().Interface().(*user.UpdateUserProfileDto)
+		if !ok {
+			return false
+		}
+		userId := profile.ID
 		isExists := i.userUseCase.UserEmailExists(context.Background(), email, userId)
 		return !isExists
 	}

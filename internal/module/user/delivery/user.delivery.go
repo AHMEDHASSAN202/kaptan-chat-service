@@ -18,11 +18,12 @@ type UserHandler struct {
 }
 
 // InitUserController will initialize the article's HTTP controller
-func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validator.Validate, userCustomValidator custom_validators.UserCustomValidator, logger logger.ILogger) {
 	handler := &UserHandler{
-		userUsecase: us,
-		validator:   validator,
-		logger:      logger,
+		userUsecase:         us,
+		validator:           validator,
+		userCustomValidator: userCustomValidator,
+		logger:              logger,
 	}
 	dashboard := e.Group("api/v1/admin/user")
 	dashboard.POST("", handler.StoreUser)
@@ -67,7 +68,7 @@ func (a *UserHandler) UpdateUserProfile(c echo.Context) error {
 	// get user id from auth middleware
 	id := c.Param("id")
 	payload.ID = id
-	validationErr := payload.Validate(c, a.validator, a.userCustomValidator.ValidateUserEmailIsUnique(payload.ID))
+	validationErr := payload.Validate(ctx, a.validator, a.userCustomValidator.ValidateUserEmailIsUnique())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -83,6 +84,7 @@ func (a *UserHandler) UpdateUserProfile(c echo.Context) error {
 func (a *UserHandler) GetUserProfile(c echo.Context) error {
 	ctx := c.Request().Context()
 
+	// get user id from auth middleware
 	id := c.Param("id")
 	data, errResp := a.userUsecase.FindUser(ctx, id)
 	if errResp.IsError {
@@ -111,10 +113,10 @@ func (a *UserHandler) ListUser(c echo.Context) error {
 
 	payload.Pagination.SetDefault()
 
-	result, paginationResult, errResp := a.userUsecase.ListUser(ctx, &payload)
+	brands, errResp := a.userUsecase.List(&ctx, &payload)
 	if errResp.IsError {
-		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
-	return validators.SuccessResponse(c, map[string]interface{}{"data": result, "meta": paginationResult})
+
+	return validators.SuccessResponse(c, brands)
 }
