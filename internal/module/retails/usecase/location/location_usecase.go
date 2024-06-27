@@ -3,27 +3,31 @@ package location
 import (
 	"context"
 	mongopagination "github.com/gobeam/mongo-go-pagination"
+	commonDomain "samm/internal/module/common/domain"
 	"samm/internal/module/retails/consts"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/location"
+	"samm/internal/module/retails/responses"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 )
 
 type LocationUseCase struct {
-	repo         domain.LocationRepository
-	brandUseCase domain.BrandUseCase
-	logger       logger.ILogger
+	repo          domain.LocationRepository
+	brandUseCase  domain.BrandUseCase
+	commonUseCase commonDomain.CommonUseCase
+	logger        logger.ILogger
 }
 
 const tag = " LocationUseCase "
 
-func NewLocationUseCase(repo domain.LocationRepository, brandUseCase domain.BrandUseCase, logger logger.ILogger) domain.LocationUseCase {
+func NewLocationUseCase(repo domain.LocationRepository, brandUseCase domain.BrandUseCase, commonUseCase commonDomain.CommonUseCase, logger logger.ILogger) domain.LocationUseCase {
 	return &LocationUseCase{
-		repo:         repo,
-		brandUseCase: brandUseCase,
-		logger:       logger,
+		repo:          repo,
+		brandUseCase:  brandUseCase,
+		commonUseCase: commonUseCase,
+		logger:        logger,
 	}
 }
 
@@ -80,12 +84,14 @@ func (l LocationUseCase) ToggleLocationStatus(ctx context.Context, id string) (e
 	return
 }
 
-func (l LocationUseCase) FindLocation(ctx context.Context, Id string) (location domain.Location, err validators.ErrorResponse) {
+func (l LocationUseCase) FindLocation(ctx context.Context, Id string) (location responses.LocationResp, err validators.ErrorResponse) {
 	domainLocation, errRe := l.repo.FindLocation(ctx, utils.ConvertStringIdToObjectId(Id))
 	if errRe != nil {
-		return *domainLocation, validators.GetErrorResponseFromErr(errRe)
+		return location, validators.GetErrorResponseFromErr(errRe)
 	}
-	return *domainLocation, validators.ErrorResponse{}
+	location = populateCollectionMethods(ctx, l, domainLocation)
+
+	return location, validators.ErrorResponse{}
 }
 
 func (l LocationUseCase) DeleteLocation(ctx context.Context, Id string) (err validators.ErrorResponse) {
