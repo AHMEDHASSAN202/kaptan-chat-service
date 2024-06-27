@@ -68,7 +68,7 @@ func (l AccountRepository) DeleteAccount(ctx context.Context, Id primitive.Objec
 	return l.UpdateAccount(ctx, accountData)
 }
 
-func (l AccountRepository) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult *PaginationData, err error) {
+func (l AccountRepository) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult PaginationData, err error) {
 	models := make([]domain.Account, 0)
 
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
@@ -108,7 +108,7 @@ func (l AccountRepository) ListAccount(ctx context.Context, payload *account.Lis
 	)
 	data, err := New(l.accountCollection.Collection).Context(ctx).Limit(payload.Limit).Page(payload.Page).Sort("created_at", -1).Aggregate(pipeline...)
 	if data == nil || data.Data == nil {
-		return models, nil, err
+		return models, paginationResult, err
 	}
 
 	for _, raw := range data.Data {
@@ -120,5 +120,5 @@ func (l AccountRepository) ListAccount(ctx context.Context, payload *account.Lis
 		}
 		models = append(models, model)
 	}
-	return models, &data.Pagination, err
+	return models, data.Pagination, err
 }
