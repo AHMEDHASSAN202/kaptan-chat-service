@@ -35,7 +35,6 @@ func main() {
 				aws.Init,
 			),
 			example.Module,
-			user.Module,
 			menu.Module,
 			database.Module,
 			retails.Module,
