@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"reflect"
+	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 )
 
 type FieldName struct {
@@ -28,7 +30,7 @@ type CollectionMethodSchema struct {
 // Input payload structure
 type Payload map[string]interface{}
 
-func ValidatePayload(ctx context.Context, validate *validator.Validate, schemaMap map[string]interface{}, payload Payload) error {
+func ValidatePayload(ctx context.Context, validate *validator.Validate, schemaMap map[string]interface{}, payload Payload) validators.ErrorResponse {
 	schema := CollectionMethodSchema{}
 	dbByte, _ := json.Marshal(schemaMap)
 	_ = json.Unmarshal(dbByte, &schema)
@@ -37,27 +39,32 @@ func ValidatePayload(ctx context.Context, validate *validator.Validate, schemaMa
 		value, exists := payload[field.Key]
 		fmt.Println(value, exists, field.Key)
 		if field.IsRequired && !exists {
-			return fmt.Errorf("missing required field: %s", field.Key)
+			fmt.Errorf("missing required field: %s", field.Key)
+			return validators.GetErrorResponse(&ctx, localization.E1008, nil, nil)
 		}
 
 		if exists {
 			switch field.Type {
 			case "TextPlate", "DropBox":
 				if reflect.TypeOf(value).Kind() != reflect.String {
-					return fmt.Errorf("field %s should be a string", field.Key)
+					fmt.Errorf("field %s should be a string", field.Key)
+					return validators.GetErrorResponse(&ctx, localization.E1008, nil, nil)
 				}
 				if field.IsRequired && value.(string) == "" {
-					return fmt.Errorf("field %s should not be empty", field.Key)
+					fmt.Errorf("field %s should not be empty", field.Key)
+					return validators.GetErrorResponse(&ctx, localization.E1008, nil, nil)
 				}
 			case "CheckBox":
 				if reflect.TypeOf(value).Kind() != reflect.Bool {
-					return fmt.Errorf("field %s should be a boolean", field.Key)
+					fmt.Errorf("field %s should be a boolean", field.Key)
+					return validators.GetErrorResponse(&ctx, localization.E1008, nil, nil)
 				}
 			default:
-				return fmt.Errorf("unsupported field type: %s", field.Type)
+				fmt.Errorf("unsupported field type: %s", field.Type)
+				return validators.GetErrorResponse(&ctx, localization.E1008, nil, nil)
 			}
 		}
 	}
 
-	return nil
+	return validators.ErrorResponse{}
 }

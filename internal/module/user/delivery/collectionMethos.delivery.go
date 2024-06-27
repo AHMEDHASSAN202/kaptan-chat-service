@@ -51,9 +51,9 @@ func (a *CollectionMethodHandler) StoreCollectionMethod(c echo.Context) error {
 	}
 
 	validationErr := collection_method.ValidatePayload(ctx, a.validator, fields, valuesPayload)
-	if validationErr != nil {
+	if validationErr.IsError {
 		a.logger.Error(validationErr)
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(validationErr))
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 	var payload domain.CollectionMethods
 	payload.Type = collectionMethodType
@@ -87,9 +87,9 @@ func (a *CollectionMethodHandler) UpdateCollectionMethod(c echo.Context) error {
 	}
 
 	validationErr := collection_method.ValidatePayload(ctx, a.validator, fields, valuesPayload)
-	if validationErr != nil {
+	if validationErr.IsError {
 		a.logger.Error(validationErr)
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(validationErr))
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 	var payload domain.CollectionMethods
 	payload.Type = collectionMethodType
