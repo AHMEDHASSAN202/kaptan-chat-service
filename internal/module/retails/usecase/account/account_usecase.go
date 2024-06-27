@@ -72,8 +72,11 @@ func (l AccountUseCase) FindAccount(ctx context.Context, Id string) (account dom
 			Ids: utils.ConvertObjectIdsToStringIds(domainAccount.AllowedBrandIds),
 		}
 		brandsRes, _ := l.brandUseCase.List(&ctx, &dto)
-		brands := brandsRes.Docs.(*[]domain.Brand)
-		domainAccount.Brands = *brands
+		brands, ok := brandsRes.Docs.(*[]domain.Brand)
+		domainAccount.Brands = make([]domain.Brand, 0)
+		if ok {
+			domainAccount.Brands = *brands
+		}
 	}
 	return *domainAccount, validators.ErrorResponse{}
 }
