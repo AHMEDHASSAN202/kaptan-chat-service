@@ -6,6 +6,7 @@ import (
 	appConfig "samm/internal/module/config"
 	"samm/internal/module/example"
 	"samm/internal/module/menu"
+	"samm/internal/module/order"
 	"samm/internal/module/retails"
 	"samm/internal/module/user"
 	"samm/pkg/aws"
@@ -36,6 +37,7 @@ func main() {
 			),
 			example.Module,
 			menu.Module,
+			order.Module,
 			database.Module,
 			retails.Module,
 			admin.Module,
