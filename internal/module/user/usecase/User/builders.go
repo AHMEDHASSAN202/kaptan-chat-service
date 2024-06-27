@@ -3,11 +3,11 @@ package user
 import (
 	"github.com/jinzhu/copier"
 	"samm/internal/module/user/domain"
-	user "samm/internal/module/user/dto/User"
+	userdto "samm/internal/module/user/dto/user"
 	"samm/pkg/utils"
 )
 
-func domainBuilderAtUpdate(dto *user.UpdateUserProfileDto, domainData *domain.User) *domain.User {
+func domainBuilderAtUpdate(dto *userdto.UpdateUserProfileDto, domainData *domain.User) *domain.User {
 	userDoc := domain.User{}
 	copier.Copy(&userDoc, dto)
 	userDoc.ID = utils.ConvertStringIdToObjectId(dto.ID)

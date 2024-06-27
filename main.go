@@ -7,6 +7,7 @@ import (
 	"samm/internal/module/example"
 	"samm/internal/module/menu"
 	"samm/internal/module/retails"
+	"samm/internal/module/user"
 	"samm/pkg/aws"
 	"samm/pkg/config"
 	"samm/pkg/database"
@@ -34,6 +35,7 @@ func main() {
 				aws.Init,
 			),
 			example.Module,
+			user.Module,
 			menu.Module,
 			database.Module,
 			retails.Module,

@@ -22,6 +22,8 @@ type CommonUseCase interface {
 	ListCities(ctx context.Context, payload *location.ListCitiesDto) (data interface{}, err validators.ErrorResponse)
 	ListCountries(ctx context.Context) (data interface{}, err validators.ErrorResponse)
 	ListAssets(ctx context.Context, hasColors, hasBrands bool) (data interface{}, err validators.ErrorResponse)
+	ListCollectionMethods(ctx context.Context) (data interface{}, errResp validators.ErrorResponse)
+	FindCollectionMethodByType(ctx context.Context, collectionMethodType string) (data map[string]interface{}, errResp validators.ErrorResponse)
 	UploadFile(ctx context.Context, file *multipart.FileHeader, filePath string) (string, validators.ErrorResponse)
 	ReadFile(ctx context.Context, filePath string) (string, validators.ErrorResponse)
 }

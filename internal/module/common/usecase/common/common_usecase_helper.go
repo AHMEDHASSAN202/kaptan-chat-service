@@ -1,10 +1,14 @@
 package common
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	. "github.com/ahmetb/go-linq/v3"
+	"io"
+	"os"
 	"samm/internal/module/common/dto"
+	"samm/pkg/logger"
 	"strings"
 )
 
@@ -2190,4 +2194,23 @@ func CountriesBuilder() interface{} {
 		return data
 	}
 	return data
+}
+
+func ReadFile(iLogger logger.ILogger, filePath string) []map[string]interface{} {
+	pwd, _ := os.Getwd()
+	file, err := os.Open(pwd + filePath)
+	if err != nil {
+		iLogger.Error(err)
+	}
+
+	defer file.Close()
+	reader := bufio.NewReader(file)
+	content, err := io.ReadAll(reader)
+	if err != nil {
+		iLogger.Error(err)
+	}
+
+	var result []map[string]interface{}
+	json.Unmarshal(content, &result)
+	return result
 }

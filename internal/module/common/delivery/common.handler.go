@@ -32,6 +32,7 @@ func InitCommonController(e *echo.Echo, us domain.CommonUseCase, validator *vali
 	dashboard.POST("/image-uploader", handler.Upload)
 	dashboard.GET("/read-file", handler.ReadFile)
 	dashboard.GET("/list-assets", handler.ListAssets)
+	dashboard.GET("/collection-methods", handler.ListCollectionMethods)
 }
 func (a *CommonHandler) ListCities(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -110,6 +111,17 @@ func (a *CommonHandler) ListAssets(c echo.Context) error {
 	}
 
 	result, errResp := a.commonUseCase.ListAssets(ctx, hasColors, hasBrands)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"data": result})
+}
+
+func (a *CommonHandler) ListCollectionMethods(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	result, errResp := a.commonUseCase.ListCollectionMethods(ctx)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
