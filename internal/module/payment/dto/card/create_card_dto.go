@@ -7,7 +7,7 @@ import (
 )
 
 type CreateCardDto struct {
-	Type        string `json:"type" validate:"required,oneof=visa master mada"`
+	Type        string `json:"type" validate:"required,oneof=visa master mada amex"`
 	Number      string `json:"number" validate:"required"`
 	ExpiryMonth string `json:"expiry_month" validate:"required"`
 	ExpiryYear  string `json:"expiry_year" validate:"required"`

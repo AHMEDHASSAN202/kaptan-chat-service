@@ -4,6 +4,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"samm/internal/module/payment/domain"
+	"samm/internal/module/payment/dto/payment"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
 )
@@ -21,29 +22,31 @@ func InitPaymentController(e *echo.Echo, us domain.PaymentUseCase, validator *va
 		validator:      validator,
 		logger:         logger,
 	}
-	mobile := e.Group("api/v1/mobile/payment")
-	mobile.POST("", handler.pay)
+	mobile := e.Group("api/v1/mobile")
+	mobile.POST("/:transactionType/pay", handler.pay)
 }
 
 func (a *PaymentHandler) pay(c echo.Context) error {
-	//ctx := c.Request().Context()
+	ctx := c.Request().Context()
 
-	//var payload user.CreateUserDto
-	//err := c.Bind(&payload)
-	//if err != nil {
-	//	return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
-	//}
+	var payload payment.PayDto
+	err := c.Bind(&payload)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	transactionType := c.Param("transactionType")
+	payload.TransactionType = transactionType
+	a.logger.Info(payload)
+	validationErr := payload.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
 	//
-	//validationErr := payload.Validate(c, a.validator)
-	//if validationErr.IsError {
-	//	a.logger.Error(validationErr)
-	//	return validators.ErrorStatusUnprocessableEntity(c, validationErr)
-	//}
-	//
-	//errResp := a.userUsecase.StoreUser(ctx, &payload)
-	//if errResp.IsError {
-	//	a.logger.Error(errResp)
-	//	return validators.ErrorStatusBadRequest(c, errResp)
-	//}
-	return validators.SuccessResponse(c, map[string]interface{}{})
+	res, errResp := a.paymentUseCase.Pay(ctx, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, res)
 }

@@ -36,7 +36,7 @@ func (c CardRepository) FindCard(ctx context.Context, Id primitive.ObjectID, use
 
 func (l CardRepository) UpdateCard(ctx context.Context, card *domain.Card) (err error) {
 	update := bson.M{"$set": card}
-	_, err = mgm.Coll(&domain.Card{}).UpdateByID(ctx, card.ID, update)
+	_, err = mgm.Coll(card).UpdateByID(ctx, card.ID, update)
 	return
 }
 func (c CardRepository) DeleteCard(ctx context.Context, Id primitive.ObjectID, userId primitive.ObjectID) (err error) {

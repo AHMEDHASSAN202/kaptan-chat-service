@@ -3,6 +3,7 @@ package payment
 import (
 	"go.uber.org/fx"
 	"samm/internal/module/payment/delivery"
+	"samm/internal/module/payment/gateways/myfatoorah"
 	"samm/internal/module/payment/repository/mongodb"
 	"samm/internal/module/payment/usecase/card"
 	"samm/internal/module/payment/usecase/payment"
@@ -15,6 +16,7 @@ var Module = fx.Options(
 		mongodb.NewCardMongoRepository,
 		mongodb.NewPaymentMongoRepository,
 		payment.NewPaymentUseCase,
+		myfatoorah.NewMyFatoorahService,
 		card.NewCardUseCase,
 	),
 	fx.Invoke(
