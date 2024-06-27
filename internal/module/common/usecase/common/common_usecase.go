@@ -1,23 +1,20 @@
 package common
 
 import (
-	"bufio"
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"io"
 	"io/ioutil"
 	"mime/multipart"
-	"os"
 	"path/filepath"
 	"samm/internal/module/common/domain"
 	location "samm/internal/module/common/dto"
 	"samm/pkg/config"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 	"strconv"
 	"time"
 )
@@ -49,41 +46,34 @@ func (l CommonUseCase) ListCities(ctx context.Context, payload *location.ListCit
 func (l CommonUseCase) ListAssets(ctx context.Context, hasColors, hasBrands bool) (data interface{}, errResp validators.ErrorResponse) {
 	assetResult := make(map[string]any)
 	if hasBrands {
-		pwd, _ := os.Getwd()
-		carBrandsFile, err := os.Open(pwd + "/internal/module/common/consts/car_brands.json")
-		if err != nil {
-			l.logger.Error(err)
-		}
-
-		defer carBrandsFile.Close()
-		reader := bufio.NewReader(carBrandsFile)
-		content, err := io.ReadAll(reader)
-		if err != nil {
-			l.logger.Error(err)
-		}
-
-		var carBrandsResult []map[string]interface{}
-		json.Unmarshal(content, &carBrandsResult)
+		carBrandsResult := ReadFile(l.logger, "/internal/module/common/consts/car_brands.json")
 		assetResult["carBrands"] = carBrandsResult
 	}
 	if hasColors {
-		pwd, _ := os.Getwd()
-		carColorsFile, err := os.Open(pwd + "/internal/module/common/consts/car_colors.json")
-		if err != nil {
-			l.logger.Error(err)
-		}
-
-		defer carColorsFile.Close()
-		reader := bufio.NewReader(carColorsFile)
-		content, err := io.ReadAll(reader)
-		if err != nil {
-			l.logger.Error(err)
-		}
-		var carColorsResult []map[string]interface{}
-		json.Unmarshal(content, &carColorsResult)
+		carColorsResult := ReadFile(l.logger, "/internal/module/common/consts/car_colors.json")
 		assetResult["carColors"] = carColorsResult
 	}
 	return assetResult, validators.ErrorResponse{}
+
+}
+func (l CommonUseCase) ListCollectionMethods(ctx context.Context) (data interface{}, errResp validators.ErrorResponse) {
+	collectionMethodsResult := ReadFile(l.logger, "/internal/module/common/consts/collection_methods.json")
+	return collectionMethodsResult, validators.ErrorResponse{}
+
+}
+func (l CommonUseCase) FindCollectionMethodByType(ctx context.Context, collectionMethodType string) (data map[string]interface{}, errResp validators.ErrorResponse) {
+	IcollectionMethodsResult, _ := l.ListCollectionMethods(ctx)
+	collectionMethodsResult, ok := IcollectionMethodsResult.([]map[string]interface{})
+	if !ok {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, nil)
+	}
+	for _, m := range collectionMethodsResult {
+		if m["type"] == collectionMethodType {
+			return m, validators.ErrorResponse{}
+		}
+	}
+
+	return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 
 }
 func (l CommonUseCase) ListCountries(ctx context.Context) (data interface{}, err validators.ErrorResponse) {

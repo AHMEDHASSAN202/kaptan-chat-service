@@ -104,7 +104,7 @@ type LocationUseCase interface {
 
 	DeleteLocation(ctx context.Context, Id string) (err validators.ErrorResponse)
 	DeleteLocationByAccountId(ctx context.Context, accountId string) (err validators.ErrorResponse)
-	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse)
+	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult mongopagination.PaginationData, err validators.ErrorResponse)
 	ListMobileLocation(ctx context.Context, payload *location.ListLocationMobileDto) (locations []LocationMobile, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse)
 	FindMobileLocation(ctx context.Context, Id string, payload *location.FindLocationMobileDto) (location LocationMobile, err validators.ErrorResponse)
 }
@@ -116,7 +116,7 @@ type LocationRepository interface {
 	FindLocation(ctx context.Context, Id primitive.ObjectID) (location *Location, err error)
 	DeleteLocation(ctx context.Context, Id primitive.ObjectID) (err error)
 	DeleteLocationByAccountId(ctx context.Context, accountId primitive.ObjectID) (err error)
-	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult *mongopagination.PaginationData, err error)
+	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult mongopagination.PaginationData, err error)
 	UpdateBulkByBrand(ctx context.Context, brand BrandDetails) error
 	UpdateBulkByBrandCuisine(ctx context.Context, cuisine CuisineDetails) error
 	SoftDeleteBulkByBrandId(ctx context.Context, brandId primitive.ObjectID) error
