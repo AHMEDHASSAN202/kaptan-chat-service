@@ -26,13 +26,17 @@ func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validato
 		logger:              logger,
 	}
 	dashboard := e.Group("api/v1/admin/user")
-	dashboard.POST("", handler.StoreUser)
 	dashboard.GET("", handler.ListUser)
-	dashboard.DELETE("/:id", handler.DeleteUser)
+	dashboard.PUT("/:id/toggle-active", handler.ToggleUserActivation)
 
 	mobile := e.Group("api/v1/mobile/user")
+	//mobile.POST("", handler.StoreUser)
+	mobile.POST("/send-otp", handler.SendUserOtp)
+	mobile.POST("/verify-otp", handler.VerifyUserOtp)
 	mobile.PUT("/:id", handler.UpdateUserProfile)
 	mobile.GET("/:id", handler.GetUserProfile)
+	mobile.DELETE("/:id", handler.DeleteUser)
+
 }
 func (a *UserHandler) StoreUser(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -49,7 +53,51 @@ func (a *UserHandler) StoreUser(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	errResp := a.userUsecase.StoreUser(ctx, &payload)
+	errResp := a.userUsecase.StoreUser(&ctx, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+func (a *UserHandler) SendUserOtp(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var payload user.SendUserOtpDto
+	err := c.Bind(&payload)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := payload.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.userUsecase.SendOtp(&ctx, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+func (a *UserHandler) VerifyUserOtp(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var payload user.VerifyUserOtpDto
+	err := c.Bind(&payload)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := payload.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.userUsecase.VerifyOtp(&ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
@@ -74,7 +122,7 @@ func (a *UserHandler) UpdateUserProfile(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	errResp := a.userUsecase.UpdateUserProfile(ctx, &payload)
+	errResp := a.userUsecase.UpdateUserProfile(&ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
@@ -86,7 +134,7 @@ func (a *UserHandler) GetUserProfile(c echo.Context) error {
 
 	// get user id from auth middleware
 	id := c.Param("id")
-	data, errResp := a.userUsecase.FindUser(ctx, id)
+	data, errResp := a.userUsecase.FindUser(&ctx, id)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
@@ -98,7 +146,7 @@ func (a *UserHandler) DeleteUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
-	errResp := a.userUsecase.DeleteUser(ctx, id)
+	errResp := a.userUsecase.DeleteUser(&ctx, id)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
@@ -119,4 +167,16 @@ func (a *UserHandler) ListUser(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, brands)
+}
+
+func (a *UserHandler) ToggleUserActivation(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id := c.Param("id")
+	errResp := a.userUsecase.ToggleUserActivation(&ctx, id)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }

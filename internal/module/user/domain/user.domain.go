@@ -30,19 +30,23 @@ type User struct {
 }
 
 type UserUseCase interface {
-	StoreUser(ctx context.Context, payload *user.CreateUserDto) (err validators.ErrorResponse)
-	UpdateUserProfile(ctx context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse)
-	FindUser(ctx context.Context, Id string) (user User, err validators.ErrorResponse)
-	DeleteUser(ctx context.Context, Id string) (err validators.ErrorResponse)
+	StoreUser(ctx *context.Context, payload *user.CreateUserDto) (err validators.ErrorResponse)
+	SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse)
+	VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (err validators.ErrorResponse)
+	UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse)
+	FindUser(ctx *context.Context, Id string) (user User, err validators.ErrorResponse)
+	DeleteUser(ctx *context.Context, Id string) (err validators.ErrorResponse)
 	List(ctx *context.Context, dto *user.ListUserDto) (*responses.ListResponse, validators.ErrorResponse)
-	UserEmailExists(ctx context.Context, email, userId string) bool
+	ToggleUserActivation(ctx *context.Context, userId string) (err validators.ErrorResponse)
+	UserEmailExists(ctx *context.Context, email, userId string) bool
 }
 
 type UserRepository interface {
-	StoreUser(ctx context.Context, user *User) (err error)
-	UpdateUser(ctx context.Context, user *User) (err error)
-	FindUser(ctx context.Context, Id primitive.ObjectID) (user *User, err error)
-	DeleteUser(ctx context.Context, Id primitive.ObjectID) (err error)
+	StoreUser(ctx *context.Context, user *User) (err error)
+	UpdateUser(ctx *context.Context, user *User) (err error)
+	FindUser(ctx *context.Context, Id primitive.ObjectID) (user *User, err error)
+	GetUserByPhoneNumber(ctx *context.Context, phoneNum, countryCode string) (user User, err error)
+	DeleteUser(ctx *context.Context, Id primitive.ObjectID) (err error)
 	List(ctx *context.Context, dto *user.ListUserDto) (usersRes *[]User, paginationMeta *PaginationData, err error)
-	UserEmailExists(ctx context.Context, email, userId string) bool
+	UserEmailExists(ctx *context.Context, email, userId string) bool
 }

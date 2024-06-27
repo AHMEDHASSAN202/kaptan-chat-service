@@ -28,7 +28,8 @@ func (i *UserCustomValidator) ValidateUserEmailIsUnique() func(fl validator.Fiel
 			return false
 		}
 		userId := profile.ID
-		isExists := i.userUseCase.UserEmailExists(context.Background(), email, userId)
+		ctx := context.Background()
+		isExists := i.userUseCase.UserEmailExists(&ctx, email, userId)
 		return !isExists
 	}
 }

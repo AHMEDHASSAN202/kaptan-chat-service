@@ -13,7 +13,6 @@ import (
 	"github.com/pkg/errors"
 	"net/http"
 	"reflect"
-	"samm/pkg/utils"
 	"samm/pkg/validators/localization"
 	"strings"
 )
@@ -168,6 +167,10 @@ func GetErrorResponseFromErr(e error) ErrorResponse {
 }
 
 func GetErrorResponse(ctx *context.Context, code string, data map[string]interface{}, statusCode *int) ErrorResponse {
+	var newStatusCode int
+	if statusCode != nil {
+		newStatusCode = *statusCode
+	}
 	message := localization.GetTranslation(ctx, code, data, "")
 	return ErrorResponse{
 		ValidationErrors: nil,
@@ -176,7 +179,7 @@ func GetErrorResponse(ctx *context.Context, code string, data map[string]interfa
 			Text: message,
 			Code: code,
 		},
-		StatusCode: utils.If(statusCode == nil, 0, *statusCode).(int),
+		StatusCode: newStatusCode,
 	}
 }
 

@@ -21,7 +21,7 @@ func NewRegisterCustomValidator(c context.Context, validate *validator.Validate)
 		ValidationTag:          localization.Timeformat,
 		RegisterValidationFunc: ValidateTimeFormat,
 	}, CustomErrorTags{
-		ValidationTag:          localization.PhoneNumberValidator,
+		ValidationTag:          localization.PhoneNumber_rule_validation,
 		RegisterValidationFunc: PhoneNumberValidator,
 	})
 }

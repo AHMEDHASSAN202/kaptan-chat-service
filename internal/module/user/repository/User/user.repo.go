@@ -30,8 +30,8 @@ func NewUserMongoRepository(dbs *mongo.Database, log logger.ILogger) domain.User
 	}
 }
 
-func (l UserRepository) StoreUser(ctx context.Context, user *domain.User) (err error) {
-	_, err = mgm.Coll(&domain.User{}).InsertOne(ctx, user)
+func (l UserRepository) StoreUser(ctx *context.Context, user *domain.User) (err error) {
+	_, err = mgm.Coll(&domain.User{}).InsertOne(*ctx, user)
 	if err != nil {
 		return err
 	}
@@ -39,20 +39,28 @@ func (l UserRepository) StoreUser(ctx context.Context, user *domain.User) (err e
 
 }
 
-func (l UserRepository) UpdateUser(ctx context.Context, user *domain.User) (err error) {
+func (l UserRepository) UpdateUser(ctx *context.Context, user *domain.User) (err error) {
 	update := bson.M{"$set": user}
-	_, err = mgm.Coll(&domain.User{}).UpdateByID(ctx, user.ID, update)
+	_, err = mgm.Coll(&domain.User{}).UpdateByID(*ctx, user.ID, update)
 	return
 }
-func (l UserRepository) FindUser(ctx context.Context, Id primitive.ObjectID) (user *domain.User, err error) {
+func (l UserRepository) FindUser(ctx *context.Context, Id primitive.ObjectID) (user *domain.User, err error) {
 	domainData := domain.User{}
 	filter := bson.M{"deleted_at": nil, "_id": Id}
-	err = l.userCollection.FirstWithCtx(ctx, filter, &domainData)
+	err = l.userCollection.FirstWithCtx(*ctx, filter, &domainData)
 
 	return &domainData, err
 }
 
-func (l UserRepository) DeleteUser(ctx context.Context, Id primitive.ObjectID) (err error) {
+func (l UserRepository) GetUserByPhoneNumber(ctx *context.Context, phoneNum, countryCode string) (user domain.User, err error) {
+	domainData := domain.User{}
+	filter := bson.M{"deleted_at": nil, "phone_number": phoneNum, "country_code": countryCode}
+	err = l.userCollection.FirstWithCtx(*ctx, filter, &domainData)
+
+	return domainData, err
+}
+
+func (l UserRepository) DeleteUser(ctx *context.Context, Id primitive.ObjectID) (err error) {
 	userData, err := l.FindUser(ctx, Id)
 	if err != nil {
 		return err
@@ -95,11 +103,11 @@ func (i *UserRepository) List(ctx *context.Context, dto *user.ListUserDto) (user
 	return
 }
 
-func (l UserRepository) UserEmailExists(ctx context.Context, email, userId string) bool {
+func (l UserRepository) UserEmailExists(ctx *context.Context, email, userId string) bool {
 	filter := bson.M{"deleted_at": nil, "email": email}
 	if userId != "" {
 		filter = bson.M{"deleted_at": nil, "email": email, "_id": bson.M{"$ne": utils.ConvertStringIdToObjectId(userId)}}
 	}
-	count, _ := l.userCollection.CountDocuments(ctx, filter)
+	count, _ := l.userCollection.CountDocuments(*ctx, filter)
 	return count > 0
 }

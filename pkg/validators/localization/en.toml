@@ -50,6 +50,19 @@ other = "You have exceeded your quotas: {{.Quota}}"
 description = "Feature not supported"
 other = "These features are not supported: {{.Feature}}"
 
+[E1013]
+description = "Invalid OTP"
+other = "The OTP provided is invalid. Please check and try again."
+
+[E1014]
+description = "OTP has expired"
+other = "The OTP has expired. Please request a new OTP."
+
+[E1015]
+description = "Exceeded maximum OTP trials"
+other = "You have exceeded the maximum number of OTP trials for today. Please try again tomorrow."
+
+
 [Modifier_groups_ids_rules_validation]
 description = "Feature not supported"
 other = "These features are not supported: {{.Feature}}"
