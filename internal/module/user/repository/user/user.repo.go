@@ -2,34 +2,36 @@ package mongodb
 
 import (
 	"context"
+	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"math"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
+	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"time"
 )
 
 type UserRepository struct {
 	userCollection *mgm.Collection
+	logger         logger.ILogger
 }
 
 const mongoUserRepositoryTag = "UserMongoRepository"
 
-func NewUserMongoRepository(dbs *mongo.Database) domain.UserRepository {
+func NewUserMongoRepository(dbs *mongo.Database, log logger.ILogger) domain.UserRepository {
 	userDbCollection := mgm.Coll(&domain.User{})
 
 	return &UserRepository{
 		userCollection: userDbCollection,
+		logger:         log,
 	}
 }
 
-func (l UserRepository) StoreUser(ctx context.Context, user *domain.User) (err error) {
-	_, err = mgm.Coll(&domain.User{}).InsertOne(ctx, user)
+func (l UserRepository) StoreUser(ctx *context.Context, user *domain.User) (err error) {
+	_, err = mgm.Coll(&domain.User{}).InsertOne(*ctx, user)
 	if err != nil {
 		return err
 	}
@@ -37,20 +39,28 @@ func (l UserRepository) StoreUser(ctx context.Context, user *domain.User) (err e
 
 }
 
-func (l UserRepository) UpdateUser(ctx context.Context, user *domain.User) (err error) {
+func (l UserRepository) UpdateUser(ctx *context.Context, user *domain.User) (err error) {
 	update := bson.M{"$set": user}
-	_, err = mgm.Coll(&domain.User{}).UpdateByID(ctx, user.ID, update)
+	_, err = mgm.Coll(&domain.User{}).UpdateByID(*ctx, user.ID, update)
 	return
 }
-func (l UserRepository) FindUser(ctx context.Context, Id primitive.ObjectID) (user *domain.User, err error) {
+func (l UserRepository) FindUser(ctx *context.Context, Id primitive.ObjectID) (user *domain.User, err error) {
 	domainData := domain.User{}
 	filter := bson.M{"deleted_at": nil, "_id": Id}
-	err = l.userCollection.FirstWithCtx(ctx, filter, &domainData)
+	err = l.userCollection.FirstWithCtx(*ctx, filter, &domainData)
 
 	return &domainData, err
 }
 
-func (l UserRepository) DeleteUser(ctx context.Context, Id primitive.ObjectID) (err error) {
+func (l UserRepository) GetUserByPhoneNumber(ctx *context.Context, phoneNum, countryCode string) (user domain.User, err error) {
+	domainData := domain.User{}
+	filter := bson.M{"deleted_at": nil, "phone_number": phoneNum, "country_code": countryCode}
+	err = l.userCollection.FirstWithCtx(*ctx, filter, &domainData)
+
+	return domainData, err
+}
+
+func (l UserRepository) DeleteUser(ctx *context.Context, Id primitive.ObjectID) (err error) {
 	userData, err := l.FindUser(ctx, Id)
 	if err != nil {
 		return err
@@ -61,35 +71,43 @@ func (l UserRepository) DeleteUser(ctx context.Context, Id primitive.ObjectID) (
 	return l.UpdateUser(ctx, userData)
 }
 
-func (l UserRepository) ListUser(ctx context.Context, payload *user.ListUserDto) (users []domain.User, paginationResult utils.PaginationResult, err error) {
+func (i *UserRepository) List(ctx *context.Context, dto *user.ListUserDto) (usersRes *[]domain.User, paginationMeta *PaginationData, err error) {
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.D{{"deleted_at", nil}},
+	}}}
 
-	offset := (payload.Page - 1) * payload.Limit
-	findOptions := options.Find().SetLimit(payload.Limit).SetSkip(offset)
-
-	filter := bson.M{}
-	match := []bson.M{}
-	match = append(match, bson.M{"deleted_at": nil})
-	if payload.Query != "" {
-		filter = bson.M{
-			"$or": []bson.M{
-				{"name.ar": bson.M{"$regex": payload.Query, "$options": "i"}},
-				{"name.en": bson.M{"$regex": payload.Query, "$options": "i"}},
-				{"email": bson.M{"$regex": payload.Query, "$options": "i"}},
-			},
-		}
+	if dto.Query != "" {
+		pattern := ".*" + dto.Query + ".*"
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name": bson.M{"$regex": pattern, "$options": "i"}}, {"phone_number": bson.M{"$regex": pattern, "$options": "i"}}}})
 	}
-	filter["$and"] = match
 
-	// Query the collection for the total count of documents
-	collection := mgm.Coll(&domain.User{})
-	totalItems, err := collection.CountDocuments(ctx, filter)
+	data, err := New(i.userCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
 
-	// Calculate total pages
-	totalPages := int(math.Ceil(float64(totalItems) / float64(payload.Limit)))
+	if data == nil || data.Data == nil {
+		return nil, nil, err
+	}
 
-	var data []domain.User
-	err = l.userCollection.SimpleFind(&data, filter, findOptions)
+	users := make([]domain.User, 0)
+	for _, raw := range data.Data {
+		model := domain.User{}
+		err = bson.Unmarshal(raw, &model)
+		if err != nil {
+			i.logger.Error("user Repo -> List -> ", err)
+			break
+		}
+		users = append(users, model)
+	}
+	paginationMeta = &data.Pagination
+	usersRes = &users
 
-	return data, utils.PaginationResult{Page: payload.Page, TotalPages: int64(totalPages), TotalItems: totalItems}, err
+	return
+}
 
+func (l UserRepository) UserEmailExists(ctx *context.Context, email, userId string) bool {
+	filter := bson.M{"deleted_at": nil, "email": email}
+	if userId != "" {
+		filter = bson.M{"deleted_at": nil, "email": email, "_id": bson.M{"$ne": utils.ConvertStringIdToObjectId(userId)}}
+	}
+	count, _ := l.userCollection.CountDocuments(*ctx, filter)
+	return count > 0
 }

@@ -1,23 +1,26 @@
 package user
 
 import (
+	"context"
 	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
 	"samm/pkg/validators"
-	"time"
+	"samm/pkg/validators/localization"
 )
 
 type UpdateUserProfileDto struct {
-	ID          string    `json:"id" validate:"required"`
-	Name        string    `json:"name" validate:"required"`
-	CountryCode string    `json:"country_code" validate:"required,len=2"`
-	PhoneNumber string    `json:"phone_number" validate:"required,e164"`
-	Email       string    `json:"email" validate:"required,email"`
-	Gender      string    `json:"gender" validate:"required,oneof=male female other"`
-	Dob         time.Time `json:"dob" validate:"required"`
-	ImageURL    string    `json:"image_url" validate:"omitempty,url"`
+	ID          string `json:"id" validate:"required"`
+	Name        string `json:"name" validate:"required"`
+	CountryCode string `json:"country_code" validate:"required,len=4,numeric"`
+	PhoneNumber string `json:"phone_number" validate:"required,PhoneNumber_rule_validation"`
+	Email       string `json:"email" validate:"required,email,Email_is_unique_rules_validation"`
+	Gender      string `json:"gender" validate:"required,oneof=male female other"`
+	Dob         string `json:"dob" validate:"required,datetime=2006-01-02"`
+	ImageURL    string `json:"image_url" validate:"omitempty,url"`
 }
 
-func (payload *UpdateUserProfileDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
-	return validators.ValidateStruct(c.Request().Context(), validate, payload)
+func (payload *UpdateUserProfileDto) Validate(ctx context.Context, validate *validator.Validate, validateUserEmailIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {
+	return validators.ValidateStruct(ctx, validate, payload, validators.CustomErrorTags{
+		ValidationTag:          localization.Email_is_unique_rules_validation,
+		RegisterValidationFunc: validateUserEmailIsUnique,
+	})
 }

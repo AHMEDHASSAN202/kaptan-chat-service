@@ -2,10 +2,11 @@ package domain
 
 import (
 	"context"
+	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/user/dto/user"
-	"samm/pkg/utils"
+	"samm/internal/module/user/responses"
 	"samm/pkg/validators"
 	"time"
 )
@@ -17,9 +18,9 @@ type User struct {
 	PhoneNumber      string     `json:"phone_number" bson:"phone_number"`
 	Email            string     `json:"email" bson:"email"`
 	Gender           string     `json:"gender" bson:"gender"`
-	Dob              time.Time  `json:"dob" bson:"dob"`
+	Dob              string     `json:"dob" bson:"dob"`
 	Otp              string     `json:"otp" bson:"otp"`
-	ExpiryOtpDate    time.Time  `json:"expiry_otp_date" bson:"expiry_otp_date"`
+	ExpiryOtpDate    *time.Time `json:"expiry_otp_date" bson:"expiry_otp_date"`
 	OtpCounter       int        `json:"otp_counter" bson:"otp_counter"`
 	ImageURL         string     `json:"image_url" bson:"image_url"`
 	Country          string     `json:"country" bson:"country"`
@@ -29,17 +30,23 @@ type User struct {
 }
 
 type UserUseCase interface {
-	StoreUser(ctx context.Context, payload *user.CreateUserDto) (err validators.ErrorResponse)
-	UpdateUser(ctx context.Context, id string, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse)
-	FindUser(ctx context.Context, Id string) (user User, err validators.ErrorResponse)
-	DeleteUser(ctx context.Context, Id string) (err validators.ErrorResponse)
-	ListUser(ctx context.Context, payload *user.ListUserDto) (users []User, paginationResult utils.PaginationResult, err validators.ErrorResponse)
+	StoreUser(ctx *context.Context, payload *user.CreateUserDto) (err validators.ErrorResponse)
+	SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse)
+	VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (err validators.ErrorResponse)
+	UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse)
+	FindUser(ctx *context.Context, Id string) (user User, err validators.ErrorResponse)
+	DeleteUser(ctx *context.Context, Id string) (err validators.ErrorResponse)
+	List(ctx *context.Context, dto *user.ListUserDto) (*responses.ListResponse, validators.ErrorResponse)
+	ToggleUserActivation(ctx *context.Context, userId string) (err validators.ErrorResponse)
+	UserEmailExists(ctx *context.Context, email, userId string) bool
 }
 
 type UserRepository interface {
-	StoreUser(ctx context.Context, user *User) (err error)
-	UpdateUser(ctx context.Context, user *User) (err error)
-	FindUser(ctx context.Context, Id primitive.ObjectID) (user *User, err error)
-	DeleteUser(ctx context.Context, Id primitive.ObjectID) (err error)
-	ListUser(ctx context.Context, payload *user.ListUserDto) (locations []User, paginationResult utils.PaginationResult, err error)
+	StoreUser(ctx *context.Context, user *User) (err error)
+	UpdateUser(ctx *context.Context, user *User) (err error)
+	FindUser(ctx *context.Context, Id primitive.ObjectID) (user *User, err error)
+	GetUserByPhoneNumber(ctx *context.Context, phoneNum, countryCode string) (user User, err error)
+	DeleteUser(ctx *context.Context, Id primitive.ObjectID) (err error)
+	List(ctx *context.Context, dto *user.ListUserDto) (usersRes *[]User, paginationMeta *PaginationData, err error)
+	UserEmailExists(ctx *context.Context, email, userId string) bool
 }

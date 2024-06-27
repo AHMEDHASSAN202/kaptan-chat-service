@@ -20,12 +20,16 @@ const (
     E1010 = "E1010" // Conflict
     E1011 = "E1011" // Quota exceeded
     E1012 = "E1012" // Feature not supported
+    E1013 = "E1013" // Invalid OTP
+    E1014 = "E1014" // OTP has expired
+    E1015 = "E1015" // Exceeded maximum OTP trials
     Email_is_unique_rules_validation = "Email_is_unique_rules_validation" // Email is Unique
     Invalid_mongo_ids_validation_rule = "Invalid_mongo_ids_validation_rule" // Invalid mongo ids validation rule
     Item_name_is_unique_rules_validation = "Item_name_is_unique_rules_validation" // Feature not supported
     Modifier_groups_ids_rules_validation = "Modifier_groups_ids_rules_validation" // Feature not supported
     Modifier_items_cant_contains_modifier_group = "Modifier_items_cant_contains_modifier_group" // Modifier items cant contains modifier group
     Password_required_if_id_is_zero = "Password_required_if_id_is_zero" // password is a required field
+    PhoneNumber_rule_validation = "PhoneNumber_rule_validation" // PhoneNumber is Wrong
     SKU_name_is_unique_rules_validation = "SKU_name_is_unique_rules_validation" // Feature not supported
     Timeformat = "Timeformat" // time format rule validation
 )

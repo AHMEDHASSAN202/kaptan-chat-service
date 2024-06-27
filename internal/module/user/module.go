@@ -2,6 +2,7 @@ package user
 
 import (
 	"go.uber.org/fx"
+	"samm/internal/module/user/custom_validators"
 	"samm/internal/module/user/delivery"
 	collection_method_repo "samm/internal/module/user/repository/collection_method"
 	user_repo "samm/internal/module/user/repository/user"
@@ -15,6 +16,7 @@ var Module = fx.Options(
 		// App Config
 		user_repo.NewUserMongoRepository,
 		user_usecase.NewUserUseCase,
+		custom_validators.InitNewCustomValidatorsForUser,
 		collection_method.NewCollectionMethodUseCase,
 		collection_method_repo.NewCollectionMethodMongoRepository,
 	),

@@ -50,6 +50,18 @@ other = "You have exceeded your quotas: {{.Quota}}"
 description = "Feature not supported"
 other = "These features are not supported: {{.Feature}}"
 
+[E1013]
+description = "رمز OTP غير صالح"
+other = "رمز OTP المقدم غير صالح. يرجى التحقق والمحاولة مرة أخرى."
+
+[E1014]
+description = "رمز OTP منتهي الصلاحية"
+other = "رمز OTP منتهي الصلاحية. يرجى طلب رمز OTP جديد."
+
+[E1015]
+description = "تجاوز الحد الأقصى لمحاولات OTP"
+other = "لقد تجاوزت الحد الأقصى لمحاولات OTP لليوم. يرجى المحاولة مرة أخرى غدًا."
+
 [Modifier_groups_ids_rules]
 description = "Feature not supported"
 other = "يجب ان يكون objectId"
@@ -97,3 +109,8 @@ other = "البريد الالكتروني مستخدم من قبل"
 [Password_required_if_id_is_zero]
 description = "password is a required field"
 other = "كلمه المرور مطلوبه"
+
+
+[PhoneNumber_rule_validation]
+description = "رقم التليفون خطآ"
+other = "رقم التليفون خطآ"
