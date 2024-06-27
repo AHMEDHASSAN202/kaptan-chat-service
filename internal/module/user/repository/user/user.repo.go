@@ -93,4 +93,3 @@ func (l UserRepository) ListUser(ctx context.Context, payload *user.ListUserDto)
 	return data, utils.PaginationResult{Page: payload.Page, TotalPages: int64(totalPages), TotalItems: totalItems}, err
 
 }
-
