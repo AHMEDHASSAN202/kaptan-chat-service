@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+	"fmt"
 	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -67,7 +68,7 @@ func (l AccountRepository) DeleteAccount(ctx context.Context, Id primitive.Objec
 	return l.UpdateAccount(ctx, accountData)
 }
 
-func (l AccountRepository) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult *PaginationData, err error) {
+func (l AccountRepository) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult PaginationData, err error) {
 	models := make([]domain.Account, 0)
 
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
@@ -84,18 +85,40 @@ func (l AccountRepository) ListAccount(ctx context.Context, payload *account.Lis
 		})
 
 	}
-	data, err := New(l.accountCollection.Collection).Context(ctx).Limit(payload.Limit).Page(payload.Page).Sort("created_at", -1).Aggregate(matching)
+	var pipeline []interface{}
+
+	pipeline = append(pipeline, matching)
+	pipeline = append(pipeline,
+		bson.M{
+			"$lookup": bson.M{
+				"from":         "locations",
+				"localField":   "_id",
+				"foreignField": "account_id",
+				"as":           "locations",
+				"pipeline":     []interface{}{bson.M{"$match": bson.M{"deleted_at": nil}}},
+			},
+		},
+	)
+	pipeline = append(pipeline,
+		bson.M{
+			"$addFields": bson.M{
+				"locations_count": bson.M{"$size": "$locations"},
+			},
+		},
+	)
+	data, err := New(l.accountCollection.Collection).Context(ctx).Limit(payload.Limit).Page(payload.Page).Sort("created_at", -1).Aggregate(pipeline...)
 	if data == nil || data.Data == nil {
-		return models, nil, err
+		return models, paginationResult, err
 	}
 
 	for _, raw := range data.Data {
 		model := domain.Account{}
 		errUnmarshal := bson.Unmarshal(raw, &model)
 		if errUnmarshal != nil {
+			fmt.Println(errUnmarshal)
 			break
 		}
 		models = append(models, model)
 	}
-	return models, &data.Pagination, err
+	return models, data.Pagination, err
 }

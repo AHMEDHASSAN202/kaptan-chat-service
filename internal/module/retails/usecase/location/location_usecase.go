@@ -104,7 +104,7 @@ func (l LocationUseCase) DeleteLocationByAccountId(ctx context.Context, AccountI
 	return validators.ErrorResponse{}
 }
 
-func (l LocationUseCase) ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []domain.Location, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse) {
+func (l LocationUseCase) ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []domain.Location, paginationResult mongopagination.PaginationData, err validators.ErrorResponse) {
 	results, paginationResult, errRe := l.repo.ListLocation(ctx, payload)
 	if errRe != nil {
 		return results, paginationResult, validators.GetErrorResponseFromErr(errRe)
