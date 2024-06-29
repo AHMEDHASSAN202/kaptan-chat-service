@@ -6,12 +6,13 @@ import (
 	"samm/pkg/validators"
 )
 
-type VerifyUserOtpDto struct {
+type UserSignUpDto struct {
 	PhoneNumber string `json:"phone_number" validate:"required,PhoneNumber_rule_validation"`
 	CountryCode string `json:"country_code" validate:"required,len=4,numeric"`
-	Otp         string `json:"otp" validate:"required,len=4,alphanum"`
+	Name        string `json:"name" validate:"required"`
+	Email       string `json:"email" validate:"required,email"`
 }
 
-func (payload *VerifyUserOtpDto) Validate(ctx context.Context, validate *validator.Validate) validators.ErrorResponse {
+func (payload *UserSignUpDto) Validate(ctx context.Context, validate *validator.Validate) validators.ErrorResponse {
 	return validators.ValidateStruct(ctx, validate, payload)
 }

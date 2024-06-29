@@ -51,16 +51,16 @@ description = "Feature not supported"
 other = "These features are not supported: {{.Feature}}"
 
 [E1013]
-description = "رمز OTP غير صالح"
-other = "رمز OTP المقدم غير صالح. يرجى التحقق والمحاولة مرة أخرى."
+description = "الرقم السري المتغير غير صالح"
+other = "الرقم السري المتغير غير صالح. يرجى التحقق والمحاولة مرة أخرى."
 
 [E1014]
-description = "رمز OTP منتهي الصلاحية"
-other = "رمز OTP منتهي الصلاحية. يرجى طلب رمز OTP جديد."
+description = "رمز الرقم السري المتغير منتهي الصلاحية"
+other = "رمز الرقم السري المتغير منتهي الصلاحية. يرجى طلب رمز جديد."
 
 [E1015]
 description = "تجاوز الحد الأقصى لمحاولات OTP"
-other = "لقد تجاوزت الحد الأقصى لمحاولات OTP لليوم. يرجى المحاولة مرة أخرى غدًا."
+other = "لقد تجاوزت الحد الأقصى لمحاولات الرقم السري المتغير . يرجى المحاولة مرة أخرى غدًا."
 
 [Modifier_groups_ids_rules]
 description = "Feature not supported"

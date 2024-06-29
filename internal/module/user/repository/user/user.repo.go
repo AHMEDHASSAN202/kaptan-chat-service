@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
 	"samm/pkg/logger"
@@ -41,7 +42,9 @@ func (l UserRepository) StoreUser(ctx *context.Context, user *domain.User) (err 
 
 func (l UserRepository) UpdateUser(ctx *context.Context, user *domain.User) (err error) {
 	update := bson.M{"$set": user}
-	_, err = mgm.Coll(&domain.User{}).UpdateByID(*ctx, user.ID, update)
+	upsert := true
+	opts := options.UpdateOptions{Upsert: &upsert}
+	_, err = mgm.Coll(&domain.User{}).UpdateByID(*ctx, user.ID, update, &opts)
 	return
 }
 func (l UserRepository) FindUser(ctx *context.Context, Id primitive.ObjectID) (user *domain.User, err error) {
@@ -80,6 +83,11 @@ func (i *UserRepository) List(ctx *context.Context, dto *user.ListUserDto) (user
 		pattern := ".*" + dto.Query + ".*"
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name": bson.M{"$regex": pattern, "$options": "i"}}, {"phone_number": bson.M{"$regex": pattern, "$options": "i"}}}})
 	}
+
+	//if !dto.Status {
+	//	pattern := ".*" + dto.Query + ".*"
+	//	matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name": bson.M{"$regex": pattern, "$options": "i"}}, {"phone_number": bson.M{"$regex": pattern, "$options": "i"}}}})
+	//}
 
 	data, err := New(i.userCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
 

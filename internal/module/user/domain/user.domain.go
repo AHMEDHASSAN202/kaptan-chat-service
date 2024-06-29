@@ -21,7 +21,7 @@ type User struct {
 	Dob              string     `json:"dob" bson:"dob"`
 	Otp              string     `json:"otp" bson:"otp"`
 	ExpiryOtpDate    *time.Time `json:"expiry_otp_date" bson:"expiry_otp_date"`
-	OtpCounter       int        `json:"otp_counter" bson:"otp_counter"`
+	OtpCounter       string     `json:"otp_counter" bson:"otp_counter"`
 	ImageURL         string     `json:"image_url" bson:"image_url"`
 	Country          string     `json:"country" bson:"country"`
 	IsActive         bool       `json:"is_active" bson:"is_active"`
@@ -32,7 +32,8 @@ type User struct {
 type UserUseCase interface {
 	StoreUser(ctx *context.Context, payload *user.CreateUserDto) (err validators.ErrorResponse)
 	SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse)
-	VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (err validators.ErrorResponse)
+	VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse)
+	UserSignUp(ctx *context.Context, payload *user.UserSignUpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse)
 	UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse)
 	FindUser(ctx *context.Context, Id string) (user User, err validators.ErrorResponse)
 	DeleteUser(ctx *context.Context, Id string) (err validators.ErrorResponse)

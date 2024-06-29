@@ -6,6 +6,7 @@ import (
 	"samm/internal/module/user/custom_validators"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
+	echomiddleware "samm/pkg/http/echo/middleware"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
 )
@@ -30,9 +31,11 @@ func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validato
 	dashboard.PUT("/:id/toggle-active", handler.ToggleUserActivation)
 
 	mobile := e.Group("api/v1/mobile/user")
+	mobile.Use(echomiddleware.AppendCountryMiddleware)
 	//mobile.POST("", handler.StoreUser)
 	mobile.POST("/send-otp", handler.SendUserOtp)
 	mobile.POST("/verify-otp", handler.VerifyUserOtp)
+	mobile.POST("/sign-up", handler.SignUp)
 	mobile.PUT("/:id", handler.UpdateUserProfile)
 	mobile.GET("/:id", handler.GetUserProfile)
 	mobile.DELETE("/:id", handler.DeleteUser)
@@ -68,6 +71,8 @@ func (a *UserHandler) SendUserOtp(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
 
 	validationErr := payload.Validate(ctx, a.validator)
 	if validationErr.IsError {
@@ -97,13 +102,39 @@ func (a *UserHandler) VerifyUserOtp(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	errResp := a.userUsecase.VerifyOtp(&ctx, &payload)
+	res, errResp := a.userUsecase.VerifyOtp(&ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
-	return validators.SuccessResponse(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{"data": res})
 }
+
+func (a *UserHandler) SignUp(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var payload user.UserSignUpDto
+	err := c.Bind(&payload)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+
+	validationErr := payload.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	res, errResp := a.userUsecase.UserSignUp(&ctx, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"data": res})
+}
+
 func (a *UserHandler) UpdateUserProfile(c echo.Context) error {
 	ctx := c.Request().Context()
 

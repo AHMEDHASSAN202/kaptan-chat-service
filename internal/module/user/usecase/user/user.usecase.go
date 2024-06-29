@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
 	"samm/internal/module/user/responses"
@@ -36,50 +37,103 @@ func (l UserUseCase) StoreUser(ctx *context.Context, payload *user.CreateUserDto
 }
 
 func (l UserUseCase) SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse) {
-	userDomain, _ := l.repo.GetUserByPhoneNumber(ctx, payload.PhoneNumber, payload.CountryCode)
-	if userDomain.OtpCounter == 0 {
+	userDomain, dbErr := l.repo.GetUserByPhoneNumber(ctx, payload.PhoneNumber, payload.CountryCode)
+	// new user
+	if dbErr != nil {
+		userDomain.ID = primitive.NewObjectID()
+		userDomain.CreatedAt = time.Now()
+		userDomain.UpdatedAt = time.Now()
+	}
+
+	newOtpCounter, ctrErr := otpTrialsPerDaySetter(userDomain.OtpCounter)
+	if ctrErr != nil {
 		return validators.GetErrorResponse(ctx, localization.E1015, nil, nil)
 	}
+
 	otp, otpErr := generateOTP()
 	if otpErr != nil {
 		err = validators.GetErrorResponseFromErr(otpErr)
 		return
 	}
 
-	expiry := time.Now().Add(5 * time.Minute)
-	userDomain.Otp = otp
-	userDomain.ExpiryOtpDate = &expiry
-	userDomain.PhoneNumber = payload.PhoneNumber
-	userDomain.CountryCode = payload.CountryCode
+	newUserDomain := domainBuilderAtCreateProfile(&userDomain, payload, otp, newOtpCounter)
 
-	// send otp sms provider
+	// send otp sms provider in-progress
 
-	errRe := l.repo.UpdateUser(ctx, &userDomain)
+	errRe := l.repo.UpdateUser(ctx, newUserDomain)
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)
 	}
 	return
 }
 
-func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (err validators.ErrorResponse) {
+func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse) {
 	userDomain, dbErr := l.repo.GetUserByPhoneNumber(ctx, payload.PhoneNumber, payload.CountryCode)
 	if dbErr != nil {
-		return validators.GetErrorResponseFromErr(dbErr)
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
 	}
 	if userDomain.Otp != payload.Otp {
-		return validators.GetErrorResponse(ctx, localization.E1013, nil, nil)
+		err = validators.GetErrorResponse(ctx, localization.E1013, nil, nil)
+		return
 	}
 	if userDomain.ExpiryOtpDate.Before(time.Now()) {
-		return validators.GetErrorResponse(ctx, localization.E1014, nil, nil)
+		err = validators.GetErrorResponse(ctx, localization.E1014, nil, nil)
+		return
 	}
 
-	userDomain.PhoneNumber = payload.PhoneNumber
-	userDomain.CountryCode = payload.CountryCode
+	userToken, tokenErr := generateUserToken(&userDomain)
+	if tokenErr != nil {
+		err = validators.GetErrorResponseFromErr(tokenErr)
+		return
+	}
+
+	if userDomain.Name == "" || userDomain.Email == "" {
+		res = responses.VerifyOtpResp{
+			Message:  responses.OtpMessage,
+			NextStep: responses.NextStep,
+		}
+	} else {
+		res = responses.VerifyOtpResp{
+			Token: userToken,
+		}
+		userDomain.Tokens = append(userDomain.Tokens, userToken)
+	}
 
 	dbErr = l.repo.UpdateUser(ctx, &userDomain)
 	if dbErr != nil {
-		return validators.GetErrorResponseFromErr(dbErr)
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
 	}
+
+	return
+}
+
+func (l UserUseCase) UserSignUp(ctx *context.Context, payload *user.UserSignUpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse) {
+	userDomain, dbErr := l.repo.GetUserByPhoneNumber(ctx, payload.PhoneNumber, payload.CountryCode)
+	if dbErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
+	}
+
+	userToken, tokenErr := generateUserToken(&userDomain)
+	if tokenErr != nil {
+		err = validators.GetErrorResponseFromErr(tokenErr)
+		return
+	}
+
+	updatedUserDomain := domainBuilderAtSignUp(payload, userToken, &userDomain)
+
+	dbErr = l.repo.UpdateUser(ctx, updatedUserDomain)
+	if dbErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
+	}
+
+	res = responses.VerifyOtpResp{
+		Token: userToken,
+	}
+
 	return
 }
 
