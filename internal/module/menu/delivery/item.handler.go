@@ -8,6 +8,7 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares/portal"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 )
@@ -20,7 +21,7 @@ type ItemHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustomValidator custom_validators.ItemCustomValidator, validator *validator.Validate, logger logger.ILogger) {
+func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustomValidator custom_validators.ItemCustomValidator, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.Middlewares) {
 	handler := &ItemHandler{
 		itemUsecase:         itemUsecase,
 		itemCustomValidator: itemCustomValidator,
@@ -28,6 +29,7 @@ func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustom
 		logger:              logger,
 	}
 	portal := e.Group("api/v1/portal/item")
+	portal.Use(portalMiddlewares.AuthMiddleware)
 	{
 		portal.POST("", handler.Create)
 		portal.GET("", handler.List)

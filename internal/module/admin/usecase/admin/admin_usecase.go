@@ -9,6 +9,7 @@ import (
 	dto "samm/internal/module/admin/dto/admin"
 	"samm/internal/module/admin/responses"
 	"samm/internal/module/menu/external"
+	"samm/pkg/jwt"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	utilsDto "samm/pkg/utils/dto"
@@ -18,16 +19,20 @@ import (
 )
 
 type AdminUseCase struct {
-	repo       domain.AdminRepository
-	logger     logger.ILogger
-	extService external.ExtService
+	repo             domain.AdminRepository
+	logger           logger.ILogger
+	extService       external.ExtService
+	AdminJwtService  jwt.JwtService
+	PortalJwtService jwt.JwtService
 }
 
-func NewAdminUseCase(repo domain.AdminRepository, logger logger.ILogger, extService external.ExtService) domain.AdminUseCase {
+func NewAdminUseCase(repo domain.AdminRepository, logger logger.ILogger, extService external.ExtService, jwtFactory jwt.JwtServiceFactory) domain.AdminUseCase {
 	return &AdminUseCase{
-		repo:       repo,
-		logger:     logger,
-		extService: extService,
+		repo:             repo,
+		logger:           logger,
+		extService:       extService,
+		AdminJwtService:  jwtFactory.AdminJwtService(),
+		PortalJwtService: jwtFactory.PortalJwtService(),
 	}
 }
 
@@ -39,12 +44,12 @@ func (oRec *AdminUseCase) Create(ctx context.Context, input *dto.CreateAdminDTO)
 		return "", validators.GetErrorResponse(&ctx, localization.E1001, nil, nil)
 	}
 
-	menuGroup, errCreate := oRec.repo.Create(ctx, adminDomain)
+	admin, errCreate := oRec.repo.Create(ctx, adminDomain)
 	if errCreate != nil {
 		oRec.logger.Error("AdminUseCase -> Create -> ", errCreate)
 		return "", validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
 	}
-	return utils.ConvertObjectIdToStringId(menuGroup.ID), validators.ErrorResponse{}
+	return utils.ConvertObjectIdToStringId(admin.ID), validators.ErrorResponse{}
 }
 
 func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO) (string, validators.ErrorResponse) {
@@ -60,13 +65,13 @@ func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO)
 		oRec.logger.Error("AdminUseCase -> Update -> ", err)
 	}
 
-	menuGroup, errCreate := oRec.repo.Update(ctx, adminDomain)
+	admin, errCreate := oRec.repo.Update(ctx, adminDomain)
 	if errCreate != nil {
 		oRec.logger.Error("AdminUseCase -> Update -> ", errCreate)
 		return "", validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
 	}
 
-	return utils.ConvertObjectIdToStringId(menuGroup.ID), validators.ErrorResponse{}
+	return utils.ConvertObjectIdToStringId(admin.ID), validators.ErrorResponse{}
 }
 
 func (oRec *AdminUseCase) Delete(ctx context.Context, adminId primitive.ObjectID) validators.ErrorResponse {

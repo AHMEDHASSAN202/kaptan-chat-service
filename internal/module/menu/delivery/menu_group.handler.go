@@ -8,6 +8,7 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/menu_group"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares/portal"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
@@ -20,13 +21,14 @@ type MenuGroupHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.Middlewares) {
 	handler := &MenuGroupHandler{
 		menuGroupUsecase: us,
 		validator:        validator,
 		logger:           logger,
 	}
 	portal := e.Group("api/v1/portal/menu-group")
+	portal.Use(portalMiddlewares.AuthMiddleware)
 	{
 		portal.GET("", handler.List)
 		portal.GET("/:id", handler.Find)

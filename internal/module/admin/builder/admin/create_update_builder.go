@@ -25,7 +25,7 @@ func CreateUpdateAdminBuilder(admin *domain.Admin, input *dto.CreateAdminDTO) (*
 		admin.Password = password
 	}
 	admin.Name = input.Name
-	admin.Email = input.Email
+	admin.Email = strings.ToLower(input.Email)
 	admin.Status = strings.ToLower(input.Status)
 	admin.Role = strings.ToLower(input.Role)
 	admin.Permissions = utils.ArrayToLower(input.Permissions)

@@ -1,0 +1,21 @@
+package admin
+
+import (
+	"samm/internal/module/admin/domain"
+	"samm/pkg/jwt"
+	"samm/pkg/logger"
+)
+
+type Middlewares struct {
+	adminRepository domain.AdminRepository
+	logger          logger.ILogger
+	jwtFactory      jwt.JwtServiceFactory
+}
+
+func NewAdminMiddlewares(adminRepository domain.AdminRepository, logger logger.ILogger, jwtFactory jwt.JwtServiceFactory) *Middlewares {
+	return &Middlewares{
+		adminRepository: adminRepository,
+		logger:          logger,
+		jwtFactory:      jwtFactory,
+	}
+}

@@ -421,3 +421,18 @@ func Distance(lt1, lng1, lt2, lng2 float64) float64 {
 func degreesToRadians(degrees float64) float64 {
 	return degrees * (math.Pi / 180)
 }
+
+func IsBearerToken(tokenValue string) (isBearerToken bool, tokenParts []string) {
+	tokenParts = strings.Split(tokenValue, " ")
+	if len(tokenParts) == 2 && strings.ToLower(tokenParts[0]) == strings.ToLower("Bearer") {
+		isBearerToken = true
+	}
+	return
+}
+
+func GetValueByKey[T any](slice []T, index int) *T {
+	if index >= 0 && index < len(slice) {
+		return &slice[index]
+	}
+	return nil
+}
