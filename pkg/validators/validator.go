@@ -121,8 +121,9 @@ func ValidateStruct(c context.Context, validate *validator.Validate, obj interfa
 
 	err := validate.Struct(obj)
 	lang := c.Value("lang")
-	fmt.Println(lang)
+	fmt.Println("lang: ", lang)
 	if err != nil {
+		fmt.Println("err: ", err)
 		errs := err.(validator.ValidationErrors)
 		errMap := make(map[string][]string)
 		for _, e := range errs {
@@ -167,6 +168,8 @@ func GetErrorResponseFromErr(e error) ErrorResponse {
 }
 
 func GetErrorResponse(ctx *context.Context, code string, data map[string]interface{}, statusCode *int) ErrorResponse {
+	ptr := utils.If(statusCode == nil, utils.GetAsPointer(0), statusCode).(*int)
+	fmt.Println(*ptr)
 	message := localization.GetTranslation(ctx, code, data, "")
 	return ErrorResponse{
 		ValidationErrors: nil,
@@ -175,7 +178,7 @@ func GetErrorResponse(ctx *context.Context, code string, data map[string]interfa
 			Text: message,
 			Code: code,
 		},
-		StatusCode: utils.If(statusCode == nil, 0, *statusCode).(int),
+		StatusCode: *ptr,
 	}
 }
 

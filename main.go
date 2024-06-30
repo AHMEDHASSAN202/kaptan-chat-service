@@ -6,7 +6,9 @@ import (
 	appConfig "samm/internal/module/config"
 	"samm/internal/module/example"
 	"samm/internal/module/menu"
+	"samm/internal/module/order"
 	"samm/internal/module/retails"
+	"samm/internal/module/user"
 	"samm/pkg/aws"
 	"samm/pkg/config"
 	"samm/pkg/database"
@@ -38,11 +40,13 @@ func main() {
 			jwt.Module,
 			example.Module,
 			menu.Module,
+			order.Module,
 			database.Module,
 			retails.Module,
 			admin.Module,
 			appConfig.Module,
 			common.Module,
+			user.Module,
 			middlewares.Module,
 			fx.Invoke(echo.RunServers, localization.InitLocalization),
 		),
@@ -182,15 +186,15 @@ func main() {
 //	"github.com/go-playground/validator/v10"
 //)
 //
-//// User struct to validate
-//type User struct {
+//// user struct to validate
+//type user struct {
 //	Username string `json:"username" validate:"required"`
 //	Email    string `json:"email" validate:"required,email"`
 //	Age      uint8  `json:"age" validate:"gte=18"` // must be 18 or older
 //}
 //
-//// validateUser function takes a User struct and returns a map[string]string containing validation errors
-//func validateUser(user User) map[string]string {
+//// validateUser function takes a user struct and returns a map[string]string containing validation errors
+//func validateUser(user user) map[string]string {
 //	validate := validator.New()
 //	err := validate.Struct(user)
 //
@@ -214,8 +218,8 @@ func main() {
 //}
 //
 //func main() {
-//	// Create a User instance with some invalid data
-//	user := User{
+//	// Create a user instance with some invalid data
+//	user := user{
 //		Username: "", // missing username
 //		Email:    "notanemail",
 //		Age:      15, // underage
@@ -230,7 +234,7 @@ func main() {
 //			fmt.Printf("Error: %s - %s (Translation: %s)\n", field, message, translate(message))
 //		}
 //	} else {
-//		fmt.Println("User data is valid!")
+//		fmt.Println("user data is valid!")
 //	}
 //}
 
@@ -247,8 +251,8 @@ func main() {
 //	"github.com/go-playground/validator/v10"
 //)
 //
-//// User contains user information
-//type User struct {
+//// user contains user information
+//type user struct {
 //	FirstName      string     `validate:"required"`
 //	LastName       string     `validate:"required"`
 //	Age            uint8      `validate:"gte=0,lte=130"`
@@ -293,7 +297,7 @@ func main() {
 //
 //func translateAll(trans ut.Translator) {
 //
-//	type User struct {
+//	type user struct {
 //		Username string     `validate:"required"`
 //		Tagline  string     `validate:"required,lt=10"`
 //		Tagline2 string     `validate:"required,gt=1"`
@@ -301,7 +305,7 @@ func main() {
 //	}
 //
 //	adds := make([]*Address, 0)
-//	user := User{
+//	user := user{
 //		Username: "",
 //		Tagline:  "This tagline is way too long.",
 //		Tagline2: "1",
@@ -324,7 +328,7 @@ func main() {
 //
 //func translateIndividual(trans ut.Translator) {
 //
-//	type User struct {
+//	type user struct {
 //		Username string     `validate:"required"`
 //		Tagline  string     `validate:"required,lt=10"`
 //		Tagline2 string     `validate:"required,gt=1"`
@@ -332,7 +336,7 @@ func main() {
 //	}
 //
 //	adds := make([]*Address, 0)
-//	user := User{
+//	user := user{
 //		Username: "",
 //		Tagline:  "This tagline is way too long.",
 //		Tagline2: "1",
@@ -361,11 +365,11 @@ func main() {
 //		return t
 //	})
 //
-//	type User struct {
+//	type user struct {
 //		Username string `validate:"required"`
 //	}
 //
-//	var user User
+//	var user user
 //
 //	err := validate.Struct(user)
 //	if err != nil {

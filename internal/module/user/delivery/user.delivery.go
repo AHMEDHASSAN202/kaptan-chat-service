@@ -3,31 +3,43 @@ package delivery
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/internal/module/user/custom_validators"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
+	echomiddleware "samm/pkg/http/echo/middleware"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
 )
 
 type UserHandler struct {
-	userUsecase domain.UserUseCase
-	validator   *validator.Validate
-	logger      logger.ILogger
+	userUsecase         domain.UserUseCase
+	validator           *validator.Validate
+	userCustomValidator custom_validators.UserCustomValidator
+	logger              logger.ILogger
 }
 
 // InitUserController will initialize the article's HTTP controller
-func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validator.Validate, userCustomValidator custom_validators.UserCustomValidator, logger logger.ILogger) {
 	handler := &UserHandler{
-		userUsecase: us,
-		validator:   validator,
-		logger:      logger,
+		userUsecase:         us,
+		validator:           validator,
+		userCustomValidator: userCustomValidator,
+		logger:              logger,
 	}
 	dashboard := e.Group("api/v1/admin/user")
-	dashboard.POST("", handler.StoreUser)
 	dashboard.GET("", handler.ListUser)
-	dashboard.PUT("/:id", handler.UpdateUser)
-	dashboard.GET("/:id", handler.FindUser)
-	dashboard.DELETE("/:id", handler.DeleteUser)
+	dashboard.PUT("/:id/toggle-active", handler.ToggleUserActivation)
+
+	mobile := e.Group("api/v1/mobile/user")
+	mobile.Use(echomiddleware.AppendCountryMiddleware)
+	//mobile.POST("", handler.StoreUser)
+	mobile.POST("/send-otp", handler.SendUserOtp)
+	mobile.POST("/verify-otp", handler.VerifyUserOtp)
+	mobile.POST("/sign-up", handler.SignUp)
+	mobile.PUT("/:id", handler.UpdateUserProfile)
+	mobile.GET("/:id", handler.GetUserProfile)
+	mobile.DELETE("/:id", handler.DeleteUser)
+
 }
 func (a *UserHandler) StoreUser(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -44,14 +56,86 @@ func (a *UserHandler) StoreUser(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	errResp := a.userUsecase.StoreUser(ctx, &payload)
+	errResp := a.userUsecase.StoreUser(&ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{})
 }
-func (a *UserHandler) UpdateUser(c echo.Context) error {
+func (a *UserHandler) SendUserOtp(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var payload user.SendUserOtpDto
+	err := c.Bind(&payload)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+
+	validationErr := payload.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.userUsecase.SendOtp(&ctx, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+func (a *UserHandler) VerifyUserOtp(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var payload user.VerifyUserOtpDto
+	err := c.Bind(&payload)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := payload.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	res, errResp := a.userUsecase.VerifyOtp(&ctx, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"data": res})
+}
+
+func (a *UserHandler) SignUp(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var payload user.UserSignUpDto
+	err := c.Bind(&payload)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+
+	validationErr := payload.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	res, errResp := a.userUsecase.UserSignUp(&ctx, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"data": res})
+}
+
+func (a *UserHandler) UpdateUserProfile(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	var payload user.UpdateUserProfileDto
@@ -60,24 +144,28 @@ func (a *UserHandler) UpdateUser(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := payload.Validate(c, a.validator)
+	// get user id from auth middleware
+	id := c.Param("id")
+	payload.ID = id
+	validationErr := payload.Validate(ctx, a.validator, a.userCustomValidator.ValidateUserEmailIsUnique())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
-	id := c.Param("id")
-	errResp := a.userUsecase.UpdateUser(ctx, id, &payload)
+
+	errResp := a.userUsecase.UpdateUserProfile(&ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{})
 }
-func (a *UserHandler) FindUser(c echo.Context) error {
+func (a *UserHandler) GetUserProfile(c echo.Context) error {
 	ctx := c.Request().Context()
 
+	// get user id from auth middleware
 	id := c.Param("id")
-	data, errResp := a.userUsecase.FindUser(ctx, id)
+	data, errResp := a.userUsecase.FindUser(&ctx, id)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
@@ -89,7 +177,7 @@ func (a *UserHandler) DeleteUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
-	errResp := a.userUsecase.DeleteUser(ctx, id)
+	errResp := a.userUsecase.DeleteUser(&ctx, id)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
@@ -104,10 +192,22 @@ func (a *UserHandler) ListUser(c echo.Context) error {
 
 	payload.Pagination.SetDefault()
 
-	result, paginationResult, errResp := a.userUsecase.ListUser(ctx, &payload)
+	brands, errResp := a.userUsecase.List(&ctx, &payload)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, brands)
+}
+
+func (a *UserHandler) ToggleUserActivation(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id := c.Param("id")
+	errResp := a.userUsecase.ToggleUserActivation(&ctx, id)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
-	return validators.SuccessResponse(c, map[string]interface{}{"data": result, "meta": paginationResult})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }

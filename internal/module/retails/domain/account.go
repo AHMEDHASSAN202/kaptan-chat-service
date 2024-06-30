@@ -18,6 +18,7 @@ type Account struct {
 	AllowedBrandIds  []primitive.ObjectID `json:"allowed_brand_ids" bson:"allowed_brand_ids"`
 	Country          Country              `json:"country" bson:"country"`
 	Brands           []Brand              `json:"brands" bson:"-"`
+	LocationsCount   int                  `json:"locations_count" bson:"locations_count,omitempty"`
 	DeletedAt        *time.Time           `json:"-" bson:"deleted_at"`
 }
 
@@ -27,7 +28,7 @@ type AccountUseCase interface {
 	FindAccount(ctx context.Context, Id string) (account Account, err validators.ErrorResponse)
 	CheckAccountEmail(ctx context.Context, email string, accountId string) bool
 	DeleteAccount(ctx context.Context, Id string) (err validators.ErrorResponse)
-	ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []Account, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse)
+	ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []Account, paginationResult mongopagination.PaginationData, err validators.ErrorResponse)
 }
 
 type AccountRepository interface {
@@ -36,5 +37,5 @@ type AccountRepository interface {
 	FindAccount(ctx context.Context, Id primitive.ObjectID) (account *Account, err error)
 	CheckAccountEmail(ctx context.Context, email string, accountId string) bool
 	DeleteAccount(ctx context.Context, Id primitive.ObjectID) (err error)
-	ListAccount(ctx context.Context, payload *account.ListAccountDto) (locations []Account, paginationResult *mongopagination.PaginationData, err error)
+	ListAccount(ctx context.Context, payload *account.ListAccountDto) (locations []Account, paginationResult mongopagination.PaginationData, err error)
 }

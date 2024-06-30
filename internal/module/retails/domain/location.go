@@ -6,6 +6,7 @@ import (
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/retails/dto/location"
+	"samm/internal/module/retails/responses"
 	"samm/pkg/validators"
 	"time"
 )
@@ -90,8 +91,11 @@ type Location struct {
 	BankAccount     BankAccount        `json:"bank_account" bson:"bank_account"`
 	Country         Country            `json:"country" bson:"country"`
 	AccountId       primitive.ObjectID `json:"account_id" bson:"account_id"`
-	AdminDetails    []AdminDetail      `json:"admin_details" bson:"admin_details"`
-	DeletedAt       *time.Time         `json:"-" bson:"deleted_at"`
+
+	AllowedCollectionMethodIds []string `json:"allowed_collection_method_ids" bson:"allowed_collection_method_ids"`
+
+	AdminDetails []AdminDetail `json:"admin_details" bson:"admin_details"`
+	DeletedAt    *time.Time    `json:"-" bson:"deleted_at"`
 }
 
 type LocationUseCase interface {
@@ -99,12 +103,12 @@ type LocationUseCase interface {
 	BulkStoreLocation(ctx context.Context, payload location.StoreBulkLocationDto) (err validators.ErrorResponse)
 	UpdateLocation(ctx context.Context, id string, payload *location.StoreLocationDto) (err validators.ErrorResponse)
 	ToggleLocationStatus(ctx context.Context, id string) (err validators.ErrorResponse)
-	FindLocation(ctx context.Context, Id string) (location Location, err validators.ErrorResponse)
+	FindLocation(ctx context.Context, Id string) (location responses.LocationResp, err validators.ErrorResponse)
 	ToggleSnooze(ctx context.Context, dto *location.LocationToggleSnoozeDto) validators.ErrorResponse
 
 	DeleteLocation(ctx context.Context, Id string) (err validators.ErrorResponse)
 	DeleteLocationByAccountId(ctx context.Context, accountId string) (err validators.ErrorResponse)
-	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse)
+	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult mongopagination.PaginationData, err validators.ErrorResponse)
 	ListMobileLocation(ctx context.Context, payload *location.ListLocationMobileDto) (locations []LocationMobile, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse)
 	FindMobileLocation(ctx context.Context, Id string, payload *location.FindLocationMobileDto) (location LocationMobile, err validators.ErrorResponse)
 }
@@ -116,7 +120,7 @@ type LocationRepository interface {
 	FindLocation(ctx context.Context, Id primitive.ObjectID) (location *Location, err error)
 	DeleteLocation(ctx context.Context, Id primitive.ObjectID) (err error)
 	DeleteLocationByAccountId(ctx context.Context, accountId primitive.ObjectID) (err error)
-	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult *mongopagination.PaginationData, err error)
+	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult mongopagination.PaginationData, err error)
 	UpdateBulkByBrand(ctx context.Context, brand BrandDetails) error
 	UpdateBulkByBrandCuisine(ctx context.Context, cuisine CuisineDetails) error
 	SoftDeleteBulkByBrandId(ctx context.Context, brandId primitive.ObjectID) error

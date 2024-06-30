@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 	"io"
@@ -22,6 +23,7 @@ import (
 
 const DefaultTimeFormat = "15:04:05"
 const DefaultHourTimeFormat = "15:04"
+const DefaultDateFormat = "2006-01-02"
 
 // RemoveDuplicates removes duplicate values from a slice.
 // T must be a comparable type.
@@ -434,5 +436,39 @@ func GetValueByKey[T any](slice []T, index int) *T {
 	if index >= 0 && index < len(slice) {
 		return &slice[index]
 	}
+	return nil
+}
+
+func assignMapToStructFields(out interface{}, mapClaims jwt.MapClaims) error {
+	outValue := reflect.ValueOf(out).Elem()
+	outType := outValue.Type()
+
+	for key, value := range mapClaims {
+		found := false
+		// Find the corresponding struct field by JSON tag
+		for i := 0; i < outType.NumField(); i++ {
+			field := outType.Field(i)
+			tag := field.Tag.Get("json")
+			if tag == key {
+				found = true
+				fieldValue := outValue.FieldByName(field.Name)
+				if fieldValue.IsValid() && fieldValue.CanSet() {
+					val := reflect.ValueOf(value)
+					if fieldValue.Type() == val.Type() {
+						fieldValue.Set(val)
+					} else if fieldValue.Kind() == reflect.Int && val.Kind() == reflect.Float64 {
+						fieldValue.SetInt(int64(val.Float()))
+					} else if fieldValue.Kind() == reflect.String && val.Kind() == reflect.String {
+						fieldValue.SetString(val.String())
+					}
+				}
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("no matching JSON tag found for claim key: %s", key)
+		}
+	}
+
 	return nil
 }
