@@ -177,7 +177,6 @@ func (l UserUseCase) DeleteUser(ctx *context.Context, Id string) (err validators
 	// Add 14 days to the current time
 	deletedAt := time.Now().Add(14 * 24 * time.Hour)
 	domainUser.DeletedAt = &deletedAt
-
 	dbErr = l.repo.UpdateUser(ctx, domainUser)
 	if dbErr != nil {
 		err = validators.GetErrorResponseFromErr(dbErr)
