@@ -29,6 +29,10 @@ type User struct {
 	Tokens           []string   `json:"tokens" bson:"tokens"`
 }
 
+type DeletedUser struct {
+	User `bson:",inline"`
+}
+
 type UserUseCase interface {
 	StoreUser(ctx *context.Context, payload *user.CreateUserDto) (err validators.ErrorResponse)
 	SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse)
@@ -44,10 +48,11 @@ type UserUseCase interface {
 
 type UserRepository interface {
 	StoreUser(ctx *context.Context, user *User) (err error)
+	InsertDeletedUser(ctx *context.Context, user *DeletedUser) (err error)
 	UpdateUser(ctx *context.Context, user *User) (err error)
 	FindUser(ctx *context.Context, Id primitive.ObjectID) (user *User, err error)
 	GetUserByPhoneNumber(ctx *context.Context, phoneNum, countryCode string) (user User, err error)
-	DeleteUser(ctx *context.Context, Id primitive.ObjectID) (err error)
+	RemoveDeletedUser(user *DeletedUser) (err error)
 	List(ctx *context.Context, dto *user.ListUserDto) (usersRes *[]User, paginationMeta *PaginationData, err error)
 	UserEmailExists(ctx *context.Context, email, userId string) bool
 }

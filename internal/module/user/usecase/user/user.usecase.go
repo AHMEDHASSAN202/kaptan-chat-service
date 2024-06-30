@@ -82,6 +82,17 @@ func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtp
 		return
 	}
 
+	// remove deletion if try to log in again within allowed period
+	if userDomain.DeletedAt != nil {
+		userDomain.DeletedAt = nil
+		deletedUser := domain.DeletedUser{User: userDomain}
+		dbErr = l.repo.RemoveDeletedUser(&deletedUser)
+		if dbErr != nil {
+			err = validators.GetErrorResponseFromErr(dbErr)
+			return
+		}
+	}
+
 	userToken, tokenErr := generateUserToken(&userDomain)
 	if tokenErr != nil {
 		err = validators.GetErrorResponseFromErr(tokenErr)
@@ -158,11 +169,28 @@ func (l UserUseCase) FindUser(ctx *context.Context, Id string) (user domain.User
 }
 
 func (l UserUseCase) DeleteUser(ctx *context.Context, Id string) (err validators.ErrorResponse) {
-
-	delErr := l.repo.DeleteUser(ctx, utils.ConvertStringIdToObjectId(Id))
-	if delErr != nil {
-		return validators.GetErrorResponseFromErr(delErr)
+	domainUser, dbErr := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(Id))
+	if dbErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
 	}
+	// Add 14 days to the current time
+	deletedAt := time.Now().Add(14 * 24 * time.Hour)
+	domainUser.DeletedAt = &deletedAt
+
+	dbErr = l.repo.UpdateUser(ctx, domainUser)
+	if dbErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
+	}
+
+	deletedUser := domain.DeletedUser{User: *domainUser}
+	// store doc in user_coll_deleted_users
+	errRe := l.repo.InsertDeletedUser(ctx, &deletedUser)
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+
 	return validators.ErrorResponse{}
 }
 
