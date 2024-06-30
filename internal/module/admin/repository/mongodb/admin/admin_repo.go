@@ -137,3 +137,31 @@ func (r *adminRepo) CheckEmailExists(ctx context.Context, email string, adminId 
 	}
 	return c > 0, err
 }
+
+func (r *adminRepo) FindByEmail(ctx context.Context, email, adminType string) (*domain.Admin, error) {
+	domainData := domain.Admin{}
+	result := mgm.Coll(&domain.Admin{}).FindOne(ctx, bson.M{"email": email, "type": adminType, "deleted_at": nil})
+	if err := result.Err(); err != nil {
+		r.logger.Error("adminRepo -> FindByEmail -> ", err)
+		return &domainData, err
+	}
+	if err := result.Decode(&domainData); err != nil {
+		r.logger.Error("adminRepo -> FindByEmail -> ", err)
+		return &domainData, err
+	}
+	return &domainData, nil
+}
+
+func (r *adminRepo) FindByToken(ctx context.Context, token string, adminType []string) (*domain.Admin, error) {
+	domainData := domain.Admin{}
+	result := mgm.Coll(&domain.Admin{}).FindOne(ctx, bson.M{"tokens": token, "type": bson.M{"$in": adminType}, "deleted_at": nil})
+	if err := result.Err(); err != nil {
+		r.logger.Error("adminRepo -> FindByToken -> ", err)
+		return &domainData, err
+	}
+	if err := result.Decode(&domainData); err != nil {
+		r.logger.Error("adminRepo -> FindFindByTokenByEmail -> ", err)
+		return &domainData, err
+	}
+	return &domainData, nil
+}

@@ -7,6 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/admin/consts"
 	"samm/internal/module/admin/dto/admin"
+	"samm/internal/module/admin/dto/auth"
+	admin2 "samm/internal/module/admin/responses/admin"
 	"samm/pkg/utils"
 	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
@@ -41,6 +43,9 @@ type AdminUseCase interface {
 	Find(ctx context.Context, adminId primitive.ObjectID) (interface{}, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, input *admin.ChangeAdminStatusDto) validators.ErrorResponse
 	CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID) (bool, validators.ErrorResponse)
+	AdminLogin(ctx context.Context, dto *auth.AdminAuthDTO) (interface{}, string, validators.ErrorResponse)
+	PortalLogin(ctx context.Context, dto *auth.PortalAuthDTO) (interface{}, string, validators.ErrorResponse)
+	Profile(ctx context.Context, adminId string) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 }
 
 type AdminRepository interface {
@@ -48,9 +53,11 @@ type AdminRepository interface {
 	Update(ctx context.Context, domainData *Admin) (*Admin, error)
 	Delete(ctx context.Context, domainData *Admin, adminDetails dto.AdminDetails) error
 	Find(ctx context.Context, adminId primitive.ObjectID) (*Admin, error)
+	FindByToken(ctx context.Context, token string, adminType []string) (*Admin, error)
 	List(ctx context.Context, dto *admin.ListAdminDTO) ([]Admin, *mongopagination.PaginationData, error)
 	ChangeStatus(ctx context.Context, model *Admin, input *admin.ChangeAdminStatusDto, adminDetails dto.AdminDetails) error
 	CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID) (bool, error)
+	FindByEmail(ctx context.Context, email string, adminType string) (*Admin, error)
 }
 
 func (model *Admin) Creating(ctx context.Context) error {
@@ -64,4 +71,8 @@ func (model *Admin) Creating(ctx context.Context) error {
 func (model *Admin) SetSoftDelete(ctx context.Context) error {
 	model.DeletedAt = utils.GetAsPointer(time.Now().UTC())
 	return nil
+}
+
+func (model *Admin) IsActive() bool {
+	return model.Status == "active"
 }

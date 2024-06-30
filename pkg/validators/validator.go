@@ -330,3 +330,8 @@ func ErrorStatusInternalServerError(c echo.Context, validationErr ErrorResponse)
 //		return
 //	}
 //}
+
+func GetError(ctx *context.Context, code string, data map[string]interface{}) error {
+	message := localization.GetTranslation(ctx, code, data, "")
+	return errors.New(message)
+}

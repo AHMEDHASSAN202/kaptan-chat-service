@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/admin/domain"
 	"samm/internal/module/admin/dto/admin"
+	"strings"
 )
 
 type AdminCustomValidator struct {
@@ -29,7 +30,7 @@ func (i *AdminCustomValidator) ValidateEmailIsUnique() func(fl validator.FieldLe
 			return false
 		}
 		adminId = adminDto.ID
-		isExists, err := i.adminUseCase.CheckEmailExists(context.Background(), val, adminId)
+		isExists, err := i.adminUseCase.CheckEmailExists(context.Background(), strings.ToLower(val), adminId)
 		if err.IsError {
 			return false
 		}
