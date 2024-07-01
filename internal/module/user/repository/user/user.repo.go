@@ -121,3 +121,9 @@ func (l UserRepository) RemoveDeletedUser(user *domain.DeletedUser) (err error) 
 	}
 	return
 }
+
+func (r *UserRepository) FindByToken(ctx context.Context, token string) (*domain.User, error) {
+	var domainData domain.User
+	err := r.userCollection.FirstWithCtx(ctx, bson.M{"tokens": token, "deleted_at": nil}, &domainData, nil)
+	return &domainData, err
+}

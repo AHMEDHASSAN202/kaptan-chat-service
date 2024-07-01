@@ -53,6 +53,7 @@ type UserRepository interface {
 	FindUser(ctx *context.Context, Id primitive.ObjectID) (user *User, err error)
 	GetUserByPhoneNumber(ctx *context.Context, phoneNum, countryCode string) (user User, err error)
 	RemoveDeletedUser(user *DeletedUser) (err error)
+	FindByToken(ctx context.Context, token string) (domainData *User, err error)
 	List(ctx *context.Context, dto *user.ListUserDto) (usersRes *[]User, paginationMeta *PaginationData, err error)
 	UserEmailExists(ctx *context.Context, email, userId string) bool
 }

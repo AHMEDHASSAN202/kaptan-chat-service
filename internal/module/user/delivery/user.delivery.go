@@ -8,6 +8,8 @@ import (
 	"samm/internal/module/user/dto/user"
 	echomiddleware "samm/pkg/http/echo/middleware"
 	"samm/pkg/logger"
+	usermiddleware "samm/pkg/middlewares/user"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 )
 
@@ -19,7 +21,7 @@ type UserHandler struct {
 }
 
 // InitUserController will initialize the article's HTTP controller
-func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validator.Validate, userCustomValidator custom_validators.UserCustomValidator, logger logger.ILogger) {
+func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validator.Validate, userCustomValidator custom_validators.UserCustomValidator, logger logger.ILogger, userMiddleware *usermiddleware.Middlewares) {
 	handler := &UserHandler{
 		userUsecase:         us,
 		validator:           validator,
@@ -35,10 +37,10 @@ func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validato
 	//mobile.POST("", handler.StoreUser)
 	mobile.POST("/send-otp", handler.SendUserOtp)
 	mobile.POST("/verify-otp", handler.VerifyUserOtp)
-	mobile.POST("/sign-up", handler.SignUp)
-	mobile.PUT("/:id", handler.UpdateUserProfile)
-	mobile.GET("/:id", handler.GetUserProfile)
-	mobile.DELETE("/:id", handler.DeleteUser)
+	mobile.POST("/sign-up", handler.SignUp, userMiddleware.AuthMiddleware)
+	mobile.PUT("", handler.UpdateUserProfile, userMiddleware.AuthMiddleware)
+	mobile.GET("", handler.GetUserProfile, userMiddleware.AuthMiddleware)
+	mobile.DELETE("", handler.DeleteUser, userMiddleware.AuthMiddleware)
 
 }
 func (a *UserHandler) StoreUser(c echo.Context) error {
@@ -143,10 +145,9 @@ func (a *UserHandler) UpdateUserProfile(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
 
-	// get user id from auth middleware
-	id := c.Param("id")
-	payload.ID = id
 	validationErr := payload.Validate(ctx, a.validator, a.userCustomValidator.ValidateUserEmailIsUnique())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
@@ -163,9 +164,11 @@ func (a *UserHandler) UpdateUserProfile(c echo.Context) error {
 func (a *UserHandler) GetUserProfile(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	// get user id from auth middleware
-	id := c.Param("id")
-	data, errResp := a.userUsecase.FindUser(&ctx, id)
+	var payload dto.MobileHeaders
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+
+	data, errResp := a.userUsecase.FindUser(&ctx, payload.CauserId)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
@@ -176,8 +179,11 @@ func (a *UserHandler) GetUserProfile(c echo.Context) error {
 func (a *UserHandler) DeleteUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	id := c.Param("id")
-	errResp := a.userUsecase.DeleteUser(&ctx, id)
+	var payload dto.MobileHeaders
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+
+	errResp := a.userUsecase.DeleteUser(&ctx, payload.CauserId)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)

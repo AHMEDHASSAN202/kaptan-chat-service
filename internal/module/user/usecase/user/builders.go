@@ -30,7 +30,7 @@ func domainBuilderAtCreateProfile(userDomain *domain.User, payload *user.SendUse
 
 func domainBuilderAtUpdateProfile(dto *user.UpdateUserProfileDto, domainData *domain.User) *domain.User {
 	copier.Copy(&domainData, dto)
-	domainData.ID = utils.ConvertStringIdToObjectId(dto.ID)
+	domainData.ID = utils.ConvertStringIdToObjectId(dto.CauserId)
 	domainData.UpdatedAt = time.Now()
 	return domainData
 }
@@ -38,7 +38,6 @@ func domainBuilderAtUpdateProfile(dto *user.UpdateUserProfileDto, domainData *do
 func domainBuilderAtSignUp(dto *user.UserSignUpDto, userToken string, domainData *domain.User) *domain.User {
 	domainData.UpdatedAt = time.Now()
 	domainData.Name = dto.Name
-	domainData.Email = dto.Email
 	domainData.IsActive = true
 	domainData.Tokens = append(domainData.Tokens, userToken)
 	return domainData

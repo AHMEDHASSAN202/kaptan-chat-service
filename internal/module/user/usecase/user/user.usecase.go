@@ -126,7 +126,7 @@ func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtp
 }
 
 func (l UserUseCase) UserSignUp(ctx *context.Context, payload *user.UserSignUpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse) {
-	userDomain, dbErr := l.repo.GetUserByPhoneNumber(ctx, payload.PhoneNumber, payload.CountryCode)
+	userDomain, dbErr := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(payload.CauserId))
 	if dbErr != nil {
 		err = validators.GetErrorResponseFromErr(dbErr)
 		return
@@ -138,7 +138,7 @@ func (l UserUseCase) UserSignUp(ctx *context.Context, payload *user.UserSignUpDt
 		return
 	}
 
-	updatedUserDomain := domainBuilderAtSignUp(payload, userToken, &userDomain)
+	updatedUserDomain := domainBuilderAtSignUp(payload, userToken, userDomain)
 
 	dbErr = l.repo.UpdateUser(ctx, updatedUserDomain)
 	if dbErr != nil {
@@ -147,21 +147,22 @@ func (l UserUseCase) UserSignUp(ctx *context.Context, payload *user.UserSignUpDt
 	}
 
 	res = responses.VerifyOtpResp{
-		Token: userToken,
+		IsProfileCompleted: true,
+		Token:              userToken,
 	}
 
 	return
 }
 
 func (l UserUseCase) UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse) {
-	userDomain, errRe := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(payload.ID))
-	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe)
+	userDomain, dbErr := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(payload.CauserId))
+	if dbErr != nil {
+		return validators.GetErrorResponseFromErr(dbErr)
 	}
 	updatedUserDomain := domainBuilderAtUpdateProfile(payload, userDomain)
-	errRe = l.repo.UpdateUser(ctx, updatedUserDomain)
-	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe)
+	dbErr = l.repo.UpdateUser(ctx, updatedUserDomain)
+	if dbErr != nil {
+		return validators.GetErrorResponseFromErr(dbErr)
 	}
 	return
 }
