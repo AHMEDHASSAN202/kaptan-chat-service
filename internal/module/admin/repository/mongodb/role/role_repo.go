@@ -13,16 +13,18 @@ import (
 )
 
 type roleRepo struct {
-	roleCollection *mgm.Collection
-	logger         logger.ILogger
+	roleCollection  *mgm.Collection
+	adminRepository domain.AdminRepository
+	logger          logger.ILogger
 }
 
-func NewRoleRepository(dbs *mongo.Database, log logger.ILogger) domain.RoleRepository {
+func NewRoleRepository(dbs *mongo.Database, log logger.ILogger, adminRepository domain.AdminRepository) domain.RoleRepository {
 	roleCollection := mgm.Coll(&domain.Role{})
 	createIndexes(roleCollection.Collection)
 	return &roleRepo{
-		roleCollection: roleCollection,
-		logger:         log,
+		roleCollection:  roleCollection,
+		adminRepository: adminRepository,
+		logger:          log,
 	}
 }
 
@@ -35,7 +37,20 @@ func (r *roleRepo) Create(ctx context.Context, domainData *domain.Role) (*domain
 }
 
 func (r *roleRepo) Update(ctx context.Context, domainData *domain.Role) (*domain.Role, error) {
-	err := mgm.Coll(domainData).Update(domainData)
+	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+		err := r.roleCollection.UpdateWithCtx(sc, domainData)
+		if err != nil {
+			r.logger.Error("roleRepo -> Update -> ", err)
+			return err
+		}
+		err = r.adminRepository.SyncRole(sc, domainData)
+		if err != nil {
+			r.logger.Error("roleRepo -> SyncRole -> ", err)
+			return err
+		}
+		return session.CommitTransaction(sc)
+	})
+
 	if err != nil {
 		r.logger.Error("roleRepo -> Update -> ", err)
 	}
