@@ -6,14 +6,14 @@ import (
 	"samm/pkg/logger"
 )
 
-type Middlewares struct {
+type ProviderMiddlewares struct {
 	adminRepository domain.AdminRepository
 	logger          logger.ILogger
 	jwtFactory      jwt.JwtServiceFactory
 }
 
-func NewAdminMiddlewares(adminRepository domain.AdminRepository, logger logger.ILogger, jwtFactory jwt.JwtServiceFactory) *Middlewares {
-	return &Middlewares{
+func NewAdminMiddlewares(adminRepository domain.AdminRepository, logger logger.ILogger, jwtFactory jwt.JwtServiceFactory) *ProviderMiddlewares {
+	return &ProviderMiddlewares{
 		adminRepository: adminRepository,
 		logger:          logger,
 		jwtFactory:      jwtFactory,

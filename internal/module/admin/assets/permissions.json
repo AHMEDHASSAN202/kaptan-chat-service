@@ -1,0 +1,74 @@
+[
+  {
+    "subject": { "name": {"ar": "المطابخ", "en": "Cuisines" } },
+    "actions": [
+      { "key": "list-cuisines", "name": {"ar": "عرض الكل", "en": "List"} },
+      { "key": "create-cuisines", "name": {"ar": "انشاء جديد", "en": "Create"} },
+      { "key": "find-cuisines", "name": {"ar": "عرض", "en": "Find"} },
+      { "key": "update-cuisines", "name": {"ar": "تحديث", "en": "Update"} },
+      { "key": "delete-cuisines", "name": {"ar": "حذف", "en": "Delete"} },
+      { "key": "update-status-cuisines", "name": {"ar": "تغيير الحالة", "en": "Update Status"} }
+    ]
+  },
+  {
+    "subject": { "name": {"ar": "البراندات", "en": "Brands" } },
+    "actions": [
+      { "key": "list-brands", "name": {"ar": "عرض الكل", "en": "List"} },
+      { "key": "create-brands", "name": {"ar": "انشاء جديد", "en": "Create"} },
+      { "key": "find-brands", "name": {"ar": "عرض", "en": "Find"} },
+      { "key": "update-brands", "name": {"ar": "تحديث", "en": "Update"} },
+      { "key": "delete-brands", "name": {"ar": "حذف", "en": "Delete"} },
+      { "key": "update-status-brands", "name": {"ar": "تغيير الحالة", "en": "Update Status"} }
+    ]
+  },
+  {
+    "subject": { "name": {"ar": "عام", "en": "General" } },
+    "actions": [
+      { "key": "list-cities", "name": {"ar": "عرض المدن", "en": "List Cities"} }
+    ]
+  },
+  {
+    "subject": { "name": {"ar": "حسابات المطاعم", "en": "Accounts" } },
+    "actions": [
+      { "key": "list-accounts", "name": {"ar": "عرض الكل", "en": "List"} },
+      { "key": "create-accounts", "name": {"ar": "انشاء جديد", "en": "Create"} },
+      { "key": "find-accounts", "name": {"ar": "عرض", "en": "Find"} },
+      { "key": "update-accounts", "name": {"ar": "تحديث", "en": "Update"} },
+      { "key": "delete-accounts", "name": {"ar": "حذف", "en": "Delete"} },
+      { "key": "portal-login-accounts", "name": {"ar": "الدخول للبورتال", "en": "Portal Login"} },
+      { "key": "list-locations-accounts", "name": {"ar": "عرض الفروع", "en": "List Locations"} },
+      { "key": "create-locations-accounts", "name": {"ar": "انشاء فروع", "en": "Create Locations"} },
+      { "key": "find-locations-accounts", "name": {"ar": "عرض الفروع", "en": "Find Locations"} },
+      { "key": "update-locations-accounts", "name": {"ar": "تعديل الفروع", "en": "Update Locations"} },
+      { "key": "delete-locations-accounts", "name": {"ar": "حذف الفروع", "en": "Delete Locations"} }
+    ]
+  },
+  {
+    "subject": { "name": {"ar": "العملاء", "en": "Users" } },
+    "actions": [
+      { "key": "list-users", "name": {"ar": "عرض الكل", "en": "List"} },
+      { "key": "update-status-users", "name": {"ar": "تغيير الحالة", "en": "Update Status"} }
+    ]
+  },
+  {
+    "subject": { "name": {"ar": "مدير النظام", "en": "Admins" } },
+    "actions": [
+      { "key": "list-admins", "name": {"ar": "عرض الكل", "en": "List"} },
+      { "key": "create-admins", "name": {"ar": "انشاء جديد", "en": "Create"} },
+      { "key": "find-admins", "name": {"ar": "عرض", "en": "Find"} },
+      { "key": "update-admins", "name": {"ar": "تحديث", "en": "Update"} },
+      { "key": "delete-admins", "name": {"ar": "حذف", "en": "Delete"} },
+      { "key": "update-status-admins", "name": {"ar": "تغيير الحالة", "en": "Update Status"} }
+    ]
+  },
+  {
+    "subject": { "name": {"ar": "العملاء", "en": "Users" } },
+    "actions": [
+      { "key": "list-roles", "name": {"ar": "عرض الكل", "en": "List"} },
+      { "key": "create-roles", "name": {"ar": "انشاء جديد", "en": "Create"} },
+      { "key": "find-roles", "name": {"ar": "عرض", "en": "Find"} },
+      { "key": "update-roles", "name": {"ar": "تحديث", "en": "Update"} },
+      { "key": "delete-roles", "name": {"ar": "حذف", "en": "Delete"} }
+    ]
+  }
+]

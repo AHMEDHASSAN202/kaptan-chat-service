@@ -11,7 +11,7 @@ import (
 	"samm/pkg/validators/localization"
 )
 
-func (m Middlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
 

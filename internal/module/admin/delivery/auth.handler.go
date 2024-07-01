@@ -4,39 +4,45 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/internal/module/admin/custom_validators"
 	"samm/internal/module/admin/domain"
 	dto "samm/internal/module/admin/dto/auth"
 	"samm/pkg/logger"
 	"samm/pkg/middlewares/admin"
 	"samm/pkg/middlewares/portal"
+	"samm/pkg/utils"
 	dto2 "samm/pkg/utils/dto"
 	"samm/pkg/validators"
 )
 
 type AdminAuthHandler struct {
-	adminUseCase domain.AdminUseCase
-	validator    *validator.Validate
-	logger       logger.ILogger
+	adminUseCase         domain.AdminUseCase
+	validator            *validator.Validate
+	logger               logger.ILogger
+	adminCustomValidator custom_validators.AdminCustomValidator
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitAdminAuthController(e *echo.Echo, adminUseCase domain.AdminUseCase, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.Middlewares, portalMiddlewares *portal.Middlewares) {
+func InitAdminAuthController(e *echo.Echo, adminUseCase domain.AdminUseCase, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, portalMiddlewares *portal.ProviderMiddlewares, adminCustomValidator custom_validators.AdminCustomValidator) {
 	handler := &AdminAuthHandler{
-		adminUseCase: adminUseCase,
-		validator:    validator,
-		logger:       logger,
+		adminUseCase:         adminUseCase,
+		validator:            validator,
+		logger:               logger,
+		adminCustomValidator: adminCustomValidator,
 	}
 
 	adminAuth := e.Group("api/v1/admin/auth")
 	{
 		adminAuth.POST("/login", handler.AdminLogin)
 		adminAuth.GET("/profile", handler.AdminProfile, adminMiddlewares.AuthMiddleware)
+		adminAuth.PUT("/profile", handler.UpdateAdminProfile, adminMiddlewares.AuthMiddleware)
 	}
 
 	portalAuth := e.Group("api/v1/portal/auth")
 	{
 		portalAuth.POST("/login", handler.PortalLogin)
 		portalAuth.GET("/profile", handler.PortalProfile, portalMiddlewares.AuthMiddleware)
+		portalAuth.PUT("/profile", handler.UpdatePortalProfile, portalMiddlewares.AuthMiddleware)
 	}
 }
 
@@ -127,6 +133,66 @@ func (a *AdminAuthHandler) PortalProfile(c echo.Context) error {
 	}
 
 	profile, errResp := a.adminUseCase.Profile(ctx, input.CauserId)
+	if errResp.IsError {
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"profile": profile})
+}
+
+func (a *AdminAuthHandler) UpdateAdminProfile(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input dto.UpdateAdminProfileDTO
+	binder := &echo.DefaultBinder{}
+	if err := c.Bind(&input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	input.ID = utils.ConvertStringIdToObjectId(input.CauserId)
+	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero())
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	profile, errResp := a.adminUseCase.UpdateAdminProfile(ctx, &input)
+	if errResp.IsError {
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"profile": profile})
+}
+
+func (a *AdminAuthHandler) UpdatePortalProfile(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input dto.UpdatePortalProfileDTO
+	binder := &echo.DefaultBinder{}
+	if err := c.Bind(&input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	input.ID = utils.ConvertStringIdToObjectId(input.CauserId)
+	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero())
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	profile, errResp := a.adminUseCase.UpdatePortalProfile(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}

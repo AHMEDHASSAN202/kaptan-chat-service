@@ -25,8 +25,7 @@ type Admin struct {
 	Email            string             `json:"email" bson:"email"`
 	Password         string             `json:"password" bson:"password,omitempty"`
 	Type             string             `json:"type" bson:"type"`
-	Role             string             `json:"role" bson:"role"`
-	Permissions      []string           `json:"permissions" bson:"permissions"`
+	Role             Role               `json:"role" bson:"role"`
 	CountryIds       []string           `json:"country_ids" bson:"country_ids"`
 	Status           string             `json:"status" bson:"status"`
 	Tokens           []string           `json:"tokens" bson:"tokens,omitempty"`
@@ -43,9 +42,12 @@ type AdminUseCase interface {
 	Find(ctx context.Context, adminId primitive.ObjectID) (interface{}, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, input *admin.ChangeAdminStatusDto) validators.ErrorResponse
 	CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID) (bool, validators.ErrorResponse)
+	CheckRoleExists(ctx context.Context, roleId primitive.ObjectID) (bool, validators.ErrorResponse)
 	AdminLogin(ctx context.Context, dto *auth.AdminAuthDTO) (interface{}, string, validators.ErrorResponse)
 	PortalLogin(ctx context.Context, dto *auth.PortalAuthDTO) (interface{}, string, validators.ErrorResponse)
 	Profile(ctx context.Context, adminId string) (*admin2.AdminProfileResponse, validators.ErrorResponse)
+	UpdateAdminProfile(ctx context.Context, dto *auth.UpdateAdminProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
+	UpdatePortalProfile(ctx context.Context, dto *auth.UpdatePortalProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 }
 
 type AdminRepository interface {
@@ -57,6 +59,7 @@ type AdminRepository interface {
 	List(ctx context.Context, dto *admin.ListAdminDTO) ([]Admin, *mongopagination.PaginationData, error)
 	ChangeStatus(ctx context.Context, model *Admin, input *admin.ChangeAdminStatusDto, adminDetails dto.AdminDetails) error
 	CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID) (bool, error)
+	CheckRoleExists(ctx context.Context, roleId primitive.ObjectID) (bool, error)
 	FindByEmail(ctx context.Context, email string, adminType string) (*Admin, error)
 }
 

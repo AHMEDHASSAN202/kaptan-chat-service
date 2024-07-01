@@ -21,7 +21,7 @@ type MenuGroupHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.Middlewares) {
+func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares) {
 	handler := &MenuGroupHandler{
 		menuGroupUsecase: us,
 		validator:        validator,

@@ -21,7 +21,7 @@ type ItemHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustomValidator custom_validators.ItemCustomValidator, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.Middlewares) {
+func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustomValidator custom_validators.ItemCustomValidator, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares) {
 	handler := &ItemHandler{
 		itemUsecase:         itemUsecase,
 		itemCustomValidator: itemCustomValidator,

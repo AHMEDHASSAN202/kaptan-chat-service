@@ -21,7 +21,7 @@ type SKUHandler struct {
 }
 
 // InitSKUController will initialize the article's HTTP controller
-func InitSKUController(e *echo.Echo, skuUsecase domain.SKUUseCase, skuCustomValidator custom_validators.SKUCustomValidator, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.Middlewares) {
+func InitSKUController(e *echo.Echo, skuUsecase domain.SKUUseCase, skuCustomValidator custom_validators.SKUCustomValidator, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares) {
 	handler := &SKUHandler{
 		skuUsecase:         skuUsecase,
 		skuCustomValidator: skuCustomValidator,
