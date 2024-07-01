@@ -37,3 +37,7 @@ email:
   subjects:
     verification_email: "Спасибо за регистрацию, %s!"
     purchase_successful: "Покупка прошла успешно!"
+
+jwt:
+  admin_expires: 8760h
+  portal_expires: 4380h

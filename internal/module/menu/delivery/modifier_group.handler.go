@@ -20,7 +20,7 @@ type ModifierGroupHandler struct {
 }
 
 // InitModifierGroupController will initialize the article's HTTP controller
-func InitModifierGroupController(e *echo.Echo, modifierGroupUsecase domain.ModifierGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.Middlewares) {
+func InitModifierGroupController(e *echo.Echo, modifierGroupUsecase domain.ModifierGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares) {
 	handler := &ModifierGroupHandler{
 		modifierGroupUsecase: modifierGroupUsecase,
 		validator:            validator,

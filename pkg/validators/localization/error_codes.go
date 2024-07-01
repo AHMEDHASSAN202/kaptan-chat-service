@@ -40,6 +40,9 @@ const (
     Modifier_items_cant_contains_modifier_group = "Modifier_items_cant_contains_modifier_group" // Modifier items cant contains modifier group
     Password_required_if_id_is_zero = "Password_required_if_id_is_zero" // password is a required field
     PhoneNumber_rule_validation = "PhoneNumber_rule_validation" // PhoneNumber is Wrong
+    PreventDeleteRolesIdsValidation = "PreventDeleteRolesIdsValidation" // You are not allowed to delete main roles
+    RoleExistsValidation = "RoleExistsValidation" // Role is not exists
+    RoleHasAdminsValidation = "RoleHasAdminsValidation" // The role you are trying to delete is currently assigned to one or more admins. Please reassign these admins to a different role before attempting to delete this role.
     SKU_name_is_unique_rules_validation = "SKU_name_is_unique_rules_validation" // Feature not supported
     Timeformat = "Timeformat" // time format rule validation
 )

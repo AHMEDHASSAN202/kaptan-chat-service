@@ -22,7 +22,7 @@ type AdminHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitAdminController(e *echo.Echo, adminUseCase domain.AdminUseCase, adminCustomValidator custom_validators.AdminCustomValidator, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.Middlewares) {
+func InitAdminController(e *echo.Echo, adminUseCase domain.AdminUseCase, adminCustomValidator custom_validators.AdminCustomValidator, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares) {
 	handler := &AdminHandler{
 		adminUseCase:         adminUseCase,
 		validator:            validator,
@@ -103,7 +103,7 @@ func (a *AdminHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero())
+	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero(), a.adminCustomValidator.ValidateRoleExists())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -136,7 +136,7 @@ func (a *AdminHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero())
+	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero(), a.adminCustomValidator.ValidateRoleExists())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)

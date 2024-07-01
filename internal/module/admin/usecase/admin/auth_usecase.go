@@ -2,15 +2,17 @@ package admin
 
 import (
 	"context"
-	"fmt"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	admin2 "samm/internal/module/admin/builder/admin"
 	"samm/internal/module/admin/consts"
 	dto "samm/internal/module/admin/dto/auth"
 	"samm/internal/module/admin/responses/admin"
 	"samm/pkg/utils"
+	utilsDto "samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+	"time"
 )
 
 func (oRec *AdminUseCase) AdminLogin(ctx context.Context, input *dto.AdminAuthDTO) (interface{}, string, validators.ErrorResponse) {
@@ -60,7 +62,6 @@ func (oRec *AdminUseCase) PortalLogin(ctx context.Context, input *dto.PortalAuth
 }
 
 func (oRec *AdminUseCase) Profile(ctx context.Context, adminId string) (*admin.AdminProfileResponse, validators.ErrorResponse) {
-	fmt.Println("CauserId => ", adminId)
 	admin, errFindAdmin := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(adminId))
 	if errFindAdmin != nil {
 		oRec.logger.Error("AdminUseCase -> Auth -> AdminLogin -> ", errFindAdmin)
@@ -70,5 +71,49 @@ func (oRec *AdminUseCase) Profile(ctx context.Context, adminId string) (*admin.A
 		oRec.logger.Error("AdminUseCase -> Auth -> AdminLogin -> Admin Is NULL")
 		return nil, validators.GetErrorResponse(&ctx, localization.ErrLoginEmail, nil, utils.GetAsPointer(http.StatusBadRequest)) //change message
 	}
+	return admin2.AdminProfileBuilder(admin), validators.ErrorResponse{}
+}
+
+func (oRec *AdminUseCase) UpdateAdminProfile(ctx context.Context, input *dto.UpdateAdminProfileDTO) (*admin.AdminProfileResponse, validators.ErrorResponse) {
+	admin, errFind := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(input.CauserId))
+	if errFind != nil {
+		oRec.logger.Error("AdminUseCase -> UpdateAdminProfile -> ", errFind)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.Name, Operation: "Update My Profile", UpdatedAt: time.Now()}
+	adminDomain, err := admin2.UpdateAdminProfileBuilder(admin, input)
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> UpdateAdminProfile -> ", err)
+	}
+
+	admin, errCreate := oRec.repo.Update(ctx, adminDomain)
+	if errCreate != nil {
+		oRec.logger.Error("AdminUseCase -> UpdateAdminProfile -> ", errCreate)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
+	}
+
+	return admin2.AdminProfileBuilder(admin), validators.ErrorResponse{}
+}
+
+func (oRec *AdminUseCase) UpdatePortalProfile(ctx context.Context, input *dto.UpdatePortalProfileDTO) (*admin.AdminProfileResponse, validators.ErrorResponse) {
+	admin, errFind := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(input.CauserId))
+	if errFind != nil {
+		oRec.logger.Error("AdminUseCase -> UpdatePortalProfile -> ", errFind)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.Name, Operation: "Update My Profile", UpdatedAt: time.Now()}
+	adminDomain, err := admin2.UpdatePortalProfileBuilder(admin, input)
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> UpdatePortalProfile -> ", err)
+	}
+
+	admin, errCreate := oRec.repo.Update(ctx, adminDomain)
+	if errCreate != nil {
+		oRec.logger.Error("AdminUseCase -> UpdatePortalProfile -> ", errCreate)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
+	}
+
 	return admin2.AdminProfileBuilder(admin), validators.ErrorResponse{}
 }

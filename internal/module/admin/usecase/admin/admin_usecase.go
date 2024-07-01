@@ -20,15 +20,17 @@ import (
 
 type AdminUseCase struct {
 	repo             domain.AdminRepository
+	roleRepo         domain.RoleRepository
 	logger           logger.ILogger
 	extService       external.ExtService
 	AdminJwtService  jwt.JwtService
 	PortalJwtService jwt.JwtService
 }
 
-func NewAdminUseCase(repo domain.AdminRepository, logger logger.ILogger, extService external.ExtService, jwtFactory jwt.JwtServiceFactory) domain.AdminUseCase {
+func NewAdminUseCase(repo domain.AdminRepository, roleRepo domain.RoleRepository, logger logger.ILogger, extService external.ExtService, jwtFactory jwt.JwtServiceFactory) domain.AdminUseCase {
 	return &AdminUseCase{
 		repo:             repo,
+		roleRepo:         roleRepo,
 		logger:           logger,
 		extService:       extService,
 		AdminJwtService:  jwtFactory.AdminJwtService(),
@@ -37,8 +39,14 @@ func NewAdminUseCase(repo domain.AdminRepository, logger logger.ILogger, extServ
 }
 
 func (oRec *AdminUseCase) Create(ctx context.Context, input *dto.CreateAdminDTO) (string, validators.ErrorResponse) {
+	role, err := oRec.roleRepo.Find(ctx, utils.ConvertStringIdToObjectId(input.RoleId))
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> Find Role -> ", err)
+		return "", validators.GetErrorResponse(&ctx, localization.E1001, nil, nil)
+	}
+
 	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Create Admin", UpdatedAt: time.Now()}
-	adminDomain, err := builder.CreateUpdateAdminBuilder(nil, input)
+	adminDomain, err := builder.CreateUpdateAdminBuilder(nil, input, *role)
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> Create -> ", err)
 		return "", validators.GetErrorResponse(&ctx, localization.E1001, nil, nil)
@@ -59,8 +67,14 @@ func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO)
 		return "", validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
+	role, err := oRec.roleRepo.Find(ctx, utils.ConvertStringIdToObjectId(input.RoleId))
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> Find Role -> ", err)
+		return "", validators.GetErrorResponse(&ctx, localization.E1001, nil, nil)
+	}
+
 	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Update Admin", UpdatedAt: time.Now()}
-	adminDomain, err := builder.CreateUpdateAdminBuilder(admin, input)
+	adminDomain, err := builder.CreateUpdateAdminBuilder(admin, input, *role)
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> Update -> ", err)
 	}
@@ -130,6 +144,14 @@ func (oRec *AdminUseCase) ChangeStatus(ctx context.Context, input *dto.ChangeAdm
 
 func (oRec *AdminUseCase) CheckEmailExists(ctx context.Context, name string, adminId primitive.ObjectID) (bool, validators.ErrorResponse) {
 	isExists, err := oRec.repo.CheckEmailExists(ctx, name, adminId)
+	if err != nil {
+		return isExists, validators.GetErrorResponseFromErr(err)
+	}
+	return isExists, validators.ErrorResponse{}
+}
+
+func (oRec *AdminUseCase) CheckRoleExists(ctx context.Context, roleId primitive.ObjectID) (bool, validators.ErrorResponse) {
+	isExists, err := oRec.repo.CheckRoleExists(ctx, roleId)
 	if err != nil {
 		return isExists, validators.GetErrorResponseFromErr(err)
 	}
