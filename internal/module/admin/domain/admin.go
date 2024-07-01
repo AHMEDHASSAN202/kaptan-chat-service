@@ -53,6 +53,7 @@ type AdminUseCase interface {
 type AdminRepository interface {
 	Create(ctx context.Context, domainData *Admin) (*Admin, error)
 	Update(ctx context.Context, domainData *Admin) (*Admin, error)
+	SyncRole(ctx context.Context, domainData *Role) error
 	Delete(ctx context.Context, domainData *Admin, adminDetails dto.AdminDetails) error
 	Find(ctx context.Context, adminId primitive.ObjectID) (*Admin, error)
 	FindByToken(ctx context.Context, token string, adminType []string) (*Admin, error)

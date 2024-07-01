@@ -45,6 +45,14 @@ func (r *adminRepo) Update(ctx context.Context, domainData *domain.Admin) (*doma
 	return domainData, err
 }
 
+func (r *adminRepo) SyncRole(ctx context.Context, domainData *domain.Role) error {
+	_, err := mgm.Coll(&domain.Admin{}).UpdateMany(ctx, bson.M{"role._id": domainData.ID}, bson.M{"$set": bson.M{"role": domainData}})
+	if err != nil {
+		r.logger.Error("adminRepo -> SyncRole -> ", err)
+	}
+	return err
+}
+
 func (r *adminRepo) Delete(ctx context.Context, domainData *domain.Admin, adminDetails dto.AdminDetails) error {
 	domainData.SetSoftDelete(ctx)
 	domainData.AdminDetails = append(domainData.AdminDetails, adminDetails)
