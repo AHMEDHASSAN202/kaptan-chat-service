@@ -7,6 +7,8 @@ var (
 	UpdatePaymentUrl    = "/v2/UpdatePaymentStatus"
 	GetPaymentStatusUrl = "/v2/GetPaymentStatus"
 
+	KeyTypeInvoiceId = "invoiceid"
+
 	SuccessUrl = "/success-page"
 	ErrorUrl   = "/error-page"
 )

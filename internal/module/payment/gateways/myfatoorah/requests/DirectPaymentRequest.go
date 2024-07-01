@@ -2,6 +2,7 @@ package requests
 
 type DirectPaymentRequest struct {
 	PaymentType string `json:"PaymentType"`
+	SaveToken   bool   `json:"SaveToken"`
 	Card        struct {
 		Number       string `json:"Number"`
 		ExpiryMonth  string `json:"ExpiryMonth"`

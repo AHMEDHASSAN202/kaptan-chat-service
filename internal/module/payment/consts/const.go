@@ -9,3 +9,8 @@ const PaymentFailedStatus = "failed"
 const PaymentPaidStatus = "paid"
 const PaymentHoldStatus = "hold"
 const PaymentTimeOutStatus = "timeout"
+
+const MyFatoorahPaidInvoiceStatus = "Paid"
+const MyFatoorahPendingInvoiceStatus = "Pending"
+const MyFatoorahHoldInvoiceStatus = "Authorize"
+const MyFatoorahInProgressInvoiceStatus = "InProgress"

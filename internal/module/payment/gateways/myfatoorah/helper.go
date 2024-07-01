@@ -62,6 +62,7 @@ func DirectPaymentCard(m MyFatoorahService, ctx context.Context, url string, pay
 		requestPayload = requests.DirectPaymentRequest{
 			PaymentType: "card",
 			Bypass3DS:   false,
+			SaveToken:   payload.SaveCard,
 		}
 		requestPayload.Card.Number = payload.Card.Number
 		requestPayload.Card.HolderName = payload.Card.HolderName

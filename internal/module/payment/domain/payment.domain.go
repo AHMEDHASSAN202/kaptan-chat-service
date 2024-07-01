@@ -16,6 +16,7 @@ type Payment struct {
 	Status           string             `json:"status"`
 	Amount           float64            `json:"amount"`
 	Currency         string             `json:"currency"`
+	RequestId        string             `json:"request_id"`
 	Request          interface{}        `json:"request"`
 	Response         interface{}        `json:"response"`
 	PaymentType      string             `json:"payment_type"`

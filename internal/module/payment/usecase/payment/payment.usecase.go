@@ -13,6 +13,7 @@ import (
 type PaymentUseCase struct {
 	repo              domain.PaymentRepository
 	myfatoorahService domain.MyFatoorahService
+	cardRepo          domain.CardRepository
 	logger            logger.ILogger
 }
 
@@ -27,11 +28,11 @@ func (p PaymentUseCase) Pay(ctx context.Context, dto *payment.PayDto) (paymentRe
 	return paymentResponse, err
 }
 
-func NewPaymentUseCase(repo domain.PaymentRepository, myfatoorahService domain.MyFatoorahService, logger logger.ILogger) domain.PaymentUseCase {
+func NewPaymentUseCase(repo domain.PaymentRepository, cardRepo domain.CardRepository, myfatoorahService domain.MyFatoorahService, logger logger.ILogger) domain.PaymentUseCase {
 	return &PaymentUseCase{
 		repo:              repo,
 		myfatoorahService: myfatoorahService,
-
-		logger: logger,
+		cardRepo:          cardRepo,
+		logger:            logger,
 	}
 }

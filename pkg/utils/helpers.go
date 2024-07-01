@@ -397,3 +397,8 @@ func MaskCard(creditCardNumber string) string {
 
 	return maskedCreditCard
 }
+func ConvertStructToMap(in interface{}) (response *map[string]interface{}) {
+	inrec, _ := json.Marshal(in)
+	json.Unmarshal(inrec, &response)
+	return
+}

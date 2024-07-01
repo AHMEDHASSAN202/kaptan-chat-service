@@ -22,6 +22,7 @@ type PayDto struct {
 	SaveCard        bool   `json:"save_card"`
 	HoldTransaction bool   `json:"hold_transaction"`
 	Card            Card   `json:"card" validate:"required_if=PaymentType card"`
+	UserId          string
 }
 
 func (payload *PayDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
