@@ -6,6 +6,7 @@ import (
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
 	"samm/internal/module/user/responses"
+	"samm/pkg/jwt"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -14,16 +15,18 @@ import (
 )
 
 type UserUseCase struct {
-	repo   domain.UserRepository
-	logger logger.ILogger
+	repo           domain.UserRepository
+	userJwtService jwt.JwtService
+	logger         logger.ILogger
 }
 
 const tag = " UserUseCase "
 
-func NewUserUseCase(repo domain.UserRepository, logger logger.ILogger) domain.UserUseCase {
+func NewUserUseCase(repo domain.UserRepository, jwtFactory jwt.JwtServiceFactory, logger logger.ILogger) domain.UserUseCase {
 	return &UserUseCase{
-		repo:   repo,
-		logger: logger,
+		repo:           repo,
+		userJwtService: jwtFactory.UserJwtService(),
+		logger:         logger,
 	}
 }
 
@@ -93,7 +96,7 @@ func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtp
 		}
 	}
 
-	userToken, tokenErr := generateUserToken(&userDomain)
+	userToken, tokenErr := l.userJwtService.GenerateToken(*ctx, utils.ConvertObjectIdToStringId(userDomain.ID))
 	if tokenErr != nil {
 		err = validators.GetErrorResponseFromErr(tokenErr)
 		return
@@ -127,7 +130,7 @@ func (l UserUseCase) UserSignUp(ctx *context.Context, payload *user.UserSignUpDt
 		return
 	}
 
-	userToken, tokenErr := generateUserToken(&userDomain)
+	userToken, tokenErr := l.userJwtService.GenerateToken(*ctx, utils.ConvertObjectIdToStringId(userDomain.ID))
 	if tokenErr != nil {
 		err = validators.GetErrorResponseFromErr(tokenErr)
 		return

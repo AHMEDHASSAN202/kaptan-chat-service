@@ -8,6 +8,7 @@ import (
 type JwtServiceFactory interface {
 	AdminJwtService() JwtService
 	PortalJwtService() JwtService
+	UserJwtService() JwtService
 }
 
 type JwtFactory struct {
@@ -25,6 +26,14 @@ func (f *JwtFactory) AdminJwtService() JwtService {
 
 func (f *JwtFactory) PortalJwtService() JwtService {
 	return &PortalJwtService{
+		secretKey:    f.jWTConfig.PortalSigningKey,
+		ExpiredHours: f.jWTConfig.PortalExpires,
+		logger:       f.logger,
+	}
+}
+
+func (f *JwtFactory) UserJwtService() JwtService {
+	return &UserJwtService{
 		secretKey:    f.jWTConfig.PortalSigningKey,
 		ExpiredHours: f.jWTConfig.PortalExpires,
 		logger:       f.logger,

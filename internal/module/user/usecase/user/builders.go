@@ -3,7 +3,6 @@ package user
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/golang-jwt/jwt"
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"math/big"
@@ -17,11 +16,6 @@ import (
 
 const maxNumOfTrialsPerDay = 3
 const jwtSecretKey = "jwtSecret"
-
-type UserClaim struct {
-	UserID string `json:"user_id"`
-	jwt.StandardClaims
-}
 
 func domainBuilderAtCreateProfile(userDomain *domain.User, payload *user.SendUserOtpDto, otp, ctr string) *domain.User {
 	expiry := time.Now().Add(5 * time.Minute)
@@ -93,30 +87,5 @@ func otpTrialsPerDayGetter(otpCounter string) (day string, counter int) {
 	day = parts[0]
 	counter, _ = strconv.Atoi(parts[1])
 
-	return
-}
-
-// todo update user claim
-func generateUserToken(userDomain *domain.User) (string, error) {
-	userClaim := UserClaim{
-		UserID: userDomain.ID.Hex(),
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().AddDate(1, 0, 0).Unix(),
-		},
-	}
-
-	token, err := utils.CreateJWT(userClaim, jwtSecretKey)
-	if err != nil {
-		return "", err
-	}
-
-	return token, nil
-}
-
-func validateUserToken(token string) (claims *UserClaim, err error) {
-	err = utils.ValidateJWT(token, jwtSecretKey, claims)
-	if err != nil {
-		return
-	}
 	return
 }
