@@ -39,7 +39,7 @@ func (l UserUseCase) StoreUser(ctx *context.Context, payload *user.CreateUserDto
 	return
 }
 
-func (l UserUseCase) SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse) {
+func (l UserUseCase) SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse, tempOtp string) {
 	userDomain, dbErr := l.repo.GetUserByPhoneNumber(ctx, payload.PhoneNumber, payload.CountryCode)
 	// new user
 	if dbErr != nil {
@@ -50,7 +50,7 @@ func (l UserUseCase) SendOtp(ctx *context.Context, payload *user.SendUserOtpDto)
 
 	newOtpCounter, ctrErr := otpTrialsPerDaySetter(userDomain.OtpCounter)
 	if ctrErr != nil {
-		return validators.GetErrorResponse(ctx, localization.E1015, nil, nil)
+		return validators.GetErrorResponse(ctx, localization.E1015, nil, nil), ""
 	}
 
 	otp, otpErr := generateOTP()
@@ -65,9 +65,10 @@ func (l UserUseCase) SendOtp(ctx *context.Context, payload *user.SendUserOtpDto)
 
 	errRe := l.repo.UpdateUser(ctx, newUserDomain)
 	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe)
+		return validators.GetErrorResponseFromErr(errRe), ""
 	}
-	return
+
+	return validators.ErrorResponse{}, otp
 }
 
 func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse) {
@@ -104,12 +105,13 @@ func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtp
 
 	if userDomain.Name == "" || userDomain.Email == "" {
 		res = responses.VerifyOtpResp{
-			Message:  responses.OtpMessage,
-			NextStep: responses.NextStep,
+			IsProfileCompleted: false,
+			Token:              userToken, //todo use temp token
 		}
 	} else {
 		res = responses.VerifyOtpResp{
-			Token: userToken,
+			IsProfileCompleted: true,
+			Token:              userToken,
 		}
 		userDomain.Tokens = append(userDomain.Tokens, userToken)
 	}

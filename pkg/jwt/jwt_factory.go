@@ -34,8 +34,8 @@ func (f *JwtFactory) PortalJwtService() JwtService {
 
 func (f *JwtFactory) UserJwtService() JwtService {
 	return &UserJwtService{
-		secretKey:    f.jWTConfig.PortalSigningKey,
-		ExpiredHours: f.jWTConfig.PortalExpires,
+		secretKey:    f.jWTConfig.UserSigningKey,
+		ExpiredHours: f.jWTConfig.UserExpires,
 		logger:       f.logger,
 	}
 }

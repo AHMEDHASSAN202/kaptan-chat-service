@@ -35,7 +35,7 @@ type DeletedUser struct {
 
 type UserUseCase interface {
 	StoreUser(ctx *context.Context, payload *user.CreateUserDto) (err validators.ErrorResponse)
-	SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse)
+	SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse, tempOtp string)
 	VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse)
 	UserSignUp(ctx *context.Context, payload *user.UserSignUpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse)
 	UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse)

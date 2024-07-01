@@ -80,12 +80,12 @@ func (a *UserHandler) SendUserOtp(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	errResp := a.userUsecase.SendOtp(&ctx, &payload)
+	errResp, otp := a.userUsecase.SendOtp(&ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
-	return validators.SuccessResponse(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, map[string]interface{}{"otp": otp})
 }
 func (a *UserHandler) VerifyUserOtp(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -107,7 +107,7 @@ func (a *UserHandler) VerifyUserOtp(c echo.Context) error {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
-	return validators.SuccessResponse(c, map[string]interface{}{"data": res})
+	return validators.SuccessResponse(c, res)
 }
 
 func (a *UserHandler) SignUp(c echo.Context) error {
