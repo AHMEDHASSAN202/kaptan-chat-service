@@ -26,7 +26,7 @@ func createIndexes(collection *mongo.Collection) {
 		bson.E{"email", mongodb.IndexType.Asc},
 	)
 
-	mongodb.CreateIndex(collection, true,
+	mongodb.CreateIndex(collection, false,
 		bson.E{"role._id", mongodb.IndexType.Asc},
 		bson.E{"deleted_at", mongodb.IndexType.Asc},
 	)
