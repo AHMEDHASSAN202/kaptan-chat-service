@@ -97,18 +97,22 @@ func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtp
 		}
 	}
 
-	userToken, tokenErr := l.userJwtService.GenerateToken(*ctx, utils.ConvertObjectIdToStringId(userDomain.ID))
-	if tokenErr != nil {
-		err = validators.GetErrorResponseFromErr(tokenErr)
-		return
-	}
-
-	if userDomain.Name == "" || userDomain.Email == "" {
+	if userDomain.Name == "" {
+		userTempToken, tokenErr := l.userJwtService.GenerateToken(*ctx, utils.ConvertObjectIdToStringId(userDomain.ID), true)
+		if tokenErr != nil {
+			err = validators.GetErrorResponseFromErr(tokenErr)
+			return
+		}
 		res = responses.VerifyOtpResp{
 			IsProfileCompleted: false,
-			Token:              userToken, //todo use temp token
+			Token:              userTempToken,
 		}
 	} else {
+		userToken, tokenErr := l.userJwtService.GenerateToken(*ctx, utils.ConvertObjectIdToStringId(userDomain.ID))
+		if tokenErr != nil {
+			err = validators.GetErrorResponseFromErr(tokenErr)
+			return
+		}
 		res = responses.VerifyOtpResp{
 			IsProfileCompleted: true,
 			Token:              userToken,

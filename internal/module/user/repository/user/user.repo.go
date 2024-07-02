@@ -75,6 +75,17 @@ func (i *UserRepository) List(ctx *context.Context, dto *user.ListUserDto) (user
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name": bson.M{"$regex": pattern, "$options": "i"}}, {"phone_number": bson.M{"$regex": pattern, "$options": "i"}}}})
 	}
 
+	if dto.Status != "" {
+		if dto.Status == "active" {
+			matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"is_active": true})
+		} else if dto.Status == "inactive" {
+			matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"is_active": false})
+		}
+	}
+	if dto.Dob != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"dob": dto.Dob})
+	}
+
 	data, err := New(i.userCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
 
 	if data == nil || data.Data == nil {

@@ -11,9 +11,11 @@ import (
 )
 
 type UserJwtService struct {
-	secretKey    string
-	ExpiredHours time.Duration
-	logger       logger.ILogger
+	secretKey        string
+	expiredHours     time.Duration
+	tempSecretKey    string
+	tempExpiredHours time.Duration
+	logger           logger.ILogger
 }
 
 // JwtClaim struct defines custom JWT claims
@@ -23,8 +25,14 @@ type UserJwtClaim struct {
 	CauserType string `json:"causer_type"`
 }
 
-func (jwtService *UserJwtService) GenerateToken(ctx context.Context, id string) (token string, err error) {
-	expiredAt := time.Now().Add(time.Duration(jwtService.ExpiredHours.Hours()) * time.Hour)
+func (jwtService *UserJwtService) GenerateToken(ctx context.Context, id string, isTempToken ...bool) (token string, err error) {
+
+	secret := jwtService.secretKey
+	expiredAt := time.Now().Add(time.Duration(jwtService.expiredHours.Hours()) * time.Hour)
+	if len(isTempToken) > 0 && isTempToken[0] {
+		secret = jwtService.tempSecretKey
+		expiredAt = time.Now().Add(time.Duration(jwtService.tempExpiredHours.Hours()) * time.Hour)
+	}
 	claims := &UserJwtClaim{
 		CauserId:   id,
 		CauserType: "user",
@@ -38,7 +46,7 @@ func (jwtService *UserJwtService) GenerateToken(ctx context.Context, id string) 
 		},
 	}
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, err = jwtToken.SignedString([]byte(jwtService.secretKey))
+	token, err = jwtToken.SignedString([]byte(secret))
 	if err != nil {
 		jwtService.logger.Error(ctx, err)
 		err = validators.GetError(&ctx, localization.JwtSigningError, nil)
@@ -47,10 +55,14 @@ func (jwtService *UserJwtService) GenerateToken(ctx context.Context, id string) 
 	return
 }
 
-func (jwtService *UserJwtService) ValidateToken(ctx context.Context, signedToken string) (interface{}, error) {
+func (jwtService *UserJwtService) ValidateToken(ctx context.Context, signedToken string, isTempToken ...bool) (interface{}, error) {
+	secret := jwtService.secretKey
+	if len(isTempToken) > 0 && isTempToken[0] {
+		secret = jwtService.tempSecretKey
+	}
 	token, err := jwt.ParseWithClaims(
 		signedToken, &UserJwtClaim{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte(jwtService.secretKey), nil
+			return []byte(secret), nil
 		},
 	)
 	if err != nil {

@@ -23,7 +23,7 @@ type AdminJwtClaim struct {
 	CauserType string `json:"causer_type"`
 }
 
-func (jwtService *AdminJwtService) GenerateToken(ctx context.Context, id string) (token string, err error) {
+func (jwtService *AdminJwtService) GenerateToken(ctx context.Context, id string, isTempToken ...bool) (token string, err error) {
 	expiredAt := time.Now().Add(time.Duration(jwtService.ExpiredHours.Hours()) * time.Hour)
 	claims := &AdminJwtClaim{
 		CauserId:   id,
@@ -47,7 +47,7 @@ func (jwtService *AdminJwtService) GenerateToken(ctx context.Context, id string)
 	return
 }
 
-func (jwtService *AdminJwtService) ValidateToken(ctx context.Context, signedToken string) (interface{}, error) {
+func (jwtService *AdminJwtService) ValidateToken(ctx context.Context, signedToken string, isTempToken ...bool) (interface{}, error) {
 	token, err := jwt.ParseWithClaims(
 		signedToken, &AdminJwtClaim{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(jwtService.secretKey), nil

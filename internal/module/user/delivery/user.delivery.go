@@ -37,7 +37,7 @@ func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validato
 	//mobile.POST("", handler.StoreUser)
 	mobile.POST("/send-otp", handler.SendUserOtp)
 	mobile.POST("/verify-otp", handler.VerifyUserOtp)
-	mobile.POST("/sign-up", handler.SignUp, userMiddleware.AuthMiddleware)
+	mobile.POST("/sign-up", handler.SignUp, userMiddleware.TempAuthMiddleware)
 	mobile.PUT("", handler.UpdateUserProfile, userMiddleware.AuthMiddleware)
 	mobile.GET("", handler.GetUserProfile, userMiddleware.AuthMiddleware)
 	mobile.DELETE("", handler.DeleteUser, userMiddleware.AuthMiddleware)
@@ -197,6 +197,12 @@ func (a *UserHandler) ListUser(c echo.Context) error {
 	_ = c.Bind(&payload)
 
 	payload.Pagination.SetDefault()
+
+	validationErr := payload.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
 
 	brands, errResp := a.userUsecase.List(&ctx, &payload)
 	if errResp.IsError {
