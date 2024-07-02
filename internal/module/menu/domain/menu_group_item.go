@@ -55,4 +55,5 @@ type MenuGroupItemRepository interface {
 	Delete(ctx context.Context, dto *menu_group.DeleteEntityFromMenuGroupDto) error
 	MobileGetMenuGroupItems(ctx context.Context, dto *menu_group.GetMenuGroupItemsDTO) (*[]menu_group2.MobileGetMenuGroupItems, error)
 	MobileGetMenuGroupItem(ctx context.Context, dto *menu_group.GetMenuGroupItemDTO) (*menu_group2.MobileGetItem, error)
+	MobileFilterMenuGroupItemForOrder(ctx context.Context, dto *menu_group.FilterMenuGroupItemsForOrder) ([]menu_group2.MobileGetItem, error)
 }

@@ -114,3 +114,7 @@ other = "password is a required field"
 [PhoneNumber_rule_validation]
 description = "PhoneNumber is Wrong"
 other = "PhoneNumber is Wrong"
+
+[Mobile_location_not_available_error]
+description = "mobile_location_not_available_error"
+other = "The location is not ready to receive orders now, try later please"

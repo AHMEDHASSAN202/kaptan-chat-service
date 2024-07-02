@@ -26,6 +26,7 @@ type EchoConfig struct {
 
 func NewEchoServer() *echo.Echo {
 	e := echo.New()
+	//e.Debug = true
 	return e
 }
 

@@ -47,11 +47,11 @@ func (l CommonUseCase) ListAssets(ctx context.Context, hasColors, hasBrands bool
 	assetResult := make(map[string]any)
 	if hasBrands {
 		carBrandsResult := ReadFile(l.logger, "/internal/module/common/consts/car_brands.json")
-		assetResult["carBrands"] = carBrandsResult
+		assetResult["car_brands"] = carBrandsResult
 	}
 	if hasColors {
 		carColorsResult := ReadFile(l.logger, "/internal/module/common/consts/car_colors.json")
-		assetResult["carColors"] = carColorsResult
+		assetResult["car_colors"] = carColorsResult
 	}
 	return assetResult, validators.ErrorResponse{}
 

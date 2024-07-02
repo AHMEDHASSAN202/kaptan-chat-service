@@ -3,6 +3,7 @@ package order
 import (
 	"go.uber.org/fx"
 	"samm/internal/module/order/delivery"
+	"samm/internal/module/order/external"
 	order_repo "samm/internal/module/order/repository/order"
 	order_usecase "samm/internal/module/order/usecase/order"
 )
@@ -13,6 +14,7 @@ var Module = fx.Options(
 		// App Config
 		order_repo.NewOrderMongoRepository,
 		order_usecase.NewOrderUseCase,
+		external.NewExternalService,
 	),
 	fx.Invoke(
 		delivery.InitOrderController,

@@ -114,3 +114,7 @@ other = "كلمه المرور مطلوبه"
 [PhoneNumber_rule_validation]
 description = "رقم التليفون خطآ"
 other = "رقم التليفون خطآ"
+
+[Mobile_location_not_available_error]
+description = "mobile_location_not_available_error"
+other = "الفرع غير جاهز لاستقبال الطلبات الآن، يرجى المحاولة لاحقًا "

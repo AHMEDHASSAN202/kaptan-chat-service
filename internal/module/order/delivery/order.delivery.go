@@ -23,56 +23,17 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 		logger:       logger,
 	}
 	dashboard := e.Group("api/v1/admin/order")
-	dashboard.POST("", handler.StoreOrder)
-	dashboard.GET("", handler.ListOrder)
-	dashboard.PUT("/:id", handler.UpdateOrder)
-	dashboard.GET("/:id", handler.FindOrder)
-	dashboard.DELETE("/:id", handler.DeleteOrder)
+	{
+		dashboard.GET("", handler.ListOrder)
+		dashboard.GET("/:id", handler.FindOrder)
+	}
+	mobile := e.Group("api/v1/mobile/order")
+	{
+		mobile.POST("/calculate-order-cost", handler.CalculateOrderCost)
+		mobile.GET("/:id", handler.FindOrder)
+	}
 }
-func (a *OrderHandler) StoreOrder(c echo.Context) error {
-	ctx := c.Request().Context()
 
-	var payload order.StoreOrderDto
-	err := c.Bind(&payload)
-	if err != nil {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
-	}
-
-	validationErr := payload.Validate(c, a.validator)
-	if validationErr.IsError {
-		a.logger.Error(validationErr)
-		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
-	}
-
-	errResp := a.orderUsecase.StoreOrder(ctx, &payload)
-	if errResp.IsError {
-		a.logger.Error(errResp)
-		return validators.ErrorStatusBadRequest(c, errResp)
-	}
-	return validators.SuccessResponse(c, map[string]interface{}{})
-}
-func (a *OrderHandler) UpdateOrder(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	var payload order.UpdateOrderDto
-	err := c.Bind(&payload)
-	if err != nil {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
-	}
-
-	validationErr := payload.Validate(c, a.validator)
-	if validationErr.IsError {
-		a.logger.Error(validationErr)
-		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
-	}
-	id := c.Param("id")
-	errResp := a.orderUsecase.UpdateOrder(ctx, id, &payload)
-	if errResp.IsError {
-		a.logger.Error(errResp)
-		return validators.ErrorStatusBadRequest(c, errResp)
-	}
-	return validators.SuccessResponse(c, map[string]interface{}{})
-}
 func (a *OrderHandler) FindOrder(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -85,17 +46,6 @@ func (a *OrderHandler) FindOrder(c echo.Context) error {
 	return validators.SuccessResponse(c, map[string]interface{}{"order": data})
 }
 
-func (a *OrderHandler) DeleteOrder(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	id := c.Param("id")
-	errResp := a.orderUsecase.DeleteOrder(ctx, id)
-	if errResp.IsError {
-		a.logger.Error(errResp)
-		return validators.ErrorStatusBadRequest(c, errResp)
-	}
-	return validators.SuccessResponse(c, map[string]interface{}{})
-}
 func (a *OrderHandler) ListOrder(c echo.Context) error {
 	ctx := c.Request().Context()
 	var payload order.ListOrderDto
@@ -110,4 +60,27 @@ func (a *OrderHandler) ListOrder(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{"data": result, "meta": paginationResult})
+}
+
+func (a *OrderHandler) CalculateOrderCost(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var calculateOrderCostDto order.CalculateOrderCostDto
+
+	err := c.Bind(calculateOrderCostDto)
+	if err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	validateErr := calculateOrderCostDto.Validate(ctx, a.validator)
+	if validateErr.IsError {
+		a.logger.Error(validateErr.ErrorMessageObject.Text)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	orderCalculate, errResp := a.orderUsecase.CalculateOrderCost(ctx, &calculateOrderCostDto)
+	if errResp.IsError {
+		a.logger.Error(validateErr.ErrorMessageObject.Text)
+		return validators.ErrorStatusUnprocessableEntity(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"order_calculate": orderCalculate})
 }

@@ -422,3 +422,31 @@ func Distance(lt1, lng1, lt2, lng2 float64) float64 {
 func degreesToRadians(degrees float64) float64 {
 	return degrees * (math.Pi / 180)
 }
+
+func EqualizeSlices(slice1, slice2 []string) ([]string, []string) {
+	set1 := make(map[string]struct{})
+	set2 := make(map[string]struct{})
+
+	for _, s := range slice1 {
+		set1[s] = struct{}{}
+	}
+	for _, s := range slice2 {
+		set2[s] = struct{}{}
+	}
+
+	var result1, result2 []string
+
+	for _, s := range slice1 {
+		if _, exists := set2[s]; exists {
+			result1 = append(result1, s)
+		}
+	}
+
+	for _, s := range slice2 {
+		if _, exists := set1[s]; exists {
+			result2 = append(result2, s)
+		}
+	}
+
+	return result1, result2
+}

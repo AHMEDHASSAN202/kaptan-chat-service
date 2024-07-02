@@ -242,3 +242,81 @@ func (i *menuGroupItemRepo) MobileGetMenuGroupItem(ctx context.Context, dto *men
 
 	return &item, nil
 }
+
+func (i *menuGroupItemRepo) MobileFilterMenuGroupItemForOrder(ctx context.Context, dto *menu_group.FilterMenuGroupItemsForOrder) ([]menu_group2.MobileGetItem, error) {
+	productIds, modifierIds := getProductAndModifierId(dto)
+
+	matching := bson.M{
+		"$match": bson.M{"$and": []interface{}{
+			bson.D{{"_id", bson.M{"$in": productIds}}},
+			bson.D{{"menu_group.branch_ids", utils.ConvertStringIdToObjectId(dto.LocationId)}},
+			bson.D{{"menu_group.status", "active"}},
+			bson.D{{"category.status", "active"}},
+			bson.D{{"status", "active"}},
+			AddAvailabilityQuery(dto.CountryId, "$menu_group.availabilities"),
+			AddAvailabilityQuery(dto.CountryId, "$availabilities"),
+		}},
+	}
+
+	modifierGroupLookup := bson.M{
+		"$lookup": bson.M{
+			"from":         "modifier_groups",
+			"localField":   "modifier_group_ids",
+			"foreignField": "_id",
+			"pipeline": []bson.M{
+				{"$match": bson.M{"status": "active", "deleted_at": nil}},
+			},
+			"as": "modifier_groups",
+		},
+	}
+
+	addonsLookup := bson.M{
+		"$lookup": bson.M{
+			"from":         "items",
+			"localField":   "modifier_groups.product_ids",
+			"foreignField": "_id",
+			"pipeline": []bson.M{
+				{"$match": bson.M{"status": "active", "deleted_at": nil, "product_ids": bson.M{"$in": modifierIds}}},
+			},
+			"as": "addons",
+		},
+	}
+
+	limit := bson.M{"$limit": 1}
+
+	//pipeline = append(pipeline, matching, modifierGroupLookup, addonsLookup, limit)
+
+	products := make([]menu_group2.MobileGetItem, 0)
+
+	err := i.menuGroupItemCollection.SimpleAggregateWithCtx(ctx, &products, matching, modifierGroupLookup, addonsLookup, limit)
+	if err != nil {
+		i.logger.Error("menuGroupItemRepo -> MobileGetMenuGroupItem -> ", err)
+		return nil, err
+	}
+	return eliminateUnusedModifiers(dto, &products), nil
+}
+
+func eliminateUnusedModifiers(order *menu_group.FilterMenuGroupItemsForOrder, products *[]menu_group2.MobileGetItem) []menu_group2.MobileGetItem {
+	for _, dtoItem := range order.MenuItems {
+		for _, product := range *products {
+			if dtoItem.Id == product.ID.Hex() {
+				//get all the modifier inside one product
+				dtoProductModifierIds := make([]string, 0)
+				for _, modifier := range dtoItem.ModifierIds {
+					dtoProductModifierIds = append(dtoProductModifierIds, modifier.Id)
+				}
+				for productModifierGroupIndex, group := range product.ModifierGroups {
+					//remove modifierIds in group
+					groupProductIds, _ := utils.EqualizeSlices(utils.ConvertObjectIdsToStringIds(group.ProductIds), dtoProductModifierIds)
+					product.ModifierGroups[productModifierGroupIndex].ProductIds = utils.ConvertStringIdsToObjectIds(groupProductIds)
+					//check if modifier group is empty
+					if len(groupProductIds) <= 0 {
+						product.ModifierGroups = append(product.ModifierGroups[:productModifierGroupIndex], product.ModifierGroups[productModifierGroupIndex+1:]...)
+					}
+
+				}
+			}
+		}
+	}
+	return *products
+}

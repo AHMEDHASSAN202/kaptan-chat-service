@@ -14,7 +14,7 @@ type MenuUseCase struct {
 	logger logger.ILogger
 }
 
-const tag = " MenuUseCase "
+const tag = " LocationUseCase "
 
 func NewMenuUseCase(repo domain.MenuRepository, logger logger.ILogger) domain.MenuUseCase {
 	return &MenuUseCase{

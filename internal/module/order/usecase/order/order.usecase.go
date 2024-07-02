@@ -4,23 +4,28 @@ import (
 	"context"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
+	"samm/internal/module/order/external"
+	"samm/internal/module/order/responses"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 	"time"
 )
 
 type OrderUseCase struct {
-	repo   domain.OrderRepository
-	logger logger.ILogger
+	repo       domain.OrderRepository
+	extService external.ExtService
+	logger     logger.ILogger
 }
 
 const tag = " OrderUseCase "
 
-func NewOrderUseCase(repo domain.OrderRepository, logger logger.ILogger) domain.OrderUseCase {
+func NewOrderUseCase(repo domain.OrderRepository, extService external.ExtService, logger logger.ILogger) domain.OrderUseCase {
 	return &OrderUseCase{
-		repo:   repo,
-		logger: logger,
+		repo:       repo,
+		extService: extService,
+		logger:     logger,
 	}
 }
 
@@ -92,4 +97,23 @@ func (l OrderUseCase) ListOrder(ctx context.Context, payload *order.ListOrderDto
 	}
 	return results, paginationResult, validators.ErrorResponse{}
 
+}
+
+func (l OrderUseCase) CalculateOrderCost(ctx context.Context, payload *order.CalculateOrderCostDto) (resp responses.CalculateOrderCostResp, err validators.ErrorResponse) {
+	//find location details
+	_, errResponse := l.extService.RetailsIService.GetLocationDetails(ctx, payload.LocationId)
+	if errResponse.IsError {
+		l.logger.Error(errResponse.ErrorMessageObject.Text)
+		validators.GetErrorResponse(&ctx, localization.Mobile_location_not_available_error, nil, nil)
+	}
+	//check is the location available for the order
+	//find menus details
+	menuDetails, errResponse := l.extService.MenuIService.GetMenuItemsDetails(ctx, payload.MenuItems)
+	if errResponse.IsError {
+		l.logger.Error(errResponse.ErrorMessageObject.Text)
+		validators.GetErrorResponse(&ctx, localization.Mobile_location_not_available_error, nil, nil)
+	}
+	//check is the menus are available
+	l.logger.Info(menuDetails)
+	return responses.CalculateOrderCostResp{}, validators.ErrorResponse{}
 }

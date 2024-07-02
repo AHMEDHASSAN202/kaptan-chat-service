@@ -5,6 +5,7 @@ import (
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/order/dto/order"
+	"samm/internal/module/order/responses"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"time"
@@ -25,6 +26,7 @@ type Name struct {
 
 type OrderUseCase interface {
 	StoreOrder(ctx context.Context, payload *order.StoreOrderDto) (err validators.ErrorResponse)
+	CalculateOrderCost(ctx context.Context, payload *order.CalculateOrderCostDto) (resp responses.CalculateOrderCostResp, err validators.ErrorResponse)
 	UpdateOrder(ctx context.Context, id string, payload *order.UpdateOrderDto) (err validators.ErrorResponse)
 	FindOrder(ctx context.Context, Id string) (order Order, err validators.ErrorResponse)
 	DeleteOrder(ctx context.Context, Id string) (err validators.ErrorResponse)
