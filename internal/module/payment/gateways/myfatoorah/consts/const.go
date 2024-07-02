@@ -8,7 +8,9 @@ var (
 	GetPaymentStatusUrl = "/v2/GetPaymentStatus"
 
 	KeyTypeInvoiceId = "invoiceid"
+	ApplePay         = "applepay"
+	SuccessUrl       = "/success-page"
+	ErrorUrl         = "/error-page"
 
-	SuccessUrl = "/success-page"
-	ErrorUrl   = "/error-page"
+	CurrencySAR = "SAR"
 )

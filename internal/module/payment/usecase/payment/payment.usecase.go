@@ -25,7 +25,6 @@ func (p PaymentUseCase) Pay(ctx context.Context, dto *payment.PayDto) (paymentRe
 	default:
 		return PayApplePay(p, ctx, dto)
 	}
-	return paymentResponse, err
 }
 
 func NewPaymentUseCase(repo domain.PaymentRepository, cardRepo domain.CardRepository, myfatoorahService domain.MyFatoorahService, logger logger.ILogger) domain.PaymentUseCase {

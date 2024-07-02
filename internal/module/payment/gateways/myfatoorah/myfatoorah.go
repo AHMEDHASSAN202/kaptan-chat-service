@@ -111,3 +111,31 @@ func (m MyFatoorahService) UpdatePaymentStatus(ctx context.Context, invoiceId st
 	}
 	return err
 }
+
+func (m MyFatoorahService) ApplePay(ctx context.Context, dto *payment.PayDto, paymentTransaction *domain.Payment) (paymentResponse responses.ExecutePaymentResponse, requestPayload requests.ApplePayExecutePaymentCardRequest, err validators.ErrorResponse) {
+
+	// Call Init Session
+	initResponse, errRe := InitSession(ctx, dto, m, paymentTransaction)
+	if errRe.IsError {
+		m.logger.Error("Init Session Error ", errRe)
+		err = errRe
+		return
+	}
+	// Call Update Session
+	updateResponse, errRe := UpdateSession(ctx, dto, initResponse.Data.SessionId, m)
+	if errRe.IsError {
+		m.logger.Info("Update Session Error ", errRe)
+		err = errRe
+		return
+	}
+	// Call Execute Payment
+	paymentResponse, paymentRequest, errRe := ExecutePayment(ctx, dto, updateResponse.Data.SessionId, m, paymentTransaction)
+	if errRe.IsError {
+		m.logger.Info("Execute Payment Error ", errRe)
+		err = errRe
+		return
+	}
+	m.httpClient.NewRequest().Get(paymentResponse.Data.PaymentURL)
+
+	return paymentResponse, paymentRequest, validators.ErrorResponse{}
+}

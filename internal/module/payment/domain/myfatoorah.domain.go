@@ -12,4 +12,5 @@ type MyFatoorahService interface {
 	PayCard(ctx context.Context, dto *payment.PayDto, paymentTransaction *Payment) (paymentResponse responses.DirectPaymentResponse, requestPayload requests.DirectPaymentRequest, invoiceId int, err validators.ErrorResponse)
 	FindPayment(ctx context.Context, invoiceId string) (paymentResponse responses.GetPaymentStatusResponse, err validators.ErrorResponse)
 	UpdatePaymentStatus(ctx context.Context, invoiceId string, capture bool) (err validators.ErrorResponse)
+	ApplePay(ctx context.Context, dto *payment.PayDto, paymentTransaction *Payment) (paymentResponse responses.ExecutePaymentResponse, requestPayload requests.ApplePayExecutePaymentCardRequest, err validators.ErrorResponse)
 }

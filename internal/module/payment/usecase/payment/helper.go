@@ -114,7 +114,83 @@ func PayCard(p PaymentUseCase, ctx context.Context, dto *payment.PayDto) (respon
 	response.Transaction = paymentTransaction
 	return response, err
 }
+
 func PayApplePay(p PaymentUseCase, ctx context.Context, dto *payment.PayDto) (paymentResponse response.PayResponse, err validators.ErrorResponse) {
 
-	return paymentResponse, err
+	// Check Old Order Transaction Status
+	paymentTransaction, errResp := p.repo.FindPaymentTransaction(ctx, "", dto.TransactionId, dto.TransactionType)
+	if errResp == nil && (paymentTransaction.Status == consts.PaymentPaidStatus || paymentTransaction.Status == consts.PaymentHoldStatus) {
+		paymentResponse.Transaction = paymentTransaction
+		return paymentResponse, validators.ErrorResponse{}
+	}
+
+	// Check if it is pending then call mf to get payment status
+	if errResp == nil && (paymentTransaction.Status == consts.PaymentPendingStatus) {
+		// Call Mf To check the status
+		responsePay, errRe := p.myfatoorahService.FindPayment(ctx, paymentTransaction.RequestId)
+
+		// Update Payment Transaction to Paid or failed
+		if !errRe.IsError && responsePay.Data.InvoiceStatus == consts.MyFatoorahPaidInvoiceStatus {
+
+			paymentTransaction.Status = consts.PaymentPaidStatus
+			errUpdate := p.repo.UpdateTransaction(ctx, paymentTransaction)
+			if errUpdate != nil {
+				p.logger.Error("Update Error => ", errUpdate)
+				return paymentResponse, validators.GetErrorResponseFromErr(errUpdate)
+
+			}
+			paymentResponse.Transaction = paymentTransaction
+			return paymentResponse, validators.ErrorResponse{}
+		}
+
+		// Check The Hold Status
+		hold := responsePay.Data.InvoiceTransactions[0].TransactionStatus == consts.MyFatoorahHoldInvoiceStatus
+		if !errRe.IsError && hold {
+
+			paymentTransaction.Status = consts.PaymentHoldStatus
+			paymentTransaction.Response = utils.ConvertStructToMap(responsePay)
+			paymentTransaction.CardType = responsePay.Data.InvoiceTransactions[0].PaymentGateway
+
+			errUpdate := p.repo.UpdateTransaction(ctx, paymentTransaction)
+			if errUpdate != nil {
+				p.logger.Error("Update Error => ", errUpdate)
+				return paymentResponse, validators.GetErrorResponseFromErr(errUpdate)
+
+			}
+			paymentResponse.Transaction = paymentTransaction
+			return paymentResponse, validators.ErrorResponse{}
+		}
+	}
+
+	// Create The Transaction
+	paymentTransaction, errResp = p.repo.CreateTransaction(ctx, CreateTransactionBuilder(dto))
+	if errResp != nil {
+		return paymentResponse, validators.GetErrorResponseFromErr(errResp)
+	}
+
+	responsePay, request, errRe := p.myfatoorahService.ApplePay(ctx, dto, paymentTransaction)
+
+	if !errRe.IsError {
+
+		paymentTransaction.Request = utils.ConvertStructToMap(request)
+		paymentTransaction.Response = utils.ConvertStructToMap(responsePay)
+		paymentTransaction.RequestId = strconv.Itoa(responsePay.Data.InvoiceId)
+		errUpdate := p.repo.UpdateTransaction(ctx, paymentTransaction)
+		if errUpdate != nil {
+			p.logger.Error("Update Error => ", errUpdate)
+		}
+		paymentResponse.Transaction = paymentTransaction
+		return paymentResponse, validators.ErrorResponse{}
+	}
+
+	paymentTransaction.Request = utils.ConvertStructToMap(request)
+	paymentTransaction.Response = utils.ConvertStructToMap(responsePay)
+	paymentTransaction.Status = consts.PaymentFailedStatus
+	paymentTransaction.RequestId = strconv.Itoa(responsePay.Data.InvoiceId)
+	errUpdate := p.repo.UpdateTransaction(ctx, paymentTransaction)
+	if errUpdate != nil {
+		p.logger.Error("Update Error => ", errUpdate)
+	}
+	paymentResponse.Transaction = paymentTransaction
+	return paymentResponse, errRe
 }

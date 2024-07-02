@@ -88,3 +88,79 @@ func DirectPaymentCard(m MyFatoorahService, ctx context.Context, url string, pay
 	return paymentResponse, requestPayload, err
 
 }
+func InitSession(ctx context.Context, payload *payment.PayDto, m MyFatoorahService, paymentTransaction *domain.Payment) (initSessionResponse responses.InitSessionResponse, err validators.ErrorResponse) {
+	//Prepare Request Data
+	requestPayload := requests.InitSessionRequest{
+		CustomerIdentifier: utils.ConvertObjectIdToStringId(paymentTransaction.ID),
+		SaveToken:          false,
+	}
+	headers := map[string]string{
+		"Authorization": "Bearer " + m.APIToken,
+		"Content-Type":  "application/json",
+	}
+
+	res, errRe := m.httpClient.NewRequest().SetHeaders(headers).SetBody(requestPayload).SetResult(&initSessionResponse).Post(m.BaseUrl + consts.InitSessionUrl)
+
+	if errRe != nil {
+		m.logger.Error(ErrorTag+"=> InitSession", errRe)
+		return initSessionResponse, validators.GetErrorResponseFromErr(errRe)
+	}
+	if !res.IsSuccess() {
+		m.logger.Error(ErrorTag+"=> InitSession", errors.New(initSessionResponse.Message))
+		return initSessionResponse, validators.GetErrorResponseFromErr(errors.New(initSessionResponse.Message))
+	}
+	return initSessionResponse, err
+}
+func UpdateSession(ctx context.Context, payload *payment.PayDto, sessionId string, m MyFatoorahService) (updateSessionResponse responses.UpdateSessionResponse, err validators.ErrorResponse) {
+	requestPayload := requests.UpdateSessionRequest{
+		SessionId: sessionId,
+		Token:     payload.PaymentToken,
+		TokenType: consts.ApplePay,
+	}
+	headers := map[string]string{
+		"Authorization": "Bearer " + m.APIToken,
+		"Content-Type":  "application/json",
+	}
+
+	res, errRe := m.httpClient.NewRequest().SetHeaders(headers).SetBody(requestPayload).SetResult(&updateSessionResponse).Post(m.BaseUrl + consts.UpdateSessionUrl)
+
+	if errRe != nil {
+		m.logger.Error(ErrorTag+"=> UpdateSession", errRe)
+		return updateSessionResponse, validators.GetErrorResponseFromErr(errRe)
+	}
+	if !res.IsSuccess() {
+		m.logger.Error(ErrorTag+"=> UpdateSession", errors.New(updateSessionResponse.Message))
+		return updateSessionResponse, validators.GetErrorResponseFromErr(errors.New(updateSessionResponse.Message))
+	}
+	return updateSessionResponse, err
+
+}
+func ExecutePayment(ctx context.Context, payload *payment.PayDto, sessionId string, m MyFatoorahService, paymentTransaction *domain.Payment) (paymentResponse responses.ExecutePaymentResponse, requestPayload requests.ApplePayExecutePaymentCardRequest, err validators.ErrorResponse) {
+
+	//Prepare Request Data
+	requestPayload = requests.ApplePayExecutePaymentCardRequest{
+		SessionId:          sessionId,
+		InvoiceValue:       paymentTransaction.Amount,
+		UserDefinedField:   utils.ConvertObjectIdToStringId(paymentTransaction.ID),
+		DisplayCurrencyIso: consts.CurrencySAR,
+	}
+	requestPayload.ProcessingDetails.AutoCapture = !payload.HoldTransaction
+	requestPayload.ProcessingDetails.Bypass3DS = true
+
+	headers := map[string]string{
+		"Authorization": "Bearer " + m.APIToken,
+		"Content-Type":  "application/json",
+	}
+
+	res, errRe := m.httpClient.NewRequest().SetHeaders(headers).SetBody(requestPayload).SetResult(&paymentResponse).Post(m.BaseUrl + consts.ExecutePaymentUrl)
+
+	if errRe != nil {
+		m.logger.Error(ErrorTag+"=> ExecutePayment", errRe)
+		return paymentResponse, requestPayload, validators.GetErrorResponseFromErr(errRe)
+	}
+	if !res.IsSuccess() {
+		m.logger.Error(ErrorTag+"=> ExecutePayment", errors.New(paymentResponse.Message))
+		return paymentResponse, requestPayload, validators.GetErrorResponseFromErr(errRe)
+	}
+	return paymentResponse, requestPayload, validators.ErrorResponse{}
+}
