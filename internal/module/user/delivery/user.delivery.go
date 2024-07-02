@@ -6,6 +6,7 @@ import (
 	"samm/internal/module/user/custom_validators"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
+	"samm/pkg/database/redis"
 	echomiddleware "samm/pkg/http/echo/middleware"
 	"samm/pkg/logger"
 	usermiddleware "samm/pkg/middlewares/user"
@@ -21,7 +22,7 @@ type UserHandler struct {
 }
 
 // InitUserController will initialize the article's HTTP controller
-func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validator.Validate, userCustomValidator custom_validators.UserCustomValidator, logger logger.ILogger, userMiddleware *usermiddleware.Middlewares) {
+func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validator.Validate, userCustomValidator custom_validators.UserCustomValidator, logger logger.ILogger, userMiddleware *usermiddleware.Middlewares, rdb *redis.RedisClient) {
 	handler := &UserHandler{
 		userUsecase:         us,
 		validator:           validator,
