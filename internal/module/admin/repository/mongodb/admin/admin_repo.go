@@ -105,6 +105,10 @@ func (r *adminRepo) List(ctx context.Context, dto *admin.ListAdminDTO) ([]domain
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"role": strings.ToLower(dto.Role)})
 	}
 
+	if dto.AccountId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"meta_data.account_id": strings.ToLower(dto.AccountId)})
+	}
+
 	data, err := New(r.adminCollection.Collection).Context(ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
 
 	if data == nil || data.Data == nil {

@@ -84,25 +84,16 @@ func (r *roleRepo) List(ctx context.Context, dto *role.ListRoleDTO) ([]domain.Ro
 
 	query := New(r.roleCollection.Collection).Context(ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1)
 
-	var data *PaginatedData
-	var err error
-
-	matchStage := bson.M{}
+	matchStage := bson.M{"$match": bson.M{"type": dto.Type}}
 	if dto.Query != "" {
 		pattern := ".*" + dto.Query + ".*"
-		matchStage = bson.M{
-			"$or": []bson.M{
-				{"name.ar": bson.M{"$regex": pattern, "$options": "i"}},
-				{"name.en": bson.M{"$regex": pattern, "$options": "i"}},
-			},
+		matchStage["$match"].(bson.M)["$or"] = []bson.M{
+			{"name.ar": bson.M{"$regex": pattern, "$options": "i"}},
+			{"name.en": bson.M{"$regex": pattern, "$options": "i"}},
 		}
 	}
 
-	if len(matchStage) > 0 {
-		data, err = query.Aggregate(bson.M{"$match": matchStage})
-	} else {
-		data, err = query.Aggregate()
-	}
+	data, err := query.Aggregate(matchStage)
 
 	if err != nil {
 		r.logger.Error("roleRepo -> List -> ", err)

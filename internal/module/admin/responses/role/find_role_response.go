@@ -13,6 +13,7 @@ type Name struct {
 type FindRoleResponse struct {
 	ID          primitive.ObjectID `json:"id"`
 	Name        Name               `json:"name"`
+	Type        string             `json:"type"`
 	Permissions []string           `json:"permissions"`
 	CanDelete   bool               `json:"can_delete"`
 	CreatedAt   time.Time          `json:"created_at"`
