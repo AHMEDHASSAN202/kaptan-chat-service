@@ -60,7 +60,7 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 			return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 		}
 
-		jsonByte, err := json.Marshal(admin)
+		jsonPermissionsByte, err := json.Marshal(admin.Role.Permissions)
 		if err != nil {
 			m.logger.Info("AuthMiddleware -> Marshal Error -> ", err)
 			return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
@@ -68,8 +68,8 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 
 		c.Request().Header.Add("causer-id", utils.ConvertObjectIdToStringId(admin.ID))
 		c.Request().Header.Add("causer-type", admin.Type)
-		c.Request().Header.Add("causer-details", string(jsonByte))
-
+		c.Request().Header.Add("causer-name", admin.Name)
+		c.Request().Header.Add("causer-permissions", string(jsonPermissionsByte))
 		return next(c)
 	}
 }

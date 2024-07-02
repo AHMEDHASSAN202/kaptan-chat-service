@@ -9,6 +9,7 @@ import (
 	dto "samm/internal/module/admin/dto/admin"
 	"samm/pkg/logger"
 	"samm/pkg/middlewares/admin"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
@@ -22,7 +23,7 @@ type AdminHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitAdminController(e *echo.Echo, adminUseCase domain.AdminUseCase, adminCustomValidator custom_validators.AdminCustomValidator, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares) {
+func InitAdminController(e *echo.Echo, adminUseCase domain.AdminUseCase, adminCustomValidator custom_validators.AdminCustomValidator, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &AdminHandler{
 		adminUseCase:         adminUseCase,
 		validator:            validator,
@@ -32,12 +33,12 @@ func InitAdminController(e *echo.Echo, adminUseCase domain.AdminUseCase, adminCu
 	admin := e.Group("api/v1/admin/admin")
 	admin.Use(adminMiddlewares.AuthMiddleware)
 	{
-		admin.GET("", handler.List)
-		admin.GET("/:id", handler.Find)
-		admin.POST("", handler.Create)
-		admin.PUT("/:id", handler.Update)
-		admin.DELETE("/:id", handler.Delete)
-		admin.PUT("/:id/change-status", handler.ChangeStatus)
+		admin.GET("", handler.List, commonMiddlewares.PermissionMiddleware("list-admins"))
+		admin.GET("/:id", handler.Find, commonMiddlewares.PermissionMiddleware("find-admins"))
+		admin.POST("", handler.Create, commonMiddlewares.PermissionMiddleware("create-admins"))
+		admin.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-admins"))
+		admin.DELETE("/:id", handler.Delete, commonMiddlewares.PermissionMiddleware("delete-admins"))
+		admin.PUT("/:id/change-status", handler.ChangeStatus, commonMiddlewares.PermissionMiddleware("update-status-admins"))
 	}
 }
 

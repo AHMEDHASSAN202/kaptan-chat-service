@@ -5,6 +5,7 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/modifier_group"
 	"samm/pkg/logger"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/middlewares/portal"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
@@ -20,7 +21,7 @@ type ModifierGroupHandler struct {
 }
 
 // InitModifierGroupController will initialize the article's HTTP controller
-func InitModifierGroupController(e *echo.Echo, modifierGroupUsecase domain.ModifierGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares) {
+func InitModifierGroupController(e *echo.Echo, modifierGroupUsecase domain.ModifierGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &ModifierGroupHandler{
 		modifierGroupUsecase: modifierGroupUsecase,
 		validator:            validator,
@@ -29,12 +30,12 @@ func InitModifierGroupController(e *echo.Echo, modifierGroupUsecase domain.Modif
 	portal := e.Group("api/v1/portal/modifier_group")
 	portal.Use(portalMiddlewares.AuthMiddleware)
 	{
-		portal.POST("", handler.Create)
-		portal.PUT("/:id", handler.Update)
-		portal.GET("", handler.List)
-		portal.GET("/:id", handler.Find)
-		portal.PUT("/:id/change-status", handler.ChangeStatus)
-		portal.DELETE("/:id", handler.Delete)
+		portal.POST("", handler.Create, commonMiddlewares.PermissionMiddleware("create-modifier-group", "portal-login-accounts"))
+		portal.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-modifier-group", "portal-login-accounts"))
+		portal.GET("", handler.List, commonMiddlewares.PermissionMiddleware("list-modifier-group", "portal-login-accounts"))
+		portal.GET("/:id", handler.Find, commonMiddlewares.PermissionMiddleware("find-modifier-group", "portal-login-accounts"))
+		portal.PUT("/:id/change-status", handler.ChangeStatus, commonMiddlewares.PermissionMiddleware("update-status-modifier-group", "portal-login-accounts"))
+		portal.DELETE("/:id", handler.Delete, commonMiddlewares.PermissionMiddleware("delete-modifier-group", "portal-login-accounts"))
 	}
 }
 

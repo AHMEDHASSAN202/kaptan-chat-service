@@ -8,6 +8,7 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
 	"samm/pkg/logger"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/middlewares/portal"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
@@ -21,7 +22,7 @@ type ItemHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustomValidator custom_validators.ItemCustomValidator, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares) {
+func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustomValidator custom_validators.ItemCustomValidator, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &ItemHandler{
 		itemUsecase:         itemUsecase,
 		itemCustomValidator: itemCustomValidator,
@@ -31,12 +32,12 @@ func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustom
 	portal := e.Group("api/v1/portal/item")
 	portal.Use(portalMiddlewares.AuthMiddleware)
 	{
-		portal.POST("", handler.Create)
-		portal.GET("", handler.List)
-		portal.GET("/:id", handler.FindOne)
-		portal.PUT("/:id", handler.Update)
-		portal.PUT("/:id/change_status", handler.ChangeStatus)
-		portal.DELETE("/:id", handler.Delete)
+		portal.POST("", handler.Create, commonMiddlewares.PermissionMiddleware("create-menus", "portal-login-accounts"))
+		portal.GET("", handler.List, commonMiddlewares.PermissionMiddleware("list-menus", "portal-login-accounts"))
+		portal.GET("/:id", handler.FindOne, commonMiddlewares.PermissionMiddleware("find-menus", "portal-login-accounts"))
+		portal.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-menus", "portal-login-accounts"))
+		portal.PUT("/:id/change_status", handler.ChangeStatus, commonMiddlewares.PermissionMiddleware("update-status-menus", "portal-login-accounts"))
+		portal.DELETE("/:id", handler.Delete, commonMiddlewares.PermissionMiddleware("delete-menus", "portal-login-accounts"))
 	}
 }
 
