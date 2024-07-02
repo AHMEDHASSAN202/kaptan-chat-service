@@ -12,7 +12,7 @@ type DeleteRoleDTO struct {
 }
 
 func (input *DeleteRoleDTO) Validate(c echo.Context, validate *validator.Validate, roleHasAdminsValidation func(fl validator.FieldLevel) bool, preventDeleteRolesIdsValidation func(fl validator.FieldLevel) bool) validators.ErrorResponse {
-	return validators.ValidateStruct(c.Request().Context(), validate, input,
+	return validators.ValidateStructAndReturnOneError(c.Request().Context(), validate, input,
 		validators.CustomErrorTags{
 			ValidationTag:          localization.RoleHasAdminsValidation,
 			RegisterValidationFunc: roleHasAdminsValidation,
