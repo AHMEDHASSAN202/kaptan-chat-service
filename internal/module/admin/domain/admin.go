@@ -16,7 +16,7 @@ import (
 )
 
 type MetaData struct {
-	AccountId string `json:"account_id" bson:"account_id"`
+	AccountId string `json:"account_id" bson:"account_id,omitempty"`
 }
 
 type Admin struct {

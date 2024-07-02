@@ -15,6 +15,7 @@ func CreateUpdateAdminBuilder(admin *domain.Admin, input *dto.CreateAdminDTO, ro
 		admin.ID = primitive.NewObjectID()
 		admin.Tokens = make([]string, 0)
 		admin.AdminDetails = []dto2.AdminDetails{}
+		admin.MetaData = domain.MetaData{AccountId: input.AccountId}
 	}
 	if input.Password != "" {
 		//hash password
@@ -29,7 +30,6 @@ func CreateUpdateAdminBuilder(admin *domain.Admin, input *dto.CreateAdminDTO, ro
 	admin.Status = strings.ToLower(input.Status)
 	admin.Type = strings.ToLower(input.Type)
 	admin.CountryIds = utils.ArrayToUpper(input.CountryIds)
-	admin.MetaData = domain.MetaData{AccountId: input.AccountId}
 	admin.Role = role
 	admin.AdminDetails = append(admin.AdminDetails, input.AdminDetails)
 	return admin, nil
