@@ -20,7 +20,7 @@ type CreateAdminDTO struct {
 	Type            string             `json:"type" validate:"required,oneof=admin portal"`
 	RoleId          string             `json:"role_id" validate:"required,mongodb,RoleExistsValidation"`
 	CountryIds      []string           `json:"country_ids" validate:"required,country_ids"`
-	AccountId       string             `json:"account_id" validate:"required_if=Type portal"`
+	AccountId       string             `json:"account_id"`
 	AdminDetails    dto.AdminDetails   `json:"-"`
 }
 
