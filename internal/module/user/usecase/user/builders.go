@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
+	"samm/internal/module/user/responses"
 	"samm/pkg/utils"
 	"strconv"
 	"strings"
@@ -87,4 +88,10 @@ func otpTrialsPerDayGetter(otpCounter string) (day string, counter int) {
 	counter, _ = strconv.Atoi(parts[1])
 
 	return
+}
+
+func reponseBuilderAtUpdateProfile(user *domain.User) *responses.MobileUser {
+	var userResp responses.MobileUser
+	copier.Copy(&userResp, user)
+	return &userResp
 }

@@ -26,7 +26,7 @@ type User struct {
 	Country          string     `json:"country" bson:"country"`
 	IsActive         bool       `json:"is_active" bson:"is_active"`
 	DeletedAt        *time.Time `json:"deleted_at" bson:"deleted_at"`
-	Tokens           []string   `json:"tokens" bson:"tokens"`
+	Tokens           []string   `json:"-" bson:"tokens"`
 }
 
 type DeletedUser struct {
@@ -38,7 +38,7 @@ type UserUseCase interface {
 	SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse, tempOtp string)
 	VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse)
 	UserSignUp(ctx *context.Context, payload *user.UserSignUpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse)
-	UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse)
+	UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (user *responses.MobileUser, err validators.ErrorResponse)
 	FindUser(ctx *context.Context, Id string) (user User, err validators.ErrorResponse)
 	DeleteUser(ctx *context.Context, Id string) (err validators.ErrorResponse)
 	List(ctx *context.Context, dto *user.ListUserDto) (*responses.ListResponse, validators.ErrorResponse)

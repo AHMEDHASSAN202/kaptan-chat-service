@@ -158,17 +158,17 @@ func (l UserUseCase) UserSignUp(ctx *context.Context, payload *user.UserSignUpDt
 	return
 }
 
-func (l UserUseCase) UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse) {
+func (l UserUseCase) UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (user *responses.MobileUser, err validators.ErrorResponse) {
 	userDomain, dbErr := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(payload.CauserId))
 	if dbErr != nil {
-		return validators.GetErrorResponseFromErr(dbErr)
+		return nil, validators.GetErrorResponseFromErr(dbErr)
 	}
 	updatedUserDomain := domainBuilderAtUpdateProfile(payload, userDomain)
 	dbErr = l.repo.UpdateUser(ctx, updatedUserDomain)
 	if dbErr != nil {
-		return validators.GetErrorResponseFromErr(dbErr)
+		return nil, validators.GetErrorResponseFromErr(dbErr)
 	}
-	return
+	return reponseBuilderAtUpdateProfile(updatedUserDomain), validators.ErrorResponse{}
 }
 func (l UserUseCase) FindUser(ctx *context.Context, Id string) (user domain.User, err validators.ErrorResponse) {
 	domainUser, errRe := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(Id))
@@ -204,11 +204,11 @@ func (l UserUseCase) DeleteUser(ctx *context.Context, Id string) (err validators
 }
 
 func (oRec *UserUseCase) List(ctx *context.Context, dto *user.ListUserDto) (*responses.ListResponse, validators.ErrorResponse) {
-	brands, paginationMeta, resErr := oRec.repo.List(ctx, dto)
+	users, paginationMeta, resErr := oRec.repo.List(ctx, dto)
 	if resErr != nil {
 		return nil, validators.GetErrorResponseFromErr(resErr)
 	}
-	return responses.SetListResponse(brands, paginationMeta), validators.ErrorResponse{}
+	return responses.SetListResponse(users, paginationMeta), validators.ErrorResponse{}
 }
 
 func (l UserUseCase) ToggleUserActivation(ctx *context.Context, userId string) (err validators.ErrorResponse) {

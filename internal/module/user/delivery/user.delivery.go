@@ -154,12 +154,12 @@ func (a *UserHandler) UpdateUserProfile(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	errResp := a.userUsecase.UpdateUserProfile(&ctx, &payload)
+	user, errResp := a.userUsecase.UpdateUserProfile(&ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
-	return validators.SuccessResponse(c, map[string]interface{}{})
+	return validators.SuccessResponse(c, user)
 }
 func (a *UserHandler) GetUserProfile(c echo.Context) error {
 	ctx := c.Request().Context()
