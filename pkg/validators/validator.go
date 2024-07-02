@@ -3,7 +3,6 @@ package validators
 import (
 	"context"
 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/go-playground/locales/ar"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -152,7 +151,6 @@ func ValidateStructAndReturnOneError(c context.Context, validate *validator.Vali
 
 	err := validate.Struct(obj)
 	lang := c.Value("lang")
-	spew.Dump(err)
 	if err != nil {
 		fmt.Println("err: ", err)
 		errs := err.(validator.ValidationErrors)
