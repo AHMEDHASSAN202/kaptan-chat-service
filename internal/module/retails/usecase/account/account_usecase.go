@@ -47,7 +47,7 @@ func (l AccountUseCase) StoreAccount(ctx context.Context, payload *account.Store
 			Type:            consts.PORTAL_TYPE,
 			RoleId:          consts.SUPER_PORTAL_ROLE,
 			CountryIds:      []string{payload.Country.Id},
-			AccountId:       utils.ConvertObjectIdToStringId(accountDomain.ID),
+			Account:         &admin.Account{Id: utils.ConvertObjectIdToStringId(accountDomain.ID), Name: admin.Name{Ar: accountDomain.Name.Ar, En: accountDomain.Name.En}},
 		}
 		_, errR := l.adminUseCase.Create(ctx, &storeAdminDto)
 		if errR.IsError {
@@ -83,6 +83,7 @@ func (l AccountUseCase) UpdateAccount(ctx context.Context, id string, payload *a
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)
 	}
+	l.adminUseCase.SyncAccount(ctx, admin.Account{Id: utils.ConvertObjectIdToStringId(accountDomain.ID), Name: admin.Name{Ar: accountDomain.Name.Ar, En: accountDomain.Name.En}})
 	return
 }
 func (l AccountUseCase) FindAccount(ctx context.Context, Id string) (account domain.Account, err validators.ErrorResponse) {

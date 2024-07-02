@@ -53,6 +53,14 @@ func (r *adminRepo) SyncRole(ctx context.Context, domainData *domain.Role) error
 	return err
 }
 
+func (r *adminRepo) SyncAccount(ctx context.Context, input admin.Account) error {
+	_, err := mgm.Coll(&domain.Admin{}).UpdateMany(ctx, bson.M{"account._id": utils.ConvertStringIdToObjectId(input.Id)}, bson.M{"$set": bson.M{"account": domain.Account{Id: utils.ConvertStringIdToObjectId(input.Id), Name: domain.Name{Ar: input.Name.Ar, En: input.Name.En}}}})
+	if err != nil {
+		r.logger.Error("adminRepo -> SyncAccount -> ", err)
+	}
+	return err
+}
+
 func (r *adminRepo) Delete(ctx context.Context, domainData *domain.Admin, adminDetails dto.AdminDetails) error {
 	domainData.SetSoftDelete(ctx)
 	domainData.AdminDetails = append(domainData.AdminDetails, adminDetails)
@@ -106,7 +114,7 @@ func (r *adminRepo) List(ctx context.Context, dto *admin.ListAdminDTO) ([]domain
 	}
 
 	if dto.AccountId != "" {
-		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"meta_data.account_id": strings.ToLower(dto.AccountId)})
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"account._id": utils.ConvertStringIdToObjectId(dto.AccountId)})
 	}
 
 	data, err := New(r.adminCollection.Collection).Context(ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)

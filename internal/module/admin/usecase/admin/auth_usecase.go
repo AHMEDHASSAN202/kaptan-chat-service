@@ -6,6 +6,8 @@ import (
 	"net/http"
 	admin2 "samm/internal/module/admin/builder/admin"
 	"samm/internal/module/admin/consts"
+	"samm/internal/module/admin/domain"
+	admin3 "samm/internal/module/admin/dto/admin"
 	dto "samm/internal/module/admin/dto/auth"
 	"samm/internal/module/admin/responses/admin"
 	"samm/pkg/utils"
@@ -61,7 +63,7 @@ func (oRec *AdminUseCase) PortalLogin(ctx context.Context, input *dto.PortalAuth
 	return admin2.AdminProfileBuilder(admin), token, validators.ErrorResponse{}
 }
 
-func (oRec *AdminUseCase) Profile(ctx context.Context, adminId string) (*admin.AdminProfileResponse, validators.ErrorResponse) {
+func (oRec *AdminUseCase) Profile(ctx context.Context, adminId string, accountId string) (*admin.AdminProfileResponse, validators.ErrorResponse) {
 	admin, errFindAdmin := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(adminId))
 	if errFindAdmin != nil {
 		oRec.logger.Error("AdminUseCase -> Auth -> AdminLogin -> ", errFindAdmin)
@@ -70,6 +72,9 @@ func (oRec *AdminUseCase) Profile(ctx context.Context, adminId string) (*admin.A
 	if admin == nil {
 		oRec.logger.Error("AdminUseCase -> Auth -> AdminLogin -> Admin Is NULL")
 		return nil, validators.GetErrorResponse(&ctx, localization.ErrLoginEmail, nil, utils.GetAsPointer(http.StatusBadRequest)) //change message
+	}
+	if accountId != "" {
+		admin.Account = &domain.Account{Id: utils.ConvertStringIdToObjectId(accountId)}
 	}
 	return admin2.AdminProfileBuilder(admin), validators.ErrorResponse{}
 }
@@ -116,4 +121,31 @@ func (oRec *AdminUseCase) UpdatePortalProfile(ctx context.Context, input *dto.Up
 	}
 
 	return admin2.AdminProfileBuilder(admin), validators.ErrorResponse{}
+}
+
+func (oRec *AdminUseCase) LoginAsPortal(ctx context.Context, input *admin3.LoginAsPortalDto) (interface{}, string, validators.ErrorResponse) {
+	admin, errFindAdmin := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(input.CauserId))
+	if errFindAdmin != nil {
+		oRec.logger.Error("AdminUseCase -> LoginAsPortal -> ", errFindAdmin)
+		return admin, "", validators.GetErrorResponse(&ctx, localization.ErrLoginEmail, nil, utils.GetAsPointer(http.StatusBadRequest)) //change message
+	}
+	if admin == nil {
+		oRec.logger.Error("AdminUseCase -> LoginAsPortal -> Admin Is NULL")
+		return admin, "", validators.GetErrorResponse(&ctx, localization.ErrLoginEmail, nil, utils.GetAsPointer(http.StatusBadRequest)) //change message
+	}
+
+	//generate token
+	token, errToken := oRec.PortalJwtService.GenerateToken(ctx, utils.ConvertObjectIdToStringId(admin.ID))
+	if errToken != nil {
+		return admin, "", validators.GetErrorResponseFromErr(errToken)
+	}
+
+	//update token
+	admin.Tokens = append(admin.Tokens, token)
+	_, errUpdate := oRec.repo.Update(ctx, admin)
+	if errUpdate != nil {
+		return admin, "", validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
+	}
+
+	return admin2.AdminProfileBuilder(admin), token, validators.ErrorResponse{}
 }

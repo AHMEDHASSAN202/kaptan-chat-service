@@ -10,6 +10,16 @@ import (
 	"samm/pkg/validators/localization"
 )
 
+type Name struct {
+	Ar string `json:"ar" bson:"ar" validate:"required"`
+	En string `json:"en" bson:"en" validate:"required"`
+}
+
+type Account struct {
+	Id   string `json:"id" validate:"required"`
+	Name Name   `json:"name" validate:"required"`
+}
+
 type CreateAdminDTO struct {
 	ID              primitive.ObjectID `json:"-"`
 	Name            string             `json:"name" validate:"required,min=3"`
@@ -20,7 +30,7 @@ type CreateAdminDTO struct {
 	Type            string             `json:"type" validate:"required,oneof=admin portal"`
 	RoleId          string             `json:"role_id" validate:"required,mongodb,RoleExistsValidation"`
 	CountryIds      []string           `json:"country_ids" validate:"required,country_ids"`
-	AccountId       string             `json:"account_id"`
+	Account         *Account           `json:"account" validate:"required_without=ID,omitempty"`
 	AdminDetails    dto.AdminDetails   `json:"-"`
 }
 
