@@ -3,6 +3,7 @@ package validators
 import (
 	"context"
 	"fmt"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/go-playground/locales/ar"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -140,6 +141,40 @@ func ValidateStruct(c context.Context, validate *validator.Validate, obj interfa
 		return ErrorResponse{
 			ValidationErrors: errMap,
 			IsError:          true,
+		}
+	}
+	return ErrorResponse{}
+}
+
+func ValidateStructAndReturnOneError(c context.Context, validate *validator.Validate, obj interface{}, customErrorTags ...CustomErrorTags) ErrorResponse {
+	registerCustomValidation(c, validate, customErrorTags...)
+	NewRegisterCustomValidator(c, validate)
+
+	err := validate.Struct(obj)
+	lang := c.Value("lang")
+	spew.Dump(err)
+	if err != nil {
+		fmt.Println("err: ", err)
+		errs := err.(validator.ValidationErrors)
+		errMap := make(map[string][]string)
+		for _, e := range errs {
+
+			filedName := GetFiledName(e)
+			// can translate each error one at a time.
+			if lang == langEn {
+				errMap[filedName] = []string{e.Translate(transEn)}
+			} else {
+				errMap[filedName] = []string{e.Translate(transAr)}
+			}
+
+		}
+		return ErrorResponse{
+			ValidationErrors: errMap,
+			IsError:          true,
+			ErrorMessageObject: &Message{
+				Text: errs[0].Translate(utils.If(lang == langEn, transEn, transAr).(ut.Translator)),
+				Code: errs[0].Tag(),
+			},
 		}
 	}
 	return ErrorResponse{}

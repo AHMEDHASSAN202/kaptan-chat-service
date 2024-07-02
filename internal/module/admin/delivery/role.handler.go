@@ -168,18 +168,18 @@ func (a *RoleHandler) Delete(c echo.Context) error {
 	var input dto.DeleteRoleDTO
 	err := c.Bind(&input)
 	if err != nil {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+		return validators.ErrorStatusBadRequest(c, validators.GetErrorResponseFromErr(err))
 	}
 
 	validationErr := input.Validate(c, a.validator, a.roleCustomValidator.ValidateRoleHasAdmins(), a.roleCustomValidator.ValidateStaticRoles())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
-		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+		return validators.ErrorStatusBadRequest(c, validationErr)
 	}
 
 	errResp := a.roleUseCase.Delete(ctx, utils.ConvertStringIdToObjectId(input.ID))
 	if errResp.IsError {
-		return validators.ErrorResp(c, errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{})
