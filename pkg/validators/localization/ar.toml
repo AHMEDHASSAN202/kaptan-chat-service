@@ -51,16 +51,16 @@ description = "Feature not supported"
 other = "These features are not supported: {{.Feature}}"
 
 [E1013]
-description = "رمز OTP غير صالح"
-other = "رمز OTP المقدم غير صالح. يرجى التحقق والمحاولة مرة أخرى."
+description = "الرقم السري المتغير غير صالح"
+other = "الرقم السري المتغير غير صالح. يرجى التحقق والمحاولة مرة أخرى."
 
 [E1014]
-description = "رمز OTP منتهي الصلاحية"
-other = "رمز OTP منتهي الصلاحية. يرجى طلب رمز OTP جديد."
+description = "رمز الرقم السري المتغير منتهي الصلاحية"
+other = "رمز الرقم السري المتغير منتهي الصلاحية. يرجى طلب رمز جديد."
 
 [E1015]
 description = "تجاوز الحد الأقصى لمحاولات OTP"
-other = "لقد تجاوزت الحد الأقصى لمحاولات OTP لليوم. يرجى المحاولة مرة أخرى غدًا."
+other = "لقد تجاوزت الحد الأقصى لمحاولات الرقم السري المتغير . يرجى المحاولة مرة أخرى غدًا."
 
 [Modifier_groups_ids_rules]
 description = "Feature not supported"
@@ -110,10 +110,61 @@ other = "البريد الالكتروني مستخدم من قبل"
 description = "password is a required field"
 other = "كلمه المرور مطلوبه"
 
+[JwtSigningError]
+description = "Error generating signed string representation of JWT: there was a problem with the signing process"
+other = "حدث خطأ في إنشاء سلسلة نصية موقعة تمثل رمز JWT: كانت هناك مشكلة في عملية التوقيع"
+
+[JwtTokenExpiredError]
+description = "Error: the JSON Web Token has expired and cannot be verified"
+other = "حدث خطأ: انتهت صلاحية رمز JSON Web Token ولا يمكن التحقق من صحت"
+
+[JwtTokenParsingError]
+description = "Error: the JSON Web Token could not be parsed"
+other = "لم يمكن تحليل رمز JSON Web Token"
+
+[JwtTokenInvalidError]
+description = "The JSON Web Token is invalid and could not be verified"
+other = "رمز JSON Web Token غير صالح ولا يمكن التحقق من صحت"
+
+[ErrLoginPassword]
+description = "Incorrect password"
+other = "كلمة المرور التي أدخلتها غير صحيحة. يرجى التحقق من كلمة المرور الخاصة بك والمحاولة مرة أخرى."
+
+[ErrLoginEmail]
+description = "Incorrect email"
+other = "عنوان البريد الإلكتروني الذي أدخلته لا يتطابق مع أي حساب. يرجى التحقق من عنوان البريد الإلكتروني والمحاولة مرة أخرى."
+
+[ErrLoginBlocked]
+description = "المستخدم موقوف من الادمن."
+other = "Your Account Is disabled from admin"
+
+[ErrLoginInActive]
+description = "Your account is currently inactive. Please contact our support team for assistance in reactivating your account."
+other = "حسابك غير نشط حاليا. يرجى الاتصال بفريق الدعم لدينا للحصول على المساعدة في إعادة تنشيط حسابك."
+
+[E1401]
+description = "Unauthorized access"
+other = "غير مصرح لك بالوصول إلى هذا المورد. يرجى تسجيل الدخول باستخدام بيانات الاعتماد الصحيحة والمحاولة مرة أخرى."
+
+[E1403]
+description = "Unauthenticated access"
+other = "ليس لديك إذن للوصول إلى هذا المورد. إذا كنت تعتقد أن هذا خطأ، فيرجى الاتصال بفريق الدعم لدينا للحصول على المساعدة."
 
 [PhoneNumber_rule_validation]
 description = "رقم التليفون خطآ"
 other = "رقم التليفون خطآ"
+
+[RoleExistsValidation]
+description = "Role is not exists"
+other = "الدور غير موجود"
+
+[RoleHasAdminsValidation]
+description = "The role you are trying to delete is currently assigned to one or more admins. Please reassign these admins to a different role before attempting to delete this role."
+other = "الدور الذي تحاول حذفه تم تعيينه حاليًا لمسؤول واحد أو أكثر. يرجى إعادة تعيين هؤلاء المسؤولين إلى دور مختلف قبل محاولة حذف هذا الدور."
+
+[PreventDeleteRolesIdsValidation]
+description = "You are not allowed to delete main roles"
+other = "غير مسموح لك بحذف الأدوار الرئيسية."
 
 [Mobile_location_not_available_error]
 description = "mobile_location_not_available_error"

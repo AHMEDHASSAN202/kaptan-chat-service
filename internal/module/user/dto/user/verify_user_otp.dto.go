@@ -9,7 +9,7 @@ import (
 type VerifyUserOtpDto struct {
 	PhoneNumber string `json:"phone_number" validate:"required,PhoneNumber_rule_validation"`
 	CountryCode string `json:"country_code" validate:"required,len=4,numeric"`
-	Otp         string `json:"otp"`
+	Otp         string `json:"otp" validate:"required,len=4,alphanum"`
 }
 
 func (payload *VerifyUserOtpDto) Validate(ctx context.Context, validate *validator.Validate) validators.ErrorResponse {

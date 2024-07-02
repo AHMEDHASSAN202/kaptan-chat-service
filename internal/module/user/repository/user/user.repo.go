@@ -7,43 +7,48 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
-	"time"
 )
 
 type UserRepository struct {
-	userCollection *mgm.Collection
-	logger         logger.ILogger
+	userCollection        *mgm.Collection
+	deletedUserCollection *mgm.Collection
+	logger                logger.ILogger
 }
 
 const mongoUserRepositoryTag = "UserMongoRepository"
 
 func NewUserMongoRepository(dbs *mongo.Database, log logger.ILogger) domain.UserRepository {
 	userDbCollection := mgm.Coll(&domain.User{})
+	deletedUserCollection := mgm.Coll(&domain.DeletedUser{})
 
 	return &UserRepository{
-		userCollection: userDbCollection,
-		logger:         log,
+		userCollection:        userDbCollection,
+		deletedUserCollection: deletedUserCollection,
+		logger:                log,
 	}
 }
 
 func (l UserRepository) StoreUser(ctx *context.Context, user *domain.User) (err error) {
-	_, err = mgm.Coll(&domain.User{}).InsertOne(*ctx, user)
+	_, err = l.userCollection.InsertOne(*ctx, user)
 	if err != nil {
 		return err
 	}
 	return nil
-
 }
 
 func (l UserRepository) UpdateUser(ctx *context.Context, user *domain.User) (err error) {
 	update := bson.M{"$set": user}
-	_, err = mgm.Coll(&domain.User{}).UpdateByID(*ctx, user.ID, update)
+	upsert := true
+	opts := options.UpdateOptions{Upsert: &upsert}
+	_, err = mgm.Coll(&domain.User{}).UpdateByID(*ctx, user.ID, update, &opts)
 	return
 }
+
 func (l UserRepository) FindUser(ctx *context.Context, Id primitive.ObjectID) (user *domain.User, err error) {
 	domainData := domain.User{}
 	filter := bson.M{"deleted_at": nil, "_id": Id}
@@ -54,21 +59,10 @@ func (l UserRepository) FindUser(ctx *context.Context, Id primitive.ObjectID) (u
 
 func (l UserRepository) GetUserByPhoneNumber(ctx *context.Context, phoneNum, countryCode string) (user domain.User, err error) {
 	domainData := domain.User{}
-	filter := bson.M{"deleted_at": nil, "phone_number": phoneNum, "country_code": countryCode}
+	filter := bson.M{"phone_number": phoneNum, "country_code": countryCode}
 	err = l.userCollection.FirstWithCtx(*ctx, filter, &domainData)
 
 	return domainData, err
-}
-
-func (l UserRepository) DeleteUser(ctx *context.Context, Id primitive.ObjectID) (err error) {
-	userData, err := l.FindUser(ctx, Id)
-	if err != nil {
-		return err
-	}
-	now := time.Now().UTC()
-	userData.DeletedAt = &now
-	userData.UpdatedAt = now
-	return l.UpdateUser(ctx, userData)
 }
 
 func (i *UserRepository) List(ctx *context.Context, dto *user.ListUserDto) (usersRes *[]domain.User, paginationMeta *PaginationData, err error) {
@@ -79,6 +73,17 @@ func (i *UserRepository) List(ctx *context.Context, dto *user.ListUserDto) (user
 	if dto.Query != "" {
 		pattern := ".*" + dto.Query + ".*"
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name": bson.M{"$regex": pattern, "$options": "i"}}, {"phone_number": bson.M{"$regex": pattern, "$options": "i"}}}})
+	}
+
+	if dto.Status != "" {
+		if dto.Status == "active" {
+			matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"is_active": true})
+		} else if dto.Status == "inactive" {
+			matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"is_active": false})
+		}
+	}
+	if dto.Dob != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"dob": dto.Dob})
 	}
 
 	data, err := New(i.userCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
@@ -110,4 +115,26 @@ func (l UserRepository) UserEmailExists(ctx *context.Context, email, userId stri
 	}
 	count, _ := l.userCollection.CountDocuments(*ctx, filter)
 	return count > 0
+}
+
+func (l UserRepository) InsertDeletedUser(ctx *context.Context, user *domain.DeletedUser) (err error) {
+	_, err = l.deletedUserCollection.InsertOne(*ctx, user)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (l UserRepository) RemoveDeletedUser(user *domain.DeletedUser) (err error) {
+	err = l.deletedUserCollection.Delete(user)
+	if err != nil {
+		return err
+	}
+	return
+}
+
+func (r *UserRepository) FindByToken(ctx context.Context, token string) (*domain.User, error) {
+	var domainData domain.User
+	err := r.userCollection.FirstWithCtx(ctx, bson.M{"tokens": token, "deleted_at": nil}, &domainData, nil)
+	return &domainData, err
 }

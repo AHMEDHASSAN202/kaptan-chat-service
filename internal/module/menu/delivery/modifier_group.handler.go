@@ -5,6 +5,7 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/modifier_group"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares/portal"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 
@@ -19,13 +20,14 @@ type ModifierGroupHandler struct {
 }
 
 // InitModifierGroupController will initialize the article's HTTP controller
-func InitModifierGroupController(e *echo.Echo, modifierGroupUsecase domain.ModifierGroupUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitModifierGroupController(e *echo.Echo, modifierGroupUsecase domain.ModifierGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares) {
 	handler := &ModifierGroupHandler{
 		modifierGroupUsecase: modifierGroupUsecase,
 		validator:            validator,
 		logger:               logger,
 	}
 	portal := e.Group("api/v1/portal/modifier_group")
+	portal.Use(portalMiddlewares.AuthMiddleware)
 	{
 		portal.POST("", handler.Create)
 		portal.PUT("/:id", handler.Update)

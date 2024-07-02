@@ -27,7 +27,7 @@ func (i *UserCustomValidator) ValidateUserEmailIsUnique() func(fl validator.Fiel
 		if !ok {
 			return false
 		}
-		userId := profile.ID
+		userId := profile.CauserId
 		ctx := context.Background()
 		isExists := i.userUseCase.UserEmailExists(&ctx, email, userId)
 		return !isExists

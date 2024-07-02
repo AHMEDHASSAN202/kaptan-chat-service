@@ -2,9 +2,11 @@ package user
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
 	"samm/internal/module/user/responses"
+	"samm/pkg/jwt"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -13,16 +15,18 @@ import (
 )
 
 type UserUseCase struct {
-	repo   domain.UserRepository
-	logger logger.ILogger
+	repo           domain.UserRepository
+	userJwtService jwt.JwtService
+	logger         logger.ILogger
 }
 
 const tag = " UserUseCase "
 
-func NewUserUseCase(repo domain.UserRepository, logger logger.ILogger) domain.UserUseCase {
+func NewUserUseCase(repo domain.UserRepository, jwtFactory jwt.JwtServiceFactory, logger logger.ILogger) domain.UserUseCase {
 	return &UserUseCase{
-		repo:   repo,
-		logger: logger,
+		repo:           repo,
+		userJwtService: jwtFactory.UserJwtService(),
+		logger:         logger,
 	}
 }
 
@@ -35,65 +39,136 @@ func (l UserUseCase) StoreUser(ctx *context.Context, payload *user.CreateUserDto
 	return
 }
 
-func (l UserUseCase) SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse) {
-	userDomain, _ := l.repo.GetUserByPhoneNumber(ctx, payload.PhoneNumber, payload.CountryCode)
-	if userDomain.OtpCounter == 0 {
-		return validators.GetErrorResponse(ctx, localization.E1015, nil, nil)
+func (l UserUseCase) SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse, tempOtp string) {
+	userDomain, dbErr := l.repo.GetUserByPhoneNumber(ctx, payload.PhoneNumber, payload.CountryCode)
+	// new user
+	if dbErr != nil {
+		userDomain.ID = primitive.NewObjectID()
+		userDomain.CreatedAt = time.Now()
+		userDomain.UpdatedAt = time.Now()
 	}
+
+	newOtpCounter, ctrErr := otpTrialsPerDaySetter(userDomain.OtpCounter)
+	if ctrErr != nil {
+		return validators.GetErrorResponse(ctx, localization.E1015, nil, nil), ""
+	}
+
 	otp, otpErr := generateOTP()
 	if otpErr != nil {
 		err = validators.GetErrorResponseFromErr(otpErr)
 		return
 	}
 
-	expiry := time.Now().Add(5 * time.Minute)
-	userDomain.Otp = otp
-	userDomain.ExpiryOtpDate = &expiry
-	userDomain.PhoneNumber = payload.PhoneNumber
-	userDomain.CountryCode = payload.CountryCode
+	newUserDomain := domainBuilderAtCreateProfile(&userDomain, payload, otp, newOtpCounter)
 
-	// send otp sms provider
+	// send otp sms provider in-progress
 
-	errRe := l.repo.UpdateUser(ctx, &userDomain)
+	errRe := l.repo.UpdateUser(ctx, newUserDomain)
 	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe)
+		return validators.GetErrorResponseFromErr(errRe), ""
 	}
-	return
+
+	return validators.ErrorResponse{}, otp
 }
 
-func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (err validators.ErrorResponse) {
+func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse) {
 	userDomain, dbErr := l.repo.GetUserByPhoneNumber(ctx, payload.PhoneNumber, payload.CountryCode)
 	if dbErr != nil {
-		return validators.GetErrorResponseFromErr(dbErr)
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
 	}
 	if userDomain.Otp != payload.Otp {
-		return validators.GetErrorResponse(ctx, localization.E1013, nil, nil)
+		err = validators.GetErrorResponse(ctx, localization.E1013, nil, nil)
+		return
 	}
 	if userDomain.ExpiryOtpDate.Before(time.Now()) {
-		return validators.GetErrorResponse(ctx, localization.E1014, nil, nil)
+		err = validators.GetErrorResponse(ctx, localization.E1014, nil, nil)
+		return
 	}
 
-	userDomain.PhoneNumber = payload.PhoneNumber
-	userDomain.CountryCode = payload.CountryCode
+	// remove deletion if try to log in again within allowed period
+	if userDomain.DeletedAt != nil {
+		userDomain.DeletedAt = nil
+		deletedUser := domain.DeletedUser{User: userDomain}
+		dbErr = l.repo.RemoveDeletedUser(&deletedUser)
+		if dbErr != nil {
+			err = validators.GetErrorResponseFromErr(dbErr)
+			return
+		}
+	}
+
+	if userDomain.Name == "" {
+		userTempToken, tokenErr := l.userJwtService.GenerateToken(*ctx, utils.ConvertObjectIdToStringId(userDomain.ID), true)
+		if tokenErr != nil {
+			err = validators.GetErrorResponseFromErr(tokenErr)
+			return
+		}
+		res = responses.VerifyOtpResp{
+			IsProfileCompleted: false,
+			Token:              userTempToken,
+		}
+	} else {
+		userToken, tokenErr := l.userJwtService.GenerateToken(*ctx, utils.ConvertObjectIdToStringId(userDomain.ID))
+		if tokenErr != nil {
+			err = validators.GetErrorResponseFromErr(tokenErr)
+			return
+		}
+		res = responses.VerifyOtpResp{
+			IsProfileCompleted: true,
+			Token:              userToken,
+		}
+		userDomain.Tokens = append(userDomain.Tokens, userToken)
+	}
 
 	dbErr = l.repo.UpdateUser(ctx, &userDomain)
 	if dbErr != nil {
-		return validators.GetErrorResponseFromErr(dbErr)
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
 	}
+
 	return
 }
 
-func (l UserUseCase) UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse) {
-	userDomain, errRe := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(payload.ID))
-	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe)
+func (l UserUseCase) UserSignUp(ctx *context.Context, payload *user.UserSignUpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse) {
+	userDomain, dbErr := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(payload.CauserId))
+	if dbErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
+	}
+
+	userToken, tokenErr := l.userJwtService.GenerateToken(*ctx, utils.ConvertObjectIdToStringId(userDomain.ID))
+	if tokenErr != nil {
+		err = validators.GetErrorResponseFromErr(tokenErr)
+		return
+	}
+
+	updatedUserDomain := domainBuilderAtSignUp(payload, userToken, userDomain)
+
+	dbErr = l.repo.UpdateUser(ctx, updatedUserDomain)
+	if dbErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
+	}
+
+	res = responses.VerifyOtpResp{
+		IsProfileCompleted: true,
+		Token:              userToken,
+	}
+
+	return
+}
+
+func (l UserUseCase) UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (user *responses.MobileUser, err validators.ErrorResponse) {
+	userDomain, dbErr := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(payload.CauserId))
+	if dbErr != nil {
+		return nil, validators.GetErrorResponseFromErr(dbErr)
 	}
 	updatedUserDomain := domainBuilderAtUpdateProfile(payload, userDomain)
-	errRe = l.repo.UpdateUser(ctx, updatedUserDomain)
-	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe)
+	dbErr = l.repo.UpdateUser(ctx, updatedUserDomain)
+	if dbErr != nil {
+		return nil, validators.GetErrorResponseFromErr(dbErr)
 	}
-	return
+	return reponseBuilderAtUpdateProfile(updatedUserDomain), validators.ErrorResponse{}
 }
 func (l UserUseCase) FindUser(ctx *context.Context, Id string) (user domain.User, err validators.ErrorResponse) {
 	domainUser, errRe := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(Id))
@@ -104,20 +179,36 @@ func (l UserUseCase) FindUser(ctx *context.Context, Id string) (user domain.User
 }
 
 func (l UserUseCase) DeleteUser(ctx *context.Context, Id string) (err validators.ErrorResponse) {
-
-	delErr := l.repo.DeleteUser(ctx, utils.ConvertStringIdToObjectId(Id))
-	if delErr != nil {
-		return validators.GetErrorResponseFromErr(delErr)
+	domainUser, dbErr := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(Id))
+	if dbErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
 	}
+	// Add 14 days to the current time
+	deletedAt := time.Now().Add(14 * 24 * time.Hour)
+	domainUser.DeletedAt = &deletedAt
+	dbErr = l.repo.UpdateUser(ctx, domainUser)
+	if dbErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
+	}
+
+	deletedUser := domain.DeletedUser{User: *domainUser}
+	// store doc in user_coll_deleted_users
+	errRe := l.repo.InsertDeletedUser(ctx, &deletedUser)
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+
 	return validators.ErrorResponse{}
 }
 
 func (oRec *UserUseCase) List(ctx *context.Context, dto *user.ListUserDto) (*responses.ListResponse, validators.ErrorResponse) {
-	brands, paginationMeta, resErr := oRec.repo.List(ctx, dto)
+	users, paginationMeta, resErr := oRec.repo.List(ctx, dto)
 	if resErr != nil {
 		return nil, validators.GetErrorResponseFromErr(resErr)
 	}
-	return responses.SetListResponse(brands, paginationMeta), validators.ErrorResponse{}
+	return responses.SetListResponse(users, paginationMeta), validators.ErrorResponse{}
 }
 
 func (l UserUseCase) ToggleUserActivation(ctx *context.Context, userId string) (err validators.ErrorResponse) {

@@ -10,6 +10,7 @@ import (
 type ChangeAdminStatusDto struct {
 	Id           string             `param:"id" validate:"required,mongodb"`
 	Status       string             `json:"status" validate:"oneof=active inactive"`
+	AccountId    string             `json:"account_id"`
 	AdminDetails []dto.AdminDetails `json:"-"`
 }
 

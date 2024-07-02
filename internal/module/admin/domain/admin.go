@@ -7,6 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/admin/consts"
 	"samm/internal/module/admin/dto/admin"
+	"samm/internal/module/admin/dto/auth"
+	admin2 "samm/internal/module/admin/responses/admin"
 	"samm/pkg/utils"
 	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
@@ -14,7 +16,7 @@ import (
 )
 
 type MetaData struct {
-	AccountId string `json:"account_id" bson:"account_id"`
+	AccountId string `json:"account_id" bson:"account_id,omitempty"`
 }
 
 type Admin struct {
@@ -23,8 +25,7 @@ type Admin struct {
 	Email            string             `json:"email" bson:"email"`
 	Password         string             `json:"password" bson:"password,omitempty"`
 	Type             string             `json:"type" bson:"type"`
-	Role             string             `json:"role" bson:"role"`
-	Permissions      []string           `json:"permissions" bson:"permissions"`
+	Role             Role               `json:"role" bson:"role"`
 	CountryIds       []string           `json:"country_ids" bson:"country_ids"`
 	Status           string             `json:"status" bson:"status"`
 	Tokens           []string           `json:"tokens" bson:"tokens,omitempty"`
@@ -36,21 +37,31 @@ type Admin struct {
 type AdminUseCase interface {
 	Create(ctx context.Context, dto *admin.CreateAdminDTO) (string, validators.ErrorResponse)
 	Update(ctx context.Context, dto *admin.CreateAdminDTO) (string, validators.ErrorResponse)
-	Delete(ctx context.Context, adminId primitive.ObjectID) validators.ErrorResponse
+	Delete(ctx context.Context, adminId primitive.ObjectID, accountId string) validators.ErrorResponse
 	List(ctx context.Context, dto *admin.ListAdminDTO) (interface{}, validators.ErrorResponse)
-	Find(ctx context.Context, adminId primitive.ObjectID) (interface{}, validators.ErrorResponse)
+	Find(ctx context.Context, adminId primitive.ObjectID, accountId string) (interface{}, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, input *admin.ChangeAdminStatusDto) validators.ErrorResponse
 	CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID) (bool, validators.ErrorResponse)
+	CheckRoleExists(ctx context.Context, roleId primitive.ObjectID) (bool, validators.ErrorResponse)
+	AdminLogin(ctx context.Context, dto *auth.AdminAuthDTO) (interface{}, string, validators.ErrorResponse)
+	PortalLogin(ctx context.Context, dto *auth.PortalAuthDTO) (interface{}, string, validators.ErrorResponse)
+	Profile(ctx context.Context, adminId string) (*admin2.AdminProfileResponse, validators.ErrorResponse)
+	UpdateAdminProfile(ctx context.Context, dto *auth.UpdateAdminProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
+	UpdatePortalProfile(ctx context.Context, dto *auth.UpdatePortalProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 }
 
 type AdminRepository interface {
 	Create(ctx context.Context, domainData *Admin) (*Admin, error)
 	Update(ctx context.Context, domainData *Admin) (*Admin, error)
+	SyncRole(ctx context.Context, domainData *Role) error
 	Delete(ctx context.Context, domainData *Admin, adminDetails dto.AdminDetails) error
 	Find(ctx context.Context, adminId primitive.ObjectID) (*Admin, error)
+	FindByToken(ctx context.Context, token string, adminType []string) (*Admin, error)
 	List(ctx context.Context, dto *admin.ListAdminDTO) ([]Admin, *mongopagination.PaginationData, error)
 	ChangeStatus(ctx context.Context, model *Admin, input *admin.ChangeAdminStatusDto, adminDetails dto.AdminDetails) error
 	CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID) (bool, error)
+	CheckRoleExists(ctx context.Context, roleId primitive.ObjectID) (bool, error)
+	FindByEmail(ctx context.Context, email string, adminType string) (*Admin, error)
 }
 
 func (model *Admin) Creating(ctx context.Context) error {
@@ -64,4 +75,12 @@ func (model *Admin) Creating(ctx context.Context) error {
 func (model *Admin) SetSoftDelete(ctx context.Context) error {
 	model.DeletedAt = utils.GetAsPointer(time.Now().UTC())
 	return nil
+}
+
+func (model *Admin) IsActive() bool {
+	return model.Status == "active"
+}
+
+func (model *Admin) Authorized(accountId string) bool {
+	return model.MetaData.AccountId == accountId
 }

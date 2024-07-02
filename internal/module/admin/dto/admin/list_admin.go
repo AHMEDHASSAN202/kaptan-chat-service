@@ -9,10 +9,11 @@ import (
 
 type ListAdminDTO struct {
 	dto.Pagination
-	Query  string `json:"query" form:"query" query:"query"`
-	Status string `json:"status" form:"status" validate:"omitempty,oneof=active inactive" query:"status"`
-	Type   string `json:"type" form:"type" query:"type"`
-	Role   string `json:"role" form:"role" query:"role"`
+	Query     string `json:"query" form:"query" query:"query"`
+	Status    string `json:"status" form:"status" validate:"omitempty,oneof=active inactive" query:"status"`
+	Type      string `json:"type" form:"type" query:"type"`
+	Role      string `json:"role" form:"role" query:"role"`
+	AccountId string `json:"account_id" form:"account_id" query:"account_id"`
 	dto.AdminHeaders
 }
 

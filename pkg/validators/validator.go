@@ -145,6 +145,39 @@ func ValidateStruct(c context.Context, validate *validator.Validate, obj interfa
 	return ErrorResponse{}
 }
 
+func ValidateStructAndReturnOneError(c context.Context, validate *validator.Validate, obj interface{}, customErrorTags ...CustomErrorTags) ErrorResponse {
+	registerCustomValidation(c, validate, customErrorTags...)
+	NewRegisterCustomValidator(c, validate)
+
+	err := validate.Struct(obj)
+	lang := c.Value("lang")
+	if err != nil {
+		fmt.Println("err: ", err)
+		errs := err.(validator.ValidationErrors)
+		errMap := make(map[string][]string)
+		for _, e := range errs {
+
+			filedName := GetFiledName(e)
+			// can translate each error one at a time.
+			if lang == langEn {
+				errMap[filedName] = []string{e.Translate(transEn)}
+			} else {
+				errMap[filedName] = []string{e.Translate(transAr)}
+			}
+
+		}
+		return ErrorResponse{
+			ValidationErrors: errMap,
+			IsError:          true,
+			ErrorMessageObject: &Message{
+				Text: errs[0].Translate(utils.If(lang == langEn, transEn, transAr).(ut.Translator)),
+				Code: errs[0].Tag(),
+			},
+		}
+	}
+	return ErrorResponse{}
+}
+
 func registerCustomValidation(c context.Context, validate *validator.Validate, customErrorTags ...CustomErrorTags) {
 	for _, tag := range customErrorTags {
 		validate.RegisterTranslation(tag.ValidationTag, GetTrans(c), func(ut ut.Translator) error {
@@ -330,3 +363,8 @@ func ErrorStatusInternalServerError(c echo.Context, validationErr ErrorResponse)
 //		return
 //	}
 //}
+
+func GetError(ctx *context.Context, code string, data map[string]interface{}) error {
+	message := localization.GetTranslation(ctx, code, data, "")
+	return errors.New(message)
+}

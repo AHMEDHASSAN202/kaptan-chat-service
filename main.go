@@ -16,7 +16,9 @@ import (
 	"samm/pkg/http/echo"
 	echoserver "samm/pkg/http/echo/server"
 	httpclient "samm/pkg/http_client"
+	"samm/pkg/jwt"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 
@@ -35,6 +37,7 @@ func main() {
 				validators.Init,
 				aws.Init,
 			),
+			jwt.Module,
 			example.Module,
 			menu.Module,
 			order.Module,
@@ -44,6 +47,7 @@ func main() {
 			appConfig.Module,
 			common.Module,
 			user.Module,
+			middlewares.Module,
 			fx.Invoke(echo.RunServers, localization.InitLocalization),
 		),
 	).Run()

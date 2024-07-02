@@ -3,6 +3,7 @@ package delivery
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	custom_validators2 "samm/internal/module/admin/custom_validators"
 	"samm/internal/module/retails/custom_validators"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/account"
@@ -13,15 +14,17 @@ import (
 type AccountHandler struct {
 	accountUsecase        domain.AccountUseCase
 	retailCustomValidator custom_validators.RetailCustomValidator
+	adminCustomValidator  custom_validators2.AdminCustomValidator
 	validator             *validator.Validate
 	logger                logger.ILogger
 }
 
 // InitUserController will initialize the article's HTTP controller
-func InitAccountController(e *echo.Echo, us domain.AccountUseCase, retailCustomValidator custom_validators.RetailCustomValidator, validator *validator.Validate, logger logger.ILogger) {
+func InitAccountController(e *echo.Echo, us domain.AccountUseCase, adminCustomValidator custom_validators2.AdminCustomValidator, retailCustomValidator custom_validators.RetailCustomValidator, validator *validator.Validate, logger logger.ILogger) {
 	handler := &AccountHandler{
 		accountUsecase:        us,
 		retailCustomValidator: retailCustomValidator,
+		adminCustomValidator:  adminCustomValidator,
 		validator:             validator,
 		logger:                logger,
 	}
@@ -41,7 +44,7 @@ func (a *AccountHandler) StoreAccount(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := payload.Validate(c, a.validator, a.retailCustomValidator.ValidateAccountEmailIsUnique(""))
+	validationErr := payload.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)

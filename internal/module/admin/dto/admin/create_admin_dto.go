@@ -18,14 +18,13 @@ type CreateAdminDTO struct {
 	Password        string             `json:"password" validate:"Password_required_if_id_is_zero,omitempty,min=8"`
 	ConfirmPassword string             `json:"password_confirmation" validate:"required_with=Password,eqfield=Password"`
 	Type            string             `json:"type" validate:"required,oneof=admin portal"`
-	Role            string             `json:"role" validate:"required"`
-	Permissions     []string           `json:"permissions" validate:"required"`
+	RoleId          string             `json:"role_id" validate:"required,mongodb,RoleExistsValidation"`
 	CountryIds      []string           `json:"country_ids" validate:"required,country_ids"`
-	AccountId       string             `json:"account_id" validate:"required_if=Type portal"`
+	AccountId       string             `json:"account_id"`
 	AdminDetails    dto.AdminDetails   `json:"-"`
 }
 
-func (input *CreateAdminDTO) Validate(c echo.Context, validate *validator.Validate, validateEmailIsUnique func(fl validator.FieldLevel) bool, passwordRequiredIfIdIsZero func(fl validator.FieldLevel) bool) validators.ErrorResponse {
+func (input *CreateAdminDTO) Validate(c echo.Context, validate *validator.Validate, validateEmailIsUnique func(fl validator.FieldLevel) bool, passwordRequiredIfIdIsZero func(fl validator.FieldLevel) bool, roleExists func(fl validator.FieldLevel) bool) validators.ErrorResponse {
 	validate.RegisterValidation("country_ids", utils.ValidateCountryIds)
 	return validators.ValidateStruct(c.Request().Context(), validate, input, validators.CustomErrorTags{
 		ValidationTag:          localization.Email_is_unique_rules_validation,
@@ -34,5 +33,9 @@ func (input *CreateAdminDTO) Validate(c echo.Context, validate *validator.Valida
 		validators.CustomErrorTags{
 			ValidationTag:          localization.Password_required_if_id_is_zero,
 			RegisterValidationFunc: passwordRequiredIfIdIsZero,
+		},
+		validators.CustomErrorTags{
+			ValidationTag:          localization.RoleExistsValidation,
+			RegisterValidationFunc: roleExists,
 		})
 }

@@ -45,6 +45,14 @@ func (r *adminRepo) Update(ctx context.Context, domainData *domain.Admin) (*doma
 	return domainData, err
 }
 
+func (r *adminRepo) SyncRole(ctx context.Context, domainData *domain.Role) error {
+	_, err := mgm.Coll(&domain.Admin{}).UpdateMany(ctx, bson.M{"role._id": domainData.ID}, bson.M{"$set": bson.M{"role": domainData}})
+	if err != nil {
+		r.logger.Error("adminRepo -> SyncRole -> ", err)
+	}
+	return err
+}
+
 func (r *adminRepo) Delete(ctx context.Context, domainData *domain.Admin, adminDetails dto.AdminDetails) error {
 	domainData.SetSoftDelete(ctx)
 	domainData.AdminDetails = append(domainData.AdminDetails, adminDetails)
@@ -97,6 +105,10 @@ func (r *adminRepo) List(ctx context.Context, dto *admin.ListAdminDTO) ([]domain
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"role": strings.ToLower(dto.Role)})
 	}
 
+	if dto.AccountId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"meta_data.account_id": strings.ToLower(dto.AccountId)})
+	}
+
 	data, err := New(r.adminCollection.Collection).Context(ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
 
 	if data == nil || data.Data == nil {
@@ -136,4 +148,41 @@ func (r *adminRepo) CheckEmailExists(ctx context.Context, email string, adminId 
 		r.logger.Error("adminRepo -> CheckEmailExists -> ", err)
 	}
 	return c > 0, err
+}
+
+func (r *adminRepo) CheckRoleExists(ctx context.Context, roleId primitive.ObjectID) (bool, error) {
+	filter := bson.M{"role._id": roleId, "deleted_at": nil}
+	c, err := r.adminCollection.CountDocuments(ctx, filter)
+	if err != nil {
+		r.logger.Error("adminRepo -> CheckRoleExists -> ", err)
+	}
+	return c > 0, err
+}
+
+func (r *adminRepo) FindByEmail(ctx context.Context, email, adminType string) (*domain.Admin, error) {
+	domainData := domain.Admin{}
+	result := mgm.Coll(&domain.Admin{}).FindOne(ctx, bson.M{"email": email, "type": adminType, "deleted_at": nil})
+	if err := result.Err(); err != nil {
+		r.logger.Error("adminRepo -> FindByEmail -> ", err)
+		return &domainData, err
+	}
+	if err := result.Decode(&domainData); err != nil {
+		r.logger.Error("adminRepo -> FindByEmail -> ", err)
+		return &domainData, err
+	}
+	return &domainData, nil
+}
+
+func (r *adminRepo) FindByToken(ctx context.Context, token string, adminType []string) (*domain.Admin, error) {
+	domainData := domain.Admin{}
+	result := mgm.Coll(&domain.Admin{}).FindOne(ctx, bson.M{"tokens": token, "type": bson.M{"$in": adminType}, "deleted_at": nil})
+	if err := result.Err(); err != nil {
+		r.logger.Error("adminRepo -> FindByToken -> ", err)
+		return &domainData, err
+	}
+	if err := result.Decode(&domainData); err != nil {
+		r.logger.Error("adminRepo -> FindFindByTokenByEmail -> ", err)
+		return &domainData, err
+	}
+	return &domainData, nil
 }

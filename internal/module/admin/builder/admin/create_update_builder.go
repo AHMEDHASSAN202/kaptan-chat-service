@@ -9,12 +9,13 @@ import (
 	"strings"
 )
 
-func CreateUpdateAdminBuilder(admin *domain.Admin, input *dto.CreateAdminDTO) (*domain.Admin, error) {
+func CreateUpdateAdminBuilder(admin *domain.Admin, input *dto.CreateAdminDTO, role domain.Role) (*domain.Admin, error) {
 	if admin == nil {
 		admin = &domain.Admin{}
 		admin.ID = primitive.NewObjectID()
 		admin.Tokens = make([]string, 0)
 		admin.AdminDetails = []dto2.AdminDetails{}
+		admin.MetaData = domain.MetaData{AccountId: input.AccountId}
 	}
 	if input.Password != "" {
 		//hash password
@@ -25,13 +26,11 @@ func CreateUpdateAdminBuilder(admin *domain.Admin, input *dto.CreateAdminDTO) (*
 		admin.Password = password
 	}
 	admin.Name = input.Name
-	admin.Email = input.Email
+	admin.Email = strings.ToLower(input.Email)
 	admin.Status = strings.ToLower(input.Status)
-	admin.Role = strings.ToLower(input.Role)
-	admin.Permissions = utils.ArrayToLower(input.Permissions)
 	admin.Type = strings.ToLower(input.Type)
 	admin.CountryIds = utils.ArrayToUpper(input.CountryIds)
-	admin.MetaData = domain.MetaData{AccountId: input.AccountId}
+	admin.Role = role
 	admin.AdminDetails = append(admin.AdminDetails, input.AdminDetails)
 	return admin, nil
 }

@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 	"io"
@@ -421,6 +422,55 @@ func Distance(lt1, lng1, lt2, lng2 float64) float64 {
 
 func degreesToRadians(degrees float64) float64 {
 	return degrees * (math.Pi / 180)
+}
+
+func IsBearerToken(tokenValue string) (isBearerToken bool, tokenParts []string) {
+	tokenParts = strings.Split(tokenValue, " ")
+	if len(tokenParts) == 2 && strings.ToLower(tokenParts[0]) == strings.ToLower("Bearer") {
+		isBearerToken = true
+	}
+	return
+}
+
+func GetValueByKey[T any](slice []T, index int) *T {
+	if index >= 0 && index < len(slice) {
+		return &slice[index]
+	}
+	return nil
+}
+
+func assignMapToStructFields(out interface{}, mapClaims jwt.MapClaims) error {
+	outValue := reflect.ValueOf(out).Elem()
+	outType := outValue.Type()
+
+	for key, value := range mapClaims {
+		found := false
+		// Find the corresponding struct field by JSON tag
+		for i := 0; i < outType.NumField(); i++ {
+			field := outType.Field(i)
+			tag := field.Tag.Get("json")
+			if tag == key {
+				found = true
+				fieldValue := outValue.FieldByName(field.Name)
+				if fieldValue.IsValid() && fieldValue.CanSet() {
+					val := reflect.ValueOf(value)
+					if fieldValue.Type() == val.Type() {
+						fieldValue.Set(val)
+					} else if fieldValue.Kind() == reflect.Int && val.Kind() == reflect.Float64 {
+						fieldValue.SetInt(int64(val.Float()))
+					} else if fieldValue.Kind() == reflect.String && val.Kind() == reflect.String {
+						fieldValue.SetString(val.String())
+					}
+				}
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("no matching JSON tag found for claim key: %s", key)
+		}
+	}
+
+	return nil
 }
 
 func EqualizeSlices(slice1, slice2 []string) ([]string, []string) {

@@ -9,8 +9,6 @@ import (
 
 type UpdateAccountDto struct {
 	Name            Name     `json:"name" validate:"required"`
-	Email           string   `json:"email" validate:"required,email,Account_Email_is_unique_rules_validation"`
-	Password        string   `json:"password"`
 	Country         Country  `json:"country" validate:"required"`
 	AllowedBrandIds []string `json:"allowed_brand_ids" validate:"required"`
 }

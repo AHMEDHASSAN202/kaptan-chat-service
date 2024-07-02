@@ -21,19 +21,24 @@ type User struct {
 	Dob              string     `json:"dob" bson:"dob"`
 	Otp              string     `json:"otp" bson:"otp"`
 	ExpiryOtpDate    *time.Time `json:"expiry_otp_date" bson:"expiry_otp_date"`
-	OtpCounter       int        `json:"otp_counter" bson:"otp_counter"`
+	OtpCounter       string     `json:"otp_counter" bson:"otp_counter"`
 	ImageURL         string     `json:"image_url" bson:"image_url"`
 	Country          string     `json:"country" bson:"country"`
 	IsActive         bool       `json:"is_active" bson:"is_active"`
 	DeletedAt        *time.Time `json:"deleted_at" bson:"deleted_at"`
-	Tokens           []string   `json:"tokens" bson:"tokens"`
+	Tokens           []string   `json:"-" bson:"tokens"`
+}
+
+type DeletedUser struct {
+	User `bson:",inline"`
 }
 
 type UserUseCase interface {
 	StoreUser(ctx *context.Context, payload *user.CreateUserDto) (err validators.ErrorResponse)
-	SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse)
-	VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (err validators.ErrorResponse)
-	UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (err validators.ErrorResponse)
+	SendOtp(ctx *context.Context, payload *user.SendUserOtpDto) (err validators.ErrorResponse, tempOtp string)
+	VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse)
+	UserSignUp(ctx *context.Context, payload *user.UserSignUpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse)
+	UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (user *responses.MobileUser, err validators.ErrorResponse)
 	FindUser(ctx *context.Context, Id string) (user User, err validators.ErrorResponse)
 	DeleteUser(ctx *context.Context, Id string) (err validators.ErrorResponse)
 	List(ctx *context.Context, dto *user.ListUserDto) (*responses.ListResponse, validators.ErrorResponse)
@@ -43,10 +48,12 @@ type UserUseCase interface {
 
 type UserRepository interface {
 	StoreUser(ctx *context.Context, user *User) (err error)
+	InsertDeletedUser(ctx *context.Context, user *DeletedUser) (err error)
 	UpdateUser(ctx *context.Context, user *User) (err error)
 	FindUser(ctx *context.Context, Id primitive.ObjectID) (user *User, err error)
 	GetUserByPhoneNumber(ctx *context.Context, phoneNum, countryCode string) (user User, err error)
-	DeleteUser(ctx *context.Context, Id primitive.ObjectID) (err error)
+	RemoveDeletedUser(user *DeletedUser) (err error)
+	FindByToken(ctx context.Context, token string) (domainData *User, err error)
 	List(ctx *context.Context, dto *user.ListUserDto) (usersRes *[]User, paginationMeta *PaginationData, err error)
 	UserEmailExists(ctx *context.Context, email, userId string) bool
 }

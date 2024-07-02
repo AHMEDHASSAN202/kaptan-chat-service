@@ -8,6 +8,7 @@ import (
 	"samm/internal/module/admin/domain"
 	dto "samm/internal/module/admin/dto/admin"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares/admin"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
@@ -21,7 +22,7 @@ type AdminHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitAdminController(e *echo.Echo, adminUseCase domain.AdminUseCase, adminCustomValidator custom_validators.AdminCustomValidator, validator *validator.Validate, logger logger.ILogger) {
+func InitAdminController(e *echo.Echo, adminUseCase domain.AdminUseCase, adminCustomValidator custom_validators.AdminCustomValidator, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares) {
 	handler := &AdminHandler{
 		adminUseCase:         adminUseCase,
 		validator:            validator,
@@ -29,6 +30,7 @@ func InitAdminController(e *echo.Echo, adminUseCase domain.AdminUseCase, adminCu
 		adminCustomValidator: adminCustomValidator,
 	}
 	admin := e.Group("api/v1/admin/admin")
+	admin.Use(adminMiddlewares.AuthMiddleware)
 	{
 		admin.GET("", handler.List)
 		admin.GET("/:id", handler.Find)
@@ -81,7 +83,7 @@ func (a *AdminHandler) Find(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
-	data, errResp := a.adminUseCase.Find(ctx, utils.ConvertStringIdToObjectId(id))
+	data, errResp := a.adminUseCase.Find(ctx, utils.ConvertStringIdToObjectId(id), "")
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
@@ -101,7 +103,7 @@ func (a *AdminHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero())
+	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero(), a.adminCustomValidator.ValidateRoleExists())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -134,7 +136,7 @@ func (a *AdminHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero())
+	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero(), a.adminCustomValidator.ValidateRoleExists())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -159,7 +161,7 @@ func (a *AdminHandler) Delete(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
-	errResp := a.adminUseCase.Delete(ctx, utils.ConvertStringIdToObjectId(id))
+	errResp := a.adminUseCase.Delete(ctx, utils.ConvertStringIdToObjectId(id), "")
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
