@@ -13,6 +13,7 @@ func CreateUpdateRoleBuilder(role *domain.Role, input *dto.CreateRoleDTO) (*doma
 		role = &domain.Role{}
 		role.ID = primitive.NewObjectID()
 		role.AdminDetails = []dto2.AdminDetails{}
+		role.Type = input.Type
 	}
 	role.Name.En = input.Name.En
 	role.Name.Ar = input.Name.Ar

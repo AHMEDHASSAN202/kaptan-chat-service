@@ -1,4 +1,4 @@
-package admin
+package admin_portal
 
 import (
 	"github.com/go-playground/validator/v10"
@@ -7,13 +7,13 @@ import (
 	"samm/pkg/validators"
 )
 
-type ChangeAdminStatusDto struct {
+type ChangeAdminPortalStatusDto struct {
 	Id           string             `param:"id" validate:"required,mongodb"`
 	Status       string             `json:"status" validate:"oneof=active inactive"`
-	AccountId    string             `json:"account_id"`
 	AdminDetails []dto.AdminDetails `json:"-"`
+	dto.PortalHeaders
 }
 
-func (input *ChangeAdminStatusDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
+func (input *ChangeAdminPortalStatusDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
 	return validators.ValidateStruct(c.Request().Context(), validate, input)
 }

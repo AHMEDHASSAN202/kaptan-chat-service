@@ -4,9 +4,12 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"samm/internal/module/admin/consts"
 	"samm/internal/module/admin/domain"
 	"samm/internal/module/admin/dto/admin"
+	"samm/internal/module/admin/dto/admin_portal"
 	"samm/internal/module/admin/dto/auth"
+	role2 "samm/internal/module/admin/responses/role"
 	"samm/pkg/utils"
 	"strings"
 )
@@ -48,6 +51,12 @@ func (i *AdminCustomValidator) ValidateEmailIsUnique() func(fl validator.FieldLe
 				return false
 			}
 			adminId = adminDto.ID
+		case *admin_portal.CreateAdminPortalDTO:
+			adminDto, ok := fl.Top().Interface().(*admin_portal.CreateAdminPortalDTO)
+			if !ok {
+				return false
+			}
+			adminId = adminDto.ID
 			//default:
 			//return false
 		}
@@ -65,6 +74,12 @@ func (i *AdminCustomValidator) PasswordRequiredIfIdIsZero() func(fl validator.Fi
 		switch fl.Top().Interface().(type) {
 		case *admin.CreateAdminDTO:
 			adminDto, ok := fl.Top().Interface().(*admin.CreateAdminDTO)
+			if !ok {
+				return false
+			}
+			adminId = adminDto.ID
+		case *admin_portal.CreateAdminPortalDTO:
+			adminDto, ok := fl.Top().Interface().(*admin_portal.CreateAdminPortalDTO)
 			if !ok {
 				return false
 			}
@@ -100,6 +115,26 @@ func (i *AdminCustomValidator) ValidateRoleExists() func(fl validator.FieldLevel
 		}
 		if role == nil {
 			return false
+		}
+		switch fl.Top().Interface().(type) {
+		case *admin_portal.CreateAdminPortalDTO:
+			_, ok := fl.Top().Interface().(*admin_portal.CreateAdminPortalDTO)
+			if !ok {
+				return false
+			}
+			if role.(role2.FindRoleResponse).Type != consts.ROLE_PORTAL_TYPE {
+				return false
+			}
+		case *auth.UpdatePortalProfileDTO:
+			_, ok := fl.Top().Interface().(*auth.UpdatePortalProfileDTO)
+			if !ok {
+				return false
+			}
+			if role.(role2.FindRoleResponse).Type != consts.ROLE_PORTAL_TYPE {
+				return false
+			}
+		default:
+			return true
 		}
 		return true
 	}

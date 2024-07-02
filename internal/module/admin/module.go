@@ -21,6 +21,6 @@ var Module = fx.Options(
 		custom_validators.InitNewCustomValidatorsRole,
 	),
 	fx.Invoke(
-		delivery.InitAdminController, delivery.InitAdminAuthController, delivery.InitRoleController,
+		delivery.InitAdminController, delivery.InitAdminAuthController, delivery.InitAdminPortalController, delivery.InitRoleController,
 	),
 )

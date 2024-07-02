@@ -67,6 +67,11 @@ func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO)
 		return "", validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
+	if input.AccountId != "" && !admin.Authorized(input.AccountId) {
+		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Update Admin -> ", admin.ID)
+		return "", validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
+
 	role, err := oRec.roleRepo.Find(ctx, utils.ConvertStringIdToObjectId(input.RoleId))
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> Find Role -> ", err)
@@ -88,11 +93,16 @@ func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO)
 	return utils.ConvertObjectIdToStringId(admin.ID), validators.ErrorResponse{}
 }
 
-func (oRec *AdminUseCase) Delete(ctx context.Context, adminId primitive.ObjectID) validators.ErrorResponse {
+func (oRec *AdminUseCase) Delete(ctx context.Context, adminId primitive.ObjectID, accountId string) validators.ErrorResponse {
 	admin, err := oRec.repo.Find(ctx, adminId)
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> Delete -> ", err)
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	if accountId != "" && !admin.Authorized(accountId) {
+		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Update Admin -> ", admin.ID)
+		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
 	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Delete Admin", UpdatedAt: time.Now()}
@@ -116,13 +126,19 @@ func (oRec *AdminUseCase) List(ctx context.Context, input *dto.ListAdminDTO) (in
 	return listResponse, validators.ErrorResponse{}
 }
 
-func (oRec *AdminUseCase) Find(ctx context.Context, adminId primitive.ObjectID) (interface{}, validators.ErrorResponse) {
+func (oRec *AdminUseCase) Find(ctx context.Context, adminId primitive.ObjectID, accountId string) (interface{}, validators.ErrorResponse) {
 	admin, err := oRec.repo.Find(ctx, adminId)
 	adminResp := builder.FindAdminBuilder(admin)
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> Find -> ", err)
 		return adminResp, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
+
+	if accountId != "" && !admin.Authorized(accountId) {
+		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Find Admin -> ", admin.ID)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
+
 	return adminResp, validators.ErrorResponse{}
 }
 
@@ -131,6 +147,11 @@ func (oRec *AdminUseCase) ChangeStatus(ctx context.Context, input *dto.ChangeAdm
 	if errFind != nil {
 		oRec.logger.Error("AdminUseCase -> Find -> ChangeStatus -> ", errFind)
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	if input.AccountId != "" && !admin.Authorized(input.AccountId) {
+		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized ChangeStatus Admin -> ", admin.ID)
+		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
 	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Change Admin Status", UpdatedAt: time.Now()}

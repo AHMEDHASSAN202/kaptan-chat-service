@@ -13,6 +13,7 @@ import (
 	dto "samm/internal/module/admin/dto/role"
 	"samm/pkg/logger"
 	"samm/pkg/middlewares/admin"
+	"samm/pkg/middlewares/portal"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
@@ -26,7 +27,7 @@ type RoleHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitRoleController(e *echo.Echo, roleUseCase domain.RoleUseCase, roleCustomValidator custom_validators.RoleCustomValidator, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares) {
+func InitRoleController(e *echo.Echo, roleUseCase domain.RoleUseCase, roleCustomValidator custom_validators.RoleCustomValidator, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, portalMiddlewares *portal.ProviderMiddlewares) {
 	handler := &RoleHandler{
 		roleUseCase:         roleUseCase,
 		validator:           validator,
@@ -41,6 +42,12 @@ func InitRoleController(e *echo.Echo, roleUseCase domain.RoleUseCase, roleCustom
 		role.POST("", handler.Create)
 		role.PUT("/:id", handler.Update)
 		role.DELETE("/:id", handler.Delete)
+	}
+
+	rolePortal := e.Group("api/v1/portal/role")
+	rolePortal.Use(portalMiddlewares.AuthMiddleware)
+	{
+		rolePortal.GET("", handler.PortalListRoles)
 	}
 
 	permissions := e.Group("api/v1/admin/permissions")
@@ -210,4 +217,12 @@ func (a *RoleHandler) ListPermissions(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{"permissions": permissions})
+}
+
+func (a *RoleHandler) PortalListRoles(c echo.Context) error {
+	req := c.Request()
+	query := req.URL.Query()
+	query.Add("type", "portal")
+	req.URL.RawQuery = query.Encode()
+	return a.List(c)
 }

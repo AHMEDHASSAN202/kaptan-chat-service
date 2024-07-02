@@ -83,7 +83,7 @@ func (a *AdminHandler) Find(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
-	data, errResp := a.adminUseCase.Find(ctx, utils.ConvertStringIdToObjectId(id))
+	data, errResp := a.adminUseCase.Find(ctx, utils.ConvertStringIdToObjectId(id), "")
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
@@ -161,7 +161,7 @@ func (a *AdminHandler) Delete(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
-	errResp := a.adminUseCase.Delete(ctx, utils.ConvertStringIdToObjectId(id))
+	errResp := a.adminUseCase.Delete(ctx, utils.ConvertStringIdToObjectId(id), "")
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}

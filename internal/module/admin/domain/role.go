@@ -18,6 +18,7 @@ type LocalizeText struct {
 type Role struct {
 	mgm.DefaultModel `bson:",inline"`
 	Name             LocalizeText       `json:"name" bson:"name"`
+	Type             string             `json:"type" bson:"type"`
 	Permissions      []string           `json:"permissions" bson:"permissions"`
 	AdminDetails     []dto.AdminDetails `json:"admin_details" bson:"admin_details,omitempty"`
 }
