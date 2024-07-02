@@ -12,5 +12,15 @@ type AdminProfileResponse struct {
 	Type       string                `json:"type"`
 	Role       role.FindRoleResponse `json:"role"`
 	CountryIds []string              `json:"country_ids"`
-	AccountId  string                `json:"account_id"`
+	Account    *Account              `json:"account"`
+}
+
+type Account struct {
+	ID   primitive.ObjectID `json:"id"`
+	Name LocalizationText   `json:"name"`
+}
+
+type LocalizationText struct {
+	Ar string `json:"ar"`
+	En string `json:"en"`
 }

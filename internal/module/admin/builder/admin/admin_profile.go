@@ -7,13 +7,16 @@ import (
 )
 
 func AdminProfileBuilder(model *domain.Admin) *admin.AdminProfileResponse {
-	return &admin.AdminProfileResponse{
+	adminResp := &admin.AdminProfileResponse{
 		ID:         model.ID,
 		Name:       model.Name,
 		Email:      model.Email,
 		Type:       model.Type,
 		Role:       admin2.FindRoleBuilder(&model.Role),
 		CountryIds: model.CountryIds,
-		AccountId:  model.MetaData.AccountId,
 	}
+	if model.Account != nil {
+		adminResp.Account = &admin.Account{ID: model.Account.Id, Name: admin.LocalizationText{Ar: model.Account.Name.Ar, En: model.Account.Name.En}}
+	}
+	return adminResp
 }

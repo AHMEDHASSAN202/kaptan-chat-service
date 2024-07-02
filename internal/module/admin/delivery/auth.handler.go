@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"samm/internal/module/admin/custom_validators"
 	"samm/internal/module/admin/domain"
+	admin2 "samm/internal/module/admin/dto/admin"
 	dto "samm/internal/module/admin/dto/auth"
 	"samm/pkg/logger"
 	"samm/pkg/middlewares/admin"
@@ -36,6 +37,7 @@ func InitAdminAuthController(e *echo.Echo, adminUseCase domain.AdminUseCase, val
 		adminAuth.POST("/login", handler.AdminLogin)
 		adminAuth.GET("/profile", handler.AdminProfile, adminMiddlewares.AuthMiddleware)
 		adminAuth.PUT("/profile", handler.UpdateAdminProfile, adminMiddlewares.AuthMiddleware)
+		adminAuth.POST("/login-as-portal/:id", handler.LoginAsPortal, adminMiddlewares.AuthMiddleware)
 	}
 
 	portalAuth := e.Group("api/v1/portal/auth")
@@ -111,7 +113,7 @@ func (a *AdminAuthHandler) AdminProfile(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	profile, errResp := a.adminUseCase.Profile(ctx, input.CauserId)
+	profile, errResp := a.adminUseCase.Profile(ctx, input.CauserId, "")
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
@@ -132,7 +134,7 @@ func (a *AdminAuthHandler) PortalProfile(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	profile, errResp := a.adminUseCase.Profile(ctx, input.CauserId)
+	profile, errResp := a.adminUseCase.Profile(ctx, input.CauserId, input.AccountId)
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
@@ -198,4 +200,35 @@ func (a *AdminAuthHandler) UpdatePortalProfile(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{"profile": profile})
+}
+
+func (a *AdminAuthHandler) LoginAsPortal(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input admin2.LoginAsPortalDto
+	binder := &echo.DefaultBinder{}
+	err := binder.BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	err = c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusBadRequest(c, validationErr)
+	}
+
+	profile, token, errResp := a.adminUseCase.LoginAsPortal(ctx, &input)
+	if errResp.IsError {
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"profile": profile, "token": token})
 }

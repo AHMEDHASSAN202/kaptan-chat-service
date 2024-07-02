@@ -136,7 +136,7 @@ func (a *AdminPortalHandler) CreateAdminPortal(c echo.Context) error {
 		Type:       consts.PORTAL_TYPE,
 		RoleId:     input.RoleId,
 		CountryIds: utils.Countries,
-		AccountId:  input.AccountId,
+		Account:    &dto.Account{Id: utils.ConvertObjectIdToStringId(input.Account.Id), Name: dto.Name{Ar: input.Account.Name.Ar, En: input.Account.Name.En}},
 	})
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
@@ -180,7 +180,7 @@ func (a *AdminPortalHandler) UpdateAdminPortal(c echo.Context) error {
 		Type:       consts.PORTAL_TYPE,
 		RoleId:     input.RoleId,
 		CountryIds: utils.Countries,
-		AccountId:  input.AccountId,
+		Account:    nil,
 		Status:     input.Status,
 	})
 	if errResp.IsError {
