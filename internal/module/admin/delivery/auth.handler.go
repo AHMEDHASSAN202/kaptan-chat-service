@@ -10,6 +10,7 @@ import (
 	dto "samm/internal/module/admin/dto/auth"
 	"samm/pkg/logger"
 	"samm/pkg/middlewares/admin"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/middlewares/portal"
 	"samm/pkg/utils"
 	dto2 "samm/pkg/utils/dto"
@@ -24,7 +25,7 @@ type AdminAuthHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitAdminAuthController(e *echo.Echo, adminUseCase domain.AdminUseCase, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, portalMiddlewares *portal.ProviderMiddlewares, adminCustomValidator custom_validators.AdminCustomValidator) {
+func InitAdminAuthController(e *echo.Echo, adminUseCase domain.AdminUseCase, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, portalMiddlewares *portal.ProviderMiddlewares, adminCustomValidator custom_validators.AdminCustomValidator, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &AdminAuthHandler{
 		adminUseCase:         adminUseCase,
 		validator:            validator,
@@ -37,7 +38,7 @@ func InitAdminAuthController(e *echo.Echo, adminUseCase domain.AdminUseCase, val
 		adminAuth.POST("/login", handler.AdminLogin)
 		adminAuth.GET("/profile", handler.AdminProfile, adminMiddlewares.AuthMiddleware)
 		adminAuth.PUT("/profile", handler.UpdateAdminProfile, adminMiddlewares.AuthMiddleware)
-		adminAuth.POST("/login-as-portal/:id", handler.LoginAsPortal, adminMiddlewares.AuthMiddleware)
+		adminAuth.POST("/login-as-portal/:id", handler.LoginAsPortal, adminMiddlewares.AuthMiddleware, commonMiddlewares.PermissionMiddleware("portal-login-accounts"))
 	}
 
 	portalAuth := e.Group("api/v1/portal/auth")

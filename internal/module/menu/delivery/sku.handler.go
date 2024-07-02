@@ -6,6 +6,7 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/sku"
 	"samm/pkg/logger"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/middlewares/portal"
 	"samm/pkg/validators"
 
@@ -21,7 +22,7 @@ type SKUHandler struct {
 }
 
 // InitSKUController will initialize the article's HTTP controller
-func InitSKUController(e *echo.Echo, skuUsecase domain.SKUUseCase, skuCustomValidator custom_validators.SKUCustomValidator, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares) {
+func InitSKUController(e *echo.Echo, skuUsecase domain.SKUUseCase, skuCustomValidator custom_validators.SKUCustomValidator, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &SKUHandler{
 		skuUsecase:         skuUsecase,
 		skuCustomValidator: skuCustomValidator,
@@ -31,8 +32,8 @@ func InitSKUController(e *echo.Echo, skuUsecase domain.SKUUseCase, skuCustomVali
 	portal := e.Group("api/v1/portal/sku")
 	portal.Use(portalMiddlewares.AuthMiddleware)
 	{
-		portal.POST("", handler.Create)
-		portal.GET("", handler.List)
+		portal.POST("", handler.Create, commonMiddlewares.PermissionMiddleware("create-menus", "portal-login-accounts"))
+		portal.GET("", handler.List, commonMiddlewares.PermissionMiddleware("list-menus", "portal-login-accounts"))
 	}
 }
 

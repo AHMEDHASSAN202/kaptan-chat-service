@@ -60,7 +60,12 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 			return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 		}
 
-		jsonByte, err := json.Marshal(admin)
+		if admin.Type == consts.PORTAL_TYPE && admin.Account == nil {
+			m.logger.Info("AuthMiddleware -> Admin Don't Has Account")
+			return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
+		}
+
+		jsonPermissionsByte, err := json.Marshal(admin.Role.Permissions)
 		if err != nil {
 			m.logger.Info("AuthMiddleware -> Marshal Error -> ", err)
 			return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
@@ -68,7 +73,11 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 
 		c.Request().Header.Add("causer-id", utils.ConvertObjectIdToStringId(admin.ID))
 		c.Request().Header.Add("causer-type", admin.Type)
-		c.Request().Header.Add("causer-details", string(jsonByte))
+		c.Request().Header.Add("causer-name", admin.Name)
+		c.Request().Header.Add("causer-permissions", string(jsonPermissionsByte))
+		if admin.Account != nil {
+			c.Request().Header.Add("causer-account-id", utils.ConvertObjectIdToStringId(admin.Account.Id))
+		}
 
 		return next(c)
 	}
