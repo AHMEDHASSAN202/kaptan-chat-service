@@ -73,10 +73,14 @@ type (
 		BucketName string
 	}
 	JWTConfig struct {
-		AdminSigningKey  string
-		AdminExpires     time.Duration `mapstructure:"admin_expires"`
-		PortalSigningKey string
-		PortalExpires    time.Duration `mapstructure:"portal_expires"`
+		AdminSigningKey    string
+		AdminExpires       time.Duration `mapstructure:"admin_expires"`
+		PortalSigningKey   string
+		PortalExpires      time.Duration `mapstructure:"portal_expires"`
+		UserSigningKey     string
+		UserExpires        time.Duration `mapstructure:"user_expires"`
+		UserTempSigningKey string
+		UserTempExpires    time.Duration `mapstructure:"user_temp_expires"`
 	}
 )
 
@@ -146,6 +150,8 @@ func setFromEnv(cfg *Config) {
 
 	cfg.JWTConfig.AdminSigningKey = os.Getenv("JWT_SECRET_ADMIN")
 	cfg.JWTConfig.PortalSigningKey = os.Getenv("JWT_SECRET_PORTAL")
+	cfg.JWTConfig.UserSigningKey = os.Getenv("JWT_SECRET_USER")
+	cfg.JWTConfig.UserTempSigningKey = os.Getenv("JWT_SECRET_USER_TEMP")
 
 	var port = defaultHTTPPort
 	if os.Getenv("PORT") != "" {

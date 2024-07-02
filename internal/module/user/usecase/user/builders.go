@@ -3,12 +3,12 @@ package user
 import (
 	"crypto/rand"
 	"fmt"
-	"github.com/golang-jwt/jwt"
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"math/big"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
+	"samm/internal/module/user/responses"
 	"samm/pkg/utils"
 	"strconv"
 	"strings"
@@ -17,11 +17,6 @@ import (
 
 const maxNumOfTrialsPerDay = 3
 const jwtSecretKey = "jwtSecret"
-
-type UserClaim struct {
-	UserID string `json:"user_id"`
-	jwt.StandardClaims
-}
 
 func domainBuilderAtCreateProfile(userDomain *domain.User, payload *user.SendUserOtpDto, otp, ctr string) *domain.User {
 	expiry := time.Now().Add(5 * time.Minute)
@@ -36,7 +31,7 @@ func domainBuilderAtCreateProfile(userDomain *domain.User, payload *user.SendUse
 
 func domainBuilderAtUpdateProfile(dto *user.UpdateUserProfileDto, domainData *domain.User) *domain.User {
 	copier.Copy(&domainData, dto)
-	domainData.ID = utils.ConvertStringIdToObjectId(dto.ID)
+	domainData.ID = utils.ConvertStringIdToObjectId(dto.CauserId)
 	domainData.UpdatedAt = time.Now()
 	return domainData
 }
@@ -44,7 +39,6 @@ func domainBuilderAtUpdateProfile(dto *user.UpdateUserProfileDto, domainData *do
 func domainBuilderAtSignUp(dto *user.UserSignUpDto, userToken string, domainData *domain.User) *domain.User {
 	domainData.UpdatedAt = time.Now()
 	domainData.Name = dto.Name
-	domainData.Email = dto.Email
 	domainData.IsActive = true
 	domainData.Tokens = append(domainData.Tokens, userToken)
 	return domainData
@@ -96,27 +90,8 @@ func otpTrialsPerDayGetter(otpCounter string) (day string, counter int) {
 	return
 }
 
-// todo update user claim
-func generateUserToken(userDomain *domain.User) (string, error) {
-	userClaim := UserClaim{
-		UserID: userDomain.ID.Hex(),
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().AddDate(1, 0, 0).Unix(),
-		},
-	}
-
-	token, err := utils.CreateJWT(userClaim, jwtSecretKey)
-	if err != nil {
-		return "", err
-	}
-
-	return token, nil
-}
-
-func validateUserToken(token string) (claims *UserClaim, err error) {
-	err = utils.ValidateJWT(token, jwtSecretKey, claims)
-	if err != nil {
-		return
-	}
-	return
+func reponseBuilderAtUpdateProfile(user *domain.User) *responses.MobileUser {
+	var userResp responses.MobileUser
+	copier.Copy(&userResp, user)
+	return &userResp
 }

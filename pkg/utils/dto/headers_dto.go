@@ -2,6 +2,7 @@ package dto
 
 type MobileHeaders struct {
 	CountryId string `header:"Country-Id"`
+	CauserId  string `header:"causer-id"`
 	Lat       string `header:"Lat"`
 	Lng       string `header:"Lng"`
 }

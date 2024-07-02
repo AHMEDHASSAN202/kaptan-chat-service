@@ -22,7 +22,7 @@ type PortalJwtClaim struct {
 	CauserType string `json:"causer_type"`
 }
 
-func (jwtService *PortalJwtService) GenerateToken(ctx context.Context, id string) (token string, err error) {
+func (jwtService *PortalJwtService) GenerateToken(ctx context.Context, id string, isTempToken ...bool) (token string, err error) {
 	expiredAt := time.Now().Add(time.Duration(jwtService.ExpiredHours.Hours()) * time.Hour)
 	claims := &PortalJwtClaim{
 		CauserId:   id,
@@ -46,7 +46,7 @@ func (jwtService *PortalJwtService) GenerateToken(ctx context.Context, id string
 	return
 }
 
-func (jwtService *PortalJwtService) ValidateToken(ctx context.Context, signedToken string) (interface{}, error) {
+func (jwtService *PortalJwtService) ValidateToken(ctx context.Context, signedToken string, isTempToken ...bool) (interface{}, error) {
 	token, err := jwt.ParseWithClaims(
 		signedToken, &PortalJwtClaim{}, func(token *jwt.Token) (interface{}, error) {
 			return []byte(jwtService.secretKey), nil

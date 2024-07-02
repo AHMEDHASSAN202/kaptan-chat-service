@@ -10,24 +10,32 @@ import (
 	"time"
 )
 
-type AdminJwtService struct {
-	secretKey    string
-	ExpiredHours time.Duration
-	logger       logger.ILogger
+type UserJwtService struct {
+	secretKey        string
+	expiredHours     time.Duration
+	tempSecretKey    string
+	tempExpiredHours time.Duration
+	logger           logger.ILogger
 }
 
 // JwtClaim struct defines custom JWT claims
-type AdminJwtClaim struct {
+type UserJwtClaim struct {
 	jwt.RegisteredClaims
 	CauserId   string `json:"causer_id"`
 	CauserType string `json:"causer_type"`
 }
 
-func (jwtService *AdminJwtService) GenerateToken(ctx context.Context, id string, isTempToken ...bool) (token string, err error) {
-	expiredAt := time.Now().Add(time.Duration(jwtService.ExpiredHours.Hours()) * time.Hour)
-	claims := &AdminJwtClaim{
+func (jwtService *UserJwtService) GenerateToken(ctx context.Context, id string, isTempToken ...bool) (token string, err error) {
+
+	secret := jwtService.secretKey
+	expiredAt := time.Now().Add(time.Duration(jwtService.expiredHours.Hours()) * time.Hour)
+	if len(isTempToken) > 0 && isTempToken[0] {
+		secret = jwtService.tempSecretKey
+		expiredAt = time.Now().Add(time.Duration(jwtService.tempExpiredHours.Hours()) * time.Hour)
+	}
+	claims := &UserJwtClaim{
 		CauserId:   id,
-		CauserType: "admin",
+		CauserType: "user",
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "Ktha",
 			Subject:   id,
@@ -38,7 +46,7 @@ func (jwtService *AdminJwtService) GenerateToken(ctx context.Context, id string,
 		},
 	}
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	token, err = jwtToken.SignedString([]byte(jwtService.secretKey))
+	token, err = jwtToken.SignedString([]byte(secret))
 	if err != nil {
 		jwtService.logger.Error(ctx, err)
 		err = validators.GetError(&ctx, localization.JwtSigningError, nil)
@@ -47,10 +55,14 @@ func (jwtService *AdminJwtService) GenerateToken(ctx context.Context, id string,
 	return
 }
 
-func (jwtService *AdminJwtService) ValidateToken(ctx context.Context, signedToken string, isTempToken ...bool) (interface{}, error) {
+func (jwtService *UserJwtService) ValidateToken(ctx context.Context, signedToken string, isTempToken ...bool) (interface{}, error) {
+	secret := jwtService.secretKey
+	if len(isTempToken) > 0 && isTempToken[0] {
+		secret = jwtService.tempSecretKey
+	}
 	token, err := jwt.ParseWithClaims(
-		signedToken, &AdminJwtClaim{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte(jwtService.secretKey), nil
+		signedToken, &UserJwtClaim{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(secret), nil
 		},
 	)
 	if err != nil {
@@ -58,7 +70,7 @@ func (jwtService *AdminJwtService) ValidateToken(ctx context.Context, signedToke
 		return nil, validators.GetError(&ctx, localization.JwtTokenInvalidError, nil)
 	}
 
-	claims, ok := token.Claims.(*AdminJwtClaim)
+	claims, ok := token.Claims.(*UserJwtClaim)
 	if ok && token.Valid {
 		return claims, nil
 	}
