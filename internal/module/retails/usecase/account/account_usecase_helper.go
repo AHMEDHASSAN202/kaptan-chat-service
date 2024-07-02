@@ -11,9 +11,6 @@ func CreateAccountBuilder(payload *account.StoreAccountDto) domain.Account {
 	accountDomain := domain.Account{}
 	accountDomain.Name.Ar = payload.Name.Ar
 	accountDomain.Name.En = payload.Name.En
-	accountDomain.Email = payload.Email
-	password, _ := utils.HashPassword(payload.Password)
-	accountDomain.Password = password
 	accountDomain.CreatedAt = time.Now()
 	accountDomain.UpdatedAt = time.Now()
 	accountDomain.Country.Id = payload.Country.Id

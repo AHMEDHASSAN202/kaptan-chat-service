@@ -48,8 +48,8 @@ func (i *AdminCustomValidator) ValidateEmailIsUnique() func(fl validator.FieldLe
 				return false
 			}
 			adminId = adminDto.ID
-		default:
-			return false
+			//default:
+			//return false
 		}
 		isExists, err := i.adminUseCase.CheckEmailExists(context.Background(), strings.ToLower(val), adminId)
 		if err.IsError {
