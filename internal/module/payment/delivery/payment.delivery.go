@@ -62,7 +62,7 @@ func (a *PaymentHandler) MyfatoorahWebhook(c echo.Context) error {
 	}
 	a.logger.Info(payload)
 	//
-	res, errResp := a.paymentUseCase.Pay(ctx, &payload)
+	res, errResp := a.paymentUseCase.MyFatoorahWebhook(ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
