@@ -9,15 +9,16 @@ import (
 	"samm/pkg/validators"
 )
 
-func (i IService) GetMenuItemsDetails(ctx context.Context, menuItems []order.MenuItem) (responses.MenuDetailsResponse, validators.ErrorResponse) {
+func (i IService) GetMenuItemsDetails(ctx context.Context, menuItems []order.MenuItem, locationId string) ([]responses.MenuDetailsResponse, validators.ErrorResponse) {
 
 	input := menu_group.FilterMenuGroupItemsForOrder{}
 	copier.Copy(&input.MenuItems, menuItems)
+	input.LocationId = locationId
 	menus, err := i.MenuUseCase.MobileFilterMenuGroupItemForOrder(ctx, &input)
 	if err != nil {
-		return responses.MenuDetailsResponse{}, validators.GetErrorResponseFromErr(err)
+		return []responses.MenuDetailsResponse{}, validators.GetErrorResponseFromErr(err)
 	}
-	resp := responses.MenuDetailsResponse{}
+	resp := make([]responses.MenuDetailsResponse, 0)
 	copier.Copy(&resp, &menus)
 
 	return resp, validators.ErrorResponse{}

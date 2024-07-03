@@ -37,6 +37,7 @@ const (
 	JwtTokenInvalidError                        = "JwtTokenInvalidError"                        // The JSON Web Token is invalid and could not be verified
 	JwtTokenParsingError                        = "JwtTokenParsingError"                        // Error: the JSON Web Token could not be parsed
 	Mobile_location_not_available_error         = "Mobile_location_not_available_error"         // mobile_location_not_available_error
+	Mobile_location_not_open_error              = "Mobile_location_not_open_error"              // Mobile_location_not_open_error
 	Modifier_groups_ids_rules_validation        = "Modifier_groups_ids_rules_validation"        // Feature not supported
 	Modifier_items_cant_contains_modifier_group = "Modifier_items_cant_contains_modifier_group" // Modifier items cant contains modifier group
 	Password_required_if_id_is_zero             = "Password_required_if_id_is_zero"             // password is a required field

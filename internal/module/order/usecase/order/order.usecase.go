@@ -101,19 +101,35 @@ func (l OrderUseCase) ListOrder(ctx context.Context, payload *order.ListOrderDto
 
 func (l OrderUseCase) CalculateOrderCost(ctx context.Context, payload *order.CalculateOrderCostDto) (resp responses.CalculateOrderCostResp, err validators.ErrorResponse) {
 	//find location details
-	_, errResponse := l.extService.RetailsIService.GetLocationDetails(ctx, payload.LocationId)
+	locationDoc, errResponse := l.extService.RetailsIService.GetLocationDetails(ctx, payload.LocationId)
 	if errResponse.IsError {
 		l.logger.Error(errResponse.ErrorMessageObject.Text)
-		validators.GetErrorResponse(&ctx, localization.Mobile_location_not_available_error, nil, nil)
+		return resp, validators.GetErrorResponse(&ctx, localization.Mobile_location_not_available_error, nil, nil)
 	}
 	//check is the location available for the order
+	hasLocErr := checkIsLocationReadyForNewOrder(&ctx, locationDoc)
+	if hasLocErr.IsError {
+		l.logger.Error(hasLocErr.ErrorMessageObject.Text)
+		return resp, hasLocErr
+	}
 	//find menus details
-	menuDetails, errResponse := l.extService.MenuIService.GetMenuItemsDetails(ctx, payload.MenuItems)
+	menuDetails, errResponse := l.extService.MenuIService.GetMenuItemsDetails(ctx, payload.MenuItems, payload.LocationId)
 	if errResponse.IsError {
 		l.logger.Error(errResponse.ErrorMessageObject.Text)
-		validators.GetErrorResponse(&ctx, localization.Mobile_location_not_available_error, nil, nil)
+		return resp, validators.GetErrorResponse(&ctx, localization.E1002Item, nil, nil)
 	}
+	//check is the location available for the order
+	hasMenuErr := checkIsMenuItemsValid(&ctx, menuDetails)
+	if hasMenuErr.IsError {
+		l.logger.Error(hasMenuErr.ErrorMessageObject.Text)
+		return resp, hasMenuErr
+	}
+
 	//check is the menus are available
-	l.logger.Info(menuDetails)
-	return responses.CalculateOrderCostResp{}, validators.ErrorResponse{}
+	resp, errResponse = l.calculateOrderCostBuilder(ctx, locationDoc, menuDetails, payload)
+	if errResponse.IsError {
+		l.logger.Error(errResponse.ErrorMessageObject.Text)
+		return resp, validators.GetErrorResponse(&ctx, localization.E1005, nil, nil)
+	}
+	return resp, validators.ErrorResponse{}
 }

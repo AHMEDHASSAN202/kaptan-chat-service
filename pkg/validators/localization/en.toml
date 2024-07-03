@@ -156,7 +156,11 @@ other = "PhoneNumber is Wrong"
 
 [Mobile_location_not_available_error]
 description = "mobile_location_not_available_error"
-other = "The location is not ready to receive orders now, try later please"
+other = "The branch is not ready to receive orders now, try later please"
+
+[Mobile_location_not_open_error]
+description = "Mobile_location_not_open_error"
+other = "The branch is closed now, try later please"
 
 [RoleExistsValidation]
 description = "Role is not exists"

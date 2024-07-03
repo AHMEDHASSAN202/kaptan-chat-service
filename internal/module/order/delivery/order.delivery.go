@@ -67,7 +67,7 @@ func (a *OrderHandler) CalculateOrderCost(c echo.Context) error {
 
 	var calculateOrderCostDto order.CalculateOrderCostDto
 
-	err := c.Bind(calculateOrderCostDto)
+	err := c.Bind(&calculateOrderCostDto)
 	if err != nil {
 		a.logger.Error(err)
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
@@ -79,8 +79,8 @@ func (a *OrderHandler) CalculateOrderCost(c echo.Context) error {
 	}
 	orderCalculate, errResp := a.orderUsecase.CalculateOrderCost(ctx, &calculateOrderCostDto)
 	if errResp.IsError {
-		a.logger.Error(validateErr.ErrorMessageObject.Text)
-		return validators.ErrorStatusUnprocessableEntity(c, errResp)
+		a.logger.Error(errResp.ErrorMessageObject.Text)
+		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{"order_calculate": orderCalculate})
 }

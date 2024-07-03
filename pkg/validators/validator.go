@@ -202,7 +202,6 @@ func GetErrorResponseFromErr(e error) ErrorResponse {
 
 func GetErrorResponse(ctx *context.Context, code string, data map[string]interface{}, statusCode *int) ErrorResponse {
 	ptr := utils.If(statusCode == nil, utils.GetAsPointer(0), statusCode).(*int)
-	fmt.Println(*ptr)
 	message := localization.GetTranslation(ctx, code, data, "")
 	return ErrorResponse{
 		ValidationErrors: nil,

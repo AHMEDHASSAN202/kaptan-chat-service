@@ -8,7 +8,7 @@ import (
 
 type MenuItem struct {
 	Id          string     `json:"id" validate:"required"`
-	Qty         string     `json:"qty" validate:"required,min=1"`
+	Qty         int64      `json:"qty" validate:"required,min=1"`
 	ModifierIds []MenuItem `json:"modifier_ids"`
 }
 
@@ -17,9 +17,9 @@ type CalculateOrderCostDto struct {
 	AccountId          string     `json:"account_id" validate:"required,mongodb"`
 	UserId             string     `json:"-"`
 	CollectionMethodId string     `json:"collection_method_id" validate:"required"`
-	MenuItems          []MenuItem `json:"menu_items" validate:"required,dive,min=1"`
+	MenuItems          []MenuItem `json:"menu_items" validate:"required,dive"`
 }
 
-func (d CalculateOrderCostDto) Validate(ctx context.Context, validate *validator.Validate) validators.ErrorResponse {
+func (d *CalculateOrderCostDto) Validate(ctx context.Context, validate *validator.Validate) validators.ErrorResponse {
 	return validators.ValidateStruct(ctx, validate, d)
 }

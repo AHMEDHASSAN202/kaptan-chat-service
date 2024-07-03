@@ -169,3 +169,7 @@ other = "غير مسموح لك بحذف الأدوار الرئيسية."
 [Mobile_location_not_available_error]
 description = "mobile_location_not_available_error"
 other = "الفرع غير جاهز لاستقبال الطلبات الآن، يرجى المحاولة لاحقًا "
+
+[Mobile_location_not_open_error]
+description = "Mobile_location_not_open_error"
+other = "الفرع مغلق الآن، يرجى المحاولة لاحقًا "

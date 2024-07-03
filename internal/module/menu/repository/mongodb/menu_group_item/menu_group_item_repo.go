@@ -276,7 +276,7 @@ func (i *menuGroupItemRepo) MobileFilterMenuGroupItemForOrder(ctx context.Contex
 			"localField":   "modifier_groups.product_ids",
 			"foreignField": "_id",
 			"pipeline": []bson.M{
-				{"$match": bson.M{"status": "active", "deleted_at": nil, "product_ids": bson.M{"$in": modifierIds}}},
+				{"$match": bson.M{"status": "active", "deleted_at": nil, "_id": bson.M{"$in": modifierIds}}},
 			},
 			"as": "addons",
 		},
