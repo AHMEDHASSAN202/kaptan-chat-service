@@ -18,8 +18,9 @@ type PortalJwtService struct {
 
 type PortalJwtClaim struct {
 	jwt.RegisteredClaims
-	CauserId   string `json:"causer_id"`
-	CauserType string `json:"causer_type"`
+	CauserId      string                 `json:"causer_id"`
+	CauserType    string                 `json:"causer_type"`
+	CauserDetails map[string]interface{} `json:"causer_data"`
 }
 
 func (jwtService *PortalJwtService) GenerateToken(ctx context.Context, id string, isTempToken ...bool) (token string, err error) {
@@ -27,6 +28,31 @@ func (jwtService *PortalJwtService) GenerateToken(ctx context.Context, id string
 	claims := &PortalJwtClaim{
 		CauserId:   id,
 		CauserType: "portal",
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "Ktha",
+			Subject:   id,
+			ExpiresAt: jwt.NewNumericDate(expiredAt),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ID:        primitive.NewObjectID().Hex(),
+		},
+	}
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err = jwtToken.SignedString([]byte(jwtService.secretKey))
+	if err != nil {
+		jwtService.logger.Error(ctx, err)
+		err = validators.GetError(&ctx, localization.JwtSigningError, nil)
+		return
+	}
+	return
+}
+
+func (jwtService *PortalJwtService) GenerateTokenByAdmin(ctx context.Context, id string, data map[string]interface{}) (token string, err error) {
+	expiredAt := time.Now().Add(time.Duration(jwtService.ExpiredHours.Hours()) * time.Hour)
+	claims := &PortalJwtClaim{
+		CauserId:      id,
+		CauserType:    "portal",
+		CauserDetails: data,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "Ktha",
 			Subject:   id,
