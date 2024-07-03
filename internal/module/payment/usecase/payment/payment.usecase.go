@@ -7,7 +7,9 @@ import (
 	"samm/internal/module/payment/dto/payment"
 	"samm/internal/module/payment/response"
 	"samm/pkg/logger"
+	"samm/pkg/utils"
 	"samm/pkg/validators"
+	"strconv"
 )
 
 type PaymentUseCase struct {
@@ -15,6 +17,65 @@ type PaymentUseCase struct {
 	myfatoorahService domain.MyFatoorahService
 	cardRepo          domain.CardRepository
 	logger            logger.ILogger
+}
+
+func (p PaymentUseCase) MyFatoorahWebhook(ctx context.Context, dto *payment.MyFatoorahWebhookPayload) (payResponse interface{}, err validators.ErrorResponse) {
+
+	responsePay, errRe := p.myfatoorahService.FindPayment(ctx, strconv.Itoa(dto.Data.InvoiceId))
+	if errRe.IsError {
+		return payResponse, errRe
+	}
+
+	paymentTransaction, errResp := p.repo.FindPaymentTransaction(ctx, responsePay.Data.UserDefinedField, "", "")
+	if errResp != nil {
+		return payResponse, errRe
+	}
+
+	if paymentTransaction.Status != consts.PaymentPendingStatus {
+		return nil, validators.ErrorResponse{}
+	}
+
+	hold := responsePay.Data.InvoiceTransactions[0].TransactionStatus == consts.MyFatoorahHoldInvoiceStatus
+
+	if responsePay.Data.InvoiceStatus == consts.MyFatoorahPaidInvoiceStatus {
+
+		paymentTransaction.Status = consts.PaymentPaidStatus
+		paymentTransaction.Response = utils.ConvertStructToMap(responsePay)
+		paymentTransaction.CardType = responsePay.Data.InvoiceTransactions[0].PaymentGateway
+		errUpdate := p.repo.UpdateTransaction(ctx, paymentTransaction)
+		if errUpdate != nil {
+			p.logger.Error("Update Error => ", errUpdate)
+			return payResponse, validators.GetErrorResponseFromErr(errUpdate)
+		}
+
+	} else if hold {
+
+		paymentTransaction.Status = consts.PaymentHoldStatus
+		paymentTransaction.Response = utils.ConvertStructToMap(responsePay)
+		paymentTransaction.CardType = responsePay.Data.InvoiceTransactions[0].PaymentGateway
+		errUpdate := p.repo.UpdateTransaction(ctx, paymentTransaction)
+		if errUpdate != nil {
+			p.logger.Error("Update Error => ", errUpdate)
+			return payResponse, validators.GetErrorResponseFromErr(errUpdate)
+		}
+
+	} else {
+		paymentTransaction.Status = consts.PaymentFailedStatus
+		paymentTransaction.Response = utils.ConvertStructToMap(responsePay)
+		paymentTransaction.CardType = responsePay.Data.InvoiceTransactions[0].PaymentGateway
+		errUpdate := p.repo.UpdateTransaction(ctx, paymentTransaction)
+		if errUpdate != nil {
+			p.logger.Error("Update Error => ", errUpdate)
+			return payResponse, validators.GetErrorResponseFromErr(errUpdate)
+		}
+	}
+
+	paymentTransaction, errResp = p.repo.FindPaymentTransaction(ctx, responsePay.Data.UserDefinedField, "", "")
+	if errResp != nil {
+		return nil, validators.GetErrorResponseFromErr(errResp)
+	}
+	UpdateOrderStatus(p, ctx, paymentTransaction)
+	return payResponse, validators.ErrorResponse{}
 }
 
 func (p PaymentUseCase) Pay(ctx context.Context, dto *payment.PayDto) (paymentResponse response.PayResponse, err validators.ErrorResponse) {

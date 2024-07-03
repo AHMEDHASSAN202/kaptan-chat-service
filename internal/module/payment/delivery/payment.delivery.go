@@ -24,6 +24,8 @@ func InitPaymentController(e *echo.Echo, us domain.PaymentUseCase, validator *va
 	}
 	mobile := e.Group("api/v1/mobile")
 	mobile.POST("/:transactionType/pay", handler.pay)
+	myfatoorah := e.Group("api/v1/myfatoorah")
+	myfatoorah.POST("/webhook", handler.MyfatoorahWebhook)
 }
 
 func (a *PaymentHandler) pay(c echo.Context) error {
@@ -42,6 +44,23 @@ func (a *PaymentHandler) pay(c echo.Context) error {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
+	//
+	res, errResp := a.paymentUseCase.Pay(ctx, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, res)
+}
+func (a *PaymentHandler) MyfatoorahWebhook(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var payload payment.MyFatoorahWebhookPayload
+	err := c.Bind(&payload)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	a.logger.Info(payload)
 	//
 	res, errResp := a.paymentUseCase.Pay(ctx, &payload)
 	if errResp.IsError {

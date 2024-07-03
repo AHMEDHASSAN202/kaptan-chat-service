@@ -63,6 +63,8 @@ func PayCard(p PaymentUseCase, ctx context.Context, dto *payment.PayDto) (respon
 				return response, validators.GetErrorResponseFromErr(errUpdate)
 
 			}
+			UpdateOrderStatus(p, ctx, paymentTransaction)
+
 			response.Transaction = paymentTransaction
 			return response, validators.ErrorResponse{}
 		}
@@ -157,6 +159,8 @@ func PayApplePay(p PaymentUseCase, ctx context.Context, dto *payment.PayDto) (pa
 				return paymentResponse, validators.GetErrorResponseFromErr(errUpdate)
 
 			}
+			UpdateOrderStatus(p, ctx, paymentTransaction)
+
 			paymentResponse.Transaction = paymentTransaction
 			return paymentResponse, validators.ErrorResponse{}
 		}
@@ -193,4 +197,7 @@ func PayApplePay(p PaymentUseCase, ctx context.Context, dto *payment.PayDto) (pa
 	}
 	paymentResponse.Transaction = paymentTransaction
 	return paymentResponse, errRe
+}
+func UpdateOrderStatus(p PaymentUseCase, ctx context.Context, transaction *domain.Payment) (err validators.ErrorResponse) {
+	return
 }
