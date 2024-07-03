@@ -168,7 +168,7 @@ func (l UserUseCase) UpdateUserProfile(ctx *context.Context, payload *user.Updat
 	if dbErr != nil {
 		return nil, validators.GetErrorResponseFromErr(dbErr)
 	}
-	return reponseBuilderAtUpdateProfile(updatedUserDomain), validators.ErrorResponse{}
+	return reposeBuilderAtUpdateProfile(updatedUserDomain), validators.ErrorResponse{}
 }
 func (l UserUseCase) FindUser(ctx *context.Context, Id string) (user domain.User, err validators.ErrorResponse) {
 	domainUser, errRe := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(Id))

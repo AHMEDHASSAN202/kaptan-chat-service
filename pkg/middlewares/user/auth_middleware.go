@@ -2,7 +2,6 @@ package user
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"samm/internal/module/user/domain"
@@ -60,14 +59,15 @@ func (m Middlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				m.logger.Info("AuthMiddleware -> FindByToken Error -> ", err)
 				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 			}
-			err := m.redisClient.Set(claim.CauserId, user, time.Hour*60)
-			if err != nil {
-				fmt.Println(" REDIS -> AuthMiddleware -> Setter > ", err)
+			oneYear := time.Now().AddDate(1, 0, 0).Sub(time.Now())
+			setErr := m.redisClient.Set(claim.CauserId, user, oneYear)
+			if setErr != nil {
+				m.logger.Info(" REDIS -> AuthMiddleware -> Setter > ", setErr)
 			}
 		}
 
 		if !user.IsActive {
-			m.logger.Info("AuthMiddleware -> Admin Is Not Active")
+			m.logger.Info("AuthMiddleware -> User Is Not Active")
 			return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 		}
 
@@ -125,6 +125,20 @@ func (m Middlewares) TempAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc 
 		c.Request().Header.Add("causer-id", claim.CauserId)
 		c.Request().Header.Add("causer-type", "user")
 
+		return next(c)
+	}
+}
+
+func (m Middlewares) RemoveUserFromRedis(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// userId
+		causerId := c.Request().Header.Get("causer-id")
+		if causerId != "" {
+			delErr := m.redisClient.Delete(causerId)
+			if delErr != nil {
+				m.logger.Info(" REDIS -> AuthMiddleware -> Delete > ", delErr)
+			}
+		}
 		return next(c)
 	}
 }

@@ -9,6 +9,8 @@ import (
 	"samm/pkg/database/redis"
 	echomiddleware "samm/pkg/http/echo/middleware"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares/admin"
+	commmon "samm/pkg/middlewares/common"
 	usermiddleware "samm/pkg/middlewares/user"
 	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
@@ -22,7 +24,7 @@ type UserHandler struct {
 }
 
 // InitUserController will initialize the article's HTTP controller
-func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validator.Validate, userCustomValidator custom_validators.UserCustomValidator, logger logger.ILogger, userMiddleware *usermiddleware.Middlewares, rdb *redis.RedisClient) {
+func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validator.Validate, userCustomValidator custom_validators.UserCustomValidator, logger logger.ILogger, userMiddleware *usermiddleware.Middlewares, rdb *redis.RedisClient, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &UserHandler{
 		userUsecase:         us,
 		validator:           validator,
@@ -30,8 +32,8 @@ func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validato
 		logger:              logger,
 	}
 	dashboard := e.Group("api/v1/admin/user")
-	dashboard.GET("", handler.ListUser)
-	dashboard.PUT("/:id/toggle-active", handler.ToggleUserActivation)
+	dashboard.GET("", handler.ListUser, adminMiddlewares.AuthMiddleware, commonMiddlewares.PermissionMiddleware("list-users"))
+	dashboard.PUT("/:id/toggle-active", handler.ToggleUserActivation, adminMiddlewares.AuthMiddleware, commonMiddlewares.PermissionMiddleware("update-status-users"))
 
 	mobile := e.Group("api/v1/mobile/user")
 	mobile.Use(echomiddleware.AppendCountryMiddleware)
@@ -39,9 +41,9 @@ func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validato
 	mobile.POST("/send-otp", handler.SendUserOtp)
 	mobile.POST("/verify-otp", handler.VerifyUserOtp)
 	mobile.POST("/sign-up", handler.SignUp, userMiddleware.TempAuthMiddleware)
-	mobile.PUT("", handler.UpdateUserProfile, userMiddleware.AuthMiddleware)
+	mobile.PUT("", handler.UpdateUserProfile, userMiddleware.AuthMiddleware, userMiddleware.RemoveUserFromRedis)
 	mobile.GET("", handler.GetUserProfile, userMiddleware.AuthMiddleware)
-	mobile.DELETE("", handler.DeleteUser, userMiddleware.AuthMiddleware)
+	mobile.DELETE("", handler.DeleteUser, userMiddleware.AuthMiddleware, userMiddleware.RemoveUserFromRedis)
 
 }
 func (a *UserHandler) StoreUser(c echo.Context) error {
