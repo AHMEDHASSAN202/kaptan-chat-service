@@ -9,6 +9,7 @@ import (
 
 type LoginAsPortalDto struct {
 	Id           string             `param:"id" validate:"required,mongodb"`
+	Name         Name               `json:"name" validate:"required"`
 	AdminDetails []dto.AdminDetails `json:"-"`
 	dto.AdminHeaders
 }

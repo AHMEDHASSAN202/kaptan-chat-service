@@ -30,8 +30,8 @@ type CreateAdminDTO struct {
 	Type            string             `json:"type" validate:"required,oneof=admin portal"`
 	RoleId          string             `json:"role_id" validate:"required,mongodb,RoleExistsValidation"`
 	CountryIds      []string           `json:"country_ids" validate:"required,country_ids"`
-	Account         *Account           `json:"account" validate:"required_without=ID,omitempty"`
 	AdminDetails    dto.AdminDetails   `json:"-"`
+	Account         *Account           `json:"account"`
 }
 
 func (input *CreateAdminDTO) Validate(c echo.Context, validate *validator.Validate, validateEmailIsUnique func(fl validator.FieldLevel) bool, passwordRequiredIfIdIsZero func(fl validator.FieldLevel) bool, roleExists func(fl validator.FieldLevel) bool) validators.ErrorResponse {

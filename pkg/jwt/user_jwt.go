@@ -90,3 +90,7 @@ func (jwtService *UserJwtService) ValidateToken(ctx context.Context, signedToken
 	jwtService.logger.Error(ctx, err)
 	return claims, validators.GetError(&ctx, localization.JwtTokenParsingError, nil)
 }
+
+func (jwtService *UserJwtService) GenerateTokenByAdmin(ctx context.Context, id string, data map[string]interface{}) (token string, err error) {
+	return "", nil
+}

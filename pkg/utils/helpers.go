@@ -500,3 +500,26 @@ func EqualizeSlices(slice1, slice2 []string) ([]string, []string) {
 
 	return result1, result2
 }
+
+func SafeMapGet[T any](m map[string]T, key string, defaultValue T) T {
+	if m == nil {
+		return defaultValue
+	}
+	if value, exists := m[key]; exists {
+		return value
+	}
+	return defaultValue
+}
+
+func MarshalUnMarshal(from interface{}, to interface{}) error {
+	jsonData, err := json.Marshal(from)
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return err
+	}
+	if err = json.Unmarshal(jsonData, &to); err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return err
+	}
+	return nil
+}
