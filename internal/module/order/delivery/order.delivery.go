@@ -6,6 +6,7 @@ import (
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/pkg/logger"
+	usermiddleware "samm/pkg/middlewares/user"
 	"samm/pkg/validators"
 )
 
@@ -16,7 +17,7 @@ type OrderHandler struct {
 }
 
 // InitOrderController will initialize the article's HTTP controller
-func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *validator.Validate, logger logger.ILogger, userMiddleware *usermiddleware.Middlewares) {
 	handler := &OrderHandler{
 		orderUsecase: us,
 		validator:    validator,
@@ -29,7 +30,7 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 	}
 	mobile := e.Group("api/v1/mobile/order")
 	{
-		mobile.POST("/calculate-order-cost", handler.CalculateOrderCost)
+		mobile.POST("/calculate-order-cost", handler.CalculateOrderCost, userMiddleware.AuthMiddleware)
 		mobile.GET("/:id", handler.FindOrder)
 	}
 }
