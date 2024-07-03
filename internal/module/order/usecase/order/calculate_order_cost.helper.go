@@ -132,7 +132,6 @@ func checkIsMenuItemsValid(ctx *context.Context, menuDocs []extMenuResponses.Men
 			}
 		}
 	}
-	fmt.Println(ValidationErrors)
 	if len(ValidationErrors) > 0 {
 		return validators.ErrorResponse{
 			ValidationErrors: ValidationErrors,

@@ -74,13 +74,12 @@ func (a *OrderHandler) CalculateOrderCost(c echo.Context) error {
 	}
 	validateErr := calculateOrderCostDto.Validate(ctx, a.validator)
 	if validateErr.IsError {
-		a.logger.Error(validateErr.ErrorMessageObject.Text)
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+		return validators.ErrorStatusUnprocessableEntity(c, validateErr)
 	}
 	orderCalculate, errResp := a.orderUsecase.CalculateOrderCost(ctx, &calculateOrderCostDto)
 	if errResp.IsError {
 		a.logger.Error(errResp.ErrorMessageObject.Text)
-		return validators.ErrorStatusBadRequest(c, errResp)
+		return validators.ErrorResp(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{"order_calculate": orderCalculate})
 }
