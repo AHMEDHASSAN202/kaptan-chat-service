@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -9,6 +10,7 @@ import (
 	location "samm/internal/module/common/dto"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
+	"strconv"
 )
 
 type CommonHandler struct {
@@ -29,6 +31,8 @@ func InitCommonController(e *echo.Echo, us domain.CommonUseCase, validator *vali
 	dashboard.GET("/cities", handler.ListCities)
 	dashboard.POST("/image-uploader", handler.Upload)
 	dashboard.GET("/read-file", handler.ReadFile)
+	dashboard.GET("/list-assets", handler.ListAssets)
+	dashboard.GET("/collection-methods", handler.ListCollectionMethods)
 }
 func (a *CommonHandler) ListCities(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -43,6 +47,7 @@ func (a *CommonHandler) ListCities(c echo.Context) error {
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{"data": result})
 }
+
 func (a *CommonHandler) ListCountries(c echo.Context) error {
 	ctx := c.Request().Context()
 	result, errResp := a.commonUseCase.ListCountries(ctx)
@@ -93,7 +98,36 @@ func (a *CommonHandler) Upload(c echo.Context) error {
 
 	return validators.SuccessResponse(c, uploadedFiles)
 }
+func (a *CommonHandler) ListAssets(c echo.Context) error {
+	ctx := c.Request().Context()
 
+	IhasColors := c.QueryParam("has_colors")
+	IhasBrands := c.QueryParam("has_brands")
+	hasColors, err1 := strconv.ParseBool(IhasColors)
+	hasBrands, err2 := strconv.ParseBool(IhasBrands)
+	if err1 != nil && err2 != nil {
+		a.logger.Error("hasColors or hasBrands has wrong value", err2, err1)
+		return validators.ErrorStatusBadRequest(c, validators.GetErrorResponseFromErr(errors.New("hasColors or hasBrands has wrong value")))
+	}
+
+	result, errResp := a.commonUseCase.ListAssets(ctx, hasColors, hasBrands)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"data": result})
+}
+
+func (a *CommonHandler) ListCollectionMethods(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	result, errResp := a.commonUseCase.ListCollectionMethods(ctx)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"data": result})
+}
 func getRelPath(location string) string {
 	parse, err := url.Parse(location)
 	if err != nil {

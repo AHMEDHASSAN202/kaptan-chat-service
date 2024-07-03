@@ -1,12 +1,15 @@
 package main
 
 import (
+	"samm/internal/module/admin"
 	"samm/internal/module/common"
 	appConfig "samm/internal/module/config"
 	"samm/internal/module/example"
 	"samm/internal/module/menu"
 	"samm/internal/module/payment"
+	"samm/internal/module/order"
 	"samm/internal/module/retails"
+	"samm/internal/module/user"
 	"samm/pkg/aws"
 	"samm/pkg/config"
 	"samm/pkg/database"
@@ -14,7 +17,9 @@ import (
 	"samm/pkg/http/echo"
 	echoserver "samm/pkg/http/echo/server"
 	httpclient "samm/pkg/http_client"
+	"samm/pkg/jwt"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 
@@ -33,13 +38,18 @@ func main() {
 				validators.Init,
 				aws.Init,
 			),
+			jwt.Module,
 			example.Module,
 			menu.Module,
+			order.Module,
 			database.Module,
 			retails.Module,
+			admin.Module,
 			appConfig.Module,
 			common.Module,
+			user.Module,
 			payment.Module,
+			middlewares.Module,
 			fx.Invoke(echo.RunServers, localization.InitLocalization),
 		),
 	).Run()
@@ -178,15 +188,15 @@ func main() {
 //	"github.com/go-playground/validator/v10"
 //)
 //
-//// User struct to validate
-//type User struct {
+//// user struct to validate
+//type user struct {
 //	Username string `json:"username" validate:"required"`
 //	Email    string `json:"email" validate:"required,email"`
 //	Age      uint8  `json:"age" validate:"gte=18"` // must be 18 or older
 //}
 //
-//// validateUser function takes a User struct and returns a map[string]string containing validation errors
-//func validateUser(user User) map[string]string {
+//// validateUser function takes a user struct and returns a map[string]string containing validation errors
+//func validateUser(user user) map[string]string {
 //	validate := validator.New()
 //	err := validate.Struct(user)
 //
@@ -210,8 +220,8 @@ func main() {
 //}
 //
 //func main() {
-//	// Create a User instance with some invalid data
-//	user := User{
+//	// Create a user instance with some invalid data
+//	user := user{
 //		Username: "", // missing username
 //		Email:    "notanemail",
 //		Age:      15, // underage
@@ -226,7 +236,7 @@ func main() {
 //			fmt.Printf("Error: %s - %s (Translation: %s)\n", field, message, translate(message))
 //		}
 //	} else {
-//		fmt.Println("User data is valid!")
+//		fmt.Println("user data is valid!")
 //	}
 //}
 
@@ -243,18 +253,18 @@ func main() {
 //	"github.com/go-playground/validator/v10"
 //)
 //
-//// User contains user information
-//type User struct {
+//// user contains user information
+//type user struct {
 //	FirstName      string     `validate:"required"`
 //	LastName       string     `validate:"required"`
 //	Age            uint8      `validate:"gte=0,lte=130"`
 //	Email          string     `validate:"required,email"`
 //	FavouriteColor string     `validate:"iscolor"`                // alias for 'hexcolor|rgb|rgba|hsl|hsla'
-//	Addresses      []*Address `validate:"required,dive,required"` // a person can have a home and cottage...
+//	Addresses      []*Url `validate:"required,dive,required"` // a person can have a home and cottage...
 //}
 //
-//// Address houses a users address information
-//type Address struct {
+//// Url houses a users address information
+//type Url struct {
 //	Street string `validate:"required"`
 //	City   string `validate:"required"`
 //	Planet string `validate:"required"`
@@ -289,15 +299,15 @@ func main() {
 //
 //func translateAll(trans ut.Translator) {
 //
-//	type User struct {
+//	type user struct {
 //		Username string     `validate:"required"`
 //		Tagline  string     `validate:"required,lt=10"`
 //		Tagline2 string     `validate:"required,gt=1"`
-//		t        []*Address `json:"t" validate:"omitempty,dive"`
+//		t        []*Url `json:"t" validate:"omitempty,dive"`
 //	}
 //
-//	adds := make([]*Address, 0)
-//	user := User{
+//	adds := make([]*Url, 0)
+//	user := user{
 //		Username: "",
 //		Tagline:  "This tagline is way too long.",
 //		Tagline2: "1",
@@ -320,15 +330,15 @@ func main() {
 //
 //func translateIndividual(trans ut.Translator) {
 //
-//	type User struct {
+//	type user struct {
 //		Username string     `validate:"required"`
 //		Tagline  string     `validate:"required,lt=10"`
 //		Tagline2 string     `validate:"required,gt=1"`
-//		t        []*Address `json:"t" validate:"omitempty,dive"`
+//		t        []*Url `json:"t" validate:"omitempty,dive"`
 //	}
 //
-//	adds := make([]*Address, 0)
-//	user := User{
+//	adds := make([]*Url, 0)
+//	user := user{
 //		Username: "",
 //		Tagline:  "This tagline is way too long.",
 //		Tagline2: "1",
@@ -357,11 +367,11 @@ func main() {
 //		return t
 //	})
 //
-//	type User struct {
+//	type user struct {
 //		Username string `validate:"required"`
 //	}
 //
-//	var user User
+//	var user user
 //
 //	err := validate.Struct(user)
 //	if err != nil {

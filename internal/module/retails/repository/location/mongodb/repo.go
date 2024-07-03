@@ -98,7 +98,7 @@ func (l locationRepository) DeleteLocationByAccountId(ctx context.Context, accou
 	return
 }
 
-func (l locationRepository) ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []domain.Location, paginationResult *PaginationData, err error) {
+func (l locationRepository) ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []domain.Location, paginationResult PaginationData, err error) {
 	models := make([]domain.Location, 0)
 
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
@@ -133,7 +133,7 @@ func (l locationRepository) ListLocation(ctx context.Context, payload *location.
 	}
 	data, err := New(l.locationCollection.Collection).Context(ctx).Limit(payload.Limit).Page(payload.Page).Sort("created_at", -1).Aggregate(matching)
 	if data == nil || data.Data == nil {
-		return models, nil, err
+		return models, paginationResult, err
 	}
 
 	for _, raw := range data.Data {
@@ -144,7 +144,7 @@ func (l locationRepository) ListLocation(ctx context.Context, payload *location.
 		}
 		models = append(models, model)
 	}
-	return models, &data.Pagination, err
+	return models, data.Pagination, err
 
 }
 

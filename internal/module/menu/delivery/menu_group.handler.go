@@ -8,12 +8,12 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/menu_group"
 	"samm/pkg/logger"
+	commmon "samm/pkg/middlewares/common"
+	"samm/pkg/middlewares/portal"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 )
-
-const AccountId = "666580eee476b942058b7fff"
 
 type MenuGroupHandler struct {
 	menuGroupUsecase domain.MenuGroupUseCase
@@ -22,21 +22,22 @@ type MenuGroupHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &MenuGroupHandler{
 		menuGroupUsecase: us,
 		validator:        validator,
 		logger:           logger,
 	}
 	portal := e.Group("api/v1/portal/menu-group")
+	portal.Use(portalMiddlewares.AuthMiddleware)
 	{
-		portal.GET("", handler.List)
-		portal.GET("/:id", handler.Find)
-		portal.POST("", handler.Create)
-		portal.PUT("/:id", handler.Update)
-		portal.DELETE("/:id", handler.Delete)
-		portal.PUT("/:id/change-status", handler.ChangeStatus)
-		portal.DELETE("/:id/:entity/:entity_id", handler.DeleteEntity)
+		portal.GET("", handler.List, commonMiddlewares.PermissionMiddleware("list-menu-group", "portal-login-accounts"))
+		portal.GET("/:id", handler.Find, commonMiddlewares.PermissionMiddleware("find-menu-group", "portal-login-accounts"))
+		portal.POST("", handler.Create, commonMiddlewares.PermissionMiddleware("create-menu-group", "portal-login-accounts"))
+		portal.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-menu-group", "portal-login-accounts"))
+		portal.DELETE("/:id", handler.Delete, commonMiddlewares.PermissionMiddleware("delete-menu-group", "portal-login-accounts"))
+		portal.PUT("/:id/change-status", handler.ChangeStatus, commonMiddlewares.PermissionMiddleware("update-status-menu-group", "portal-login-accounts"))
+		portal.DELETE("/:id/:entity/:entity_id", handler.DeleteEntity, commonMiddlewares.PermissionMiddleware("update-menu-group", "portal-login-accounts"))
 	}
 
 	mobile := e.Group("api/v1/menu-group/:branch_id")
@@ -53,9 +54,11 @@ func (a *MenuGroupHandler) List(c echo.Context) error {
 	}
 
 	var input menu_group.ListMenuGroupDTO
-	input.AccountId = AccountId
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -65,7 +68,7 @@ func (a *MenuGroupHandler) List(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	data, errResp := a.menuGroupUsecase.List(ctx, input)
+	data, errResp := a.menuGroupUsecase.List(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
@@ -79,12 +82,22 @@ func (a *MenuGroupHandler) Find(c echo.Context) error {
 		ctx = context.Background()
 	}
 
-	id := c.Param("id")
-	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
+	var input menu_group.FindMenuGroupDTO
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	data, errResp := a.menuGroupUsecase.Find(ctx, utils.ConvertStringIdToObjectId(id))
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	data, errResp := a.menuGroupUsecase.Find(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
@@ -99,9 +112,11 @@ func (a *MenuGroupHandler) Create(c echo.Context) error {
 	}
 
 	var input menu_group.CreateMenuGroupDTO
-	input.AccountId = AccountId
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -131,11 +146,13 @@ func (a *MenuGroupHandler) Update(c echo.Context) error {
 	}
 
 	var input menu_group.CreateMenuGroupDTO
-	input.AccountId = AccountId
 	input.ID = utils.ConvertStringIdToObjectId(id)
 
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -159,12 +176,22 @@ func (a *MenuGroupHandler) Delete(c echo.Context) error {
 		ctx = context.Background()
 	}
 
-	id := c.Param("id")
-	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
+	var input menu_group.FindMenuGroupDTO
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	errResp := a.menuGroupUsecase.Delete(ctx, utils.ConvertStringIdToObjectId(id))
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.menuGroupUsecase.Delete(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
@@ -184,8 +211,11 @@ func (a *MenuGroupHandler) ChangeStatus(c echo.Context) error {
 	}
 
 	var input menu_group.ChangeMenuGroupStatusDto
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -215,8 +245,11 @@ func (a *MenuGroupHandler) DeleteEntity(c echo.Context) error {
 	}
 
 	var input menu_group.DeleteEntityFromMenuGroupDto
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -241,8 +274,11 @@ func (a *MenuGroupHandler) MobileGetMenuGroupItems(c echo.Context) error {
 	}
 
 	var input menu_group.GetMenuGroupItemsDTO
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -267,8 +303,11 @@ func (a *MenuGroupHandler) MobileGetMenuGroupItem(c echo.Context) error {
 	}
 
 	var input menu_group.GetMenuGroupItemDTO
-	err := c.Bind(&input)
-	if err != nil {
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 

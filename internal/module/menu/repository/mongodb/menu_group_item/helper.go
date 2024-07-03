@@ -2,7 +2,9 @@ package menu_group_item
 
 import (
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"samm/internal/module/menu/dto/menu_group"
 	"samm/pkg/database/mongodb"
 	"samm/pkg/utils"
 	"strings"
@@ -142,4 +144,17 @@ func createIndexes(collection *mongo.Collection) {
 		bson.E{"name.ar", mongodb.IndexType.Text},
 		bson.E{"name.en", mongodb.IndexType.Text},
 	)
+}
+
+func getProductAndModifierId(order *menu_group.FilterMenuGroupItemsForOrder) ([]primitive.ObjectID, []primitive.ObjectID) {
+	var modifierIds []primitive.ObjectID
+	var productIds []primitive.ObjectID
+
+	for _, item := range order.MenuItems {
+		productIds = append(productIds, utils.ConvertStringIdToObjectId(item.Id))
+		for _, modifier := range item.ModifierIds {
+			modifierIds = append(modifierIds, utils.ConvertStringIdToObjectId(modifier.Id))
+		}
+	}
+	return productIds, modifierIds
 }

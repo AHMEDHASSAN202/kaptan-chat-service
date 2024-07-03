@@ -85,15 +85,14 @@ func (oRec *MenuGroupUseCase) Update(ctx context.Context, dto *menu_group.Create
 	return utils.ConvertObjectIdToStringId(menuGroup.ID), validators.ErrorResponse{}
 }
 
-func (oRec *MenuGroupUseCase) Delete(ctx context.Context, menuGroupId primitive.ObjectID) validators.ErrorResponse {
-	menuGroup, err := oRec.repo.Find(ctx, menuGroupId)
+func (oRec *MenuGroupUseCase) Delete(ctx context.Context, dto *menu_group.FindMenuGroupDTO) validators.ErrorResponse {
+	menuGroup, err := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(dto.Id))
 	if err != nil {
 		oRec.logger.Error("MenuGroupUseCase -> Delete -> ", err)
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	accountId := menuGroup.AccountId //todo We need to get the accountId from auth
-	authorized := oRec.AuthorizeMenuGroup(&ctx, menuGroup, accountId)
+	authorized := oRec.AuthorizeMenuGroup(&ctx, menuGroup, utils.ConvertStringIdToObjectId(dto.AccountId))
 	if authorized.IsError {
 		return authorized
 	}
@@ -107,8 +106,8 @@ func (oRec *MenuGroupUseCase) Delete(ctx context.Context, menuGroupId primitive.
 	return validators.ErrorResponse{}
 }
 
-func (oRec *MenuGroupUseCase) List(ctx context.Context, dto menu_group.ListMenuGroupDTO) (interface{}, validators.ErrorResponse) {
-	list, pagination, err := oRec.repo.List(ctx, dto)
+func (oRec *MenuGroupUseCase) List(ctx context.Context, dto *menu_group.ListMenuGroupDTO) (interface{}, validators.ErrorResponse) {
+	list, pagination, err := oRec.repo.List(ctx, *dto)
 	data := menu_group2.ListGroupBuilder(list)
 	listResponse := responses.SetListResponse(data, pagination)
 	if err != nil {
@@ -118,18 +117,17 @@ func (oRec *MenuGroupUseCase) List(ctx context.Context, dto menu_group.ListMenuG
 	return listResponse, validators.ErrorResponse{}
 }
 
-func (oRec *MenuGroupUseCase) Find(ctx context.Context, id primitive.ObjectID) (interface{}, validators.ErrorResponse) {
-	menuGroup, err := oRec.repo.FindWithItems(ctx, id)
+func (oRec *MenuGroupUseCase) Find(ctx context.Context, dto *menu_group.FindMenuGroupDTO) (interface{}, validators.ErrorResponse) {
+	menuGroup, err := oRec.repo.FindWithItems(ctx, utils.ConvertStringIdToObjectId(dto.Id))
 	menuGroup = menu_group2.FindMenuGroupBuilder(menuGroup)
 	if err != nil {
 		oRec.logger.Error("MenuGroupUseCase -> Find -> ", err)
 		return menuGroup, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	accountId := menuGroup.AccountId //todo We need to get the accountId from auth
 	model := domain.MenuGroup{AccountId: menuGroup.AccountId}
 	model.ID = menuGroup.ID
-	authorized := oRec.AuthorizeMenuGroup(&ctx, &model, accountId)
+	authorized := oRec.AuthorizeMenuGroup(&ctx, &model, utils.ConvertStringIdToObjectId(dto.AccountId))
 	if authorized.IsError {
 		return menuGroup, authorized
 	}
@@ -151,8 +149,7 @@ func (oRec *MenuGroupUseCase) ChangeStatus(ctx context.Context, id primitive.Obj
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	accountId := model.AccountId //todo We need to get the accountId from auth
-	authorized := oRec.AuthorizeMenuGroup(&ctx, model, accountId)
+	authorized := oRec.AuthorizeMenuGroup(&ctx, model, utils.ConvertStringIdToObjectId(input.AccountId))
 	if authorized.IsError {
 		return authorized
 	}
@@ -184,8 +181,7 @@ func (oRec *MenuGroupUseCase) DeleteEntity(ctx context.Context, input *menu_grou
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	accountId := model.AccountId //todo We need to get the accountId from auth
-	authorized := oRec.AuthorizeMenuGroup(&ctx, model, accountId)
+	authorized := oRec.AuthorizeMenuGroup(&ctx, model, utils.ConvertStringIdToObjectId(input.AccountId))
 	if authorized.IsError {
 		return authorized
 	}

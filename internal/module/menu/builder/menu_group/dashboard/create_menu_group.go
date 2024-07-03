@@ -16,6 +16,8 @@ func MenuGroupBuilder(dto *menu_group.CreateMenuGroupDTO, oldDocument *domain.Me
 	if dto.ID == primitive.NilObjectID || dto.ID.IsZero() {
 		dto.ID = primitive.NewObjectID()
 		menuGroupDomain.AdminDetails = []dto2.AdminDetails{dto.AdminDetails}
+	} else {
+		menuGroupDomain.AdminDetails = append(oldDocument.AdminDetails, dto.AdminDetails)
 	}
 	menuGroupDomain.ID = dto.ID
 	menuGroupDomain.AccountId = utils.ConvertStringIdToObjectId(dto.AccountId)

@@ -30,6 +30,7 @@ type (
 	Config struct {
 		Environment  string
 		Mongo        MongoConfig
+		RedisUrl     string
 		AwsConfig    AwsConfig
 		HTTP         HTTPConfig
 		Echo         echoserver.EchoConfig
@@ -37,6 +38,7 @@ type (
 		CacheTTL     time.Duration `mapstructure:"ttl"`
 		ServiceUrl   string
 		LoggerConfig logger.LoggerConfig
+		JWTConfig    JWTConfig
 	}
 	EchoConfig struct {
 		Port                string   `mapstructure:"port" validate:"required"`
@@ -71,14 +73,24 @@ type (
 		EndPoint   string
 		BucketName string
 	}
+	JWTConfig struct {
+		AdminSigningKey    string
+		AdminExpires       time.Duration `mapstructure:"admin_expires"`
+		PortalSigningKey   string
+		PortalExpires      time.Duration `mapstructure:"portal_expires"`
+		UserSigningKey     string
+		UserExpires        time.Duration `mapstructure:"user_expires"`
+		UserTempSigningKey string
+		UserTempExpires    time.Duration `mapstructure:"user_temp_expires"`
+	}
 )
 
 // Init populates Config struct with values from config file
 // located at filepath and environment variables.
-func Init() (*Config, *MongoConfig,
+func Init() (*Config, *MongoConfig, *string,
 	*HTTPConfig,
 	*echoserver.EchoConfig,
-	*LimiterConfig, *AwsConfig,
+	*LimiterConfig, *AwsConfig, *JWTConfig,
 	logger.LoggerConfig, error) {
 	configsDir := "pkg/config/configs"
 	populateDefaults()
@@ -87,17 +99,17 @@ func Init() (*Config, *MongoConfig,
 		logrus.Info("Error  from load env. this mean the application load on the cloud not from a file.")
 	}
 	if err := parseConfigFile(configsDir, os.Getenv("APP_ENV")); err != nil {
-		return nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
 	}
 
 	var cfg Config
 	if err := unmarshal(&cfg); err != nil {
-		return nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
 	}
 
 	setFromEnv(&cfg)
 
-	return &cfg, &cfg.Mongo, &cfg.HTTP, &cfg.Echo, &cfg.Limiter, &cfg.AwsConfig, cfg.LoggerConfig, nil
+	return &cfg, &cfg.Mongo, &cfg.RedisUrl, &cfg.HTTP, &cfg.Echo, &cfg.Limiter, &cfg.AwsConfig, &cfg.JWTConfig, cfg.LoggerConfig, nil
 }
 
 func unmarshal(cfg *Config) error {
@@ -113,6 +125,10 @@ func unmarshal(cfg *Config) error {
 	if err := viper.UnmarshalKey("limiter", &cfg.Limiter); err != nil {
 		return err
 	}
+
+	if err := viper.UnmarshalKey("jwt", &cfg.JWTConfig); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -120,6 +136,8 @@ func setFromEnv(cfg *Config) {
 	// TODO use envconfig https://github.com/kelseyhightower/envconfig
 	cfg.Mongo.MongoConnection = os.Getenv("MONGO_CONNECTION")
 	cfg.Mongo.MongoDbName = os.Getenv("MONGO_DB_NAME")
+
+	cfg.RedisUrl = os.Getenv("REDIS_URL")
 
 	cfg.ServiceUrl = os.Getenv("SERVICE_URL")
 
@@ -132,6 +150,11 @@ func setFromEnv(cfg *Config) {
 	cfg.AwsConfig.Region = os.Getenv("AWS_REGION")
 	cfg.AwsConfig.BucketName = os.Getenv("AWS_BUCKET_NAME")
 	cfg.AwsConfig.EndPoint = os.Getenv("AWS_END_POINT")
+
+	cfg.JWTConfig.AdminSigningKey = os.Getenv("JWT_SECRET_ADMIN")
+	cfg.JWTConfig.PortalSigningKey = os.Getenv("JWT_SECRET_PORTAL")
+	cfg.JWTConfig.UserSigningKey = os.Getenv("JWT_SECRET_USER")
+	cfg.JWTConfig.UserTempSigningKey = os.Getenv("JWT_SECRET_USER_TEMP")
 
 	var port = defaultHTTPPort
 	if os.Getenv("PORT") != "" {

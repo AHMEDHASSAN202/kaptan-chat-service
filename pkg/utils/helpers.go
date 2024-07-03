@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 	"io"
@@ -22,6 +23,7 @@ import (
 
 const DefaultTimeFormat = "15:04:05"
 const DefaultHourTimeFormat = "15:04"
+const DefaultDateFormat = "2006-01-02"
 
 // RemoveDuplicates removes duplicate values from a slice.
 // T must be a comparable type.
@@ -132,6 +134,19 @@ func ValidateIDsIsMongoObjectIds(fl validator.FieldLevel) bool {
 	return true
 }
 
+func ValidateCountryIds(fl validator.FieldLevel) bool {
+	countryIDs := fl.Field().Interface().([]string)
+	if len(countryIDs) == 0 {
+		return false
+	}
+	for _, country := range countryIDs {
+		if !Contains(Countries, strings.ToUpper(country)) {
+			return false
+		}
+	}
+	return true
+}
+
 // DiffStructs returns a map of field names and their differing values between two structs.
 func DiffStructs(a, b interface{}) []string {
 	differences := make([]string, 0)
@@ -189,6 +204,11 @@ func compareStructs(valA, valB reflect.Value, parentField string, differences []
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 6)
 	return string(bytes), err
+}
+
+func CheckPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 func Decrypt(encryptionKey string, encryptedString string) (decrypted string, err error) {
@@ -361,6 +381,26 @@ func GetAsPointer[T any](p T) *T {
 	return v
 }
 
+func ArrayToUpper(i []string) []string {
+	ii := make([]string, 0)
+	if i != nil {
+		for _, s := range i {
+			ii = append(ii, strings.ToUpper(s))
+		}
+	}
+	return ii
+}
+
+func ArrayToLower(i []string) []string {
+	ii := make([]string, 0)
+	if i != nil {
+		for _, s := range i {
+			ii = append(ii, strings.ToLower(s))
+		}
+	}
+	return ii
+}
+
 func Distance(lt1, lng1, lt2, lng2 float64) float64 {
 	lat1 := degreesToRadians(lt1)
 	lon1 := degreesToRadians(lng1)
@@ -401,4 +441,81 @@ func ConvertStructToMap(in interface{}) (response *map[string]interface{}) {
 	inrec, _ := json.Marshal(in)
 	json.Unmarshal(inrec, &response)
 	return
+}
+
+func IsBearerToken(tokenValue string) (isBearerToken bool, tokenParts []string) {
+	tokenParts = strings.Split(tokenValue, " ")
+	if len(tokenParts) == 2 && strings.ToLower(tokenParts[0]) == strings.ToLower("Bearer") {
+		isBearerToken = true
+	}
+	return
+}
+
+func GetValueByKey[T any](slice []T, index int) *T {
+	if index >= 0 && index < len(slice) {
+		return &slice[index]
+	}
+	return nil
+}
+
+func assignMapToStructFields(out interface{}, mapClaims jwt.MapClaims) error {
+	outValue := reflect.ValueOf(out).Elem()
+	outType := outValue.Type()
+
+	for key, value := range mapClaims {
+		found := false
+		// Find the corresponding struct field by JSON tag
+		for i := 0; i < outType.NumField(); i++ {
+			field := outType.Field(i)
+			tag := field.Tag.Get("json")
+			if tag == key {
+				found = true
+				fieldValue := outValue.FieldByName(field.Name)
+				if fieldValue.IsValid() && fieldValue.CanSet() {
+					val := reflect.ValueOf(value)
+					if fieldValue.Type() == val.Type() {
+						fieldValue.Set(val)
+					} else if fieldValue.Kind() == reflect.Int && val.Kind() == reflect.Float64 {
+						fieldValue.SetInt(int64(val.Float()))
+					} else if fieldValue.Kind() == reflect.String && val.Kind() == reflect.String {
+						fieldValue.SetString(val.String())
+					}
+				}
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("no matching JSON tag found for claim key: %s", key)
+		}
+	}
+
+	return nil
+}
+
+func EqualizeSlices(slice1, slice2 []string) ([]string, []string) {
+	set1 := make(map[string]struct{})
+	set2 := make(map[string]struct{})
+
+	for _, s := range slice1 {
+		set1[s] = struct{}{}
+	}
+	for _, s := range slice2 {
+		set2[s] = struct{}{}
+	}
+
+	var result1, result2 []string
+
+	for _, s := range slice1 {
+		if _, exists := set2[s]; exists {
+			result1 = append(result1, s)
+		}
+	}
+
+	for _, s := range slice2 {
+		if _, exists := set1[s]; exists {
+			result2 = append(result2, s)
+		}
+	}
+
+	return result1, result2
 }

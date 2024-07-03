@@ -10,6 +10,7 @@ import (
 	"samm/internal/module/retails/consts"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/location"
+	"samm/internal/module/retails/responses"
 	"samm/pkg/utils"
 	"strings"
 	"time"
@@ -46,6 +47,7 @@ func LocationBuilder(ctx context.Context, payload *location.StoreLocationDto, l 
 	locationDomain.WorkingHour = mapWorkingHours(locationDomain.WorkingHour)
 	locationDomain.WorkingHourEid = mapWorkingHours(locationDomain.WorkingHourEid)
 	locationDomain.WorkingHourRamadan = mapWorkingHours(locationDomain.WorkingHourRamadan)
+	locationDomain.AllowedCollectionMethodIds = payload.AllowedCollectionMethodIds
 	locationDomain.CreatedAt = time.Now().UTC()
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return &locationDomain
@@ -105,6 +107,7 @@ func UpdateLocationBuilder(ctx context.Context, payload *location.StoreLocationD
 
 	locationDomain.City.Id = utils.ConvertStringIdToObjectId(payload.City.Id)
 	locationDomain.BrandDetails.Id = utils.ConvertStringIdToObjectId(payload.BrandDetails.Id)
+	locationDomain.AllowedCollectionMethodIds = payload.AllowedCollectionMethodIds
 	locationDomain.AccountId = utils.ConvertStringIdToObjectId(payload.AccountId)
 	locationDomain.Coordinate = domain.Coordinate{
 		Type:        "Point",
@@ -178,4 +181,15 @@ func mapWorkingHours(workingHours []domain.WorkingHour) []domain.WorkingHour {
 		items = append(items, hour)
 	}
 	return items
+}
+
+func populateCollectionMethods(ctx context.Context, l LocationUseCase, domainLocation *domain.Location) responses.LocationResp {
+	location := responses.LocationResp{}
+	copier.Copy(&location, &domainLocation)
+	location.AllowedCollectionMethod = make([]map[string]any, 0)
+	for _, CollectionMethodId := range domainLocation.AllowedCollectionMethodIds {
+		CollectionMethod, _ := l.commonUseCase.FindCollectionMethodByType(ctx, CollectionMethodId)
+		location.AllowedCollectionMethod = append(location.AllowedCollectionMethod, CollectionMethod)
+	}
+	return location
 }

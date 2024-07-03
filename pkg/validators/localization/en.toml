@@ -26,6 +26,14 @@ other = "The services are currently unavailable. Please try again later."
 description = "Unauthorized access"
 other = "Unauthorized access attempts detected. Please log in and try again."
 
+[E1401]
+description = "Unauthorized access"
+other = "You are not authorized to access this resource. Please log in with the correct credentials and try again."
+
+[E1403]
+description = "Unauthenticated access"
+other = "You do not have permission to access this resource. If you believe this is an error, please contact our support team for assistance."
+
 [E1007]
 description = "Session expired"
 other = "Your sessions have expired. Please log in again."
@@ -49,6 +57,18 @@ other = "You have exceeded your quotas: {{.Quota}}"
 [E1012]
 description = "Feature not supported"
 other = "These features are not supported: {{.Feature}}"
+
+[E1013]
+description = "Invalid OTP"
+other = "The OTP provided is invalid. Please check and try again."
+
+[E1014]
+description = "OTP has expired"
+other = "The OTP has expired. Please request a new OTP."
+
+[E1015]
+description = "Exceeded maximum OTP trials"
+other = "You have exceeded the maximum number of OTP trials for today. Please try again tomorrow."
 
 [Modifier_groups_ids_rules_validation]
 description = "Feature not supported"
@@ -90,3 +110,62 @@ other = "Modifier items cant contains modifier group"
 description = "Menu item not found"
 other = "The menu item was not found or is currently unavailable. Please check back later."
 
+[Email_is_unique_rules_validation]
+description = "Email is Unique"
+other = "Email is Exists"
+
+[Password_required_if_id_is_zero]
+description = "password is a required field"
+other = "password is a required field"
+
+[JwtSigningError]
+description = "Error generating signed string representation of JWT: there was a problem with the signing process"
+other = "There was a problem with the signing process"
+
+[JwtTokenExpiredError]
+description = "Error: the JSON Web Token has expired and cannot be verified"
+other = "The JSON Web Token has expired and cannot be verified"
+
+[JwtTokenParsingError]
+description = "Error: the JSON Web Token could not be parsed"
+other = "The JSON Web Token could not be parsed"
+
+[JwtTokenInvalidError]
+description = "The JSON Web Token is invalid and could not be verified"
+other = "The JSON Web Token is invalid and could not be verified"
+
+[ErrLoginPassword]
+description = "Incorrect password"
+other = "The password you entered is incorrect. Please check your password and try again."
+
+[ErrLoginEmail]
+description = "Incorrect email"
+other = "The email address you entered does not match any account. Please check the email address and try again."
+
+[ErrLoginBlocked]
+description = "Your Account Is disabled from admin"
+other = "Your Account Is disabled from admin"
+
+[ErrLoginInActive]
+description = "Your account is currently inactive. Please contact our support team for assistance in reactivating your account."
+other = "Your account is currently inactive. Please contact our support team for assistance in reactivating your account."
+
+[PhoneNumber_rule_validation]
+description = "PhoneNumber is Wrong"
+other = "PhoneNumber is Wrong"
+
+[Mobile_location_not_available_error]
+description = "mobile_location_not_available_error"
+other = "The location is not ready to receive orders now, try later please"
+
+[RoleExistsValidation]
+description = "Role is not exists"
+other = "Role is not exists"
+
+[RoleHasAdminsValidation]
+description = "The role you are trying to delete is currently assigned to one or more admins. Please reassign these admins to a different role before attempting to delete this role."
+other = "The role you are trying to delete is currently assigned to one or more admins. Please reassign these admins to a different role before attempting to delete this role."
+
+[PreventDeleteRolesIdsValidation]
+description = "You are not allowed to delete main roles"
+other = "You are not allowed to delete main roles."
