@@ -139,19 +139,3 @@ func (i *AdminCustomValidator) ValidateRoleExists() func(fl validator.FieldLevel
 		return true
 	}
 }
-
-func (i *AdminCustomValidator) AccountValidationRequired() func(fl validator.FieldLevel) bool {
-	return func(fl validator.FieldLevel) bool {
-		switch fl.Top().Interface().(type) {
-		case *admin_portal.CreateAdminPortalDTO:
-			adminDto, ok := fl.Top().Interface().(*admin_portal.CreateAdminPortalDTO)
-			if !ok {
-				return false
-			}
-			if adminDto.Account == nil && adminDto.ID.IsZero() {
-				return false
-			}
-		}
-		return true
-	}
-}
