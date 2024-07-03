@@ -8,6 +8,8 @@ import (
 	"samm/internal/module/retails/dto/location"
 	echomiddleware "samm/pkg/http/echo/middleware"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares/admin"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
@@ -20,21 +22,23 @@ type LocationHandler struct {
 }
 
 // InitUserController will initialize the article's HTTP controller
-func InitController(e *echo.Echo, us domain.LocationUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitController(e *echo.Echo, us domain.LocationUseCase, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &LocationHandler{
 		locationUsecase: us,
 		validator:       validator,
 		logger:          logger,
 	}
 	dashboard := e.Group("api/v1/admin/location")
-	dashboard.POST("", handler.StoreLocation)
-	dashboard.POST("/bulk", handler.BulkStoreLocation)
-	dashboard.GET("", handler.ListLocation)
-	dashboard.PUT("/:id/toggle-active", handler.ToggleLocationActive)
-	dashboard.PUT("/:id", handler.UpdateLocation)
-	dashboard.PUT("/:id/toggle-snooze", handler.ToggleSnooze)
-	dashboard.GET("/:id", handler.FindLocation)
-	dashboard.DELETE("/:id", handler.DeleteLocation)
+	dashboard.Use(adminMiddlewares.AuthMiddleware)
+
+	dashboard.POST("", handler.StoreLocation, commonMiddlewares.PermissionMiddleware("create-locations-accounts"))
+	dashboard.POST("/bulk", handler.BulkStoreLocation, commonMiddlewares.PermissionMiddleware("create-locations-accounts"))
+	dashboard.GET("", handler.ListLocation, commonMiddlewares.PermissionMiddleware("list-locations-accounts"))
+	dashboard.PUT("/:id/toggle-active", handler.ToggleLocationActive, commonMiddlewares.PermissionMiddleware("update-status-locations-accounts"))
+	dashboard.PUT("/:id", handler.UpdateLocation, commonMiddlewares.PermissionMiddleware("update-locations-accounts"))
+	dashboard.PUT("/:id/toggle-snooze", handler.ToggleSnooze, commonMiddlewares.PermissionMiddleware("update-status-locations-accounts"))
+	dashboard.GET("/:id", handler.FindLocation, commonMiddlewares.PermissionMiddleware("find-locations-accounts"))
+	dashboard.DELETE("/:id", handler.DeleteLocation, commonMiddlewares.PermissionMiddleware("delete-locations-accounts"))
 
 	mobile := e.Group("api/v1/mobile/location")
 	mobile.Use(echomiddleware.AppendCountryMiddleware)

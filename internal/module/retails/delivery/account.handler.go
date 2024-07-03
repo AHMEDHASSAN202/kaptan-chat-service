@@ -8,6 +8,8 @@ import (
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/account"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares/admin"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/validators"
 )
 
@@ -20,7 +22,7 @@ type AccountHandler struct {
 }
 
 // InitUserController will initialize the article's HTTP controller
-func InitAccountController(e *echo.Echo, us domain.AccountUseCase, adminCustomValidator custom_validators2.AdminCustomValidator, retailCustomValidator custom_validators.RetailCustomValidator, validator *validator.Validate, logger logger.ILogger) {
+func InitAccountController(e *echo.Echo, us domain.AccountUseCase, adminCustomValidator custom_validators2.AdminCustomValidator, retailCustomValidator custom_validators.RetailCustomValidator, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &AccountHandler{
 		accountUsecase:        us,
 		retailCustomValidator: retailCustomValidator,
@@ -29,11 +31,12 @@ func InitAccountController(e *echo.Echo, us domain.AccountUseCase, adminCustomVa
 		logger:                logger,
 	}
 	dashboard := e.Group("api/v1/admin/account")
-	dashboard.POST("", handler.StoreAccount)
-	dashboard.GET("", handler.ListAccount)
-	dashboard.PUT("/:id", handler.UpdateAccount)
-	dashboard.GET("/:id", handler.FindAccount)
-	dashboard.DELETE("/:id", handler.DeleteAccount)
+	dashboard.Use(adminMiddlewares.AuthMiddleware)
+	dashboard.POST("", handler.StoreAccount, commonMiddlewares.PermissionMiddleware("create-accounts"))
+	dashboard.GET("", handler.ListAccount, commonMiddlewares.PermissionMiddleware("list-accounts"))
+	dashboard.PUT("/:id", handler.UpdateAccount, commonMiddlewares.PermissionMiddleware("update-accounts"))
+	dashboard.GET("/:id", handler.FindAccount, commonMiddlewares.PermissionMiddleware("find-accounts"))
+	dashboard.DELETE("/:id", handler.DeleteAccount, commonMiddlewares.PermissionMiddleware("delete-accounts"))
 }
 func (a *AccountHandler) StoreAccount(c echo.Context) error {
 	ctx := c.Request().Context()
