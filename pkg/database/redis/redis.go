@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"github.com/go-redis/redis/v8"
 	"time"
@@ -20,10 +19,10 @@ func NewRedisClient(fullUrl *string) *RedisClient {
 	if err != nil {
 		panic(err)
 	}
-	// Configure TLS to skip certificate verification
-	options.TLSConfig = &tls.Config{
-		InsecureSkipVerify: true,
-	}
+	//// Configure TLS to skip certificate verification
+	//options.TLSConfig = &tls.Config{
+	//	InsecureSkipVerify: true,
+	//}
 
 	rdb := redis.NewClient(options)
 

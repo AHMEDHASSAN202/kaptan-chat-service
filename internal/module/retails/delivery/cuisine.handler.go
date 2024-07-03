@@ -7,6 +7,8 @@ import (
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/cuisine"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares/admin"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
@@ -18,20 +20,21 @@ type CuisineHandler struct {
 	logger         logger.ILogger
 }
 
-func InitCuisineController(e *echo.Echo, cuisineUsecase domain.CuisineUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitCuisineController(e *echo.Echo, cuisineUsecase domain.CuisineUseCase, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &CuisineHandler{
 		cuisineUsecase: cuisineUsecase,
 		validator:      validator,
 		logger:         logger,
 	}
 	portal := e.Group("api/v1/admin/cuisine")
+	portal.Use(adminMiddlewares.AuthMiddleware)
 	{
-		portal.POST("", handler.Create)
-		portal.PUT("/:id", handler.Update)
-		portal.GET("", handler.List)
-		portal.GET("/:id", handler.Find)
-		portal.PUT("/:id/status", handler.ChangeStatus)
-		portal.DELETE("/:id", handler.Delete)
+		portal.POST("", handler.Create, commonMiddlewares.PermissionMiddleware("create-cuisines"))
+		portal.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-cuisines"))
+		portal.GET("", handler.List, commonMiddlewares.PermissionMiddleware("list-cuisines"))
+		portal.GET("/:id", handler.Find, commonMiddlewares.PermissionMiddleware("find-cuisines"))
+		portal.PUT("/:id/status", handler.ChangeStatus, commonMiddlewares.PermissionMiddleware("update-status-cuisines"))
+		portal.DELETE("/:id", handler.Delete, commonMiddlewares.PermissionMiddleware("delete-cuisines"))
 	}
 }
 
