@@ -26,6 +26,7 @@ type Payment struct {
 type PaymentUseCase interface {
 	Pay(ctx context.Context, dto *payment.PayDto) (payResponse response.PayResponse, err validators.ErrorResponse)
 	MyFatoorahWebhook(ctx context.Context, dto *payment.MyFatoorahWebhookPayload) (payResponse interface{}, err validators.ErrorResponse)
+	AuthorizePayment(ctx context.Context, payload *payment.AuthorizePayload) (payResponse response.PayResponse, err validators.ErrorResponse)
 }
 
 type PaymentRepository interface {
