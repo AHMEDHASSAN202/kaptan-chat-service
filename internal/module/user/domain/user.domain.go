@@ -25,6 +25,7 @@ type User struct {
 	ImageURL         string     `json:"image_url" bson:"image_url"`
 	Country          string     `json:"country" bson:"country"`
 	IsActive         bool       `json:"is_active" bson:"is_active"`
+	VerifiedAt       *time.Time `json:"verified_at" bson:"verified_at"`
 	DeletedAt        *time.Time `json:"deleted_at" bson:"deleted_at"`
 	Tokens           []string   `json:"-" bson:"tokens"`
 }
