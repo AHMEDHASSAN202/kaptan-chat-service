@@ -13,6 +13,7 @@ import (
 	dto "samm/internal/module/admin/dto/role"
 	"samm/pkg/logger"
 	"samm/pkg/middlewares/admin"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/middlewares/portal"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -27,7 +28,7 @@ type RoleHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitRoleController(e *echo.Echo, roleUseCase domain.RoleUseCase, roleCustomValidator custom_validators.RoleCustomValidator, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, portalMiddlewares *portal.ProviderMiddlewares) {
+func InitRoleController(e *echo.Echo, roleUseCase domain.RoleUseCase, roleCustomValidator custom_validators.RoleCustomValidator, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, portalMiddlewares *portal.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &RoleHandler{
 		roleUseCase:         roleUseCase,
 		validator:           validator,
@@ -37,23 +38,23 @@ func InitRoleController(e *echo.Echo, roleUseCase domain.RoleUseCase, roleCustom
 	role := e.Group("api/v1/admin/role")
 	role.Use(adminMiddlewares.AuthMiddleware)
 	{
-		role.GET("", handler.List)
-		role.GET("/:id", handler.Find)
-		role.POST("", handler.Create)
-		role.PUT("/:id", handler.Update)
-		role.DELETE("/:id", handler.Delete)
+		role.GET("", handler.List, commonMiddlewares.PermissionMiddleware("list-roles"))
+		role.GET("/:id", handler.Find, commonMiddlewares.PermissionMiddleware("find-roles"))
+		role.POST("", handler.Create, commonMiddlewares.PermissionMiddleware("create-roles"))
+		role.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-roles"))
+		role.DELETE("/:id", handler.Delete, commonMiddlewares.PermissionMiddleware("delete-roles"))
 	}
 
 	rolePortal := e.Group("api/v1/portal/role")
 	rolePortal.Use(portalMiddlewares.AuthMiddleware)
 	{
-		rolePortal.GET("", handler.PortalListRoles)
+		rolePortal.GET("", handler.PortalListRoles, commonMiddlewares.PermissionMiddleware("create-portal-admins", "update-portal-admins", "portal-login-accounts"))
 	}
 
 	permissions := e.Group("api/v1/admin/permissions")
 	permissions.Use(adminMiddlewares.AuthMiddleware)
 	{
-		permissions.GET("", handler.ListPermissions)
+		permissions.GET("", handler.ListPermissions, commonMiddlewares.PermissionMiddleware("create-roles", "update-roles"))
 	}
 }
 

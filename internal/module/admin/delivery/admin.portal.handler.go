@@ -10,6 +10,7 @@ import (
 	dto "samm/internal/module/admin/dto/admin"
 	"samm/internal/module/admin/dto/admin_portal"
 	"samm/pkg/logger"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/middlewares/portal"
 	"samm/pkg/utils"
 	dto2 "samm/pkg/utils/dto"
@@ -25,7 +26,7 @@ type AdminPortalHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitAdminPortalController(e *echo.Echo, adminUseCase domain.AdminUseCase, adminCustomValidator custom_validators.AdminCustomValidator, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares) {
+func InitAdminPortalController(e *echo.Echo, adminUseCase domain.AdminUseCase, adminCustomValidator custom_validators.AdminCustomValidator, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &AdminPortalHandler{
 		adminUseCase:         adminUseCase,
 		validator:            validator,
@@ -35,12 +36,12 @@ func InitAdminPortalController(e *echo.Echo, adminUseCase domain.AdminUseCase, a
 	portalAdmin := e.Group("api/v1/portal/admin")
 	portalAdmin.Use(portalMiddlewares.AuthMiddleware)
 	{
-		portalAdmin.GET("", handler.ListAdminPortal)
-		portalAdmin.GET("/:id", handler.FindAdminPortal)
-		portalAdmin.POST("", handler.CreateAdminPortal)
-		portalAdmin.PUT("/:id", handler.UpdateAdminPortal)
-		portalAdmin.DELETE("/:id", handler.DeleteAdminPortal)
-		portalAdmin.PUT("/:id/change-status", handler.ChangeStatusAdminPortal)
+		portalAdmin.GET("", handler.ListAdminPortal, commonMiddlewares.PermissionMiddleware("list-portal-admins", "portal-login-accounts"))
+		portalAdmin.GET("/:id", handler.FindAdminPortal, commonMiddlewares.PermissionMiddleware("find-portal-admins", "portal-login-accounts"))
+		portalAdmin.POST("", handler.CreateAdminPortal, commonMiddlewares.PermissionMiddleware("create-portal-admins", "portal-login-accounts"))
+		portalAdmin.PUT("/:id", handler.UpdateAdminPortal, commonMiddlewares.PermissionMiddleware("update-portal-admins", "portal-login-accounts"))
+		portalAdmin.DELETE("/:id", handler.DeleteAdminPortal, commonMiddlewares.PermissionMiddleware("delete-portal-admins", "portal-login-accounts"))
+		portalAdmin.PUT("/:id/change-status", handler.ChangeStatusAdminPortal, commonMiddlewares.PermissionMiddleware("update-status-portal-admins", "portal-login-accounts"))
 	}
 }
 
@@ -123,7 +124,7 @@ func (a *AdminPortalHandler) CreateAdminPortal(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero(), a.adminCustomValidator.ValidateRoleExists())
+	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero(), a.adminCustomValidator.ValidateRoleExists(), a.adminCustomValidator.AccountValidationRequired())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -136,7 +137,7 @@ func (a *AdminPortalHandler) CreateAdminPortal(c echo.Context) error {
 		Type:       consts.PORTAL_TYPE,
 		RoleId:     input.RoleId,
 		CountryIds: utils.Countries,
-		AccountId:  input.AccountId,
+		Account:    &dto.Account{Id: utils.ConvertObjectIdToStringId(input.Account.Id), Name: dto.Name{Ar: input.Account.Name.Ar, En: input.Account.Name.En}},
 	})
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
@@ -166,7 +167,7 @@ func (a *AdminPortalHandler) UpdateAdminPortal(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero(), a.adminCustomValidator.ValidateRoleExists())
+	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero(), a.adminCustomValidator.ValidateRoleExists(), a.adminCustomValidator.AccountValidationRequired())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -180,7 +181,7 @@ func (a *AdminPortalHandler) UpdateAdminPortal(c echo.Context) error {
 		Type:       consts.PORTAL_TYPE,
 		RoleId:     input.RoleId,
 		CountryIds: utils.Countries,
-		AccountId:  input.AccountId,
+		Account:    nil,
 		Status:     input.Status,
 	})
 	if errResp.IsError {

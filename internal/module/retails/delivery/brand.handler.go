@@ -8,6 +8,8 @@ import (
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/brand"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares/admin"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
@@ -20,7 +22,7 @@ type BrandHandler struct {
 	logger          logger.ILogger
 }
 
-func InitBrandController(e *echo.Echo, brandUsecase domain.BrandUseCase, validator *validator.Validate, logger logger.ILogger, customValidator custom_validators.RetailCustomValidator) {
+func InitBrandController(e *echo.Echo, brandUsecase domain.BrandUseCase, validator *validator.Validate, logger logger.ILogger, customValidator custom_validators.RetailCustomValidator, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &BrandHandler{
 		brandUsecase:    brandUsecase,
 		validator:       validator,
@@ -28,13 +30,14 @@ func InitBrandController(e *echo.Echo, brandUsecase domain.BrandUseCase, validat
 		customValidator: customValidator,
 	}
 	portal := e.Group("api/v1/admin/brand")
+	portal.Use(adminMiddlewares.AuthMiddleware)
 	{
-		portal.POST("", handler.Create)
-		portal.PUT("/:id", handler.Update)
-		portal.GET("", handler.List)
-		portal.GET("/:id", handler.Find)
-		portal.PUT("/:id/status", handler.ChangeStatus)
-		portal.DELETE("/:id", handler.Delete)
+		portal.POST("", handler.Create, commonMiddlewares.PermissionMiddleware("create-brands"))
+		portal.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-brands"))
+		portal.GET("", handler.List, commonMiddlewares.PermissionMiddleware("list-brands"))
+		portal.GET("/:id", handler.Find, commonMiddlewares.PermissionMiddleware("find-brands"))
+		portal.PUT("/:id/status", handler.ChangeStatus, commonMiddlewares.PermissionMiddleware("update-status-brands"))
+		portal.DELETE("/:id", handler.Delete, commonMiddlewares.PermissionMiddleware("delete-brands"))
 	}
 }
 

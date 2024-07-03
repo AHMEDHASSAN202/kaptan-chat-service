@@ -30,6 +30,7 @@ type (
 	Config struct {
 		Environment  string
 		Mongo        MongoConfig
+		RedisTlsUrl  string
 		AwsConfig    AwsConfig
 		HTTP         HTTPConfig
 		Echo         echoserver.EchoConfig
@@ -86,7 +87,7 @@ type (
 
 // Init populates Config struct with values from config file
 // located at filepath and environment variables.
-func Init() (*Config, *MongoConfig,
+func Init() (*Config, *MongoConfig, *string,
 	*HTTPConfig,
 	*echoserver.EchoConfig,
 	*LimiterConfig, *AwsConfig, *JWTConfig,
@@ -98,17 +99,17 @@ func Init() (*Config, *MongoConfig,
 		logrus.Info("Error  from load env. this mean the application load on the cloud not from a file.")
 	}
 	if err := parseConfigFile(configsDir, os.Getenv("APP_ENV")); err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
 	}
 
 	var cfg Config
 	if err := unmarshal(&cfg); err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
 	}
 
 	setFromEnv(&cfg)
 
-	return &cfg, &cfg.Mongo, &cfg.HTTP, &cfg.Echo, &cfg.Limiter, &cfg.AwsConfig, &cfg.JWTConfig, cfg.LoggerConfig, nil
+	return &cfg, &cfg.Mongo, &cfg.RedisTlsUrl, &cfg.HTTP, &cfg.Echo, &cfg.Limiter, &cfg.AwsConfig, &cfg.JWTConfig, cfg.LoggerConfig, nil
 }
 
 func unmarshal(cfg *Config) error {
@@ -135,6 +136,8 @@ func setFromEnv(cfg *Config) {
 	// TODO use envconfig https://github.com/kelseyhightower/envconfig
 	cfg.Mongo.MongoConnection = os.Getenv("MONGO_CONNECTION")
 	cfg.Mongo.MongoDbName = os.Getenv("MONGO_DB_NAME")
+
+	cfg.RedisTlsUrl = os.Getenv("REDIS_TLS_URL")
 
 	cfg.ServiceUrl = os.Getenv("SERVICE_URL")
 

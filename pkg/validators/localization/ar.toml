@@ -173,3 +173,7 @@ other = "الفرع غير جاهز لاستقبال الطلبات الآن، �
 [Mobile_location_not_open_error]
 description = "Mobile_location_not_open_error"
 other = "الفرع مغلق الآن، يرجى المحاولة لاحقًا "
+
+[AccountRequiredValidation]
+description = "AccountRequiredValidation"
+other = "الحساب مطلوب"

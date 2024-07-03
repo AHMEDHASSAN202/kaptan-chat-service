@@ -78,3 +78,7 @@ func (jwtService *AdminJwtService) ValidateToken(ctx context.Context, signedToke
 	jwtService.logger.Error(ctx, err)
 	return claims, validators.GetError(&ctx, localization.JwtTokenParsingError, nil)
 }
+
+func (jwtService *AdminJwtService) GenerateTokenByAdmin(ctx context.Context, id string, data map[string]interface{}) (token string, err error) {
+	return "", nil
+}

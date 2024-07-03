@@ -258,11 +258,11 @@ func main() {
 //	Age            uint8      `validate:"gte=0,lte=130"`
 //	Email          string     `validate:"required,email"`
 //	FavouriteColor string     `validate:"iscolor"`                // alias for 'hexcolor|rgb|rgba|hsl|hsla'
-//	Addresses      []*Address `validate:"required,dive,required"` // a person can have a home and cottage...
+//	Addresses      []*Url `validate:"required,dive,required"` // a person can have a home and cottage...
 //}
 //
-//// Address houses a users address information
-//type Address struct {
+//// Url houses a users address information
+//type Url struct {
 //	Street string `validate:"required"`
 //	City   string `validate:"required"`
 //	Planet string `validate:"required"`
@@ -301,10 +301,10 @@ func main() {
 //		Username string     `validate:"required"`
 //		Tagline  string     `validate:"required,lt=10"`
 //		Tagline2 string     `validate:"required,gt=1"`
-//		t        []*Address `json:"t" validate:"omitempty,dive"`
+//		t        []*Url `json:"t" validate:"omitempty,dive"`
 //	}
 //
-//	adds := make([]*Address, 0)
+//	adds := make([]*Url, 0)
 //	user := user{
 //		Username: "",
 //		Tagline:  "This tagline is way too long.",
@@ -332,10 +332,10 @@ func main() {
 //		Username string     `validate:"required"`
 //		Tagline  string     `validate:"required,lt=10"`
 //		Tagline2 string     `validate:"required,gt=1"`
-//		t        []*Address `json:"t" validate:"omitempty,dive"`
+//		t        []*Url `json:"t" validate:"omitempty,dive"`
 //	}
 //
-//	adds := make([]*Address, 0)
+//	adds := make([]*Url, 0)
 //	user := user{
 //		Username: "",
 //		Tagline:  "This tagline is way too long.",

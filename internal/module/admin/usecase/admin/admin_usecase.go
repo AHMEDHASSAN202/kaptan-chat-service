@@ -7,8 +7,9 @@ import (
 	builder "samm/internal/module/admin/builder/admin"
 	"samm/internal/module/admin/domain"
 	dto "samm/internal/module/admin/dto/admin"
+	"samm/internal/module/admin/external"
 	"samm/internal/module/admin/responses"
-	"samm/internal/module/menu/external"
+	"samm/pkg/database/redis"
 	"samm/pkg/jwt"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
@@ -25,16 +26,17 @@ type AdminUseCase struct {
 	extService       external.ExtService
 	AdminJwtService  jwt.JwtService
 	PortalJwtService jwt.JwtService
+	redisClient      *redis.RedisClient
 }
 
-func NewAdminUseCase(repo domain.AdminRepository, roleRepo domain.RoleRepository, logger logger.ILogger, extService external.ExtService, jwtFactory jwt.JwtServiceFactory) domain.AdminUseCase {
+func NewAdminUseCase(repo domain.AdminRepository, roleRepo domain.RoleRepository, logger logger.ILogger, jwtFactory jwt.JwtServiceFactory, redisClient *redis.RedisClient) domain.AdminUseCase {
 	return &AdminUseCase{
 		repo:             repo,
 		roleRepo:         roleRepo,
 		logger:           logger,
-		extService:       extService,
 		AdminJwtService:  jwtFactory.AdminJwtService(),
 		PortalJwtService: jwtFactory.PortalJwtService(),
+		redisClient:      redisClient,
 	}
 }
 
@@ -67,7 +69,7 @@ func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO)
 		return "", validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	if input.AccountId != "" && !admin.Authorized(input.AccountId) {
+	if input.Account != nil && input.Account.Id != "" && !admin.Authorized(input.Account.Id) {
 		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Update Admin -> ", admin.ID)
 		return "", validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
@@ -90,6 +92,8 @@ func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO)
 		return "", validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
 	}
 
+	oRec.RemoveAdminFromCache(utils.ConvertObjectIdToStringId(admin.ID))
+
 	return utils.ConvertObjectIdToStringId(admin.ID), validators.ErrorResponse{}
 }
 
@@ -111,6 +115,8 @@ func (oRec *AdminUseCase) Delete(ctx context.Context, adminId primitive.ObjectID
 		oRec.logger.Error("AdminUseCase -> Delete -> ", err)
 		return validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
 	}
+
+	oRec.RemoveAdminFromCache(utils.ConvertObjectIdToStringId(admin.ID))
 
 	return validators.ErrorResponse{}
 }
@@ -160,6 +166,8 @@ func (oRec *AdminUseCase) ChangeStatus(ctx context.Context, input *dto.ChangeAdm
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 	}
 
+	oRec.RemoveAdminFromCache(utils.ConvertObjectIdToStringId(admin.ID))
+
 	return validators.ErrorResponse{}
 }
 
@@ -177,4 +185,13 @@ func (oRec *AdminUseCase) CheckRoleExists(ctx context.Context, roleId primitive.
 		return isExists, validators.GetErrorResponseFromErr(err)
 	}
 	return isExists, validators.ErrorResponse{}
+}
+
+func (oRec *AdminUseCase) SyncAccount(ctx context.Context, input dto.Account) validators.ErrorResponse {
+	errCreate := oRec.repo.SyncAccount(ctx, input)
+	if errCreate != nil {
+		oRec.logger.Error("AdminUseCase -> UpdateAccountById -> ", errCreate)
+		return validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
+	}
+	return validators.ErrorResponse{}
 }

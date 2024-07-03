@@ -90,7 +90,7 @@ func otpTrialsPerDayGetter(otpCounter string) (day string, counter int) {
 	return
 }
 
-func reponseBuilderAtUpdateProfile(user *domain.User) *responses.MobileUser {
+func reposeBuilderAtUpdateProfile(user *domain.User) *responses.MobileUser {
 	var userResp responses.MobileUser
 	copier.Copy(&userResp, user)
 	return &userResp

@@ -16,7 +16,16 @@ import (
 )
 
 type MetaData struct {
-	AccountId string `json:"account_id" bson:"account_id,omitempty"`
+}
+
+type Name struct {
+	Ar string `json:"ar" bson:"ar"`
+	En string `json:"en" bson:"en"`
+}
+
+type Account struct {
+	Id   primitive.ObjectID `json:"id" bson:"_id"`
+	Name Name               `json:"name" bson:"name"`
 }
 
 type Admin struct {
@@ -30,6 +39,7 @@ type Admin struct {
 	Status           string             `json:"status" bson:"status"`
 	Tokens           []string           `json:"tokens" bson:"tokens,omitempty"`
 	MetaData         MetaData           `json:"meta_data" bson:"meta_data"`
+	Account          *Account           `json:"account" bson:"account,omitempty"`
 	AdminDetails     []dto.AdminDetails `json:"admin_details" bson:"admin_details,omitempty"`
 	DeletedAt        *time.Time         `json:"deleted_at" bson:"deleted_at"`
 }
@@ -45,9 +55,11 @@ type AdminUseCase interface {
 	CheckRoleExists(ctx context.Context, roleId primitive.ObjectID) (bool, validators.ErrorResponse)
 	AdminLogin(ctx context.Context, dto *auth.AdminAuthDTO) (interface{}, string, validators.ErrorResponse)
 	PortalLogin(ctx context.Context, dto *auth.PortalAuthDTO) (interface{}, string, validators.ErrorResponse)
-	Profile(ctx context.Context, adminId string) (*admin2.AdminProfileResponse, validators.ErrorResponse)
+	Profile(ctx context.Context, profileDTO auth.ProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 	UpdateAdminProfile(ctx context.Context, dto *auth.UpdateAdminProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 	UpdatePortalProfile(ctx context.Context, dto *auth.UpdatePortalProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
+	SyncAccount(ctx context.Context, input admin.Account) validators.ErrorResponse
+	LoginAsPortal(ctx context.Context, portalDto *admin.LoginAsPortalDto) (interface{}, string, validators.ErrorResponse)
 }
 
 type AdminRepository interface {
@@ -62,6 +74,7 @@ type AdminRepository interface {
 	CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID) (bool, error)
 	CheckRoleExists(ctx context.Context, roleId primitive.ObjectID) (bool, error)
 	FindByEmail(ctx context.Context, email string, adminType string) (*Admin, error)
+	SyncAccount(ctx context.Context, input admin.Account) error
 }
 
 func (model *Admin) Creating(ctx context.Context) error {
@@ -82,5 +95,5 @@ func (model *Admin) IsActive() bool {
 }
 
 func (model *Admin) Authorized(accountId string) bool {
-	return model.MetaData.AccountId == accountId
+	return model.Account.Id == utils.ConvertStringIdToObjectId(accountId)
 }

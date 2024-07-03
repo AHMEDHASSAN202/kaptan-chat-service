@@ -21,8 +21,7 @@ import (
 
 const tag = "CommonUseCase "
 
-func NewCommonUseCase(repo domain.CommonRepository, logger logger.ILogger, awsS3 *s3.Client,
-	awsConfig *config.AwsConfig) domain.CommonUseCase {
+func NewCommonUseCase(repo domain.CommonRepository, logger logger.ILogger, awsS3 *s3.Client, awsConfig *config.AwsConfig) domain.CommonUseCase {
 	return &CommonUseCase{
 		repo:      repo,
 		logger:    logger,

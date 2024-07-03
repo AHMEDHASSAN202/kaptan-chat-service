@@ -8,6 +8,7 @@ import (
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/menu_group"
 	"samm/pkg/logger"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/middlewares/portal"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -21,7 +22,7 @@ type MenuGroupHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares) {
+func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &MenuGroupHandler{
 		menuGroupUsecase: us,
 		validator:        validator,
@@ -30,13 +31,13 @@ func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator
 	portal := e.Group("api/v1/portal/menu-group")
 	portal.Use(portalMiddlewares.AuthMiddleware)
 	{
-		portal.GET("", handler.List)
-		portal.GET("/:id", handler.Find)
-		portal.POST("", handler.Create)
-		portal.PUT("/:id", handler.Update)
-		portal.DELETE("/:id", handler.Delete)
-		portal.PUT("/:id/change-status", handler.ChangeStatus)
-		portal.DELETE("/:id/:entity/:entity_id", handler.DeleteEntity)
+		portal.GET("", handler.List, commonMiddlewares.PermissionMiddleware("list-menu-group", "portal-login-accounts"))
+		portal.GET("/:id", handler.Find, commonMiddlewares.PermissionMiddleware("find-menu-group", "portal-login-accounts"))
+		portal.POST("", handler.Create, commonMiddlewares.PermissionMiddleware("create-menu-group", "portal-login-accounts"))
+		portal.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-menu-group", "portal-login-accounts"))
+		portal.DELETE("/:id", handler.Delete, commonMiddlewares.PermissionMiddleware("delete-menu-group", "portal-login-accounts"))
+		portal.PUT("/:id/change-status", handler.ChangeStatus, commonMiddlewares.PermissionMiddleware("update-status-menu-group", "portal-login-accounts"))
+		portal.DELETE("/:id/:entity/:entity_id", handler.DeleteEntity, commonMiddlewares.PermissionMiddleware("update-menu-group", "portal-login-accounts"))
 	}
 
 	mobile := e.Group("api/v1/menu-group/:branch_id")
