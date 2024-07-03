@@ -7,4 +7,5 @@ import (
 type ListCardDto struct {
 	dto.Pagination
 	UserId string `json:"user_id" `
+	dto.MobileHeaders
 }

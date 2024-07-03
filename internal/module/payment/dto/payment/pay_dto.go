@@ -3,6 +3,7 @@ package payment
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 )
 
@@ -23,6 +24,7 @@ type PayDto struct {
 	HoldTransaction bool   `json:"hold_transaction"`
 	Card            Card   `json:"card" validate:"required_if=PaymentType card"`
 	UserId          string
+	dto.MobileHeaders
 }
 
 func (payload *PayDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {

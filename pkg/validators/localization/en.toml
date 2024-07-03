@@ -169,3 +169,7 @@ other = "The role you are trying to delete is currently assigned to one or more 
 [PreventDeleteRolesIdsValidation]
 description = "You are not allowed to delete main roles"
 other = "You are not allowed to delete main roles."
+
+[PAYMENT_PROCESS_RUNNING]
+description = "Payment is running"
+other = "Please Wait Payment is running"
