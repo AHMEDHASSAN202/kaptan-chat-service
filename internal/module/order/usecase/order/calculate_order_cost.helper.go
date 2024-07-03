@@ -2,6 +2,8 @@ package order
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"samm/internal/module/order/dto/order"
 	extMenuResponses "samm/internal/module/order/external/menu/responses"
 	extLocResponses "samm/internal/module/order/external/retails/responses"
@@ -108,9 +110,39 @@ func checkIsLocationReadyForNewOrder(ctx *context.Context, doc extLocResponses.L
 	return validators.ErrorResponse{}
 }
 
-func checkIsMenuItemsValid(ctx *context.Context, doc []extMenuResponses.MenuDetailsResponse) validators.ErrorResponse {
-	//if !doc.IsOpen {
-	//	return validators.GetErrorResponse(ctx, localization.Mobile_location_not_open_error, nil, nil)
-	//}
+func checkIsMenuItemsValid(ctx *context.Context, menuDocs []extMenuResponses.MenuDetailsResponse, menuItemDto []order.MenuItem) validators.ErrorResponse {
+
+	modifierMap := make(map[string]bool)
+	menuItemsMap := make(map[string]bool)
+
+	for _, menu := range menuDocs {
+		menuItemsMap[menu.ID.Hex()] = true
+		for _, addon := range menu.Addons {
+			modifierMap[addon.ID.Hex()] = true
+		}
+	}
+	ValidationErrors := make(map[string][]string)
+	for menuIndex, item := range menuItemDto {
+		if _, ok := menuItemsMap[item.Id]; !ok {
+			ValidationErrors[fmt.Sprintf("menu.%d", menuIndex)] = []string{"not exists"}
+		}
+		for modifierIndex, modifier := range item.ModifierIds {
+			if _, ok := modifierMap[modifier.Id]; !ok {
+				ValidationErrors[fmt.Sprintf("menu.%d.modifier.%d", menuIndex, modifierIndex)] = []string{"not exists"}
+			}
+		}
+	}
+	fmt.Println(ValidationErrors)
+	if len(ValidationErrors) > 0 {
+		return validators.ErrorResponse{
+			ValidationErrors: ValidationErrors,
+			IsError:          true,
+			ErrorMessageObject: &validators.Message{
+				Text: "validationError",
+				Code: localization.E1002,
+			},
+			StatusCode: http.StatusUnprocessableEntity,
+		}
+	}
 	return validators.ErrorResponse{}
 }
