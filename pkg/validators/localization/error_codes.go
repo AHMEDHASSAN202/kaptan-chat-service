@@ -37,6 +37,7 @@ const (
 	JwtTokenExpiredError                        = "JwtTokenExpiredError"                        // Error: the JSON Web Token has expired and cannot be verified
 	JwtTokenInvalidError                        = "JwtTokenInvalidError"                        // The JSON Web Token is invalid and could not be verified
 	JwtTokenParsingError                        = "JwtTokenParsingError"                        // Error: the JSON Web Token could not be parsed
+	Mobile_item_unavailable                     = "Mobile_item_unavailable"                     // Mobile_item_unavailable
 	Mobile_location_not_available_error         = "Mobile_location_not_available_error"         // mobile_location_not_available_error
 	Mobile_location_not_open_error              = "Mobile_location_not_open_error"              // Mobile_location_not_open_error
 	Modifier_groups_ids_rules_validation        = "Modifier_groups_ids_rules_validation"        // Feature not supported

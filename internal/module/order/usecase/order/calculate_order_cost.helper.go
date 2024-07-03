@@ -124,11 +124,11 @@ func checkIsMenuItemsValid(ctx *context.Context, menuDocs []extMenuResponses.Men
 	ValidationErrors := make(map[string][]string)
 	for menuIndex, item := range menuItemDto {
 		if _, ok := menuItemsMap[item.Id]; !ok {
-			ValidationErrors[fmt.Sprintf("menu.%d", menuIndex)] = []string{"not exists"}
+			ValidationErrors[fmt.Sprintf("menu.%d", menuIndex)] = []string{localization.GetTranslation(ctx, localization.Mobile_item_unavailable, nil, "")}
 		}
 		for modifierIndex, modifier := range item.ModifierIds {
 			if _, ok := modifierMap[modifier.Id]; !ok {
-				ValidationErrors[fmt.Sprintf("menu.%d.modifier.%d", menuIndex, modifierIndex)] = []string{"not exists"}
+				ValidationErrors[fmt.Sprintf("menu.%d.modifier.%d", menuIndex, modifierIndex)] = []string{localization.GetTranslation(ctx, localization.Mobile_item_unavailable, nil, "")}
 			}
 		}
 	}
@@ -138,7 +138,7 @@ func checkIsMenuItemsValid(ctx *context.Context, menuDocs []extMenuResponses.Men
 			IsError:          true,
 			ErrorMessageObject: &validators.Message{
 				Text: "validationError",
-				Code: localization.E1002,
+				Code: localization.E1002Item,
 			},
 			StatusCode: http.StatusUnprocessableEntity,
 		}

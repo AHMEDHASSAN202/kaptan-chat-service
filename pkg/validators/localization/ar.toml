@@ -177,3 +177,7 @@ other = "الفرع مغلق الآن، يرجى المحاولة لاحقًا "
 [AccountRequiredValidation]
 description = "AccountRequiredValidation"
 other = "الحساب مطلوب"
+
+[Mobile_item_unavailable]
+description = "Mobile_item_unavailable"
+other = "هذا العنصر غير متاح"
