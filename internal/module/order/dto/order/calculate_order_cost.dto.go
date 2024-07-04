@@ -15,7 +15,7 @@ type MenuItem struct {
 type CalculateOrderCostDto struct {
 	LocationId         string     `json:"location_id" validate:"required,mongodb"`
 	UserId             string     `json:"-"`
-	CollectionMethodId string     `json:"collection_method_id" validate:"required"`
+	CollectionMethodId string     `json:"collection_method_id"`
 	MenuItems          []MenuItem `json:"menu_items" validate:"required,dive"`
 }
 
