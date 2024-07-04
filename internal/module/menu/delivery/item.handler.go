@@ -33,6 +33,7 @@ func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustom
 	portal.Use(portalMiddlewares.AuthMiddleware)
 	{
 		portal.POST("", handler.Create, commonMiddlewares.PermissionMiddleware("create-menus", "portal-login-accounts"))
+		portal.POST("/bulk", handler.CreateBulk, commonMiddlewares.PermissionMiddleware("create-menus", "portal-login-accounts"))
 		portal.GET("", handler.List, commonMiddlewares.PermissionMiddleware("list-menus", "portal-login-accounts"))
 		portal.GET("/:id", handler.FindOne, commonMiddlewares.PermissionMiddleware("find-menus", "portal-login-accounts"))
 		portal.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-menus", "portal-login-accounts"))
@@ -47,11 +48,38 @@ func (a *ItemHandler) Create(c echo.Context) error {
 		ctx = context.Background()
 	}
 
-	var input []item.CreateItemDto
-	err := c.Bind(&input)
+	input := item.CreateItemDto{}
+	err := (&echo.DefaultBinder{}).BindBody(c, &input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+
+	validationErr := input.Validate(ctx, a.validator, a.itemCustomValidator.ValidateNameIsUnique())
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.itemUsecase.Create(ctx, []item.CreateItemDto{input})
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+func (a *ItemHandler) CreateBulk(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	input := make([]item.CreateItemDto, 0)
+	a.logger.DumpRequest(c.Request())
+	err := (&echo.DefaultBinder{}).BindBody(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
 	for _, itemDoc := range input {
 		validationErr := itemDoc.Validate(ctx, a.validator, a.itemCustomValidator.ValidateNameIsUnique())
 		if validationErr.IsError {
