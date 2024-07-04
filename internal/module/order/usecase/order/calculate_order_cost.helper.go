@@ -39,8 +39,8 @@ func calculateTotalCostForMenus(menus []extMenuResponses.MenuDetailsResponse, pa
 				modifierDocs, totalModifierValueBefore, totalModifierValueAfter := getModifierItemPriceSummary(item, menu)
 
 				//calculate total values
-				SubTotalMenusValueBefore := float64(item.Qty)*menu.Price + totalModifierValueBefore
-				SubTotalMenusValueAfter := float64(item.Qty)*menu.Price + totalModifierValueAfter
+				SubTotalMenusValueBefore := float64(item.Qty) * (menu.Price + totalModifierValueBefore)
+				SubTotalMenusValueAfter := float64(item.Qty) * (menu.Price + totalModifierValueAfter)
 
 				totalMenusValueBefore += SubTotalMenusValueBefore
 				totalMenusValueAfter += SubTotalMenusValueAfter
