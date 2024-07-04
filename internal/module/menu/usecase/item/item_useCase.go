@@ -33,6 +33,7 @@ func NewItemUseCase(repo domain.ItemRepository, logger logger.ILogger, skuUsecas
 func (oRec *ItemUseCase) Create(ctx context.Context, dto []item.CreateItemDto) validators.ErrorResponse {
 	err := oRec.repo.Create(ctx, convertDtoArrToCorrespondingDomain(dto))
 	if err != nil {
+		oRec.logger.Error("ItemUseCase", "Create", err)
 		return validators.GetErrorResponseFromErr(err)
 	}
 
@@ -44,6 +45,7 @@ func (oRec *ItemUseCase) Create(ctx context.Context, dto []item.CreateItemDto) v
 	errResp := oRec.skuUsecase.CreateBulk(ctx, skus)
 	if errResp.IsError {
 		oRec.logger.Error("itemuseCase", "createSku", errResp.ErrorMessageObject)
+		return errResp
 	}
 	return validators.ErrorResponse{}
 }

@@ -1,7 +1,10 @@
 package logger
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
+	"net/http"
+	"net/http/httputil"
 	"os"
 )
 
@@ -21,6 +24,7 @@ type ILogger interface {
 	Fatal(args ...interface{})
 	Fatalf(format string, args ...interface{})
 	Trace(args ...interface{})
+	DumpRequest(args *http.Request)
 	Tracef(format string, args ...interface{})
 }
 
@@ -140,4 +144,15 @@ func (l *appLogger) Fatal(args ...interface{}) {
 
 func (l *appLogger) Fatalf(format string, args ...interface{}) {
 	l.logger.Fatalf(format, args...)
+}
+
+func (l *appLogger) DumpRequest(args *http.Request) {
+	// Save a copy of this request for debugging.
+	fmt.Println("************************************DumpRequest************************************")
+	requestDump, err := httputil.DumpRequest(args, true)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(requestDump))
+	fmt.Println("*************************************************************************************************")
 }
