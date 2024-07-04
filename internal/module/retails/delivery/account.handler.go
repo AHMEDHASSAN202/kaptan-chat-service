@@ -31,11 +31,11 @@ func InitAccountController(e *echo.Echo, us domain.AccountUseCase, adminCustomVa
 		logger:                logger,
 	}
 	dashboard := e.Group("api/v1/admin/account")
-	dashboard.Use(adminMiddlewares.AuthMiddleware)
+	// dashboard.Use(adminMiddlewares.AuthMiddleware)
 	dashboard.POST("", handler.StoreAccount, commonMiddlewares.PermissionMiddleware("create-accounts"))
 	dashboard.GET("", handler.ListAccount, commonMiddlewares.PermissionMiddleware("list-accounts"))
 	dashboard.PUT("/:id", handler.UpdateAccount, commonMiddlewares.PermissionMiddleware("update-accounts"))
-	dashboard.GET("/:id", handler.FindAccount, commonMiddlewares.PermissionMiddleware("find-accounts"))
+	dashboard.GET("/:id", handler.FindAccount)
 	dashboard.DELETE("/:id", handler.DeleteAccount, commonMiddlewares.PermissionMiddleware("delete-accounts"))
 }
 func (a *AccountHandler) StoreAccount(c echo.Context) error {
