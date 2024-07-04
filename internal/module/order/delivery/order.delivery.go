@@ -30,7 +30,7 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 	}
 	mobile := e.Group("api/v1/mobile/order")
 	{
-		mobile.POST("/calculate-order-cost", handler.CalculateOrderCost, userMiddleware.AuthMiddleware)
+		mobile.POST("/calculate-order-cost", handler.CalculateOrderCost)
 		mobile.GET("/:id", handler.FindOrder)
 	}
 }
