@@ -19,6 +19,7 @@ func (l OrderUseCase) calculateOrderCostBuilder(ctx context.Context, loc extLocR
 			Ar: loc.Name.Ar,
 			En: loc.Name.En,
 		},
+		IsOpen: loc.IsOpen,
 	}
 	var totalMenusValueBefore, totalMenusValueAfter float64
 	resp.MenuItems, totalMenusValueBefore, totalMenusValueAfter = calculateTotalCostForMenus(menus, payload)
@@ -104,9 +105,9 @@ func getModifierItemPriceSummary(item order.MenuItem, menu extMenuResponses.Menu
 	return
 }
 func checkIsLocationReadyForNewOrder(ctx *context.Context, doc extLocResponses.LocationDetails) validators.ErrorResponse {
-	if !doc.IsOpen {
-		return validators.GetErrorResponse(ctx, localization.Mobile_location_not_open_error, nil, nil)
-	}
+	//if !doc.IsOpen {
+	//	return validators.GetErrorResponse(ctx, localization.Mobile_location_not_open_error, nil, nil)
+	//}
 	return validators.ErrorResponse{}
 }
 

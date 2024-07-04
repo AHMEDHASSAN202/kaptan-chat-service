@@ -6,8 +6,9 @@ type LocalizationText struct {
 }
 
 type LocationDoc struct {
-	Id   string           `json:"id"`
-	Name LocalizationText `json:"name"`
+	Id     string           `json:"id"`
+	Name   LocalizationText `json:"name"`
+	IsOpen bool             `json:"is_open"`
 }
 
 type PriceSummary struct {
