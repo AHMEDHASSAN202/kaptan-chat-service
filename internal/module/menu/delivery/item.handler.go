@@ -74,25 +74,17 @@ func (a *ItemHandler) CreateBulk(c echo.Context) error {
 		ctx = context.Background()
 	}
 
+	//bind payload from body
 	input := make([]item.CreateBulkItemDto, 0)
 	err := (&echo.DefaultBinder{}).BindBody(c, &input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErrs := validators.ErrorResponse{ValidationErrors: map[string][]string{}}
-	for index, itemDoc := range input {
-		validationErr := itemDoc.Validate(ctx, index, a.validator, a.itemCustomValidator.ValidateNameIsUnique())
-		a.logger.Info(validationErr, validationErrs)
-		if validationErr.IsError {
-			validationErrs.IsError = validationErr.IsError
-			for k, v := range validationErr.ValidationErrors {
-				validationErrs.ValidationErrors[k] = v
-			}
-		}
-	}
-	if validationErrs.IsError {
-		return validators.ErrorStatusUnprocessableEntity(c, validationErrs)
+	//make sure that payload is valid
+	validationErr := (&item.CreateBulkItemDto{}).Validate(ctx, input, a.validator, a.itemCustomValidator.ValidateNameIsUnique())
+	if validationErr.IsError {
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
 	bulkInput := make([]item.CreateItemDto, 0)

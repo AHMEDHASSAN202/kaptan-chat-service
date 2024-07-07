@@ -28,7 +28,7 @@ type CreateBulkItemDto struct {
 	AdminDetails      []dto.AdminDetails   `json:"-"`
 }
 
-func (input *CreateBulkItemDto) Validate(ctx context.Context, rowIndex int, validate *validator.Validate, validateNameIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {
+func (input *CreateBulkItemDto) validateItem(ctx context.Context, rowIndex int, validate *validator.Validate, validateNameIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {
 	// Register custom field-specific messages
 	validationErr := validators.ValidateStruct(ctx, validate, input, validators.CustomErrorTags{
 		ValidationTag:          localization.Item_name_is_unique_rules_validation,
@@ -45,4 +45,19 @@ func (input *CreateBulkItemDto) Validate(ctx context.Context, rowIndex int, vali
 		}
 	}
 	return validationErr
+}
+func (input *CreateBulkItemDto) Validate(ctx context.Context, payload []CreateBulkItemDto, validate *validator.Validate, validateNameIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {
+
+	validationErrs := validators.ErrorResponse{ValidationErrors: map[string][]string{}}
+	for index, itemDoc := range payload {
+		validationErr := itemDoc.validateItem(ctx, index, validate, validateNameIsUnique)
+		if validationErr.IsError {
+			validationErrs.IsError = validationErr.IsError
+			for k, v := range validationErr.ValidationErrors {
+				validationErrs.ValidationErrors[k] = v
+			}
+		}
+	}
+
+	return validationErrs
 }
