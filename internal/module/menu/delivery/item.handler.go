@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"context"
-	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/copier"
 	"github.com/labstack/echo/v4"
@@ -80,18 +79,22 @@ func (a *ItemHandler) CreateBulk(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-	a.logger.Info(input)
+
+	validationErrs := validators.ErrorResponse{ValidationErrors: map[string][]string{}}
 	for index, itemDoc := range input {
-		validationErr := itemDoc.Validate(ctx, a.validator, a.itemCustomValidator.ValidateNameIsUnique())
+		validationErr := itemDoc.Validate(ctx, index, a.validator, a.itemCustomValidator.ValidateNameIsUnique())
+		a.logger.Info(validationErr, validationErrs)
 		if validationErr.IsError {
-			a.logger.Error(validationErr)
-			for k, value := range validationErr.ValidationErrors {
-				delete(validationErr.ValidationErrors, k)
-				validationErr.ValidationErrors[fmt.Sprintf("product.%d.%s", index, k)] = value
+			validationErrs.IsError = validationErr.IsError
+			for k, v := range validationErr.ValidationErrors {
+				validationErrs.ValidationErrors[k] = v
 			}
-			return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 		}
 	}
+	if validationErrs.IsError {
+		return validators.ErrorStatusUnprocessableEntity(c, validationErrs)
+	}
+
 	bulkInput := make([]item.CreateItemDto, 0)
 	copier.Copy(&bulkInput, &input)
 	errResp := a.itemUsecase.Create(ctx, bulkInput)

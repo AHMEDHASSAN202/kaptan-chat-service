@@ -2,6 +2,7 @@ package item
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
@@ -27,13 +28,21 @@ type CreateBulkItemDto struct {
 	AdminDetails      []dto.AdminDetails   `json:"-"`
 }
 
-func (input *CreateBulkItemDto) Validate(ctx context.Context, validate *validator.Validate, validateNameIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {
+func (input *CreateBulkItemDto) Validate(ctx context.Context, rowIndex int, validate *validator.Validate, validateNameIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {
 	// Register custom field-specific messages
-	return validators.ValidateStruct(ctx, validate, input, validators.CustomErrorTags{
+	validationErr := validators.ValidateStruct(ctx, validate, input, validators.CustomErrorTags{
 		ValidationTag:          localization.Item_name_is_unique_rules_validation,
 		RegisterValidationFunc: validateNameIsUnique,
 	}, validators.CustomErrorTags{
 		ValidationTag:          localization.Modifier_items_cant_contains_modifier_group,
 		RegisterValidationFunc: ModifierItemsCantContainsModifierGroup,
 	})
+	//prepare the validation response to be array
+	if validationErr.IsError {
+		for k, value := range validationErr.ValidationErrors {
+			delete(validationErr.ValidationErrors, k)
+			validationErr.ValidationErrors[fmt.Sprintf("product.%d.%s", rowIndex, k)] = value
+		}
+	}
+	return validationErr
 }
