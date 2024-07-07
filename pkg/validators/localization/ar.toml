@@ -68,7 +68,7 @@ other = "يجب ان يكون objectId"
 
 [Item_name_is_unique_rules_validation]
 description = "Feature not supported"
-other = "Item_name_is_unique_rules_validation_ar"
+other = "تم اضافه اسم هذا المنتج من قبل"
 
 [SKU_name_is_unique_rules_validation]
 description = "Feature not supported"

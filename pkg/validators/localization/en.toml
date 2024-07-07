@@ -76,7 +76,7 @@ other = "These features are not supported: {{.Feature}}"
 
 [Item_name_is_unique_rules_validation]
 description = "Feature not supported"
-other = "Item_name_is_unique_rules_validation"
+other = "item name is added before"
 
 [SKU_name_is_unique_rules_validation]
 description = "Feature not supported"
