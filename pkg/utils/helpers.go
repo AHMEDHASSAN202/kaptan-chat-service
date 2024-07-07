@@ -523,3 +523,27 @@ func MarshalUnMarshal(from interface{}, to interface{}) error {
 	}
 	return nil
 }
+
+func GetStructName(i interface{}) string {
+	t := reflect.TypeOf(i)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t.Name()
+}
+
+func CallMethod(obj interface{}, methodName string, args ...interface{}) []reflect.Value {
+	v := reflect.ValueOf(obj)
+	method := v.MethodByName(methodName)
+	if !method.IsValid() {
+		fmt.Println(fmt.Errorf("method not found: %s", methodName))
+		return nil
+	}
+
+	in := make([]reflect.Value, len(args))
+	for i, arg := range args {
+		in[i] = reflect.ValueOf(arg)
+	}
+
+	return method.Call(in)
+}
