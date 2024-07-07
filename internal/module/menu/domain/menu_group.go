@@ -32,7 +32,7 @@ type MenuGroup struct {
 	mgm.DefaultModel `bson:",inline"`
 	AccountId        primitive.ObjectID      `json:"account_id" bson:"account_id"`
 	Name             LocalizationText        `json:"name" bson:"name"`
-	BranchIds        []primitive.ObjectID    `json:"branch_ids" bson:"branch_ids"`
+	LocationIds      []primitive.ObjectID    `json:"location_ids" bson:"location_ids"`
 	Categories       []Category              `json:"categories" bson:"categories"`
 	Availabilities   []MenuGroupAvailability `json:"availabilities" bson:"availabilities"`
 	Status           string                  `json:"status" bson:"status,omitempty"`

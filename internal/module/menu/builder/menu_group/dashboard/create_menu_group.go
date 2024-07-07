@@ -23,9 +23,9 @@ func MenuGroupBuilder(dto *menu_group.CreateMenuGroupDTO, oldDocument *domain.Me
 	menuGroupDomain.AccountId = utils.ConvertStringIdToObjectId(dto.AccountId)
 	menuGroupDomain.Name.Ar = dto.Name.Ar
 	menuGroupDomain.Name.En = dto.Name.En
-	menuGroupDomain.BranchIds = utils.ConvertStringIdsToObjectIds(utils.RemoveDuplicates[string](dto.BranchIds))
-	if menuGroupDomain.BranchIds == nil {
-		menuGroupDomain.BranchIds = make([]primitive.ObjectID, 0)
+	menuGroupDomain.LocationIds = utils.ConvertStringIdsToObjectIds(utils.RemoveDuplicates[string](dto.LocationIds))
+	if menuGroupDomain.LocationIds == nil {
+		menuGroupDomain.LocationIds = make([]primitive.ObjectID, 0)
 	}
 	menuGroupDomain.Categories = CategoriesBuilder(&dto.Categories)
 	menuGroupDomain.Availabilities = AvailabilitiesBuilder(dto.Availabilities)
@@ -88,7 +88,7 @@ func MenuGroupItemsBuilder(dto *menu_group.CreateMenuGroupDTO) *[]domain.MenuGro
 	items := []domain.MenuGroupItem{}
 	menuGroup := domain.ItemMenuGroup{
 		ID:             dto.ID,
-		BranchIds:      utils.ConvertStringIdsToObjectIds(utils.RemoveDuplicates[string](dto.BranchIds)),
+		LocationIds:    utils.ConvertStringIdsToObjectIds(utils.RemoveDuplicates[string](dto.LocationIds)),
 		Status:         utils.If(dto.Status != "", strings.ToLower(dto.Status), consts.MENU_GROUP_DEFUALT_STATUS).(string),
 		Availabilities: AvailabilitiesBuilder(dto.Availabilities),
 	}

@@ -116,7 +116,7 @@ func (r *menuGroupRepo) FindWithItems(ctx context.Context, menuGroupId primitive
 			{Key: "_id", Value: "$_id"},
 			{Key: "categories", Value: bson.D{{Key: "$push", Value: "$categories"}}},
 			{Key: "name", Value: bson.D{{Key: "$first", Value: "$name"}}},
-			{Key: "branch_ids", Value: bson.D{{Key: "$first", Value: "$branch_ids"}}},
+			{Key: "location_ids", Value: bson.D{{Key: "$first", Value: "$location_ids"}}},
 			{Key: "availabilities", Value: bson.D{{Key: "$first", Value: "$availabilities"}}},
 			{Key: "status", Value: bson.D{{Key: "$first", Value: "$status"}}},
 			{Key: "account_id", Value: bson.D{{Key: "$first", Value: "$account_id"}}},
@@ -164,8 +164,8 @@ func (r *menuGroupRepo) List(ctx context.Context, dto menu_group.ListMenuGroupDT
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name.ar": bson.M{"$regex": pattern, "$options": "i"}}, {"name.en": bson.M{"$regex": pattern, "$options": "i"}}}})
 	}
 
-	if dto.BranchId != "" {
-		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"branch_ids": utils.ConvertStringIdToObjectId(dto.BranchId)})
+	if dto.LocationId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"location_ids": utils.ConvertStringIdToObjectId(dto.LocationId)})
 	}
 
 	if dto.Status != "" {

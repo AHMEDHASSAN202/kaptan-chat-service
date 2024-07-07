@@ -132,7 +132,7 @@ func (oRec *MenuGroupUseCase) Find(ctx context.Context, dto *menu_group.FindMenu
 		return menuGroup, authorized
 	}
 
-	branches, errBranches := oRec.extService.RetailsIService.GetBranchesByIds(ctx, utils.ConvertObjectIdsToStringIds(menuGroup.BranchIds))
+	branches, errBranches := oRec.extService.RetailsIService.GetBranchesByIds(ctx, utils.ConvertObjectIdsToStringIds(menuGroup.LocationIds))
 	if errBranches.IsError {
 		oRec.logger.Error("MenuGroupUseCase -> Find -> errBranches -> ", err)
 		return menuGroup, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
