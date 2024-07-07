@@ -5,6 +5,7 @@ import (
 	"samm/internal/module/common"
 	appConfig "samm/internal/module/config"
 	"samm/internal/module/example"
+	"samm/internal/module/kitchen"
 	"samm/internal/module/menu"
 	"samm/internal/module/order"
 	"samm/internal/module/retails"
@@ -49,6 +50,7 @@ func main() {
 			appConfig.Module,
 			common.Module,
 			user.Module,
+			kitchen.Module,
 			middlewares.Module,
 			fx.Invoke(echo.RunServers, localization.InitLocalization),
 		),
