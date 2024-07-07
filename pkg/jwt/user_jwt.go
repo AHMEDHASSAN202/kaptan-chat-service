@@ -21,8 +21,9 @@ type UserJwtService struct {
 // JwtClaim struct defines custom JWT claims
 type UserJwtClaim struct {
 	jwt.RegisteredClaims
-	CauserId   string `json:"causer_id"`
-	CauserType string `json:"causer_type"`
+	CauserId      string                 `json:"causer_id"`
+	CauserType    string                 `json:"causer_type"`
+	CauserDetails map[string]interface{} `json:"causer_data"`
 }
 
 func (jwtService *UserJwtService) GenerateToken(ctx context.Context, id string, isTempToken ...bool) (token string, err error) {
