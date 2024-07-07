@@ -27,8 +27,10 @@ type TotalPriceSummary struct {
 type MenuDoc struct {
 	Id            string           `json:"id"`
 	Name          LocalizationText `json:"name,omitempty"`
+	MobileId      string           `json:"mobile_id"`
 	Desc          LocalizationText `json:"desc,omitempty"`
 	Image         string           `json:"image"`
+	HasError      []string         `json:"has_error"`
 	PriceSummary  PriceSummary     `json:"price_summary"`
 	ModifierItems []MenuDoc        `json:"modifier_items,omitempty"`
 }

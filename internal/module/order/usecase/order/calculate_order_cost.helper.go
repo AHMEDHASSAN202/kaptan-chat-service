@@ -3,7 +3,6 @@ package order
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"samm/internal/module/order/dto/order"
 	extMenuResponses "samm/internal/module/order/external/menu/responses"
 	extLocResponses "samm/internal/module/order/external/retails/responses"
@@ -22,7 +21,7 @@ func (l OrderUseCase) calculateOrderCostBuilder(ctx context.Context, loc extLocR
 		IsOpen: loc.IsOpen,
 	}
 	var totalMenusValueBefore, totalMenusValueAfter float64
-	resp.MenuItems, totalMenusValueBefore, totalMenusValueAfter = calculateTotalCostForMenus(menus, payload)
+	resp.MenuItems, totalMenusValueBefore, totalMenusValueAfter = calculateTotalCostForMenus(&ctx, menus, payload)
 	resp.TotalPriceSummary = responses.TotalPriceSummary{
 		Fees:                     0,
 		TotalPriceBeforeDiscount: totalMenusValueBefore,
@@ -32,12 +31,15 @@ func (l OrderUseCase) calculateOrderCostBuilder(ctx context.Context, loc extLocR
 	return resp, err
 }
 
-func calculateTotalCostForMenus(menus []extMenuResponses.MenuDetailsResponse, payload *order.CalculateOrderCostDto) (menuRespDocs []responses.MenuDoc, totalMenusValueBefore float64, totalMenusValueAfter float64) {
+func calculateTotalCostForMenus(ctx *context.Context, menus []extMenuResponses.MenuDetailsResponse, payload *order.CalculateOrderCostDto) (menuRespDocs []responses.MenuDoc, totalMenusValueBefore float64, totalMenusValueAfter float64) {
+	//validate the menu&modifiers items
+	validationErrorMap := checkIsMenuItemsValid(ctx, menus, payload.MenuItems)
+
 	menuRespDocs = make([]responses.MenuDoc, 0)
 	for _, item := range payload.MenuItems {
 		for _, menu := range menus {
 			if menu.ID.Hex() == item.Id {
-				modifierDocs, totalModifierValueBefore, totalModifierValueAfter := getModifierItemPriceSummary(item, menu)
+				modifierDocs, totalModifierValueBefore, totalModifierValueAfter := getModifierItemPriceSummary(item, menu, validationErrorMap)
 
 				//calculate total values
 				SubTotalMenusValueBefore := float64(item.Qty) * (menu.Price + totalModifierValueBefore)
@@ -56,7 +58,9 @@ func calculateTotalCostForMenus(menus []extMenuResponses.MenuDetailsResponse, pa
 						Ar: menu.Desc.Ar,
 						En: menu.Desc.En,
 					},
-					Image: menu.Image,
+					Image:    menu.Image,
+					MobileId: item.MobileId,
+					HasError: validationErrorMap[item.Id],
 					PriceSummary: responses.PriceSummary{
 						Qty:                      item.Qty,
 						UnitPrice:                menu.Price,
@@ -73,7 +77,7 @@ func calculateTotalCostForMenus(menus []extMenuResponses.MenuDetailsResponse, pa
 	return
 }
 
-func getModifierItemPriceSummary(item order.MenuItem, menu extMenuResponses.MenuDetailsResponse) (modifierRespDocs []responses.MenuDoc, totalModifierValueBefore float64, totalModifierValueAfter float64) {
+func getModifierItemPriceSummary(item order.MenuItem, menu extMenuResponses.MenuDetailsResponse, validationErrorMap map[string][]string) (modifierRespDocs []responses.MenuDoc, totalModifierValueBefore float64, totalModifierValueAfter float64) {
 	modifierRespDocs = make([]responses.MenuDoc, 0)
 	for _, modifier := range item.ModifierIds {
 		for _, addon := range menu.Addons {
@@ -89,7 +93,8 @@ func getModifierItemPriceSummary(item order.MenuItem, menu extMenuResponses.Menu
 						Ar: addon.Name.Ar,
 						En: addon.Name.En,
 					},
-					Image: addon.Image,
+					Image:    addon.Image,
+					HasError: validationErrorMap[item.Id],
 					PriceSummary: responses.PriceSummary{
 						Qty:                      modifier.Qty,
 						UnitPrice:                addon.Price,
@@ -111,7 +116,7 @@ func checkIsLocationReadyForNewOrder(ctx *context.Context, doc extLocResponses.L
 	return validators.ErrorResponse{}
 }
 
-func checkIsMenuItemsValid(ctx *context.Context, menuDocs []extMenuResponses.MenuDetailsResponse, menuItemDto []order.MenuItem) validators.ErrorResponse {
+func checkIsMenuItemsValid(ctx *context.Context, menuDocs []extMenuResponses.MenuDetailsResponse, menuItemDto []order.MenuItem) map[string][]string {
 
 	modifierMap := make(map[string]bool)
 	menuItemsMap := make(map[string]bool)
@@ -133,16 +138,5 @@ func checkIsMenuItemsValid(ctx *context.Context, menuDocs []extMenuResponses.Men
 			}
 		}
 	}
-	if len(ValidationErrors) > 0 {
-		return validators.ErrorResponse{
-			ValidationErrors: ValidationErrors,
-			IsError:          true,
-			ErrorMessageObject: &validators.Message{
-				Text: "validationError",
-				Code: localization.E1002Item,
-			},
-			StatusCode: http.StatusUnprocessableEntity,
-		}
-	}
-	return validators.ErrorResponse{}
+	return ValidationErrors
 }

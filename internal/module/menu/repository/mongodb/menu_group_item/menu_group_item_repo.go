@@ -308,7 +308,7 @@ func eliminateUnusedModifiers(order *menu_group.FilterMenuGroupItemsForOrder, pr
 				for productModifierGroupIndex, group := range product.ModifierGroups {
 					//remove modifierIds in group
 					groupProductIds, _ := utils.EqualizeSlices(utils.ConvertObjectIdsToStringIds(group.ProductIds), dtoProductModifierIds)
-					product.ModifierGroups[productModifierGroupIndex].ProductIds = utils.ConvertStringIdsToObjectIds(groupProductIds)
+					//product.ModifierGroups[productModifierGroupIndex].ProductIds = utils.ConvertStringIdsToObjectIds(groupProductIds)
 					//check if modifier group is empty
 					if len(groupProductIds) <= 0 {
 						product.ModifierGroups = append(product.ModifierGroups[:productModifierGroupIndex], product.ModifierGroups[productModifierGroupIndex+1:]...)

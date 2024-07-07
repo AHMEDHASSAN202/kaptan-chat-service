@@ -8,6 +8,7 @@ import (
 
 type MenuItem struct {
 	Id          string     `json:"id" validate:"required"`
+	MobileId    string     `json:"mobile_id" validate:"required"`
 	Qty         int64      `json:"qty" validate:"required,min=1"`
 	ModifierIds []MenuItem `json:"modifier_ids"`
 }

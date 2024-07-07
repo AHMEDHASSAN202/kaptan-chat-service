@@ -118,13 +118,6 @@ func (l OrderUseCase) CalculateOrderCost(ctx context.Context, payload *order.Cal
 		l.logger.Error(errResponse.ErrorMessageObject.Text)
 		return resp, validators.GetErrorResponse(&ctx, localization.E1002Item, nil, nil)
 	}
-	//check is the location available for the order
-	menuErr := checkIsMenuItemsValid(&ctx, menuDetails, payload.MenuItems)
-	if menuErr.IsError {
-		l.logger.Error(menuErr.ErrorMessageObject.Text)
-		return resp, menuErr
-	}
-
 	//check is the menus are available
 	resp, errResponse = l.calculateOrderCostBuilder(ctx, locationDoc, menuDetails, payload)
 	if errResponse.IsError {
