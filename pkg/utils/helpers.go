@@ -534,12 +534,15 @@ func GetStructName(i interface{}) string {
 
 func CallMethod(obj interface{}, methodName string, args ...interface{}) []reflect.Value {
 	v := reflect.ValueOf(obj)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
 	method := v.MethodByName(methodName)
 	if !method.IsValid() {
 		fmt.Println(fmt.Errorf("method not found: %s", methodName))
 		return nil
 	}
-
 	in := make([]reflect.Value, len(args))
 	for i, arg := range args {
 		in[i] = reflect.ValueOf(arg)

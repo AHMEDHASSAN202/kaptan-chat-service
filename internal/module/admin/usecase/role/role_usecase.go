@@ -8,6 +8,7 @@ import (
 	"samm/internal/module/admin/domain"
 	dto "samm/internal/module/admin/dto/role"
 	"samm/internal/module/admin/responses"
+	"samm/pkg/database/redis"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	utilsDto "samm/pkg/utils/dto"
@@ -17,14 +18,16 @@ import (
 )
 
 type RoleUseCase struct {
-	repo   domain.RoleRepository
-	logger logger.ILogger
+	repo        domain.RoleRepository
+	logger      logger.ILogger
+	redisClient *redis.RedisClient
 }
 
-func NewRoleUseCase(repo domain.RoleRepository, logger logger.ILogger) domain.RoleUseCase {
+func NewRoleUseCase(repo domain.RoleRepository, logger logger.ILogger, redisClient *redis.RedisClient) domain.RoleUseCase {
 	return &RoleUseCase{
-		repo:   repo,
-		logger: logger,
+		repo:        repo,
+		logger:      logger,
+		redisClient: redisClient,
 	}
 }
 
@@ -63,6 +66,8 @@ func (oRec *RoleUseCase) Update(ctx context.Context, input *dto.CreateRoleDTO) (
 		return "", validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
 	}
 
+	oRec.removeAdminFromCache(role.Type)
+
 	return utils.ConvertObjectIdToStringId(role.ID), validators.ErrorResponse{}
 }
 
@@ -78,6 +83,8 @@ func (oRec *RoleUseCase) Delete(ctx context.Context, roleId primitive.ObjectID) 
 		oRec.logger.Error("RoleUseCase -> Delete -> ", err)
 		return validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
 	}
+
+	oRec.removeAdminFromCache(role.Type)
 
 	return validators.ErrorResponse{}
 }
@@ -101,4 +108,12 @@ func (oRec *RoleUseCase) Find(ctx context.Context, roleId primitive.ObjectID) (i
 		return roleResp, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 	return roleResp, validators.ErrorResponse{}
+}
+
+func (oRec *RoleUseCase) removeAdminFromCache(roleType string) {
+	go func() {
+		if err := oRec.redisClient.DeleteKeysWithPrefix(roleType); err != nil {
+			oRec.logger.Error("Can't Delete Admin From Cache -> ", err)
+		}
+	}()
 }
