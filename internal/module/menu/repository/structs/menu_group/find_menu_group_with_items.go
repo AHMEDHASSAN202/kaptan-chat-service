@@ -43,7 +43,7 @@ type ItemMenuGroup struct {
 	Status         string               `json:"status" bson:"status"`
 }
 
-type Branch struct {
+type Location struct {
 	ID   primitive.ObjectID `json:"id"`
 	Name LocalizationText   `json:"name"`
 }
@@ -53,7 +53,7 @@ type FindMenuGroupWithItems struct {
 	AccountId      primitive.ObjectID   `json:"account_id" bson:"account_id"`
 	Name           LocalizationText     `json:"name" bson:"name"`
 	LocationIds    []primitive.ObjectID `json:"location_ids" bson:"location_ids"`
-	Branches       []Branch             `json:"branches" bson:"branches"`
+	Locations      []Location           `json:"locations" bson:"locations"`
 	Categories     []MenuCategory       `json:"categories" bson:"categories"`
 	Availabilities []Availability       `json:"availabilities" bson:"availabilities"`
 	Status         string               `json:"status" bson:"status"`
