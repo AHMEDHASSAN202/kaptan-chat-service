@@ -1,7 +1,14 @@
 {
-    "test-1":"Test AR-1",
-    "test-2":"Test AR-2",
-    "test-3":"Test AR-3",
-    "test-4":"Test AR-4",
-    "test-5":"Test AR-5"
+    "home": "الرئيسية",
+    "wallet": "محفظتى",
+    "orders": "طلباتي",
+    "profile": "حسابي",
+    "profileTitle": "الملف الشخصي والإعدادات",
+    "myCards": "بطاقاتي",
+    "personalDetails": "التفاصيل الشخصية",
+    "myCars": "سياراتي",
+    "reportItems": "الإبلاغ عن العناصر",
+    "darkMode": "الوضع الداكن",
+    "signOut": "تسجيل الخروج",
+    "login": "تسجيل الدخول"
 }
