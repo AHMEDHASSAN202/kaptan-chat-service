@@ -284,8 +284,6 @@ func (i *menuGroupItemRepo) MobileFilterMenuGroupItemForOrder(ctx context.Contex
 
 	limit := bson.M{"$limit": 1}
 
-	//pipeline = append(pipeline, matching, modifierGroupLookup, addonsLookup, limit)
-
 	products := make([]menu_group2.MobileGetItem, 0)
 
 	err := i.menuGroupItemCollection.SimpleAggregateWithCtx(ctx, &products, matching, modifierGroupLookup, addonsLookup, limit)
