@@ -8,7 +8,7 @@ import (
 
 type VerifyUserOtpDto struct {
 	PhoneNumber string `json:"phone_number" validate:"required,PhoneNumber_rule_validation"`
-	CountryCode string `json:"country_code" validate:"required,len=4,numeric"`
+	CountryCode string `json:"country_code" validate:"required,oneof=+966 +20 +971"`
 	Otp         string `json:"otp" validate:"required,len=4,alphanum"`
 }
 

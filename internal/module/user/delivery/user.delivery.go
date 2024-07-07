@@ -32,8 +32,9 @@ func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validato
 		logger:              logger,
 	}
 	dashboard := e.Group("api/v1/admin/user")
-	dashboard.GET("", handler.ListUser, adminMiddlewares.AuthMiddleware, commonMiddlewares.PermissionMiddleware("list-users"))
-	dashboard.PUT("/:id/toggle-active", handler.ToggleUserActivation, adminMiddlewares.AuthMiddleware, commonMiddlewares.PermissionMiddleware("update-status-users"))
+	dashboard.Use(adminMiddlewares.AuthMiddleware)
+	dashboard.GET("", handler.ListUser, commonMiddlewares.PermissionMiddleware("list-users"))
+	dashboard.PUT("/:id/toggle-active", handler.ToggleUserActivation, commonMiddlewares.PermissionMiddleware("update-status-users"), userMiddleware.RemoveUserFromRedis)
 
 	mobile := e.Group("api/v1/mobile/user")
 	mobile.Use(echomiddleware.AppendCountryMiddleware)

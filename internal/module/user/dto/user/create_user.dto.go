@@ -9,7 +9,7 @@ import (
 
 type CreateUserDto struct {
 	Name          string    `json:"name" validate:"required"`
-	CountryCode   string    `json:"country_code" validate:"required,len=2"`
+	CountryCode   string    `json:"country_code" validate:"required,oneof=+966 +20 +971"`
 	PhoneNumber   string    `json:"phone_number" validate:"required,e164"`
 	Email         string    `json:"email" validate:"required,email"`
 	Gender        string    `json:"gender" validate:"required,oneof=male female other"`

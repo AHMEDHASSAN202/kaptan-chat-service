@@ -51,7 +51,8 @@ func (m Middlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		var user *domain.User
-		err = m.redisClient.Get(claim.CauserId, &user)
+		userRedisKey := claim.CauserType + ":" + claim.CauserId
+		err = m.redisClient.Get(userRedisKey, &user)
 		if user == nil || err != nil {
 			m.logger.Info("AuthMiddleware -> FindByToken MongoDB .... ")
 			user, err = m.userRepository.FindByToken(ctx, *token)
@@ -59,10 +60,9 @@ func (m Middlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 				m.logger.Info("AuthMiddleware -> FindByToken Error -> ", err)
 				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 			}
-			oneYear := time.Now().AddDate(1, 0, 0).Sub(time.Now())
-			setErr := m.redisClient.Set(claim.CauserId, user, oneYear)
+			setErr := m.redisClient.Set(userRedisKey, user, claim.ExpiresAt.Sub(time.Now()))
 			if setErr != nil {
-				m.logger.Info(" REDIS -> AuthMiddleware -> Setter > ", setErr)
+				m.logger.Info(" REDIS -> AuthMiddleware -> Setter  Error -> ", setErr)
 			}
 		}
 
@@ -131,13 +131,19 @@ func (m Middlewares) TempAuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc 
 
 func (m Middlewares) RemoveUserFromRedis(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		// userId
-		causerId := c.Request().Header.Get("causer-id")
-		if causerId != "" {
-			delErr := m.redisClient.Delete(causerId)
+		// Get userId from the path parameter or form token
+		userId := c.Param("id")
+		if userId == "" {
+			userId = c.Request().Header.Get("causer-id")
+		}
+		userRedisKey := "user:" + userId
+		if userId != "" {
+			delErr := m.redisClient.Delete(userRedisKey)
 			if delErr != nil {
-				m.logger.Info(" REDIS -> AuthMiddleware -> Delete > ", delErr)
+				m.logger.Info(" REDIS -> AuthMiddleware -> Delete Error > ", delErr)
+				return next(c)
 			}
+			m.logger.Info(" RemoveUserFromRedis -> UserDeleted > ", userRedisKey)
 		}
 		return next(c)
 	}
