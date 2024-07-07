@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/copier"
 	"github.com/labstack/echo/v4"
@@ -75,16 +76,19 @@ func (a *ItemHandler) CreateBulk(c echo.Context) error {
 	}
 
 	input := make([]item.CreateBulkItemDto, 0)
-	a.logger.DumpRequest(c.Request())
 	err := (&echo.DefaultBinder{}).BindBody(c, &input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-
-	for _, itemDoc := range input {
+	a.logger.Info(input)
+	for index, itemDoc := range input {
 		validationErr := itemDoc.Validate(ctx, a.validator, a.itemCustomValidator.ValidateNameIsUnique())
 		if validationErr.IsError {
 			a.logger.Error(validationErr)
+			for k, value := range validationErr.ValidationErrors {
+				delete(validationErr.ValidationErrors, k)
+				validationErr.ValidationErrors[fmt.Sprintf("product.%d.%s", index, k)] = value
+			}
 			return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 		}
 	}
