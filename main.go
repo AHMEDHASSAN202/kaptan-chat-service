@@ -12,6 +12,7 @@ import (
 	"samm/pkg/aws"
 	"samm/pkg/config"
 	"samm/pkg/database"
+	"samm/pkg/gate"
 	"samm/pkg/http"
 	"samm/pkg/http/echo"
 	echoserver "samm/pkg/http/echo/server"
@@ -38,6 +39,7 @@ func main() {
 				aws.Init,
 			),
 			jwt.Module,
+			gate.Module,
 			example.Module,
 			menu.Module,
 			order.Module,

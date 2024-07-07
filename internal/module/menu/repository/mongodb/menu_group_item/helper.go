@@ -17,8 +17,8 @@ func AddAvailabilityQuery(countryId, field string) bson.M {
 	return bson.M{
 		"$expr": bson.M{
 			"$or": bson.A{
-				bson.M{"$ne": bson.A{field, nil}},
-				bson.M{"$ne": bson.A{field, make([]interface{}, 0)}},
+				bson.M{"$eq": bson.A{field, nil}},
+				bson.M{"$eq": bson.A{field, make([]interface{}, 0)}},
 				bson.D{{"$gt", bson.A{
 					bson.D{
 						{"$size", bson.D{

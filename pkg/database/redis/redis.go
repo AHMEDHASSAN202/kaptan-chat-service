@@ -69,3 +69,14 @@ func (r *RedisClient) Close() error {
 func (r *RedisClient) GetAllKeys(pattern string) ([]string, error) {
 	return r.client.Keys(ctx, pattern).Result()
 }
+
+func (r *RedisClient) DeleteKeysWithPrefix(prefix string) error {
+	keys, err := r.client.Keys(ctx, prefix+"*").Result()
+	if err != nil {
+		return err
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+	return r.client.Del(ctx, keys...).Err()
+}

@@ -10,6 +10,7 @@ import (
 	"samm/internal/module/menu/dto/menu_group"
 	"samm/internal/module/menu/external"
 	"samm/internal/module/menu/responses"
+	"samm/pkg/gate"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	utilsDto "samm/pkg/utils/dto"
@@ -24,15 +25,17 @@ type MenuGroupUseCase struct {
 	itemRepo          domain.ItemRepository
 	logger            logger.ILogger
 	extService        external.ExtService
+	gate              *gate.Gate
 }
 
-func NewMenuGroupUseCase(repo domain.MenuGroupRepository, itemRepo domain.ItemRepository, menuGroupItemRepo domain.MenuGroupItemRepository, logger logger.ILogger, extService external.ExtService) domain.MenuGroupUseCase {
+func NewMenuGroupUseCase(repo domain.MenuGroupRepository, itemRepo domain.ItemRepository, menuGroupItemRepo domain.MenuGroupItemRepository, logger logger.ILogger, extService external.ExtService, g *gate.Gate) domain.MenuGroupUseCase {
 	return &MenuGroupUseCase{
 		repo:              repo,
 		logger:            logger,
 		menuGroupItemRepo: menuGroupItemRepo,
 		itemRepo:          itemRepo,
 		extService:        extService,
+		gate:              g,
 	}
 }
 
@@ -62,9 +65,8 @@ func (oRec *MenuGroupUseCase) Update(ctx context.Context, dto *menu_group.Create
 		return "", validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	authorized := oRec.AuthorizeMenuGroup(&ctx, menuGroup, utils.ConvertStringIdToObjectId(dto.AccountId))
-	if authorized.IsError {
-		return "", authorized
+	if !oRec.gate.Authorize(menuGroup, "Update", ctx) {
+		return "", validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
 	dto.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Update Menu", UpdatedAt: time.Now()}
@@ -92,9 +94,8 @@ func (oRec *MenuGroupUseCase) Delete(ctx context.Context, dto *menu_group.FindMe
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	authorized := oRec.AuthorizeMenuGroup(&ctx, menuGroup, utils.ConvertStringIdToObjectId(dto.AccountId))
-	if authorized.IsError {
-		return authorized
+	if !oRec.gate.Authorize(menuGroup, "Delete", ctx) {
+		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
 	err = oRec.repo.Delete(ctx, menuGroup)
@@ -125,11 +126,8 @@ func (oRec *MenuGroupUseCase) Find(ctx context.Context, dto *menu_group.FindMenu
 		return menuGroup, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	model := domain.MenuGroup{AccountId: menuGroup.AccountId}
-	model.ID = menuGroup.ID
-	authorized := oRec.AuthorizeMenuGroup(&ctx, &model, utils.ConvertStringIdToObjectId(dto.AccountId))
-	if authorized.IsError {
-		return menuGroup, authorized
+	if !oRec.gate.Authorize(domain.MenuGroup{AccountId: menuGroup.AccountId}, "Find", ctx) {
+		return menuGroup, validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
 	branches, errBranches := oRec.extService.RetailsIService.GetBranchesByIds(ctx, utils.ConvertObjectIdsToStringIds(menuGroup.LocationIds))
@@ -149,9 +147,8 @@ func (oRec *MenuGroupUseCase) ChangeStatus(ctx context.Context, id primitive.Obj
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	authorized := oRec.AuthorizeMenuGroup(&ctx, model, utils.ConvertStringIdToObjectId(input.AccountId))
-	if authorized.IsError {
-		return authorized
+	if !oRec.gate.Authorize(model, "Update", ctx) {
+		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
 	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Change Menu Status", UpdatedAt: time.Now()}
@@ -181,9 +178,8 @@ func (oRec *MenuGroupUseCase) DeleteEntity(ctx context.Context, input *menu_grou
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	authorized := oRec.AuthorizeMenuGroup(&ctx, model, utils.ConvertStringIdToObjectId(input.AccountId))
-	if authorized.IsError {
-		return authorized
+	if !oRec.gate.Authorize(model, "Update", ctx) {
+		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
 	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", UpdatedAt: time.Now()}
