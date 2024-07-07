@@ -3,6 +3,7 @@ package delivery
 import (
 	"context"
 	"github.com/go-playground/validator/v10"
+	"github.com/jinzhu/copier"
 	"github.com/labstack/echo/v4"
 	"samm/internal/module/menu/custom_validators"
 	"samm/internal/module/menu/domain"
@@ -73,7 +74,7 @@ func (a *ItemHandler) CreateBulk(c echo.Context) error {
 		ctx = context.Background()
 	}
 
-	input := make([]item.CreateItemDto, 0)
+	input := make([]item.CreateBulkItemDto, 0)
 	a.logger.DumpRequest(c.Request())
 	err := (&echo.DefaultBinder{}).BindBody(c, &input)
 	if err != nil {
@@ -87,8 +88,9 @@ func (a *ItemHandler) CreateBulk(c echo.Context) error {
 			return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 		}
 	}
-
-	errResp := a.itemUsecase.Create(ctx, input)
+	bulkInput := make([]item.CreateItemDto, 0)
+	copier.Copy(&bulkInput, &input)
+	errResp := a.itemUsecase.Create(ctx, bulkInput)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
