@@ -22,7 +22,7 @@ type CreateBulkItemDto struct {
 	Availabilities    []Availability       `json:"availabilities"`
 	Tags              []string             `json:"tags"`
 	SKU               string               `json:"sku"`
-	Image             string               `json:"image" validate:"required"`
+	Image             string               `json:"image"`
 	Status            string               `json:"status" validate:"oneof=active inactive"`
 	AdminDetails      []dto.AdminDetails   `json:"-"`
 }
