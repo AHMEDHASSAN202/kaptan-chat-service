@@ -24,5 +24,5 @@ func FindMenuGroupBuilder(model *menu_group.FindMenuGroupWithItems) *menu_group.
 }
 
 func PopulateBranches(model *menu_group.FindMenuGroupWithItems, branches []responses.BranchByIdResp) {
-	copier.Copy(&model.Branches, branches)
+	copier.Copy(&model.Locations, branches)
 }

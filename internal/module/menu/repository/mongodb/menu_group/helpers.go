@@ -9,7 +9,7 @@ import (
 func createIndexes(collection *mongo.Collection) {
 	mongodb.CreateIndex(collection, false,
 		bson.E{"account_id", mongodb.IndexType.Asc},
-		bson.E{"branch_ids", mongodb.IndexType.Asc},
+		bson.E{"location_ids", mongodb.IndexType.Asc},
 		bson.E{"status", mongodb.IndexType.Asc},
 	)
 
@@ -25,7 +25,7 @@ func createIndexes(collection *mongo.Collection) {
 	)
 
 	mongodb.CreateIndex(collection, false,
-		bson.E{"branch_ids", mongodb.IndexType.Asc},
+		bson.E{"location_ids", mongodb.IndexType.Asc},
 		bson.E{"status", mongodb.IndexType.Asc},
 	)
 }

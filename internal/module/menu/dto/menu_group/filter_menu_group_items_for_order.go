@@ -12,6 +12,6 @@ type MenuItem struct {
 
 type FilterMenuGroupItemsForOrder struct {
 	MenuItems  []MenuItem `json:"menu_items" validate:"required,dive,min=1"`
-	LocationId string     `json:"branch_id" validate:"required,mongodb"`
+	LocationId string     `json:"location_id" validate:"required,mongodb"`
 	dto.MobileHeaders
 }

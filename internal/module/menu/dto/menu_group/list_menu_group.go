@@ -9,9 +9,9 @@ import (
 
 type ListMenuGroupDTO struct {
 	dto.Pagination
-	Query    string `json:"query" form:"query" query:"query"`
-	BranchId string `json:"branch_id" form:"branch_id" query:"branch_id" validate:"omitempty,mongodb"`
-	Status   string `json:"status" form:"status" validate:"omitempty,oneof=active inactive" query:"status"`
+	Query      string `json:"query" form:"query" query:"query"`
+	LocationId string `json:"location_id" form:"location_id" query:"location_id" validate:"omitempty,mongodb"`
+	Status     string `json:"status" form:"status" validate:"omitempty,oneof=active inactive" query:"status"`
 	dto.PortalHeaders
 }
 

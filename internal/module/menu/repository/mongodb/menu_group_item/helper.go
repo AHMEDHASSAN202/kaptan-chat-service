@@ -133,7 +133,7 @@ func createIndexes(collection *mongo.Collection) {
 	)
 
 	mongodb.CreateIndex(collection, false,
-		bson.E{"menu_group.branch_ids", mongodb.IndexType.Asc},
+		bson.E{"menu_group.location_ids", mongodb.IndexType.Asc},
 		bson.E{"menu_group.status", mongodb.IndexType.Asc},
 		bson.E{"category.status", mongodb.IndexType.Asc},
 		bson.E{"category.sort", mongodb.IndexType.Asc},

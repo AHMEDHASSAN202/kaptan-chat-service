@@ -110,7 +110,7 @@ func (i *menuGroupItemRepo) MobileGetMenuGroupItems(ctx context.Context, dto *me
 
 	matching := bson.M{
 		"$match": bson.M{"$and": []interface{}{
-			bson.D{{"menu_group.branch_ids", utils.ConvertStringIdToObjectId(dto.BranchId)}},
+			bson.D{{"menu_group.location_ids", utils.ConvertStringIdToObjectId(dto.LocationId)}},
 			bson.D{{"menu_group.status", "active"}},
 			bson.D{{"category.status", "active"}},
 			bson.D{{"status", "active"}},
@@ -185,7 +185,7 @@ func (i *menuGroupItemRepo) MobileGetMenuGroupItem(ctx context.Context, dto *men
 	matching := bson.M{
 		"$match": bson.M{"$and": []interface{}{
 			bson.D{{"_id", utils.ConvertStringIdToObjectId(dto.ID)}},
-			bson.D{{"menu_group.branch_ids", utils.ConvertStringIdToObjectId(dto.BranchId)}},
+			bson.D{{"menu_group.location_ids", utils.ConvertStringIdToObjectId(dto.LocationId)}},
 			bson.D{{"menu_group.status", "active"}},
 			bson.D{{"category.status", "active"}},
 			bson.D{{"status", "active"}},
@@ -249,7 +249,7 @@ func (i *menuGroupItemRepo) MobileFilterMenuGroupItemForOrder(ctx context.Contex
 	matching := bson.M{
 		"$match": bson.M{"$and": []interface{}{
 			bson.D{{"_id", bson.M{"$in": productIds}}},
-			bson.D{{"menu_group.branch_ids", utils.ConvertStringIdToObjectId(dto.LocationId)}},
+			bson.D{{"menu_group.location_ids", utils.ConvertStringIdToObjectId(dto.LocationId)}},
 			bson.D{{"menu_group.status", "active"}},
 			bson.D{{"category.status", "active"}},
 			bson.D{{"status", "active"}},

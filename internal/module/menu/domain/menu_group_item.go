@@ -20,7 +20,7 @@ type MenuGroupItemCategory struct {
 
 type ItemMenuGroup struct {
 	ID             primitive.ObjectID      `json:"id" bson:"_id,omitempty"`
-	BranchIds      []primitive.ObjectID    `json:"branch_ids" bson:"branch_ids"`
+	LocationIds    []primitive.ObjectID    `json:"location_ids" bson:"location_ids"`
 	Availabilities []MenuGroupAvailability `json:"availabilities" bson:"availabilities"`
 	Status         string                  `json:"status" bson:"status"`
 }
