@@ -14,10 +14,12 @@
     "homeBranchesTitle": "المتاجر الأقرب إليك",
     "homeAreaTitle": "اختر طلبك من",
     "open": "مفتوح",
-    "close": "مغلق",
+    "closed": "مغلق",
     "meter": "م",
     "kilometer": "كم",
     "prepTime": "وقت التحضير",
     "minutes": "دقيقة",
-    "maps": "خرائط"
+    "maps": "خرائط",
+    "search": "بحث"
+
 }

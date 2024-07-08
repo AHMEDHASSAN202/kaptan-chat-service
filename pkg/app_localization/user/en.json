@@ -14,10 +14,12 @@
     "homeBranchesTitle": "Stores nearest to you",
     "homeAreaTitle": "Pick your order",
     "open": "open",
-    "close": "closed",
+    "closed": "closed",
     "meter": "m",
     "kilometer": "km",
     "prepTime": "Prep time",
     "minutes": "mins",
-    "maps": "Maps"
+    "maps": "Maps",
+    "search": "Search"
+
 }
