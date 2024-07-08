@@ -10,5 +10,14 @@
     "reportItems": "الإبلاغ عن العناصر",
     "darkMode": "الوضع الداكن",
     "signOut": "تسجيل الخروج",
-    "login": "تسجيل الدخول"
+    "login": "تسجيل الدخول",
+    "homeBranchesTitle": "المتاجر الأقرب إليك",
+    "homeAreaTitle": "اختر طلبك من",
+    "open": "مفتوح",
+    "close": "مغلق",
+    "meter": "م",
+    "kilometer": "كم",
+    "prepTime": "وقت التحضير",
+    "minutes": "دقيقة",
+    "maps": "خرائط"
 }

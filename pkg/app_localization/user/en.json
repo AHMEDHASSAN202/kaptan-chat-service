@@ -10,5 +10,14 @@
     "reportItems": "Report items",
     "darkMode": "Dark mode",
     "signOut": "Sign out",
-    "login": "Login User"
+    "login": "Login",
+    "homeBranchesTitle": "Stores nearest to you",
+    "homeAreaTitle": "Pick your order",
+    "open": "open",
+    "close": "closed",
+    "meter": "m",
+    "kilometer": "km",
+    "prepTime": "Prep time",
+    "minutes": "mins",
+    "maps": "Maps"
 }
