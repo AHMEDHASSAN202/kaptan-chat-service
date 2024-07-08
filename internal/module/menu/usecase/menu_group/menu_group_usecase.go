@@ -126,7 +126,7 @@ func (oRec *MenuGroupUseCase) Find(ctx context.Context, dto *menu_group.FindMenu
 		return menuGroup, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	if !oRec.gate.Authorize(domain.MenuGroup{AccountId: menuGroup.AccountId}, "Find", ctx) {
+	if !oRec.gate.Authorize(&domain.MenuGroup{AccountId: menuGroup.AccountId}, "Find", ctx) {
 		return menuGroup, validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
