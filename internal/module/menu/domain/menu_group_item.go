@@ -47,6 +47,7 @@ type MenuGroupItem struct {
 type MenuGroupItemRepository interface {
 	CreateUpdateBulk(ctx context.Context, models *[]MenuGroupItem) error
 	SyncMenuItemsChanges(ctx context.Context, itemId menu_group_item.MenuGroupItemSyncItemModel) error
+	DeleteByItemId(ctx context.Context, itemId primitive.ObjectID) error
 	DeleteBulkByGroupMenuId(ctx context.Context, groupMenuId primitive.ObjectID, exceptionIds []primitive.ObjectID) error
 	ChangeMenuStatus(ctx context.Context, id primitive.ObjectID, dto *menu_group.ChangeMenuGroupStatusDto, adminDetails dto.AdminDetails) error
 	ChangeCategoryStatus(ctx context.Context, id primitive.ObjectID, dto *menu_group.ChangeMenuGroupStatusDto, adminDetails dto.AdminDetails) error

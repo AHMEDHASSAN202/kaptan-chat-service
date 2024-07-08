@@ -54,6 +54,15 @@ func (i *menuGroupItemRepo) SyncMenuItemsChanges(ctx context.Context, itemDoc me
 	return nil
 }
 
+func (i *menuGroupItemRepo) DeleteByItemId(ctx context.Context, itemId primitive.ObjectID) error {
+	filter := bson.M{"item_id": itemId}
+	_, err := i.menuGroupItemCollection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (i *menuGroupItemRepo) DeleteBulkByGroupMenuId(ctx context.Context, groupMenuId primitive.ObjectID, exceptionIds []primitive.ObjectID) error {
 	_, err := i.menuGroupItemCollection.DeleteMany(ctx, bson.M{"menu_group._id": groupMenuId, "_id": bson.M{"$nin": utils.If(exceptionIds != nil, exceptionIds, make([]primitive.ObjectID, 0)).([]primitive.ObjectID)}})
 	if err != nil {
