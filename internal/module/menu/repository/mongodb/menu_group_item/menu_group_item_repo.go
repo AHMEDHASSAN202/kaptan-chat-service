@@ -133,7 +133,7 @@ func (i *menuGroupItemRepo) MobileGetMenuGroupItems(ctx context.Context, dto *me
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.D{{"$or", []bson.M{{"name.ar": bson.M{"$regex": pattern, "$options": "i"}}, {"name.en": bson.M{"$regex": pattern, "$options": "i"}}}}})
 	}
 
-	sort := bson.M{"$sort": bson.M{"sort": 1}}
+	sort := bson.M{"$sort": bson.M{"category.sort": 1, "category._id": 1, "sort": 1, "_id": 1}}
 
 	group := bson.M{
 		"$group": bson.D{
