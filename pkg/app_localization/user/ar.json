@@ -29,5 +29,14 @@
     "defaultCarMsg": "حفظ كسيارة افتراضية",
     "AddCarButtonText": "إضافة سيارة",
     "carsEmptyTitleMsg": "لم يتم حفظ أي سيارات ،",
-    "carsEmptySubtitleMsg": "أضف تفاصيل سيارتك الآن."
+    "carsEmptySubtitleMsg": "أضف تفاصيل سيارتك الآن.",
+    "fullName": "الاسم بالكامل",
+    "mobileNumber": "رقم الجوال",
+    "email": "البريد الإلكتروني",
+    "geneder": "الجنس",
+    "select": "اختر",
+    "male": "ذكر",
+    "female": "أنثى",
+    "personalDetailsSaveButtonText": "حفظ التفاصيل",
+    "personalDetailsDeleteAccountButtonText": "حذف الحساب"
 }

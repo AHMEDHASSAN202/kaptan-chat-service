@@ -29,7 +29,14 @@
     "defaultCarMsg": "Save as default car",
     "AddCarButtonText": "Add a car",
     "carsEmptyTitleMsg": "No cars saved ,",
-    "carsEmptySubtitleMsg": "add your car details now."
-
-
+    "carsEmptySubtitleMsg": "add your car details now.",
+    "fullName": "Full name",
+    "mobileNumber": "Mobile number",
+    "email": "Email",
+    "geneder": "Gender",
+    "select": "Select",
+    "male": "Male",
+    "female": "Female",
+    "personalDetailsSaveButtonText": "Save details",
+    "personalDetailsDeleteAccountButtonText": "Delete account"
 }
