@@ -33,7 +33,7 @@
     "fullName": "Full name",
     "mobileNumber": "Mobile number",
     "email": "Email",
-    "geneder": "Gender",
+    "gender": "Gender",
     "select": "Select",
     "male": "Male",
     "female": "Female",
