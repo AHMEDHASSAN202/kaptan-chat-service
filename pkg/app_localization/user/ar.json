@@ -25,10 +25,9 @@
     "carPlate": "لوحة السيارة",
     "carColor": "لون السيارة",
     "carBrandName": "اسم ماركة السيارة",
+    "carBrandHintText": "مثال: تويوتا",
     "defaultCarMsg": "حفظ كسيارة افتراضية",
     "AddCarButtonText": "إضافة سيارة",
     "carsEmptyTitleMsg": "لم يتم حفظ أي سيارات ،",
     "carsEmptySubtitleMsg": "أضف تفاصيل سيارتك الآن."
-
-
 }

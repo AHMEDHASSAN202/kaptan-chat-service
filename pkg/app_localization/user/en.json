@@ -25,6 +25,7 @@
     "carPlate": "Car plate",
     "carColor": "Car color",
     "carBrandName": "Car brand name",
+    "carBrandHintText": "Example: Toyota",
     "defaultCarMsg": "Save as default car",
     "AddCarButtonText": "Add a car",
     "carsEmptyTitleMsg": "No cars saved ,",
