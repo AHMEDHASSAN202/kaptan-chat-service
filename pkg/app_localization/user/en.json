@@ -21,7 +21,14 @@
     "minutes": "mins",
     "maps": "Maps",
     "search": "Search",
-    "sar": "SAR"
+    "sar": "SAR",
+    "carPlate": "Car plate",
+    "carColor": "Car color",
+    "carBrandName": "Car brand name",
+    "defaultCarMsg": "Save as default car",
+    "AddCarButtonText": "Add a car",
+    "carsEmptyTitleMsg": "No cars saved ,",
+    "carsEmptySubtitleMsg": "add your car details now."
 
 
 }

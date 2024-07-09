@@ -21,7 +21,14 @@
     "minutes": "دقيقة",
     "maps": "خرائط",
     "search": "بحث",
-    "sar": "ريال"
+    "sar": "ريال",
+    "carPlate": "لوحة السيارة",
+    "carColor": "لون السيارة",
+    "carBrandName": "اسم ماركة السيارة",
+    "defaultCarMsg": "حفظ كسيارة افتراضية",
+    "AddCarButtonText": "إضافة سيارة",
+    "carsEmptyTitleMsg": "لم يتم حفظ أي سيارات ،",
+    "carsEmptySubtitleMsg": "أضف تفاصيل سيارتك الآن."
 
 
 }
