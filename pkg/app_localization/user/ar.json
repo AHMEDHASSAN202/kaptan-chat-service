@@ -38,5 +38,9 @@
     "male": "ذكر",
     "female": "أنثى",
     "personalDetailsSaveButtonText": "حفظ التفاصيل",
-    "personalDetailsDeleteAccountButtonText": "حذف الحساب"
+    "personalDetailsDeleteAccountButtonText": "حذف الحساب",
+    "kcal": "كالوري",
+    "min": "الأدنى",
+    "max": "الأقصى",
+    "branchAddToCartButtonText": "أضف إلى السلة"
 }

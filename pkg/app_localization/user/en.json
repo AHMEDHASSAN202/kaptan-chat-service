@@ -38,5 +38,9 @@
     "male": "Male",
     "female": "Female",
     "personalDetailsSaveButtonText": "Save details",
-    "personalDetailsDeleteAccountButtonText": "Delete account"
+    "personalDetailsDeleteAccountButtonText": "Delete account",
+    "kcal": "Kcal",
+    "min": "Min",
+    "max": "Max",
+    "branchAddToCartButtonText": "Add to Basket"
 }
