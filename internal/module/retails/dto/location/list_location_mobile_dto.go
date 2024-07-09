@@ -16,5 +16,8 @@ func (p *ListLocationMobileDto) SetDefault() {
 	p.Pagination.SetDefault()
 	if p.Distance == 0 {
 		p.Distance = 20
+		if p.BrandId != "" {
+			p.Distance = 200000000
+		}
 	}
 }
