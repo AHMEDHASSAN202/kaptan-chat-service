@@ -12,6 +12,10 @@ import (
 	"time"
 )
 
+// write in cannical key
+const CauserId = "Causer-Id"
+const CauserType = "Causer-Type"
+
 func (m Middlewares) AuthenticationMiddleware(isTempToken bool) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
