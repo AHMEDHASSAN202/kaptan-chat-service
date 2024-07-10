@@ -15,7 +15,9 @@ func CreateUpdateAdminBuilder(admin *domain.Admin, input *dto.CreateAdminDTO, ro
 		admin.ID = primitive.NewObjectID()
 		admin.Tokens = make([]string, 0)
 		admin.AdminDetails = []dto2.AdminDetails{}
-		admin.Account = &domain.Account{Id: utils.ConvertStringIdToObjectId(input.Account.Id), Name: domain.Name{Ar: input.Account.Name.Ar, En: input.Account.Name.En}}
+		if input.Account != nil {
+			admin.Account = &domain.Account{Id: utils.ConvertStringIdToObjectId(input.Account.Id), Name: domain.Name{Ar: input.Account.Name.Ar, En: input.Account.Name.En}}
+		}
 	}
 	if input.Password != "" {
 		//hash password

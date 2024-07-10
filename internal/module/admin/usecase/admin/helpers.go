@@ -29,3 +29,14 @@ func (oRec *AdminUseCase) LoginHelper(ctx context.Context, email, password, admi
 	}
 	return admin, validators.ErrorResponse{}
 }
+
+func (oRec *AdminUseCase) RemoveAdminFromCache(adminId string) {
+	go func() {
+		if err := oRec.redisClient.Delete("portal:" + adminId); err != nil {
+			oRec.logger.Error("Can't Delete Admin From Cache -> ", err)
+		}
+		if err := oRec.redisClient.Delete("admin:" + adminId); err != nil {
+			oRec.logger.Error("Can't Delete Admin From Cache -> ", err)
+		}
+	}()
+}

@@ -30,7 +30,7 @@ type (
 	Config struct {
 		Environment  string
 		Mongo        MongoConfig
-		RedisUrl     string
+		RedisTlsUrl  string
 		AwsConfig    AwsConfig
 		HTTP         HTTPConfig
 		Echo         echoserver.EchoConfig
@@ -109,7 +109,7 @@ func Init() (*Config, *MongoConfig, *string,
 
 	setFromEnv(&cfg)
 
-	return &cfg, &cfg.Mongo, &cfg.RedisUrl, &cfg.HTTP, &cfg.Echo, &cfg.Limiter, &cfg.AwsConfig, &cfg.JWTConfig, cfg.LoggerConfig, nil
+	return &cfg, &cfg.Mongo, &cfg.RedisTlsUrl, &cfg.HTTP, &cfg.Echo, &cfg.Limiter, &cfg.AwsConfig, &cfg.JWTConfig, cfg.LoggerConfig, nil
 }
 
 func unmarshal(cfg *Config) error {
@@ -137,7 +137,7 @@ func setFromEnv(cfg *Config) {
 	cfg.Mongo.MongoConnection = os.Getenv("MONGO_CONNECTION")
 	cfg.Mongo.MongoDbName = os.Getenv("MONGO_DB_NAME")
 
-	cfg.RedisUrl = os.Getenv("REDIS_URL")
+	cfg.RedisTlsUrl = os.Getenv("REDIS_TLS_URL")
 
 	cfg.ServiceUrl = os.Getenv("SERVICE_URL")
 

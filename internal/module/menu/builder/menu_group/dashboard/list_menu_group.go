@@ -12,13 +12,13 @@ func ListGroupBuilder(models []domain.MenuGroup) []dashboard.ListMenuGroupRespon
 	}
 	for _, model := range models {
 		data = append(data, dashboard.ListMenuGroupResponse{
-			ID:        model.ID,
-			AccountId: model.AccountId,
-			Name:      model.Name,
-			BranchIds: model.BranchIds,
-			Status:    model.Status,
-			CreatedAt: model.CreatedAt,
-			UpdateAt:  model.UpdatedAt,
+			ID:          model.ID,
+			AccountId:   model.AccountId,
+			Name:        model.Name,
+			LocationIds: model.LocationIds,
+			Status:      model.Status,
+			CreatedAt:   model.CreatedAt,
+			UpdateAt:    model.UpdatedAt,
 		})
 	}
 	return data

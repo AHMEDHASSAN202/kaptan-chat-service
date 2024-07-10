@@ -65,6 +65,7 @@ func (i *modifierGroupRepo) List(ctx context.Context, dto *modifier_group.ListMo
 	models := make([]domain.ModifierGroup, 0)
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
 		bson.D{{"deleted_at", nil}},
+		bson.D{{"account_id", utils.ConvertStringIdToObjectId(dto.AccountId)}},
 	}}}
 
 	if dto.Query != "" {

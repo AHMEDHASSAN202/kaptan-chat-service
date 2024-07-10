@@ -6,6 +6,7 @@ This document outlines key points regarding the role.
 
 - [ ] **Auto Create Module with Command Line**  
   Command: `go run ./pkg/cmd/module_setup.go -new_module='ModuleName' -new_module_path='NewModulePath' -root_module='WholeProjectModuleRoot'`
+  Ex: `go run ./pkg/cmd/module_setup.go -new_module='Kitchen' -new_module_path='internal/module/kitchen' -root_module='samm'`
 
 - [ ] **Restrict Access to Repo Layer Between Modules**
 

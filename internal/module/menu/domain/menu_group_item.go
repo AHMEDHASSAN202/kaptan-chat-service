@@ -20,7 +20,7 @@ type MenuGroupItemCategory struct {
 
 type ItemMenuGroup struct {
 	ID             primitive.ObjectID      `json:"id" bson:"_id,omitempty"`
-	BranchIds      []primitive.ObjectID    `json:"branch_ids" bson:"branch_ids"`
+	LocationIds    []primitive.ObjectID    `json:"location_ids" bson:"location_ids"`
 	Availabilities []MenuGroupAvailability `json:"availabilities" bson:"availabilities"`
 	Status         string                  `json:"status" bson:"status"`
 }
@@ -47,6 +47,7 @@ type MenuGroupItem struct {
 type MenuGroupItemRepository interface {
 	CreateUpdateBulk(ctx context.Context, models *[]MenuGroupItem) error
 	SyncMenuItemsChanges(ctx context.Context, itemId menu_group_item.MenuGroupItemSyncItemModel) error
+	DeleteByItemId(ctx context.Context, itemId primitive.ObjectID) error
 	DeleteBulkByGroupMenuId(ctx context.Context, groupMenuId primitive.ObjectID, exceptionIds []primitive.ObjectID) error
 	ChangeMenuStatus(ctx context.Context, id primitive.ObjectID, dto *menu_group.ChangeMenuGroupStatusDto, adminDetails dto.AdminDetails) error
 	ChangeCategoryStatus(ctx context.Context, id primitive.ObjectID, dto *menu_group.ChangeMenuGroupStatusDto, adminDetails dto.AdminDetails) error

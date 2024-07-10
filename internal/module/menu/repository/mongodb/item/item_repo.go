@@ -113,11 +113,7 @@ func (i *itemRepo) SoftDelete(ctx context.Context, doc *domain.Item) error {
 			i.logger.Error("ItemRepository -> SoftDelete -> ", err)
 			return err
 		}
-		menuGroupItem := menu_group_item.MenuGroupItemSyncItemModel{}
-		copier.Copy(&menuGroupItem, &doc)
-		menuGroupItem.UpdatedAt = time.Now()
-		menuGroupItem.ItemId = doc.ID
-		err = i.menuGroupItemRepo.SyncMenuItemsChanges(sc, menuGroupItem)
+		err = i.menuGroupItemRepo.DeleteByItemId(sc, doc.ID)
 		if err != nil {
 			i.logger.Error("ItemRepository -> SyncMenuItemsChanges -> ", err)
 			return err

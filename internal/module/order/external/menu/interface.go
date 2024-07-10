@@ -8,5 +8,5 @@ import (
 )
 
 type Interface interface {
-	GetMenuItemsDetails(ctx context.Context, menuItems []order.MenuItem) (responses.MenuDetailsResponse, validators.ErrorResponse)
+	GetMenuItemsDetails(ctx context.Context, menuItems []order.MenuItem, locationId string) (responses.MenuDetailsResponse, validators.ErrorResponse)
 }

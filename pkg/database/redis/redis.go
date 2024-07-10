@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"github.com/go-redis/redis/v8"
 	"time"
@@ -20,10 +19,10 @@ func NewRedisClient(fullUrl *string) *RedisClient {
 	if err != nil {
 		panic(err)
 	}
-	// Configure TLS to skip certificate verification
-	options.TLSConfig = &tls.Config{
-		InsecureSkipVerify: true,
-	}
+	//// Configure TLS to skip certificate verification
+	//options.TLSConfig = &tls.Config{
+	//	InsecureSkipVerify: true,
+	//}
 
 	rdb := redis.NewClient(options)
 
@@ -69,4 +68,15 @@ func (r *RedisClient) Close() error {
 // GetAllKeys retrieves all keys matching a given pattern
 func (r *RedisClient) GetAllKeys(pattern string) ([]string, error) {
 	return r.client.Keys(ctx, pattern).Result()
+}
+
+func (r *RedisClient) DeleteKeysWithPrefix(prefix string) error {
+	keys, err := r.client.Keys(ctx, prefix+"*").Result()
+	if err != nil {
+		return err
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+	return r.client.Del(ctx, keys...).Err()
 }

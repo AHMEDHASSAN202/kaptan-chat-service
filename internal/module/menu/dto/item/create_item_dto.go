@@ -52,6 +52,10 @@ var ModifierItemsCantContainsModifierGroup = func(fl validator.FieldLevel) bool 
 		itemDto := IitemDto.(*CreateItemDto)
 		itemType = itemDto.Type
 
+	case "*item.CreateBulkItemDto":
+		itemDto := IitemDto.(*CreateBulkItemDto)
+		itemType = itemDto.Type
+
 	case "*item.UpdateItemDto":
 		itemDto := IitemDto.(*UpdateItemDto)
 		itemType = itemDto.Type

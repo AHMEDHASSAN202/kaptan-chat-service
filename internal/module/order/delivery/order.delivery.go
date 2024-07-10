@@ -6,6 +6,7 @@ import (
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/pkg/logger"
+	usermiddleware "samm/pkg/middlewares/user"
 	"samm/pkg/validators"
 )
 
@@ -16,7 +17,7 @@ type OrderHandler struct {
 }
 
 // InitOrderController will initialize the article's HTTP controller
-func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *validator.Validate, logger logger.ILogger, userMiddleware *usermiddleware.Middlewares) {
 	handler := &OrderHandler{
 		orderUsecase: us,
 		validator:    validator,
@@ -67,20 +68,19 @@ func (a *OrderHandler) CalculateOrderCost(c echo.Context) error {
 
 	var calculateOrderCostDto order.CalculateOrderCostDto
 
-	err := c.Bind(calculateOrderCostDto)
+	err := c.Bind(&calculateOrderCostDto)
 	if err != nil {
 		a.logger.Error(err)
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 	validateErr := calculateOrderCostDto.Validate(ctx, a.validator)
 	if validateErr.IsError {
-		a.logger.Error(validateErr.ErrorMessageObject.Text)
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+		return validators.ErrorStatusUnprocessableEntity(c, validateErr)
 	}
 	orderCalculate, errResp := a.orderUsecase.CalculateOrderCost(ctx, &calculateOrderCostDto)
 	if errResp.IsError {
-		a.logger.Error(validateErr.ErrorMessageObject.Text)
-		return validators.ErrorStatusUnprocessableEntity(c, errResp)
+		a.logger.Error(errResp.ErrorMessageObject.Text)
+		return validators.ErrorResp(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{"order_calculate": orderCalculate})
 }

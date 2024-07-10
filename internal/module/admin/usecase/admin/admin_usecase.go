@@ -9,6 +9,8 @@ import (
 	dto "samm/internal/module/admin/dto/admin"
 	"samm/internal/module/admin/external"
 	"samm/internal/module/admin/responses"
+	"samm/pkg/database/redis"
+	"samm/pkg/gate"
 	"samm/pkg/jwt"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
@@ -25,15 +27,19 @@ type AdminUseCase struct {
 	extService       external.ExtService
 	AdminJwtService  jwt.JwtService
 	PortalJwtService jwt.JwtService
+	redisClient      *redis.RedisClient
+	gate             *gate.Gate
 }
 
-func NewAdminUseCase(repo domain.AdminRepository, roleRepo domain.RoleRepository, logger logger.ILogger, jwtFactory jwt.JwtServiceFactory) domain.AdminUseCase {
+func NewAdminUseCase(repo domain.AdminRepository, roleRepo domain.RoleRepository, logger logger.ILogger, jwtFactory jwt.JwtServiceFactory, redisClient *redis.RedisClient, g *gate.Gate) domain.AdminUseCase {
 	return &AdminUseCase{
 		repo:             repo,
 		roleRepo:         roleRepo,
 		logger:           logger,
 		AdminJwtService:  jwtFactory.AdminJwtService(),
 		PortalJwtService: jwtFactory.PortalJwtService(),
+		redisClient:      redisClient,
+		gate:             g,
 	}
 }
 
@@ -66,7 +72,7 @@ func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO)
 		return "", validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	if input.Account != nil && input.Account.Id != "" && !admin.Authorized(input.Account.Id) {
+	if !oRec.gate.Authorize(admin, "Update", ctx) {
 		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Update Admin -> ", admin.ID)
 		return "", validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
@@ -89,6 +95,8 @@ func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO)
 		return "", validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
 	}
 
+	oRec.RemoveAdminFromCache(utils.ConvertObjectIdToStringId(admin.ID))
+
 	return utils.ConvertObjectIdToStringId(admin.ID), validators.ErrorResponse{}
 }
 
@@ -99,7 +107,7 @@ func (oRec *AdminUseCase) Delete(ctx context.Context, adminId primitive.ObjectID
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	if accountId != "" && !admin.Authorized(accountId) {
+	if !oRec.gate.Authorize(admin, "Delete", ctx) {
 		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Update Admin -> ", admin.ID)
 		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
@@ -110,6 +118,8 @@ func (oRec *AdminUseCase) Delete(ctx context.Context, adminId primitive.ObjectID
 		oRec.logger.Error("AdminUseCase -> Delete -> ", err)
 		return validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
 	}
+
+	oRec.RemoveAdminFromCache(utils.ConvertObjectIdToStringId(admin.ID))
 
 	return validators.ErrorResponse{}
 }
@@ -133,7 +143,7 @@ func (oRec *AdminUseCase) Find(ctx context.Context, adminId primitive.ObjectID, 
 		return adminResp, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	if accountId != "" && !admin.Authorized(accountId) {
+	if !oRec.gate.Authorize(admin, "Find", ctx) {
 		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Find Admin -> ", admin.ID)
 		return nil, validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
@@ -148,7 +158,7 @@ func (oRec *AdminUseCase) ChangeStatus(ctx context.Context, input *dto.ChangeAdm
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	if input.AccountId != "" && !admin.Authorized(input.AccountId) {
+	if !oRec.gate.Authorize(admin, "Update", ctx) {
 		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized ChangeStatus Admin -> ", admin.ID)
 		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
@@ -158,6 +168,8 @@ func (oRec *AdminUseCase) ChangeStatus(ctx context.Context, input *dto.ChangeAdm
 	if err != nil {
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 	}
+
+	oRec.RemoveAdminFromCache(utils.ConvertObjectIdToStringId(admin.ID))
 
 	return validators.ErrorResponse{}
 }

@@ -56,7 +56,7 @@ type AvailabilityDTO struct {
 type CreateMenuGroupDTO struct {
 	ID             primitive.ObjectID `json:"-"`
 	Name           LocalizationText   `json:"name" validate:"required"`
-	BranchIds      []string           `json:"branch_ids" validate:"branch_ids_rules"`
+	LocationIds    []string           `json:"location_ids" validate:"location_ids_rules"`
 	Categories     []CategoryDTO      `json:"categories" validate:"dive"`
 	Availabilities []AvailabilityDTO  `json:"availabilities" validate:"dive"`
 	Status         string             `json:"status" validate:"oneof=active inactive"`
@@ -65,6 +65,6 @@ type CreateMenuGroupDTO struct {
 }
 
 func (input *CreateMenuGroupDTO) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
-	validate.RegisterValidation("branch_ids_rules", utils.ValidateIDsIsMongoObjectIds)
+	validate.RegisterValidation("location_ids_rules", utils.ValidateIDsIsMongoObjectIds)
 	return validators.ValidateStruct(c.Request().Context(), validate, input)
 }

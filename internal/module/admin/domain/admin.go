@@ -55,7 +55,7 @@ type AdminUseCase interface {
 	CheckRoleExists(ctx context.Context, roleId primitive.ObjectID) (bool, validators.ErrorResponse)
 	AdminLogin(ctx context.Context, dto *auth.AdminAuthDTO) (interface{}, string, validators.ErrorResponse)
 	PortalLogin(ctx context.Context, dto *auth.PortalAuthDTO) (interface{}, string, validators.ErrorResponse)
-	Profile(ctx context.Context, adminId string, accountId string) (*admin2.AdminProfileResponse, validators.ErrorResponse)
+	Profile(ctx context.Context, profileDTO auth.ProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 	UpdateAdminProfile(ctx context.Context, dto *auth.UpdateAdminProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 	UpdatePortalProfile(ctx context.Context, dto *auth.UpdatePortalProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 	SyncAccount(ctx context.Context, input admin.Account) validators.ErrorResponse

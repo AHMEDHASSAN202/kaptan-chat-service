@@ -1,14 +1,17 @@
 package admin
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"samm/internal/module/admin/consts"
+	"samm/internal/module/admin/domain"
 	"samm/pkg/jwt"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+	"time"
 )
 
 func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
@@ -43,16 +46,26 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 			return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 		}
 
-		_, ok := claims.(*jwt.AdminJwtClaim)
+		data, ok := claims.(*jwt.AdminJwtClaim)
 		if !ok {
 			m.logger.Info("AuthMiddleware -> Claims Parse Error")
 			return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 		}
 
-		admin, err := m.adminRepository.FindByToken(ctx, *token, []string{consts.ADMIN_TYPE})
-		if err != nil {
-			m.logger.Info("AuthMiddleware -> FindByToken Error -> ", err)
-			return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
+		var admin *domain.Admin
+		key := data.CauserType + ":" + data.CauserId
+		err = m.redisClient.Get(key, &admin)
+		if admin == nil || err != nil {
+			m.logger.Info("Admin -> AuthMiddleware -> FindByToken MongoDB .... ")
+			admin, err = m.adminRepository.FindByToken(ctx, *token, []string{consts.ADMIN_TYPE})
+			if err != nil {
+				m.logger.Info("AuthMiddleware -> FindByToken Error -> ", err)
+				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
+			}
+			setErr := m.redisClient.Set(key, admin, data.ExpiresAt.Sub(time.Now()))
+			if setErr != nil {
+				m.logger.Info("Admin -> REDIS -> AuthMiddleware -> Setter > ", setErr)
+			}
 		}
 
 		if !admin.IsActive() {
@@ -70,6 +83,11 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 		c.Request().Header.Add("causer-type", admin.Type)
 		c.Request().Header.Add("causer-name", admin.Name)
 		c.Request().Header.Add("causer-permissions", string(jsonPermissionsByte))
+
+		ctx = context.WithValue(ctx, "causer-id", utils.ConvertObjectIdToStringId(admin.ID))
+		ctx = context.WithValue(ctx, "causer-type", admin.Type)
+		c.SetRequest(c.Request().WithContext(ctx))
+
 		return next(c)
 	}
 }

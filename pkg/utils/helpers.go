@@ -519,3 +519,53 @@ func EqualizeSlices(slice1, slice2 []string) ([]string, []string) {
 
 	return result1, result2
 }
+
+func SafeMapGet[T any](m map[string]T, key string, defaultValue T) T {
+	if m == nil {
+		return defaultValue
+	}
+	if value, exists := m[key]; exists {
+		return value
+	}
+	return defaultValue
+}
+
+func MarshalUnMarshal(from interface{}, to interface{}) error {
+	jsonData, err := json.Marshal(from)
+	if err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return err
+	}
+	if err = json.Unmarshal(jsonData, &to); err != nil {
+		fmt.Println("Error marshaling JSON:", err)
+		return err
+	}
+	return nil
+}
+
+func GetStructName(i interface{}) string {
+	t := reflect.TypeOf(i)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t.Name()
+}
+
+func CallMethod(obj interface{}, methodName string, args ...interface{}) []reflect.Value {
+	v := reflect.ValueOf(obj)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	method := v.MethodByName(methodName)
+	if !method.IsValid() {
+		fmt.Println(fmt.Errorf("method not found: %s", methodName))
+		return nil
+	}
+	in := make([]reflect.Value, len(args))
+	for i, arg := range args {
+		in[i] = reflect.ValueOf(arg)
+	}
+
+	return method.Call(in)
+}

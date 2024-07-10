@@ -11,6 +11,11 @@ import (
 )
 
 const TimeFormat = "15:04:05" // Example format (HH:MM:SS)
+var (
+	saudiRegex = regexp.MustCompile(`^\+9665\d{8}$`)
+	egyptRegex = regexp.MustCompile(`^\+201\d{9}$`)
+	uaeRegex   = regexp.MustCompile(`^\+9715\d{8}$`)
+)
 
 func NewRegisterCustomValidator(c context.Context, validate *validator.Validate) {
 	//TODO: context.Background() should depend on the actual context of the request
@@ -55,7 +60,9 @@ func ValidateIDsIsMongoObjectIds(fl validator.FieldLevel) bool {
 
 func PhoneNumberValidator(fl validator.FieldLevel) bool {
 	// Define a regular expression for validating phone numbers
-	regex := regexp.MustCompile(`^\d{4,15}$`)
+	countryCode := fl.Parent().FieldByName("CountryCode").String()
 	phoneNumber := fl.Field().String()
-	return regex.MatchString(phoneNumber)
+
+	fullNumber := countryCode + phoneNumber
+	return saudiRegex.MatchString(fullNumber) || egyptRegex.MatchString(fullNumber) || uaeRegex.MatchString(fullNumber)
 }

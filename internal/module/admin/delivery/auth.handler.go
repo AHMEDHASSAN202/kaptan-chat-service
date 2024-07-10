@@ -114,7 +114,7 @@ func (a *AdminAuthHandler) AdminProfile(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	profile, errResp := a.adminUseCase.Profile(ctx, input.CauserId, "")
+	profile, errResp := a.adminUseCase.Profile(ctx, dto.ProfileDTO{AdminId: input.CauserId, AccountId: "", CauserDetails: nil})
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
@@ -135,7 +135,7 @@ func (a *AdminAuthHandler) PortalProfile(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	profile, errResp := a.adminUseCase.Profile(ctx, input.CauserId, input.AccountId)
+	profile, errResp := a.adminUseCase.Profile(ctx, dto.ProfileDTO{AdminId: input.CauserId, AccountId: input.CauserAccountId, CauserDetails: input.GetCauserDetailsAsMap()})
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}

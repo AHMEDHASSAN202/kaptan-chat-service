@@ -10,6 +10,8 @@ import (
 	"samm/pkg/logger"
 	"samm/pkg/middlewares/admin"
 	commmon "samm/pkg/middlewares/common"
+	"samm/pkg/middlewares/portal"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 )
 
@@ -22,7 +24,7 @@ type AccountHandler struct {
 }
 
 // InitUserController will initialize the article's HTTP controller
-func InitAccountController(e *echo.Echo, us domain.AccountUseCase, adminCustomValidator custom_validators2.AdminCustomValidator, retailCustomValidator custom_validators.RetailCustomValidator, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
+func InitAccountController(e *echo.Echo, us domain.AccountUseCase, adminCustomValidator custom_validators2.AdminCustomValidator, retailCustomValidator custom_validators.RetailCustomValidator, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, portalMiddlewares *portal.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &AccountHandler{
 		accountUsecase:        us,
 		retailCustomValidator: retailCustomValidator,
@@ -37,6 +39,10 @@ func InitAccountController(e *echo.Echo, us domain.AccountUseCase, adminCustomVa
 	dashboard.PUT("/:id", handler.UpdateAccount, commonMiddlewares.PermissionMiddleware("update-accounts"))
 	dashboard.GET("/:id", handler.FindAccount, commonMiddlewares.PermissionMiddleware("find-accounts"))
 	dashboard.DELETE("/:id", handler.DeleteAccount, commonMiddlewares.PermissionMiddleware("delete-accounts"))
+
+	portal := e.Group("api/v1/portal/account")
+	portal.Use(portalMiddlewares.AuthMiddleware)
+	portal.GET("/find", handler.FindAccountPortal)
 }
 func (a *AccountHandler) StoreAccount(c echo.Context) error {
 	ctx := c.Request().Context()
@@ -119,4 +125,18 @@ func (a *AccountHandler) ListAccount(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{"data": result, "meta": paginationResult})
+}
+func (a *AccountHandler) FindAccountPortal(c echo.Context) error {
+	ctx := c.Request().Context()
+	var input dto.PortalHeaders
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	data, errResp := a.accountUsecase.FindAccount(ctx, input.CauserAccountId)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"account": data})
 }

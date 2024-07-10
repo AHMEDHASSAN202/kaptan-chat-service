@@ -5,6 +5,7 @@ import (
 	"samm/internal/module/common"
 	appConfig "samm/internal/module/config"
 	"samm/internal/module/example"
+	"samm/internal/module/kitchen"
 	"samm/internal/module/menu"
 	"samm/internal/module/payment"
 	"samm/internal/module/order"
@@ -13,6 +14,7 @@ import (
 	"samm/pkg/aws"
 	"samm/pkg/config"
 	"samm/pkg/database"
+	"samm/pkg/gate"
 	"samm/pkg/http"
 	"samm/pkg/http/echo"
 	echoserver "samm/pkg/http/echo/server"
@@ -39,6 +41,7 @@ func main() {
 				aws.Init,
 			),
 			jwt.Module,
+			gate.Module,
 			example.Module,
 			menu.Module,
 			order.Module,
@@ -48,6 +51,7 @@ func main() {
 			appConfig.Module,
 			common.Module,
 			user.Module,
+			kitchen.Module,
 			payment.Module,
 			middlewares.Module,
 			fx.Invoke(echo.RunServers, localization.InitLocalization),

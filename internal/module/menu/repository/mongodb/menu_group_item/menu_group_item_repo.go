@@ -54,6 +54,15 @@ func (i *menuGroupItemRepo) SyncMenuItemsChanges(ctx context.Context, itemDoc me
 	return nil
 }
 
+func (i *menuGroupItemRepo) DeleteByItemId(ctx context.Context, itemId primitive.ObjectID) error {
+	filter := bson.M{"item_id": itemId}
+	_, err := i.menuGroupItemCollection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (i *menuGroupItemRepo) DeleteBulkByGroupMenuId(ctx context.Context, groupMenuId primitive.ObjectID, exceptionIds []primitive.ObjectID) error {
 	_, err := i.menuGroupItemCollection.DeleteMany(ctx, bson.M{"menu_group._id": groupMenuId, "_id": bson.M{"$nin": utils.If(exceptionIds != nil, exceptionIds, make([]primitive.ObjectID, 0)).([]primitive.ObjectID)}})
 	if err != nil {
@@ -110,7 +119,7 @@ func (i *menuGroupItemRepo) MobileGetMenuGroupItems(ctx context.Context, dto *me
 
 	matching := bson.M{
 		"$match": bson.M{"$and": []interface{}{
-			bson.D{{"menu_group.branch_ids", utils.ConvertStringIdToObjectId(dto.BranchId)}},
+			bson.D{{"menu_group.location_ids", utils.ConvertStringIdToObjectId(dto.LocationId)}},
 			bson.D{{"menu_group.status", "active"}},
 			bson.D{{"category.status", "active"}},
 			bson.D{{"status", "active"}},
@@ -124,7 +133,7 @@ func (i *menuGroupItemRepo) MobileGetMenuGroupItems(ctx context.Context, dto *me
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.D{{"$or", []bson.M{{"name.ar": bson.M{"$regex": pattern, "$options": "i"}}, {"name.en": bson.M{"$regex": pattern, "$options": "i"}}}}})
 	}
 
-	sort := bson.M{"$sort": bson.M{"sort": 1}}
+	sort := bson.M{"$sort": bson.M{"category.sort": 1, "category._id": 1, "sort": 1, "_id": 1}}
 
 	group := bson.M{
 		"$group": bson.D{
@@ -185,7 +194,7 @@ func (i *menuGroupItemRepo) MobileGetMenuGroupItem(ctx context.Context, dto *men
 	matching := bson.M{
 		"$match": bson.M{"$and": []interface{}{
 			bson.D{{"_id", utils.ConvertStringIdToObjectId(dto.ID)}},
-			bson.D{{"menu_group.branch_ids", utils.ConvertStringIdToObjectId(dto.BranchId)}},
+			bson.D{{"menu_group.location_ids", utils.ConvertStringIdToObjectId(dto.LocationId)}},
 			bson.D{{"menu_group.status", "active"}},
 			bson.D{{"category.status", "active"}},
 			bson.D{{"status", "active"}},
@@ -249,7 +258,7 @@ func (i *menuGroupItemRepo) MobileFilterMenuGroupItemForOrder(ctx context.Contex
 	matching := bson.M{
 		"$match": bson.M{"$and": []interface{}{
 			bson.D{{"_id", bson.M{"$in": productIds}}},
-			bson.D{{"menu_group.branch_ids", utils.ConvertStringIdToObjectId(dto.LocationId)}},
+			bson.D{{"menu_group.location_ids", utils.ConvertStringIdToObjectId(dto.LocationId)}},
 			bson.D{{"menu_group.status", "active"}},
 			bson.D{{"category.status", "active"}},
 			bson.D{{"status", "active"}},
@@ -276,15 +285,13 @@ func (i *menuGroupItemRepo) MobileFilterMenuGroupItemForOrder(ctx context.Contex
 			"localField":   "modifier_groups.product_ids",
 			"foreignField": "_id",
 			"pipeline": []bson.M{
-				{"$match": bson.M{"status": "active", "deleted_at": nil, "product_ids": bson.M{"$in": modifierIds}}},
+				{"$match": bson.M{"status": "active", "deleted_at": nil, "_id": bson.M{"$in": modifierIds}}},
 			},
 			"as": "addons",
 		},
 	}
 
 	limit := bson.M{"$limit": 1}
-
-	//pipeline = append(pipeline, matching, modifierGroupLookup, addonsLookup, limit)
 
 	products := make([]menu_group2.MobileGetItem, 0)
 
@@ -308,7 +315,7 @@ func eliminateUnusedModifiers(order *menu_group.FilterMenuGroupItemsForOrder, pr
 				for productModifierGroupIndex, group := range product.ModifierGroups {
 					//remove modifierIds in group
 					groupProductIds, _ := utils.EqualizeSlices(utils.ConvertObjectIdsToStringIds(group.ProductIds), dtoProductModifierIds)
-					product.ModifierGroups[productModifierGroupIndex].ProductIds = utils.ConvertStringIdsToObjectIds(groupProductIds)
+					//product.ModifierGroups[productModifierGroupIndex].ProductIds = utils.ConvertStringIdsToObjectIds(groupProductIds)
 					//check if modifier group is empty
 					if len(groupProductIds) <= 0 {
 						product.ModifierGroups = append(product.ModifierGroups[:productModifierGroupIndex], product.ModifierGroups[productModifierGroupIndex+1:]...)

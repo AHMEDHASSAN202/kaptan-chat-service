@@ -17,8 +17,8 @@ func AddAvailabilityQuery(countryId, field string) bson.M {
 	return bson.M{
 		"$expr": bson.M{
 			"$or": bson.A{
-				bson.M{"$ne": bson.A{field, nil}},
-				bson.M{"$ne": bson.A{field, make([]interface{}, 0)}},
+				bson.M{"$eq": bson.A{field, nil}},
+				bson.M{"$eq": bson.A{field, make([]interface{}, 0)}},
 				bson.D{{"$gt", bson.A{
 					bson.D{
 						{"$size", bson.D{
@@ -133,7 +133,7 @@ func createIndexes(collection *mongo.Collection) {
 	)
 
 	mongodb.CreateIndex(collection, false,
-		bson.E{"menu_group.branch_ids", mongodb.IndexType.Asc},
+		bson.E{"menu_group.location_ids", mongodb.IndexType.Asc},
 		bson.E{"menu_group.status", mongodb.IndexType.Asc},
 		bson.E{"category.status", mongodb.IndexType.Asc},
 		bson.E{"category.sort", mongodb.IndexType.Asc},
@@ -147,8 +147,8 @@ func createIndexes(collection *mongo.Collection) {
 }
 
 func getProductAndModifierId(order *menu_group.FilterMenuGroupItemsForOrder) ([]primitive.ObjectID, []primitive.ObjectID) {
-	var modifierIds []primitive.ObjectID
-	var productIds []primitive.ObjectID
+	modifierIds := []primitive.ObjectID{}
+	productIds := []primitive.ObjectID{}
 
 	for _, item := range order.MenuItems {
 		productIds = append(productIds, utils.ConvertStringIdToObjectId(item.Id))

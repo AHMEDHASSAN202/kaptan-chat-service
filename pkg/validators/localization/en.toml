@@ -76,7 +76,7 @@ other = "These features are not supported: {{.Feature}}"
 
 [Item_name_is_unique_rules_validation]
 description = "Feature not supported"
-other = "Item_name_is_unique_rules_validation"
+other = "item name is added before"
 
 [SKU_name_is_unique_rules_validation]
 description = "Feature not supported"
@@ -109,6 +109,10 @@ other = "Modifier items cant contains modifier group"
 [E1002Item]
 description = "Menu item not found"
 other = "The menu item was not found or is currently unavailable. Please check back later."
+
+[Mobile_item_unavailable]
+description = "Mobile_item_unavailable"
+other = "This item is unavailable"
 
 [Email_is_unique_rules_validation]
 description = "Email is Unique"
@@ -156,7 +160,11 @@ other = "PhoneNumber is Wrong"
 
 [Mobile_location_not_available_error]
 description = "mobile_location_not_available_error"
-other = "The location is not ready to receive orders now, try later please"
+other = "The branch is not ready to receive orders now, try later please"
+
+[Mobile_location_not_open_error]
+description = "Mobile_location_not_open_error"
+other = "The branch is closed now, try later please"
 
 [RoleExistsValidation]
 description = "Role is not exists"
@@ -169,6 +177,10 @@ other = "The role you are trying to delete is currently assigned to one or more 
 [PreventDeleteRolesIdsValidation]
 description = "You are not allowed to delete main roles"
 other = "You are not allowed to delete main roles."
+
+[AccountRequiredValidation]
+description = "AccountRequiredValidation"
+other = "Account is required"
 
 [PAYMENT_PROCESS_RUNNING]
 description = "Payment is running"

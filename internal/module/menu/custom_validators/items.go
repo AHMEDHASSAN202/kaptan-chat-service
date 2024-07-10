@@ -30,6 +30,11 @@ func (i *ItemCustomValidator) ValidateNameIsUnique() func(fl validator.FieldLeve
 			accountId = itemDto.AccountId
 			itemId = itemDto.Id
 
+		case "*item.CreateBulkItemDto":
+			itemDto := IitemDto.(*item.CreateBulkItemDto)
+			accountId = itemDto.AccountId
+			itemId = itemDto.Id
+
 		case "*item.UpdateItemDto":
 			itemDto := IitemDto.(*item.UpdateItemDto)
 			accountId = itemDto.AccountId

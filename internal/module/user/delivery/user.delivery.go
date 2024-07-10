@@ -32,18 +32,20 @@ func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validato
 		logger:              logger,
 	}
 	dashboard := e.Group("api/v1/admin/user")
-	dashboard.GET("", handler.ListUser, adminMiddlewares.AuthMiddleware, commonMiddlewares.PermissionMiddleware("list-users"))
-	dashboard.PUT("/:id/toggle-active", handler.ToggleUserActivation, adminMiddlewares.AuthMiddleware, commonMiddlewares.PermissionMiddleware("update-status-users"))
+	dashboard.Use(adminMiddlewares.AuthMiddleware)
+	dashboard.GET("", handler.ListUser, commonMiddlewares.PermissionMiddleware("list-users"))
+	dashboard.PUT("/:id/toggle-active", handler.ToggleUserActivation, commonMiddlewares.PermissionMiddleware("update-status-users"), userMiddleware.RemoveUserFromRedis)
 
 	mobile := e.Group("api/v1/mobile/user")
 	mobile.Use(echomiddleware.AppendCountryMiddleware)
 	//mobile.POST("", handler.StoreUser)
 	mobile.POST("/send-otp", handler.SendUserOtp)
 	mobile.POST("/verify-otp", handler.VerifyUserOtp)
-	mobile.POST("/sign-up", handler.SignUp, userMiddleware.TempAuthMiddleware)
-	mobile.PUT("", handler.UpdateUserProfile, userMiddleware.AuthMiddleware, userMiddleware.RemoveUserFromRedis)
-	mobile.GET("", handler.GetUserProfile, userMiddleware.AuthMiddleware)
-	mobile.DELETE("", handler.DeleteUser, userMiddleware.AuthMiddleware, userMiddleware.RemoveUserFromRedis)
+	mobile.POST("/sign-up", handler.SignUp, userMiddleware.AuthenticationMiddleware(true))
+	authGroup := mobile.Group("", userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
+	authGroup.PUT("", handler.UpdateUserProfile, userMiddleware.RemoveUserFromRedis)
+	authGroup.GET("", handler.GetUserProfile)
+	authGroup.DELETE("", handler.DeleteUser, userMiddleware.RemoveUserFromRedis)
 
 }
 func (a *UserHandler) StoreUser(c echo.Context) error {

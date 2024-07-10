@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"os"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
 	"samm/internal/module/user/responses"
@@ -63,9 +64,14 @@ func (l UserUseCase) SendOtp(ctx *context.Context, payload *user.SendUserOtpDto)
 
 	// send otp sms provider in-progress
 
-	errRe := l.repo.UpdateUser(ctx, newUserDomain)
-	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe), ""
+	dbErr = l.repo.UpdateUser(ctx, newUserDomain)
+	if dbErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
+	}
+
+	if os.Getenv("APP_ENV") == "prod" {
+		otp = ""
 	}
 
 	return validators.ErrorResponse{}, otp
@@ -77,7 +83,7 @@ func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtp
 		err = validators.GetErrorResponseFromErr(dbErr)
 		return
 	}
-	if userDomain.Otp != payload.Otp {
+	if userDomain.Otp != payload.Otp || userDomain.Otp == "" {
 		err = validators.GetErrorResponse(ctx, localization.E1013, nil, nil)
 		return
 	}
@@ -119,7 +125,9 @@ func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtp
 		}
 		userDomain.Tokens = append(userDomain.Tokens, userToken)
 	}
-
+	currentTime := time.Now()
+	userDomain.VerifiedAt = &currentTime
+	userDomain.Otp = ""
 	dbErr = l.repo.UpdateUser(ctx, &userDomain)
 	if dbErr != nil {
 		err = validators.GetErrorResponseFromErr(dbErr)
