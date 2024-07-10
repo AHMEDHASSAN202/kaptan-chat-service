@@ -17,7 +17,6 @@ type CardUseCase struct {
 }
 
 func (c CardUseCase) StoreCard(ctx context.Context, payload *card.CreateCardDto) (err validators.ErrorResponse) {
-	// Call MyFatoorah for getting card Token
 
 	// Store Card Details
 	var cardDomain domain.Card

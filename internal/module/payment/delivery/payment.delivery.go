@@ -33,7 +33,7 @@ func InitPaymentController(e *echo.Echo, us domain.PaymentUseCase, validator *va
 		userMiddleware: userMiddleware,
 	}
 	mobile := e.Group("api/v1/mobile")
-	mobile.POST("/:transactionType/pay", handler.pay, userMiddleware.AuthMiddleware)
+	mobile.POST("/:transactionType/pay", handler.pay, userMiddleware.AuthenticationMiddleware(false))
 	myfatoorah := e.Group("api/v1/myfatoorah")
 	myfatoorah.POST("/webhook", handler.MyfatoorahWebhook)
 }
@@ -46,8 +46,11 @@ func (a *PaymentHandler) pay(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
 
 	userId := payload.CauserId
+
 	duration := time.Now().UTC().Add(10 * time.Second).Sub(time.Now().UTC())
 	lock, er := a.redis.Lock("USER_PAYMENT_"+userId, userId, duration)
 

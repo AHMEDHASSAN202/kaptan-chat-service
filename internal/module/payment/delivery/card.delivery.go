@@ -1,6 +1,7 @@
 package delivery
 
 import (
+	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"samm/internal/module/payment/domain"
@@ -27,9 +28,9 @@ func InitCardController(e *echo.Echo, us domain.CardUseCase, validator *validato
 		userMiddleware: userMiddleware,
 	}
 	mobile := e.Group("api/v1/mobile/payment/card")
-	mobile.GET("", handler.ListCard, userMiddleware.AuthMiddleware)
-	mobile.DELETE("/:id", handler.DeleteCard, userMiddleware.AuthMiddleware)
-	mobile.GET("/:id", handler.FindCard, userMiddleware.AuthMiddleware)
+	mobile.GET("", handler.ListCard, userMiddleware.AuthenticationMiddleware(false))
+	mobile.DELETE("/:id", handler.DeleteCard, userMiddleware.AuthenticationMiddleware(false))
+	mobile.GET("/:id", handler.FindCard, userMiddleware.AuthenticationMiddleware(false))
 }
 
 func (a *CardHandler) FindCard(c echo.Context) error {
@@ -39,6 +40,8 @@ func (a *CardHandler) FindCard(c echo.Context) error {
 
 	var payload dto.MobileHeaders
 	c.Bind(&payload)
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
 
 	userId := payload.CauserId
 	data, errResp := a.cardUseCase.FindCard(ctx, id, userId)
@@ -55,6 +58,8 @@ func (a *CardHandler) DeleteCard(c echo.Context) error {
 	id := c.Param("id")
 	var payload dto.MobileHeaders
 	c.Bind(&payload)
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
 
 	userId := payload.CauserId
 	errResp := a.cardUseCase.DeleteCard(ctx, id, userId)
@@ -70,9 +75,13 @@ func (a *CardHandler) ListCard(c echo.Context) error {
 
 	_ = c.Bind(&payload)
 
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+
 	payload.Pagination.SetDefault()
 
 	payload.UserId = payload.CauserId
+	fmt.Println("USER => ", payload.UserId)
 	result, paginationResult, errResp := a.cardUseCase.ListCard(ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
