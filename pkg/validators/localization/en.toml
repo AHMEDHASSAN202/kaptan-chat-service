@@ -181,3 +181,7 @@ other = "You are not allowed to delete main roles."
 [AccountRequiredValidation]
 description = "AccountRequiredValidation"
 other = "Account is required"
+
+[PAYMENT_PROCESS_RUNNING]
+description = "Payment is running"
+other = "Please Wait Payment is running"

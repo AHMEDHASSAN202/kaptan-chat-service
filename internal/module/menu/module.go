@@ -4,6 +4,7 @@ import (
 	"samm/internal/module/menu/custom_validators"
 	"samm/internal/module/menu/delivery"
 	"samm/internal/module/menu/external"
+	"samm/internal/module/menu/policies"
 	"samm/internal/module/menu/repository/mongodb/item"
 	menu_group2 "samm/internal/module/menu/repository/mongodb/menu_group"
 	"samm/internal/module/menu/repository/mongodb/menu_group_item"
@@ -34,6 +35,7 @@ var Module = fx.Options(
 		custom_validators.InitNewCustomValidatorsSKU,
 	),
 	fx.Invoke(
+		policies.NewIPolicy,
 		delivery.InitMenuGroupController,
 		delivery.InitItemController,
 		delivery.InitModifierGroupController,

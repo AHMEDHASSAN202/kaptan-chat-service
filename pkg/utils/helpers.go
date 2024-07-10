@@ -423,6 +423,25 @@ func Distance(lt1, lng1, lt2, lng2 float64) float64 {
 func degreesToRadians(degrees float64) float64 {
 	return degrees * (math.Pi / 180)
 }
+func MaskCard(creditCardNumber string) string {
+	if len(creditCardNumber) < 15 {
+		return "Invalid credit card number"
+	}
+
+	lastFourDigits := creditCardNumber[len(creditCardNumber)-4:]
+
+	prefix := creditCardNumber[:len(creditCardNumber)-4]
+	padding := strings.Repeat("*", len(prefix))
+
+	maskedCreditCard := padding + lastFourDigits
+
+	return maskedCreditCard
+}
+func ConvertStructToMap(in interface{}) (response *map[string]interface{}) {
+	inrec, _ := json.Marshal(in)
+	json.Unmarshal(inrec, &response)
+	return
+}
 
 func IsBearerToken(tokenValue string) (isBearerToken bool, tokenParts []string) {
 	tokenParts = strings.Split(tokenValue, " ")
@@ -522,4 +541,31 @@ func MarshalUnMarshal(from interface{}, to interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func GetStructName(i interface{}) string {
+	t := reflect.TypeOf(i)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
+	return t.Name()
+}
+
+func CallMethod(obj interface{}, methodName string, args ...interface{}) []reflect.Value {
+	v := reflect.ValueOf(obj)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+
+	method := v.MethodByName(methodName)
+	if !method.IsValid() {
+		fmt.Println(fmt.Errorf("method not found: %s", methodName))
+		return nil
+	}
+	in := make([]reflect.Value, len(args))
+	for i, arg := range args {
+		in[i] = reflect.ValueOf(arg)
+	}
+
+	return method.Call(in)
 }

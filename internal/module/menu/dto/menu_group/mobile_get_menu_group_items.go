@@ -8,8 +8,8 @@ import (
 )
 
 type GetMenuGroupItemsDTO struct {
-	Query    string `json:"query" form:"query" query:"query"`
-	BranchId string `param:"branch_id" validate:"required,mongodb"`
+	Query      string `json:"query" form:"query" query:"query"`
+	LocationId string `param:"location_id" validate:"required,mongodb"`
 	dto.MobileHeaders
 }
 

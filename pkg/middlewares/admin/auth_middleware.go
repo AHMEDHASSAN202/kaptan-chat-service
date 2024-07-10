@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -82,6 +83,11 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 		c.Request().Header.Add("causer-type", admin.Type)
 		c.Request().Header.Add("causer-name", admin.Name)
 		c.Request().Header.Add("causer-permissions", string(jsonPermissionsByte))
+
+		ctx = context.WithValue(ctx, "causer-id", utils.ConvertObjectIdToStringId(admin.ID))
+		ctx = context.WithValue(ctx, "causer-type", admin.Type)
+		c.SetRequest(c.Request().WithContext(ctx))
+
 		return next(c)
 	}
 }

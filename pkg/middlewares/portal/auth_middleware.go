@@ -1,6 +1,7 @@
 package portal
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -88,11 +89,15 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 		c.Request().Header.Add("causer-name", admin.Name)
 		c.Request().Header.Add("causer-permissions", string(jsonPermissionsByte))
 
+		accountId := ""
 		if admin.Account != nil {
-			c.Request().Header.Add("causer-account-id", utils.ConvertObjectIdToStringId(admin.Account.Id))
+			accountId = utils.ConvertObjectIdToStringId(admin.Account.Id)
 		} else if utils.SafeMapGet(data.CauserDetails, "id", "") != "" {
-			c.Request().Header.Add("causer-account-id", utils.SafeMapGet(data.CauserDetails, "id", "").(string))
+			accountId = utils.SafeMapGet(data.CauserDetails, "id", "").(string)
 		}
+
+		c.Request().Header.Add("causer-account-id", accountId)
+		c.Request().Header.Set("account-id", accountId)
 
 		if data.CauserDetails != nil {
 			jsonDetailsByte, err := json.Marshal(data.CauserDetails)
@@ -102,6 +107,11 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 			}
 			c.Request().Header.Add("causer-details", string(jsonDetailsByte))
 		}
+
+		ctx = context.WithValue(ctx, "causer-id", utils.ConvertObjectIdToStringId(admin.ID))
+		ctx = context.WithValue(ctx, "causer-type", admin.Type)
+		ctx = context.WithValue(ctx, "causer-account-id", accountId)
+		c.SetRequest(c.Request().WithContext(ctx))
 
 		return next(c)
 	}

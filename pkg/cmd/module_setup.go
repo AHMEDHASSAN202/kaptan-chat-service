@@ -52,36 +52,36 @@ func createDeliveryFile(newModulePath, newModuleName, rootModuleName string) err
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"samm/internal/module/retails/domain"
-	"samm/internal/module/retails/dto/account"
+	"samm/internal/module/kitchen/domain"
+	"samm/internal/module/kitchen/dto/kitchen"
 	"samm/pkg/logger"
 	"samm/pkg/validators"
 )
 
-type AccountHandler struct {
-	accountUsecase domain.AccountUseCase
+type KitchenHandler struct {
+	kitchenUsecase domain.KitchenUseCase
 	validator      *validator.Validate
 	logger         logger.ILogger
 }
 
-// InitAccountController will initialize the article's HTTP controller
-func InitAccountController(e *echo.Echo, us domain.AccountUseCase, validator *validator.Validate, logger logger.ILogger) {
-	handler := &AccountHandler{
-		accountUsecase: us,
+// InitKitchenController will initialize the article's HTTP controller
+func InitKitchenController(e *echo.Echo, us domain.KitchenUseCase, validator *validator.Validate, logger logger.ILogger) {
+	handler := &KitchenHandler{
+		kitchenUsecase: us,
 		validator:      validator,
 		logger:         logger,
 	}
-	dashboard := e.Group("api/v1/admin/account")
-	dashboard.POST("", handler.StoreAccount)
-	dashboard.GET("", handler.ListAccount)
-	dashboard.PUT("/:id", handler.UpdateAccount)
-	dashboard.GET("/:id", handler.FindAccount)
-	dashboard.DELETE("/:id", handler.DeleteAccount)
+	dashboard := e.Group("api/v1/admin/kitchen")
+	dashboard.POST("", handler.CreateKitchen)
+	dashboard.GET("", handler.ListKitchen)
+	dashboard.PUT("/:id", handler.UpdateKitchen)
+	dashboard.GET("/:id", handler.FindKitchen)
+	dashboard.DELETE("/:id", handler.DeleteKitchen)
 }
-func (a *AccountHandler) StoreAccount(c echo.Context) error {
+func (a *KitchenHandler) CreateKitchen(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	var payload account.StoreAccountDto
+	var payload kitchen.StoreKitchenDto
 	err := c.Bind(&payload)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
@@ -93,17 +93,17 @@ func (a *AccountHandler) StoreAccount(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	errResp := a.accountUsecase.StoreAccount(ctx, &payload)
+	errResp := a.kitchenUsecase.CreateKitchen(ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{})
 }
-func (a *AccountHandler) UpdateAccount(c echo.Context) error {
+func (a *KitchenHandler) UpdateKitchen(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	var payload account.UpdateAccountDto
+	var payload kitchen.UpdateKitchenDto
 	err := c.Bind(&payload)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
@@ -115,57 +115,58 @@ func (a *AccountHandler) UpdateAccount(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 	id := c.Param("id")
-	errResp := a.accountUsecase.UpdateAccount(ctx, id, &payload)
+	errResp := a.kitchenUsecase.UpdateKitchen(ctx, id, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{})
 }
-func (a *AccountHandler) FindAccount(c echo.Context) error {
+func (a *KitchenHandler) FindKitchen(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
-	data, errResp := a.accountUsecase.FindAccount(ctx, id)
+	data, errResp := a.kitchenUsecase.FindKitchen(ctx, id)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
-	return validators.SuccessResponse(c, map[string]interface{}{"account": data})
+	return validators.SuccessResponse(c, map[string]interface{}{"kitchen": data})
 }
 
-func (a *AccountHandler) DeleteAccount(c echo.Context) error {
+func (a *KitchenHandler) DeleteKitchen(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
-	errResp := a.accountUsecase.DeleteAccount(ctx, id)
+	errResp := a.kitchenUsecase.DeleteKitchen(ctx, id)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{})
 }
-func (a *AccountHandler) ListAccount(c echo.Context) error {
+func (a *KitchenHandler) ListKitchen(c echo.Context) error {
 	ctx := c.Request().Context()
-	var payload account.ListAccountDto
+	var payload kitchen.ListKitchenDto
 
 	_ = c.Bind(&payload)
 
 	payload.Pagination.SetDefault()
 
-	result, paginationResult, errResp := a.accountUsecase.ListAccount(ctx, &payload)
+	result, errResp := a.kitchenUsecase.List(&ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
-	return validators.SuccessResponse(c, map[string]interface{}{"data": result, "meta": paginationResult})
-}	
+	return validators.SuccessResponse(c, result)
+}
+
 	`
 
 	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
 	content = strings.Replace(content, "internal/module/retails", newModulePath, -1)
-	content = strings.Replace(content, "Account", moduleCamelCase, -1)
-	content = strings.Replace(content, "account", moduleLowerCamelCase, -1)
+	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
+	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
 
 	if err := os.WriteFile(mainFilePath, []byte(content), 0644); err != nil {
 		return err
@@ -185,15 +186,16 @@ func createDomainFile(newModulePath, newModuleName, rootModuleName string) error
 
 import (
 	"context"
+	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"samm/internal/module/retails/dto/account"
-	"samm/pkg/utils"
+	"samm/internal/module/kitchen/dto/kitchen"
+	"samm/internal/module/kitchen/responses"
 	"samm/pkg/validators"
 	"time"
 )
 
-type Account struct {
+type Kitchen struct {
 	mgm.DefaultModel ` + "`bson:\",inline\"`" + `
 	Name             Name       ` + "`json:\"name\" bson:\"name\"`" + `
 	Email            string     ` + "`json:\"email\" bson:\"email\"`" + `
@@ -206,28 +208,27 @@ type Name struct {
 	En string ` + "`json:\"en\" bson:\"en\"`" + `
 }
 
-
-type AccountUseCase interface {
-	StoreAccount(ctx context.Context, payload *account.StoreAccountDto) (err validators.ErrorResponse)
-	UpdateAccount(ctx context.Context, id string, payload *account.UpdateAccountDto) (err validators.ErrorResponse)
-	FindAccount(ctx context.Context, Id string) (account Account, err validators.ErrorResponse)
-	DeleteAccount(ctx context.Context, Id string) (err validators.ErrorResponse)
-	ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []Account, paginationResult utils.PaginationResult, err validators.ErrorResponse)
+type KitchenUseCase interface {
+	CreateKitchen(ctx context.Context, payload *kitchen.StoreKitchenDto) (err validators.ErrorResponse)
+	UpdateKitchen(ctx context.Context, id string, payload *kitchen.UpdateKitchenDto) (err validators.ErrorResponse)
+	FindKitchen(ctx context.Context, Id string) (kitchen Kitchen, err validators.ErrorResponse)
+	DeleteKitchen(ctx context.Context, Id string) (err validators.ErrorResponse)
+	List(ctx *context.Context, dto *kitchen.ListKitchenDto) (*responses.ListResponse, validators.ErrorResponse)
 }
 
-type AccountRepository interface {
-	StoreAccount(ctx context.Context, account *Account) (err error)
-	UpdateAccount(ctx context.Context, account *Account) (err error)
-	FindAccount(ctx context.Context, Id primitive.ObjectID) (account *Account, err error)
-	DeleteAccount(ctx context.Context, Id primitive.ObjectID) (err error)
-	ListAccount(ctx context.Context, payload *account.ListAccountDto) (locations []Account, paginationResult utils.PaginationResult, err error)
+type KitchenRepository interface {
+	CreateKitchen(kitchen *Kitchen) (err error)
+	UpdateKitchen(kitchen *Kitchen) (err error)
+	FindKitchen(ctx context.Context, Id primitive.ObjectID) (kitchen *Kitchen, err error)
+	DeleteKitchen(ctx context.Context, Id primitive.ObjectID) (err error)
+	List(ctx *context.Context, dto *kitchen.ListKitchenDto) (usersRes *[]Kitchen, paginationMeta *PaginationData, err error)
 }
 
 `
 	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
 	content = strings.Replace(content, "internal/module/retails", newModulePath, -1)
-	content = strings.Replace(content, "Account", moduleCamelCase, -1)
-	content = strings.Replace(content, "account", moduleLowerCamelCase, -1)
+	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
+	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
 
 	if err := os.WriteFile(mainFilePath, []byte(content), 0644); err != nil {
 		return err
@@ -243,106 +244,153 @@ func createUseCaseFile(newModulePath, newModuleName, rootModuleName string) erro
 
 	fileName := moduleLowerCamelCase + ".usecase.go"
 	mainFilePath := filepath.Join(newModulePath+"/usecase/"+newModuleName, fileName)
-	content := `package account
+	content := `package kitchen
 
 import (
 	"context"
-	"samm/internal/module/retails/domain"
-	"samm/internal/module/retails/dto/account"
+	"samm/internal/module/kitchen/domain"
+	"samm/internal/module/kitchen/dto/kitchen"
+	"samm/internal/module/kitchen/responses"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"time"
 )
 
-type AccountUseCase struct {
-	repo            domain.AccountRepository
-	logger          logger.ILogger
+type KitchenUseCase struct {
+	repo   domain.KitchenRepository
+	logger logger.ILogger
 }
 
-const tag = " AccountUseCase "
+const tag = " KitchenUseCase "
 
-func NewAccountUseCase(repo domain.AccountRepository, logger logger.ILogger) domain.AccountUseCase {
-	return &AccountUseCase{
-		repo:            repo,
-		logger:          logger,
+func NewKitchenUseCase(repo domain.KitchenRepository, logger logger.ILogger) domain.KitchenUseCase {
+	return &KitchenUseCase{
+		repo:   repo,
+		logger: logger,
 	}
 }
 
-func (l AccountUseCase) StoreAccount(ctx context.Context, payload *account.StoreAccountDto) (err validators.ErrorResponse) {
-	accountDomain := domain.Account{}
-	accountDomain.Name.Ar = payload.Name.Ar
-	accountDomain.Name.En = payload.Name.En
-	accountDomain.Email = payload.Email
+func (l KitchenUseCase) CreateKitchen(ctx context.Context, payload *kitchen.StoreKitchenDto) (err validators.ErrorResponse) {
+	kitchenDomain := domain.Kitchen{}
+	kitchenDomain.Name.Ar = payload.Name.Ar
+	kitchenDomain.Name.En = payload.Name.En
+	kitchenDomain.Email = payload.Email
 	password, er := utils.HashPassword(payload.Password)
 	if er != nil {
 		return validators.GetErrorResponseFromErr(er)
 	}
-	accountDomain.Password = password
-	accountDomain.CreatedAt = time.Now()
-	accountDomain.UpdatedAt = time.Now()
+	kitchenDomain.Password = password
+	kitchenDomain.CreatedAt = time.Now()
+	kitchenDomain.UpdatedAt = time.Now()
 
-	errRe := l.repo.StoreAccount(ctx, &accountDomain)
-	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe)
+	dbErr := l.repo.CreateKitchen(&kitchenDomain)
+	if dbErr != nil {
+		return validators.GetErrorResponseFromErr(dbErr)
 	}
 	return
 }
 
-func (l AccountUseCase) UpdateAccount(ctx context.Context, id string, payload *account.UpdateAccountDto) (err validators.ErrorResponse) {
-	accountDomain, errRe := l.repo.FindAccount(ctx, utils.ConvertStringIdToObjectId(id))
-	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe)
+func (l KitchenUseCase) UpdateKitchen(ctx context.Context, id string, payload *kitchen.UpdateKitchenDto) (err validators.ErrorResponse) {
+	kitchenDomain, dbErr := l.repo.FindKitchen(ctx, utils.ConvertStringIdToObjectId(id))
+	if dbErr != nil {
+		return validators.GetErrorResponseFromErr(dbErr)
 	}
-	accountDomain.Name.Ar = payload.Name.Ar
-	accountDomain.Name.En = payload.Name.En
-	accountDomain.Email = payload.Email
+	kitchenDomain.Name.Ar = payload.Name.Ar
+	kitchenDomain.Name.En = payload.Name.En
+	kitchenDomain.Email = payload.Email
 
 	if payload.Password != "" {
 		password, er := utils.HashPassword(payload.Password)
 		if er != nil {
 			return validators.GetErrorResponseFromErr(er)
 		}
-		accountDomain.Password = password
+		kitchenDomain.Password = password
 	}
-	accountDomain.UpdatedAt = time.Now()
+	kitchenDomain.UpdatedAt = time.Now()
 
-	errRe = l.repo.UpdateAccount(ctx, accountDomain)
-	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe)
+	dbErr = l.repo.UpdateKitchen(kitchenDomain)
+	if dbErr != nil {
+		return validators.GetErrorResponseFromErr(dbErr)
 	}
 	return
 }
-func (l AccountUseCase) FindAccount(ctx context.Context, Id string) (account domain.Account, err validators.ErrorResponse) {
-	domainAccount, errRe := l.repo.FindAccount(ctx, utils.ConvertStringIdToObjectId(Id))
-	if errRe != nil {
-		return *domainAccount, validators.GetErrorResponseFromErr(errRe)
+func (l KitchenUseCase) FindKitchen(ctx context.Context, Id string) (kitchen domain.Kitchen, err validators.ErrorResponse) {
+	domainKitchen, dbErr := l.repo.FindKitchen(ctx, utils.ConvertStringIdToObjectId(Id))
+	if dbErr != nil {
+		return *domainKitchen, validators.GetErrorResponseFromErr(dbErr)
 	}
-	return *domainAccount, validators.ErrorResponse{}
+	return *domainKitchen, validators.ErrorResponse{}
 }
 
-func (l AccountUseCase) DeleteAccount(ctx context.Context, Id string) (err validators.ErrorResponse) {
+func (l KitchenUseCase) DeleteKitchen(ctx context.Context, Id string) (err validators.ErrorResponse) {
 
-	delErr := l.repo.DeleteAccount(ctx, utils.ConvertStringIdToObjectId(Id))
+	delErr := l.repo.DeleteKitchen(ctx, utils.ConvertStringIdToObjectId(Id))
 	if delErr != nil {
 		return validators.GetErrorResponseFromErr(delErr)
 	}
 	return validators.ErrorResponse{}
 }
 
-func (l AccountUseCase) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult utils.PaginationResult, err validators.ErrorResponse) {
-	results, paginationResult, errRe := l.repo.ListAccount(ctx, payload)
-	if errRe != nil {
-		return results, paginationResult, validators.GetErrorResponseFromErr(errRe)
+func (l KitchenUseCase) List(ctx *context.Context, dto *kitchen.ListKitchenDto) (*responses.ListResponse, validators.ErrorResponse) {
+	users, paginationMeta, resErr := l.repo.List(ctx, dto)
+	if resErr != nil {
+		return nil, validators.GetErrorResponseFromErr(resErr)
 	}
-	return results, paginationResult, validators.ErrorResponse{}
-
+	return responses.SetListResponse(users, paginationMeta), validators.ErrorResponse{}
 }
+
 `
 	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
 	content = strings.Replace(content, "internal/module/retails", newModulePath, -1)
-	content = strings.Replace(content, "Account", moduleCamelCase, -1)
-	content = strings.Replace(content, "account", moduleLowerCamelCase, -1)
+	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
+	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
+
+	if err := os.WriteFile(mainFilePath, []byte(content), 0644); err != nil {
+		return err
+	}
+	fmt.Println("Created file:", mainFilePath)
+	return nil
+}
+
+func createResponseFile(newModulePath, newModuleName, rootModuleName string) error {
+
+	moduleCamelCase := toCamelCase(newModuleName)
+	moduleLowerCamelCase := toLowerCamelCase(newModuleName)
+
+	fileName := "list_dashboard.go"
+	mainFilePath := filepath.Join(newModulePath+"/responses/", fileName)
+	content := `package responses
+
+import (
+	mongopagination "github.com/gobeam/mongo-go-pagination"
+	"samm/pkg/utils"
+)
+
+type ListResponse struct {
+	Docs interface{}                ` + "`json:\"docs\" bson:\"docs\"`" + ` 
+	Meta *mongopagination.PaginationData ` + "`json:\"meta\" bson:\"meta\"`" + `
+}
+
+func SetListResponse(docs interface{}, meta *mongopagination.PaginationData) *ListResponse {
+	listResponse := ListResponse{
+		Docs: docs,
+		Meta: meta,
+	}
+	if listResponse.Meta == nil {
+		listResponse.Meta = &mongopagination.PaginationData{}
+	}
+	if utils.IsNil(docs) {
+		listResponse.Docs = make([]interface{}, 0)
+	}
+	return &listResponse
+}
+
+`
+	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
+	content = strings.Replace(content, "internal/module/retails", newModulePath, -1)
+	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
+	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
 
 	if err := os.WriteFile(mainFilePath, []byte(content), 0644); err != nil {
 		return err
@@ -362,34 +410,36 @@ func createRepoFile(newModulePath, newModuleName, rootModuleName string) error {
 
 import (
 	"context"
+	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"math"
-	"samm/internal/module/retails/domain"
-	"samm/internal/module/retails/dto/account"
-	"samm/pkg/utils"
+	"samm/internal/module/kitchen/domain"
+	"samm/internal/module/kitchen/dto/kitchen"
+	"samm/pkg/logger"
 	"time"
 )
 
-type AccountRepository struct {
-	accountCollection *mgm.Collection
+type KitchenRepository struct {
+	kitchenCollection *mgm.Collection
+	logger            logger.ILogger
 }
 
-const mongoAccountRepositoryTag = "AccountMongoRepository"
+const mongoKitchenRepositoryTag = "KitchenMongoRepository"
 
-func NewAccountMongoRepository(dbs *mongo.Database) domain.AccountRepository {
-	accountDbCollection := mgm.Coll(&domain.Account{})
+func NewKitchenMongoRepository(dbs *mongo.Database, log logger.ILogger) domain.KitchenRepository {
+	kitchenDbCollection := mgm.Coll(&domain.Kitchen{})
 
-	return &AccountRepository{
-		accountCollection: accountDbCollection,
+	return &KitchenRepository{
+		kitchenCollection: kitchenDbCollection,
+		logger:            log,
 	}
 }
 
-func (l AccountRepository) StoreAccount(ctx context.Context, account *domain.Account) (err error) {
-	_, err = mgm.Coll(&domain.Account{}).InsertOne(ctx, account)
+func (l KitchenRepository) CreateKitchen(kitchen *domain.Kitchen) (err error) {
+	err = l.kitchenCollection.Create(kitchen)
 	if err != nil {
 		return err
 	}
@@ -397,68 +447,69 @@ func (l AccountRepository) StoreAccount(ctx context.Context, account *domain.Acc
 
 }
 
-func (l AccountRepository) UpdateAccount(ctx context.Context, account *domain.Account) (err error) {
-	update := bson.M{"$set": account}
-	_, err = mgm.Coll(&domain.Account{}).UpdateByID(ctx, account.ID, update)
+func (l KitchenRepository) UpdateKitchen(kitchen *domain.Kitchen) (err error) {
+	upsert := true
+	opts := options.UpdateOptions{Upsert: &upsert}
+	err = l.kitchenCollection.Update(kitchen, &opts)
 	return
 }
-func (l AccountRepository) FindAccount(ctx context.Context, Id primitive.ObjectID) (account *domain.Account, err error) {
-	domainData := domain.Account{}
+func (l KitchenRepository) FindKitchen(ctx context.Context, Id primitive.ObjectID) (kitchen *domain.Kitchen, err error) {
+	domainData := domain.Kitchen{}
 	filter := bson.M{"deleted_at": nil, "_id": Id}
-	err = l.accountCollection.FirstWithCtx(ctx, filter, &domainData)
+	err = l.kitchenCollection.FirstWithCtx(ctx, filter, &domainData)
 
 	return &domainData, err
 }
 
-func (l AccountRepository) DeleteAccount(ctx context.Context, Id primitive.ObjectID) (err error) {
-	accountData, err := l.FindAccount(ctx, Id)
+func (l KitchenRepository) DeleteKitchen(ctx context.Context, Id primitive.ObjectID) (err error) {
+	kitchenData, err := l.FindKitchen(ctx, Id)
 	if err != nil {
 		return err
 	}
 	now := time.Now().UTC()
-	accountData.DeletedAt = &now
-	accountData.UpdatedAt = now
-	return l.UpdateAccount(ctx, accountData)
+	kitchenData.DeletedAt = &now
+	kitchenData.UpdatedAt = now
+	return l.UpdateKitchen(kitchenData)
 }
 
-func (l AccountRepository) ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []domain.Account, paginationResult utils.PaginationResult, err error) {
+func (l *KitchenRepository) List(ctx *context.Context, dto *kitchen.ListKitchenDto) (usersRes *[]domain.Kitchen, paginationMeta *PaginationData, err error) {
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.D{{"deleted_at", nil}},
+	}}}
 
-	offset := (payload.Page - 1) * payload.Limit
-	findOptions := options.Find().SetLimit(payload.Limit).SetSkip(offset)
-
-	filter := bson.M{}
-	match := []bson.M{}
-	match = append(match, bson.M{"deleted_at": nil})
-	if payload.Query != "" {
-		filter = bson.M{
-			"$or": []bson.M{
-				{"name.ar": bson.M{"$regex": payload.Query, "$options": "i"}},
-				{"name.en": bson.M{"$regex": payload.Query, "$options": "i"}},
-				{"email": bson.M{"$regex": payload.Query, "$options": "i"}},
-			},
-		}
+	if dto.Query != "" {
+		pattern := ".*" + dto.Query + ".*"
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name": bson.M{"$regex": pattern, "$options": "i"}}, {"phone_number": bson.M{"$regex": pattern, "$options": "i"}}}})
 	}
-	filter["$and"] = match
 
-	// Query the collection for the total count of documents
-	collection := mgm.Coll(&domain.Account{})
-	totalItems, err := collection.CountDocuments(ctx, filter)
+	data, err := New(l.kitchenCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
 
-	// Calculate total pages
-	totalPages := int(math.Ceil(float64(totalItems) / float64(payload.Limit)))
+	if data == nil || data.Data == nil {
+		return nil, nil, err
+	}
 
-	var data []domain.Account
-	err = l.accountCollection.SimpleFind(&data, filter, findOptions)
+	users := make([]domain.Kitchen, 0)
+	for _, raw := range data.Data {
+		model := domain.Kitchen{}
+		err = bson.Unmarshal(raw, &model)
+		if err != nil {
+			l.logger.Error("kitchen Repo -> List -> ", err)
+			break
+		}
+		users = append(users, model)
+	}
+	paginationMeta = &data.Pagination
+	usersRes = &users
 
-	return data, utils.PaginationResult{Page: payload.Page, TotalPages: int64(totalPages), TotalItems: totalItems}, err
-
+	return
 }
+
 
 `
 	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
 	content = strings.Replace(content, "internal/module/retails", newModulePath, -1)
-	content = strings.Replace(content, "Account", moduleCamelCase, -1)
-	content = strings.Replace(content, "account", moduleLowerCamelCase, -1)
+	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
+	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
 
 	if err := os.WriteFile(mainFilePath, []byte(content), 0644); err != nil {
 		return err
@@ -474,7 +525,7 @@ func createDtoFile(newModulePath, newModuleName, rootModuleName string) error {
 
 	fileName := moduleLowerCamelCase + ".dto.go"
 	mainFilePath := filepath.Join(newModulePath+"/dto/"+newModuleName, fileName)
-	content := `package account
+	content := `package kitchen
 
 import (
 	"github.com/go-playground/validator/v10"
@@ -488,35 +539,35 @@ type Name struct {
 	En string ` + "`json:\"en\" validate:\"required,min=3\"`" + `
 }
 
-type StoreAccountDto struct {
+type StoreKitchenDto struct {
 	Name     Name   ` + "`json:\"name\" validate:\"required\"`" + `
 	Email    string ` + "`json:\"email\" validate:\"required,email\"`" + `
 	Password string ` + "`json:\"password\" validate:\"required\"`" + `
 }
 
-func (payload *StoreAccountDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
+func (payload *StoreKitchenDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
 	return validators.ValidateStruct(c.Request().Context(), validate, payload)
 }
 
-type ListAccountDto struct {
+type ListKitchenDto struct {
 	dto.Pagination
 	Query string ` + "`query:\"query\"`" + `
 }
 
-type UpdateAccountDto struct {
+type UpdateKitchenDto struct {
 	Name     Name   ` + "`json:\"name\" validate:\"required\"`" + `
 	Email    string ` + "`json:\"email\" validate:\"required,email\"`" + `
 	Password string ` + "`json:\"password\"`" + `
 }
 
-func (payload *UpdateAccountDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
+func (payload *UpdateKitchenDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
 	return validators.ValidateStruct(c.Request().Context(), validate, payload)
 }
 `
 	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
 	content = strings.Replace(content, "internal/module/retails", newModulePath, -1)
-	content = strings.Replace(content, "Account", moduleCamelCase, -1)
-	content = strings.Replace(content, "account", moduleLowerCamelCase, -1)
+	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
+	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
 
 	if err := os.WriteFile(mainFilePath, []byte(content), 0644); err != nil {
 		return err
@@ -646,32 +697,33 @@ func createModuleFile(newModuleName, newModulePath, rootModuleName string) error
 	moduleLowerCamelCase := toLowerCamelCase(newModuleName)
 
 	mainFilePath := filepath.Join(newModulePath, "module.go")
-	content := `package account
+	content := `package kitchen
 
 import (
 	"go.uber.org/fx"
-	"samm/internal/module/account/delivery"
-	account_repo "samm/internal/module/account/repository/account"
-	account_usecase "samm/internal/module/account/usecase/account"
+	"samm/internal/module/kitchen/delivery"
+	kitchen_repo "samm/internal/module/kitchen/repository/kitchen"
+	kitchen_usecase "samm/internal/module/kitchen/usecase/kitchen"
 )
 
 // Module for controller database repository
 var Module = fx.Options(
 	fx.Provide(
 		// App Config
-		account_repo.NewAccountMongoRepository,
-		account_usecase.NewAccountUseCase,
+		kitchen_repo.NewKitchenMongoRepository,
+		kitchen_usecase.NewKitchenUseCase,
 	),
 	fx.Invoke(
-		delivery.InitAccountController,
+		delivery.InitKitchenController,
 	),
 )
 
+
 `
 	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
-	content = strings.Replace(content, "internal/module/account", newModulePath, -1)
-	content = strings.Replace(content, "Account", moduleCamelCase, -1)
-	content = strings.Replace(content, "account", moduleLowerCamelCase, -1)
+	content = strings.Replace(content, "internal/module/kitchen", newModulePath, -1)
+	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
+	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
 
 	if err := os.WriteFile(mainFilePath, []byte(content), 0644); err != nil {
 		fmt.Println("ERRRR:", err)
@@ -694,8 +746,9 @@ func main() {
 	domain := newModulePath + "/domain"
 	dto := newModulePath + "/dto/" + newModuleName
 	useCase := newModulePath + "/usecase/" + newModuleName
+	responses := newModulePath + "/responses/" + newModuleName
 	repository := newModulePath + "/repository/" + newModuleName
-	folders := []string{delivery, domain, dto, useCase, repository}
+	folders := []string{delivery, domain, dto, useCase, responses, repository}
 
 	// Check if module name is provided
 	if newModuleName == "" {
@@ -735,6 +788,11 @@ func main() {
 	}
 
 	if err := createUseCaseFile(newModulePath, newModuleName, rootModuleName); err != nil {
+		fmt.Println("Error createUseCaseFile.go file:", err)
+		return
+	}
+
+	if err := createResponseFile(newModulePath, newModuleName, rootModuleName); err != nil {
 		fmt.Println("Error createUseCaseFile.go file:", err)
 		return
 	}

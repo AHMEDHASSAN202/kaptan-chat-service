@@ -38,12 +38,12 @@ type MenuCategory struct {
 
 type ItemMenuGroup struct {
 	ID             primitive.ObjectID   `json:"id" bson:"_id,omitempty"`
-	BranchIds      []primitive.ObjectID `json:"branch_ids" bson:"branch_ids"`
+	LocationIds    []primitive.ObjectID `json:"location_ids" bson:"location_ids"`
 	Availabilities []Availability       `json:"availabilities" bson:"availabilities"`
 	Status         string               `json:"status" bson:"status"`
 }
 
-type Branch struct {
+type Location struct {
 	ID   primitive.ObjectID `json:"id"`
 	Name LocalizationText   `json:"name"`
 }
@@ -52,8 +52,8 @@ type FindMenuGroupWithItems struct {
 	ID             primitive.ObjectID   `json:"id" bson:"_id"`
 	AccountId      primitive.ObjectID   `json:"account_id" bson:"account_id"`
 	Name           LocalizationText     `json:"name" bson:"name"`
-	BranchIds      []primitive.ObjectID `json:"branch_ids" bson:"branch_ids"`
-	Branches       []Branch             `json:"branches" bson:"branches"`
+	LocationIds    []primitive.ObjectID `json:"location_ids" bson:"location_ids"`
+	Locations      []Location           `json:"locations" bson:"locations"`
 	Categories     []MenuCategory       `json:"categories" bson:"categories"`
 	Availabilities []Availability       `json:"availabilities" bson:"availabilities"`
 	Status         string               `json:"status" bson:"status"`

@@ -4,6 +4,7 @@ import (
 	"go.uber.org/fx"
 	"samm/internal/module/admin/custom_validators"
 	"samm/internal/module/admin/delivery"
+	"samm/internal/module/admin/policies"
 	admin2 "samm/internal/module/admin/repository/mongodb/admin"
 	"samm/internal/module/admin/repository/mongodb/role"
 	"samm/internal/module/admin/usecase/admin"
@@ -21,6 +22,6 @@ var Module = fx.Options(
 		custom_validators.InitNewCustomValidatorsRole,
 	),
 	fx.Invoke(
-		delivery.InitAdminController, delivery.InitAdminAuthController, delivery.InitAdminPortalController, delivery.InitRoleController,
+		policies.NewIPolicy, delivery.InitAdminController, delivery.InitAdminAuthController, delivery.InitAdminPortalController, delivery.InitRoleController,
 	),
 )
