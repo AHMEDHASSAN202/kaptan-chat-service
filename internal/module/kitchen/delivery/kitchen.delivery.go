@@ -7,6 +7,8 @@ import (
 	"samm/internal/module/kitchen/domain"
 	"samm/internal/module/kitchen/dto/kitchen"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares/admin"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/validators"
 )
 
@@ -18,7 +20,7 @@ type KitchenHandler struct {
 }
 
 // InitKitchenController will initialize the article's HTTP controller
-func InitKitchenController(e *echo.Echo, us domain.KitchenUseCase, validator *validator.Validate, logger logger.ILogger, adminCustomValidator custom_validators2.AdminCustomValidator) {
+func InitKitchenController(e *echo.Echo, us domain.KitchenUseCase, validator *validator.Validate, logger logger.ILogger, adminCustomValidator custom_validators2.AdminCustomValidator, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &KitchenHandler{
 		kitchenUsecase:       us,
 		validator:            validator,
@@ -26,11 +28,13 @@ func InitKitchenController(e *echo.Echo, us domain.KitchenUseCase, validator *va
 		adminCustomValidator: adminCustomValidator,
 	}
 	dashboard := e.Group("api/v1/admin/kitchen")
-	dashboard.POST("", handler.CreateKitchen)
-	dashboard.GET("", handler.ListKitchen)
-	dashboard.PUT("/:id", handler.UpdateKitchen)
-	dashboard.GET("/:id", handler.FindKitchen)
-	dashboard.DELETE("/:id", handler.DeleteKitchen)
+	dashboard.Use(adminMiddlewares.AuthMiddleware)
+
+	dashboard.POST("", handler.CreateKitchen, commonMiddlewares.PermissionMiddleware("create-kitchens"))
+	dashboard.GET("", handler.ListKitchen, commonMiddlewares.PermissionMiddleware("list-kitchens"))
+	dashboard.PUT("/:id", handler.UpdateKitchen, commonMiddlewares.PermissionMiddleware("update-kitchens"))
+	dashboard.GET("/:id", handler.FindKitchen, commonMiddlewares.PermissionMiddleware("find-kitchens"))
+	dashboard.DELETE("/:id", handler.DeleteKitchen, commonMiddlewares.PermissionMiddleware("delete-kitchens"))
 }
 func (a *KitchenHandler) CreateKitchen(c echo.Context) error {
 	ctx := c.Request().Context()
