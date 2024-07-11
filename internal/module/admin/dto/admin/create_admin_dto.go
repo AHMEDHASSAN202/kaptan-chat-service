@@ -32,7 +32,7 @@ type CreateAdminDTO struct {
 	Status          string             `json:"status" validate:"oneof=active inactive"`
 	Password        string             `json:"password" validate:"Password_required_if_id_is_zero,omitempty,min=8"`
 	ConfirmPassword string             `json:"password_confirmation" validate:"required_with=Password,eqfield=Password"`
-	Type            string             `json:"type" validate:"required,oneof=admin portal"`
+	Type            string             `json:"type" validate:"required,oneof=admin portal kitchen"`
 	RoleId          string             `json:"role_id" validate:"required,mongodb,RoleExistsValidation"`
 	CountryIds      []string           `json:"country_ids" validate:"required,country_ids"`
 	AdminDetails    dto.AdminDetails   `json:"-"`
