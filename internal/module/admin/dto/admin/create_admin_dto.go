@@ -19,6 +19,11 @@ type Account struct {
 	Id   string `json:"id" validate:"required"`
 	Name Name   `json:"name" validate:"required"`
 }
+type Kitchen struct {
+	Id            string   `json:"id" validate:"required"`
+	Name          Name     `json:"name" validate:"required"`
+	AllowedStatus []string `json:"allowed_status"`
+}
 
 type CreateAdminDTO struct {
 	ID              primitive.ObjectID `json:"-"`
@@ -32,6 +37,7 @@ type CreateAdminDTO struct {
 	CountryIds      []string           `json:"country_ids" validate:"required,country_ids"`
 	AdminDetails    dto.AdminDetails   `json:"-"`
 	Account         *Account           `json:"account"`
+	Kitchen         *Kitchen           `json:"kitchen"`
 }
 
 func (input *CreateAdminDTO) Validate(c echo.Context, validate *validator.Validate, validateEmailIsUnique func(fl validator.FieldLevel) bool, passwordRequiredIfIdIsZero func(fl validator.FieldLevel) bool, roleExists func(fl validator.FieldLevel) bool) validators.ErrorResponse {
