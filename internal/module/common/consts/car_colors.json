@@ -10,49 +10,49 @@
   {
     "name": {
       "ar": "احمر",
-      "en": "Red"
+      "en": "Green"
     },
-    "code": "#FF0000",
+    "code": "#00FF00",
     "id": "2"
   },
   {
     "name": {
       "ar": "احمر",
-      "en": "Red"
+      "en": "Blue"
     },
-    "code": "#FF0000",
+    "code": "#0000FF",
     "id": "3"
   },
   {
     "name": {
       "ar": "احمر",
-      "en": "Red"
+      "en": "Black"
     },
-    "code": "#FF0000",
+    "code": "#000000",
     "id": "4"
   },
   {
     "name": {
       "ar": "احمر",
-      "en": "Red"
+      "en": "White"
     },
-    "code": "#FF0000",
+    "code": "#FFFFFF",
     "id": "5"
   },
   {
     "name": {
       "ar": "احمر",
-      "en": "Red"
+      "en": "Gray"
     },
-    "code": "#FF0000",
+    "code": "#808080",
     "id": "6"
   },
   {
     "name": {
       "ar": "احمر",
-      "en": "Red"
+      "en": "Orange"
     },
-    "code": "#FF0000",
+    "code": "#FFA500",
     "id": "7"
   }
 ]
