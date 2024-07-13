@@ -36,6 +36,8 @@
     "age_validation_invalid_msg": "السن غير صالح",
     "gender_male": "ذكر",
     "gender_female": "أنثى",
+    "collectionMethod_driveThru": "استلم بسيارة",
+    "collectionMethod_pickUp": "استلم شخصيا",
     "home": "الرئيسية",
     "wallet": "محفظتى",
     "orders": "طلباتي",
