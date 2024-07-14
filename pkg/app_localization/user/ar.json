@@ -1,7 +1,6 @@
 {
     "auth_signin_title": "تسجيل الدخول",
     "auth_signin_subtitle": "الرجاء تسجيل الدخول لإكمال طلبك",
-    "auth_signin_name_hint": "الاسم",
     "auth_signin_mobile_hint": "الجوال",
     "auth_signin_button_text": "احصل على الكود",
     "auth_signin_licence_text1": "من خلال إنشاء حساب أو التوقيع فإنك توافق على",
@@ -9,6 +8,10 @@
     "auth_otp_title": "تسجيل الدخول",
     "auth_otp_subtitle": "تم إرسال الرمز إلى",
     "auth_otp_button_text": "ارسل الرمز مجددا",
+    "auth_register_title": "التسجيل",
+    "auth_register_subtitle": "الرجاء إدخال الاسم لإكمال التسجيل",
+    "auth_register_name_hint": "الاسم",
+    "auth_register_button_text": "تسجيل",
     "personal_details_title": "التفاصيل الشخصية",
     "personal_details_name_label": "الاسم الكامل",
     "personal_details_name_hint": "الاسم الأول والأخير",

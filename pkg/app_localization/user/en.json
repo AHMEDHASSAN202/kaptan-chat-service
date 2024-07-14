@@ -1,7 +1,6 @@
 {
     "auth_signin_title": "Sign in",
     "auth_signin_subtitle": "Please sign in to complete your order",
-    "auth_signin_name_hint": "Name",
     "auth_signin_mobile_hint": "Mobile",
     "auth_signin_button_text": "Get code",
     "auth_signin_licence_text1": "By creating an account or signing you agree to our",
@@ -9,6 +8,10 @@
     "auth_otp_title": "Sign in",
     "auth_otp_subtitle": "Code has been send to",
     "auth_otp_button_text": "Send code again",
+    "auth_register_title": "Sign up",
+    "auth_register_subtitle": "Please enter name to complete signup",
+    "auth_register_name_hint": "Name",
+    "auth_register_button_text": "Sign up",
     "personal_details_title": "Personal details",
     "personal_details_name_label": "Full name",
     "personal_details_name_hint": "First and last name",
