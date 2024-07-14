@@ -82,6 +82,9 @@ func (l AccountUseCase) UpdateAccount(ctx context.Context, id string, payload *a
 	accountDomain.Country.Name.En = payload.Country.Name.En
 	accountDomain.AllowedBrandIds = utils.ConvertStringIdsToObjectIds(payload.AllowedBrandIds)
 	accountDomain.UpdatedAt = time.Now()
+	accountDomain.BankAccount.AccountNumber = payload.BankAccount.AccountNumber
+	accountDomain.BankAccount.BankName = payload.BankAccount.BankName
+	accountDomain.BankAccount.CompanyName = payload.BankAccount.CompanyName
 
 	errRe = l.repo.UpdateAccount(ctx, accountDomain)
 	if errRe != nil {

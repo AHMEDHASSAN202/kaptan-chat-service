@@ -8,9 +8,11 @@ import (
 )
 
 type UpdateAccountDto struct {
-	Name            Name     `json:"name" validate:"required"`
-	Country         Country  `json:"country" validate:"required"`
-	AllowedBrandIds []string `json:"allowed_brand_ids" validate:"required"`
+	Name            Name        `json:"name" validate:"required"`
+	Country         Country     `json:"country" validate:"required"`
+	AllowedBrandIds []string    `json:"allowed_brand_ids" validate:"required"`
+	Percent         float64     `json:"percent" validate:"required"`
+	BankAccount     BankAccount `json:"bank_account" validate:"required"`
 }
 
 func (payload *UpdateAccountDto) Validate(c echo.Context, validate *validator.Validate, validateAccountEmailIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {
