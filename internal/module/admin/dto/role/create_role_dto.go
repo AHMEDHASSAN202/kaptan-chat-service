@@ -16,7 +16,7 @@ type Name struct {
 type CreateRoleDTO struct {
 	ID           primitive.ObjectID `json:"-"`
 	Name         Name               `json:"name" validate:"required"`
-	Type         string             `json:"type" validate:"required,oneof=admin portal"`
+	Type         string             `json:"type" validate:"required,oneof=admin portal kitchen"`
 	Permissions  []string           `json:"permissions" validate:"required"`
 	AdminDetails dto.AdminDetails   `json:"-"`
 }
