@@ -29,7 +29,7 @@ func NewOrderUseCase(repo domain.OrderRepository, extService external.ExtService
 	}
 }
 
-func (l OrderUseCase) StoreOrder(ctx context.Context, payload *order.StoreOrderDto) (err validators.ErrorResponse) {
+func (l OrderUseCase) CreateOrder(ctx context.Context, payload *order.StoreOrderDto) (err validators.ErrorResponse) {
 	orderDomain := domain.Order{}
 	orderDomain.Name.Ar = payload.Name.Ar
 	orderDomain.Name.En = payload.Name.En
@@ -42,7 +42,7 @@ func (l OrderUseCase) StoreOrder(ctx context.Context, payload *order.StoreOrderD
 	orderDomain.CreatedAt = time.Now()
 	orderDomain.UpdatedAt = time.Now()
 
-	errRe := l.repo.StoreOrder(ctx, &orderDomain)
+	errRe := l.repo.CreateOrder(ctx, &orderDomain)
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)
 	}
@@ -90,13 +90,12 @@ func (l OrderUseCase) DeleteOrder(ctx context.Context, Id string) (err validator
 	return validators.ErrorResponse{}
 }
 
-func (l OrderUseCase) ListOrder(ctx context.Context, payload *order.ListOrderDto) (orders []domain.Order, paginationResult utils.PaginationResult, err validators.ErrorResponse) {
-	results, paginationResult, errRe := l.repo.ListOrder(ctx, payload)
-	if errRe != nil {
-		return results, paginationResult, validators.GetErrorResponseFromErr(errRe)
+func (l OrderUseCase) ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDto) (*responses.ListResponse, validators.ErrorResponse) {
+	ordersRes, paginationMeta, dbErr := l.repo.ListOrderForDashboard(&ctx, payload)
+	if dbErr != nil {
+		return nil, validators.GetErrorResponseFromErr(dbErr)
 	}
-	return results, paginationResult, validators.ErrorResponse{}
-
+	return responses.SetListResponse(ordersRes, paginationMeta), validators.ErrorResponse{}
 }
 
 func (l OrderUseCase) CalculateOrderCost(ctx context.Context, payload *order.CalculateOrderCostDto) (resp responses.CalculateOrderCostResp, err validators.ErrorResponse) {

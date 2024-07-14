@@ -24,7 +24,8 @@ func (payload *StoreOrderDto) Validate(c echo.Context, validate *validator.Valid
 
 type ListOrderDto struct {
 	dto.Pagination
-	Query string `query:"query"`
+	Status string `query:"status" `
+	Query  string `query:"query"`
 }
 
 type UpdateOrderDto struct {

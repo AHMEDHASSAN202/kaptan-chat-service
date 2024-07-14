@@ -25,17 +25,18 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 	}
 	dashboard := e.Group("api/v1/admin/order")
 	{
-		dashboard.GET("", handler.ListOrder)
-		dashboard.GET("/:id", handler.FindOrder)
+		dashboard.GET("", handler.ListOrderForDashboard)
+		dashboard.GET("/:id", handler.FindOrderForDashboard)
 	}
 	mobile := e.Group("api/v1/mobile/order")
 	{
 		mobile.POST("/calculate-order-cost", handler.CalculateOrderCost)
-		mobile.GET("/:id", handler.FindOrder)
+		dashboard.GET("", handler.ListOrderForMobile)
+		mobile.GET("/:id", handler.FindOrderForMobile)
 	}
 }
 
-func (a *OrderHandler) FindOrder(c echo.Context) error {
+func (a *OrderHandler) FindOrderForDashboard(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
@@ -47,7 +48,7 @@ func (a *OrderHandler) FindOrder(c echo.Context) error {
 	return validators.SuccessResponse(c, map[string]interface{}{"order": data})
 }
 
-func (a *OrderHandler) ListOrder(c echo.Context) error {
+func (a *OrderHandler) ListOrderForDashboard(c echo.Context) error {
 	ctx := c.Request().Context()
 	var payload order.ListOrderDto
 
@@ -55,12 +56,40 @@ func (a *OrderHandler) ListOrder(c echo.Context) error {
 
 	payload.Pagination.SetDefault()
 
-	result, paginationResult, errResp := a.orderUsecase.ListOrder(ctx, &payload)
+	orders, errResp := a.orderUsecase.ListOrderForDashboard(ctx, &payload)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, orders)
+
+}
+
+func (a *OrderHandler) FindOrderForMobile(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	id := c.Param("id")
+	data, errResp := a.orderUsecase.FindOrder(ctx, id)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
-	return validators.SuccessResponse(c, map[string]interface{}{"data": result, "meta": paginationResult})
+	return validators.SuccessResponse(c, map[string]interface{}{"order": data})
+}
+
+func (a *OrderHandler) ListOrderForMobile(c echo.Context) error {
+	ctx := c.Request().Context()
+	var payload order.ListOrderDto
+
+	_ = c.Bind(&payload)
+
+	payload.Pagination.SetDefault()
+
+	orders, errResp := a.orderUsecase.ListOrderForDashboard(ctx, &payload)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, orders)
+
 }
 
 func (a *OrderHandler) CalculateOrderCost(c echo.Context) error {
