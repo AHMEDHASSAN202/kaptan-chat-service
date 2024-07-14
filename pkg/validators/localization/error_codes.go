@@ -5,6 +5,7 @@ package localization
 const (
 	AccountRequiredValidation                   = "AccountRequiredValidation"                   // AccountRequiredValidation
 	Account_Email_is_unique_rules_validation    = "Account_Email_is_unique_rules_validation"    // Email is Unique
+	Account_Used_in_kitchen                     = "Account_Used_in_kitchen"                     // Account_Used_in_kitchen
 	App_type_is_unique_rules_validation         = "App_type_is_unique_rules_validation"         // Feature not supported
 	Cuisine_id_is_exists_rules_validation       = "Cuisine_id_is_exists_rules_validation"       // Cuisine Id Not Exist
 	E1000                                       = "E1000"                                       // Database layer error
@@ -37,6 +38,7 @@ const (
 	JwtTokenExpiredError                        = "JwtTokenExpiredError"                        // Error: the JSON Web Token has expired and cannot be verified
 	JwtTokenInvalidError                        = "JwtTokenInvalidError"                        // The JSON Web Token is invalid and could not be verified
 	JwtTokenParsingError                        = "JwtTokenParsingError"                        // Error: the JSON Web Token could not be parsed
+	Location_Used_in_kitchen                    = "Location_Used_in_kitchen"                    // Location_Used_in_kitchen
 	Mobile_item_unavailable                     = "Mobile_item_unavailable"                     // Mobile_item_unavailable
 	Mobile_location_not_available_error         = "Mobile_location_not_available_error"         // mobile_location_not_available_error
 	Mobile_location_not_open_error              = "Mobile_location_not_open_error"              // Mobile_location_not_open_error

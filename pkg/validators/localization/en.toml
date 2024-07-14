@@ -185,3 +185,12 @@ other = "Account is required"
 [PAYMENT_PROCESS_RUNNING]
 description = "Payment is running"
 other = "Please Wait Payment is running"
+
+[Location_Used_in_kitchen]
+description = "Location_Used_in_kitchen"
+other = "Can't delete location used before"
+
+[Account_Used_in_kitchen]
+description = "Account_Used_in_kitchen"
+other = "Can't delete Account used before"
+

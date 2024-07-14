@@ -44,7 +44,9 @@ func (payload *StoreKitchenDto) Validate(c echo.Context, validate *validator.Val
 
 type ListKitchenDto struct {
 	dto.Pagination
-	Query string `query:"query"`
+	Query      string `query:"query"`
+	AccountId  string `query:"account_id"`
+	LocationId string `query:"location_id"`
 }
 
 type UpdateKitchenDto struct {

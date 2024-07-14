@@ -141,3 +141,13 @@ func (l KitchenUseCase) List(ctx *context.Context, dto *kitchen.ListKitchenDto) 
 	}
 	return responses.SetListResponse(users, paginationMeta), validators.ErrorResponse{}
 }
+func (l KitchenUseCase) KitchenExists(ctx *context.Context, dto *kitchen.ListKitchenDto) bool {
+	users, _, resErr := l.repo.List(ctx, dto)
+	if resErr != nil {
+		return false
+	}
+	if users == nil {
+		return false
+	}
+	return len(*users) > 0
+}

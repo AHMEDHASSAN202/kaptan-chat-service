@@ -181,3 +181,11 @@ other = "الحساب مطلوب"
 [Mobile_item_unavailable]
 description = "Mobile_item_unavailable"
 other = "هذا العنصر غير متاح"
+
+[Location_Used_in_kitchen]
+description = "Location_Used_in_kitchen"
+other = "غير مسموح بحذف مطعم مستخدم"
+
+[Account_Used_in_kitchen]
+description = "Account_Used_in_kitchen"
+other = "غير مسموح بحذف حساب مستخدم"
