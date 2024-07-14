@@ -85,6 +85,7 @@ func (l AccountUseCase) UpdateAccount(ctx context.Context, id string, payload *a
 	accountDomain.BankAccount.AccountNumber = payload.BankAccount.AccountNumber
 	accountDomain.BankAccount.BankName = payload.BankAccount.BankName
 	accountDomain.BankAccount.CompanyName = payload.BankAccount.CompanyName
+	accountDomain.Percent = payload.Percent
 
 	errRe = l.repo.UpdateAccount(ctx, accountDomain)
 	if errRe != nil {
