@@ -10,7 +10,7 @@ import (
 type ListRoleDTO struct {
 	dto.Pagination
 	Query string `json:"query" form:"query" query:"query"`
-	Type  string `json:"type" form:"type" query:"type" validate:"required,oneof=admin portal"`
+	Type  string `json:"type" form:"type" query:"type" validate:"required,oneof=admin portal kitchen"`
 	dto.AdminHeaders
 }
 

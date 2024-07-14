@@ -116,6 +116,9 @@ func (r *adminRepo) List(ctx context.Context, dto *admin.ListAdminDTO) ([]domain
 	if dto.AccountId != "" {
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"account._id": utils.ConvertStringIdToObjectId(dto.AccountId)})
 	}
+	if dto.KitchenId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"kitchen._id": utils.ConvertStringIdToObjectId(dto.KitchenId)})
+	}
 
 	data, err := New(r.adminCollection.Collection).Context(ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
 

@@ -14,6 +14,7 @@ type ListAdminDTO struct {
 	Type      string `json:"type" form:"type" query:"type"`
 	Role      string `json:"role" form:"role" query:"role"`
 	AccountId string `json:"account_id" form:"account_id" query:"account_id"`
+	KitchenId string `json:"kitchen_id" form:"kitchen_id" query:"kitchen_id"`
 	dto.AdminHeaders
 }
 

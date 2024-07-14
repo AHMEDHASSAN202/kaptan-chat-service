@@ -7,6 +7,7 @@ import (
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/collection_method"
 	"samm/pkg/logger"
+	usermiddleware "samm/pkg/middlewares/user"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 )
@@ -19,7 +20,7 @@ type CollectionMethodHandler struct {
 }
 
 // InitUserController will initialize the article's HTTP controller
-func InitCollectionMethodController(e *echo.Echo, us domain.CollectionMethodUseCase, commonUseCase common_domain.CommonUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitCollectionMethodController(e *echo.Echo, us domain.CollectionMethodUseCase, commonUseCase common_domain.CommonUseCase, userMiddleware *usermiddleware.Middlewares, validator *validator.Validate, logger logger.ILogger) {
 	handler := &CollectionMethodHandler{
 		collectionMethodUseCase: us,
 		commonUseCase:           commonUseCase,
@@ -27,11 +28,11 @@ func InitCollectionMethodController(e *echo.Echo, us domain.CollectionMethodUseC
 		logger:                  logger,
 	}
 	dashboard := e.Group("api/v1/mobile/user/collection_methods/:type")
-	dashboard.POST("", handler.StoreCollectionMethod)
-	dashboard.GET("", handler.ListCollectionMethod)
-	dashboard.PUT("/:id", handler.UpdateCollectionMethod)
-	dashboard.GET("/:id", handler.FindCollectionMethod)
-	dashboard.DELETE("/:id", handler.DeleteCollectionMethod)
+	dashboard.POST("", handler.StoreCollectionMethod, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
+	dashboard.GET("", handler.ListCollectionMethod, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
+	dashboard.PUT("/:id", handler.UpdateCollectionMethod, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
+	dashboard.GET("/:id", handler.FindCollectionMethod, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
+	dashboard.DELETE("/:id", handler.DeleteCollectionMethod, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 }
 
 func (a *CollectionMethodHandler) StoreCollectionMethod(c echo.Context) error {
@@ -60,7 +61,9 @@ func (a *CollectionMethodHandler) StoreCollectionMethod(c echo.Context) error {
 	payload.Fields = fields
 	payload.Values = valuesPayload
 	//todo: read the user_id from auth
-	payload.UserId = utils.ConvertStringIdToObjectId("667b4dc916412390df546630")
+	if v := c.Request().Header.Get(usermiddleware.CauserId); v != "" {
+		payload.UserId = utils.ConvertStringIdToObjectId(v)
+	}
 
 	errResp = a.collectionMethodUseCase.StoreCollectionMethod(ctx, &payload)
 	if errResp.IsError {
@@ -95,7 +98,11 @@ func (a *CollectionMethodHandler) UpdateCollectionMethod(c echo.Context) error {
 	payload.Type = collectionMethodType
 	payload.Fields = fields
 	payload.Values = valuesPayload
-	payload.UserId = utils.ConvertStringIdToObjectId("667b4dc916412390df546630")
+	//todo: read the user_id from auth
+	if v := c.Request().Header.Get(usermiddleware.CauserId); v != "" {
+		payload.UserId = utils.ConvertStringIdToObjectId(v)
+	}
+
 	errResp = a.collectionMethodUseCase.UpdateCollectionMethod(ctx, id, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
@@ -107,7 +114,8 @@ func (a *CollectionMethodHandler) FindCollectionMethod(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
-	userId := "667b4dc916412390df546630"
+	userId := c.Request().Header.Get(usermiddleware.CauserId)
+	//userId := "667b4dc916412390df546630"
 	data, errResp := a.collectionMethodUseCase.FindCollectionMethod(ctx, id, userId)
 	if errResp.IsError {
 		a.logger.Error(errResp)
@@ -120,7 +128,7 @@ func (a *CollectionMethodHandler) DeleteCollectionMethod(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
-	userId := "667b4dc916412390df546630"
+	userId := c.Request().Header.Get(usermiddleware.CauserId)
 	errResp := a.collectionMethodUseCase.DeleteCollectionMethod(ctx, id, userId)
 	if errResp.IsError {
 		a.logger.Error(errResp)
@@ -132,7 +140,7 @@ func (a *CollectionMethodHandler) ListCollectionMethod(c echo.Context) error {
 	ctx := c.Request().Context()
 	collectionMethodType := c.Param("type")
 
-	userId := "667b4dc916412390df546630"
+	userId := c.Request().Header.Get(usermiddleware.CauserId)
 	result, errResp := a.collectionMethodUseCase.ListCollectionMethod(ctx, collectionMethodType, userId)
 	if errResp.IsError {
 		a.logger.Error(errResp)

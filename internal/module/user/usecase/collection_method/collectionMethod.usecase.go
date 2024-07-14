@@ -4,6 +4,7 @@ import (
 	"context"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
+	commonDomain "samm/internal/module/common/domain"
 	"samm/internal/module/user/domain"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
@@ -12,16 +13,18 @@ import (
 )
 
 type CollectionMethodUseCase struct {
-	repo   domain.CollectionMethodRepository
-	logger logger.ILogger
+	repo          domain.CollectionMethodRepository
+	commonUseCase commonDomain.CommonUseCase
+	logger        logger.ILogger
 }
 
 const tag = " CollectionMethodUseCase "
 
-func NewCollectionMethodUseCase(repo domain.CollectionMethodRepository, logger logger.ILogger) domain.CollectionMethodUseCase {
+func NewCollectionMethodUseCase(repo domain.CollectionMethodRepository, logger logger.ILogger, commonUseCase commonDomain.CommonUseCase) domain.CollectionMethodUseCase {
 	return &CollectionMethodUseCase{
-		repo:   repo,
-		logger: logger,
+		repo:          repo,
+		commonUseCase: commonUseCase,
+		logger:        logger,
 	}
 }
 
@@ -57,6 +60,10 @@ func (l CollectionMethodUseCase) FindCollectionMethod(ctx context.Context, Id st
 		}
 		return *domainCollectionMethod, validators.GetErrorResponseFromErr(errRe)
 	}
+	errResp := buildResponse(ctx, l, &[]domain.CollectionMethods{*domainCollectionMethod})
+	if errResp.IsError {
+		return *domainCollectionMethod, errResp
+	}
 	return *domainCollectionMethod, validators.ErrorResponse{}
 }
 
@@ -80,6 +87,35 @@ func (l CollectionMethodUseCase) ListCollectionMethod(ctx context.Context, colle
 	if errRe != nil {
 		return results, validators.GetErrorResponseFromErr(errRe)
 	}
+	errResp := buildResponse(ctx, l, &results)
+	if errResp.IsError {
+		return results, errResp
+	}
 	return results, validators.ErrorResponse{}
 
+}
+
+func buildResponse(ctx context.Context, l CollectionMethodUseCase, results *[]domain.CollectionMethods) validators.ErrorResponse {
+	assets, errRe := l.commonUseCase.ListAssets(ctx, true, true)
+	if errRe.IsError {
+		return errRe
+	}
+	carColorsResult := assets.(map[string]any)["car_colors"]
+	carBrandsResult := assets.(map[string]any)["car_brands"]
+	for i, collection := range *results {
+		if collection.Type == "drive_through" {
+			for _, color := range carColorsResult.([]map[string]interface{}) {
+				if color["id"] == collection.Values["car_color"] {
+					collection.Values["car_color"] = color
+				}
+			}
+			for _, brand := range carBrandsResult.([]map[string]interface{}) {
+				if brand["id"] == collection.Values["car_brand"] {
+					collection.Values["car_brand"] = brand
+				}
+			}
+			(*results)[i].Values = collection.Values
+		}
+	}
+	return validators.ErrorResponse{}
 }
