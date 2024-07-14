@@ -116,9 +116,20 @@ func (l KitchenUseCase) FindKitchen(ctx context.Context, Id string) (kitchen dom
 
 func (l KitchenUseCase) DeleteKitchen(ctx context.Context, Id string) (err validators.ErrorResponse) {
 
-	delErr := l.repo.DeleteKitchen(ctx, utils.ConvertStringIdToObjectId(Id))
-	if delErr != nil {
-		return validators.GetErrorResponseFromErr(delErr)
+	erre := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+
+		delErr := l.repo.DeleteKitchen(sc, utils.ConvertStringIdToObjectId(Id))
+		if delErr != nil {
+			return delErr
+		}
+		delErre := l.adminUseCase.DeleteBy(sc, utils.ConvertStringIdToObjectId(Id), consts.KITCHEN_TYPE)
+		if delErre.IsError {
+			return errors.New(delErre.ErrorMessageObject.Text)
+		}
+		return session.CommitTransaction(sc)
+	})
+	if erre != nil {
+		return validators.GetErrorResponseFromErr(erre)
 	}
 	return validators.ErrorResponse{}
 }
