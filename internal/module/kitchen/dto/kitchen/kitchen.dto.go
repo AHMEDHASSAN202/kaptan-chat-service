@@ -3,6 +3,7 @@ package kitchen
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
@@ -24,11 +25,12 @@ type Country struct {
 }
 
 type StoreKitchenDto struct {
-	Name            Name    `json:"name" validate:"required"`
-	Email           string  `json:"email" validate:"required,email,Email_is_unique_rules_validation"`
-	Password        string  `json:"password" validate:"required,omitempty,min=8"`
-	ConfirmPassword string  `json:"password_confirmation" validate:"required,eqfield=Password"`
-	Country         Country `json:"country" validate:"required"`
+	ID              primitive.ObjectID `json:"-"`
+	Name            Name               `json:"name" validate:"required"`
+	Email           string             `json:"email" validate:"required,email,Email_is_unique_rules_validation"`
+	Password        string             `json:"password" validate:"required,omitempty,min=8"`
+	ConfirmPassword string             `json:"password_confirmation" validate:"required,eqfield=Password"`
+	Country         Country            `json:"country" validate:"required"`
 
 	AccountIds    []string `json:"account_ids" validate:"required,Validate_Account_Location_validation"`
 	LocationIds   []string `json:"location_ids" validate:"required,Validate_Account_Location_validation"`

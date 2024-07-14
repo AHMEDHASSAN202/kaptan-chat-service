@@ -38,6 +38,10 @@ func InitKitchenController(e *echo.Echo, us domain.KitchenUseCase, validator *va
 	dashboard.PUT("/:id", handler.UpdateKitchen, commonMiddlewares.PermissionMiddleware("update-kitchens"))
 	dashboard.GET("/:id", handler.FindKitchen, commonMiddlewares.PermissionMiddleware("find-kitchens"))
 	dashboard.DELETE("/:id", handler.DeleteKitchen, commonMiddlewares.PermissionMiddleware("delete-kitchens"))
+
+	//mobile_kitchen := e.Group("api/v1/mobile-kitchen")
+	//mobile_kitchen.Use(adminMiddlewares.AuthMiddleware)
+
 }
 func (a *KitchenHandler) CreateKitchen(c echo.Context) error {
 	ctx := c.Request().Context()

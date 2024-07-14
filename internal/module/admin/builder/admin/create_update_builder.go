@@ -2,6 +2,7 @@ package admin
 
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"samm/internal/module/admin/consts"
 	"samm/internal/module/admin/domain"
 	dto "samm/internal/module/admin/dto/admin"
 	"samm/pkg/utils"
@@ -29,6 +30,10 @@ func CreateUpdateAdminBuilder(admin *domain.Admin, input *dto.CreateAdminDTO, ro
 			return admin, err
 		}
 		admin.Password = password
+		//save the password encrypted for non admin users
+		if input.Type != consts.ADMIN_TYPE {
+			admin.EncryptedPassword = utils.Encrypt("", password)
+		}
 	}
 	admin.Name = input.Name
 	admin.Email = strings.ToLower(input.Email)

@@ -22,25 +22,27 @@ import (
 )
 
 type AdminUseCase struct {
-	repo             domain.AdminRepository
-	roleRepo         domain.RoleRepository
-	logger           logger.ILogger
-	extService       external.ExtService
-	AdminJwtService  jwt.JwtService
-	PortalJwtService jwt.JwtService
-	redisClient      *redis.RedisClient
-	gate             *gate.Gate
+	repo              domain.AdminRepository
+	roleRepo          domain.RoleRepository
+	logger            logger.ILogger
+	extService        external.ExtService
+	AdminJwtService   jwt.JwtService
+	PortalJwtService  jwt.JwtService
+	KitchenJwtService jwt.JwtService
+	redisClient       *redis.RedisClient
+	gate              *gate.Gate
 }
 
 func NewAdminUseCase(repo domain.AdminRepository, roleRepo domain.RoleRepository, logger logger.ILogger, jwtFactory jwt.JwtServiceFactory, redisClient *redis.RedisClient, g *gate.Gate) domain.AdminUseCase {
 	return &AdminUseCase{
-		repo:             repo,
-		roleRepo:         roleRepo,
-		logger:           logger,
-		AdminJwtService:  jwtFactory.AdminJwtService(),
-		PortalJwtService: jwtFactory.PortalJwtService(),
-		redisClient:      redisClient,
-		gate:             g,
+		repo:              repo,
+		roleRepo:          roleRepo,
+		logger:            logger,
+		AdminJwtService:   jwtFactory.AdminJwtService(),
+		PortalJwtService:  jwtFactory.PortalJwtService(),
+		KitchenJwtService: jwtFactory.KitchenJwtService(),
+		redisClient:       redisClient,
+		gate:              g,
 	}
 }
 
@@ -58,7 +60,7 @@ func (oRec *AdminUseCase) Create(ctx context.Context, input *dto.CreateAdminDTO)
 		oRec.logger.Error("AdminUseCase -> Create -> ", err)
 		return "", validators.GetErrorResponse(&ctx, localization.E1001, nil, nil)
 	}
-
+	oRec.logger.Info(adminDomain, adminDomain.Status)
 	admin, errCreate := oRec.repo.Create(ctx, adminDomain)
 	if errCreate != nil {
 		oRec.logger.Error("AdminUseCase -> Create -> ", errCreate)
@@ -201,8 +203,8 @@ func (oRec *AdminUseCase) ChangeStatus(ctx context.Context, input *dto.ChangeAdm
 	return validators.ErrorResponse{}
 }
 
-func (oRec *AdminUseCase) CheckEmailExists(ctx context.Context, name string, adminId primitive.ObjectID) (bool, validators.ErrorResponse) {
-	isExists, err := oRec.repo.CheckEmailExists(ctx, name, adminId)
+func (oRec *AdminUseCase) CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID, adminType string) (bool, validators.ErrorResponse) {
+	isExists, err := oRec.repo.CheckEmailExists(ctx, email, adminId, adminType)
 	if err != nil {
 		return isExists, validators.GetErrorResponseFromErr(err)
 	}
