@@ -23,44 +23,11 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 		validator:    validator,
 		logger:       logger,
 	}
-	dashboard := e.Group("api/v1/admin/order")
-	{
-		dashboard.GET("", handler.ListOrder)
-		dashboard.GET("/:id", handler.FindOrder)
-	}
 	mobile := e.Group("api/v1/mobile/order")
 	{
 		mobile.POST("/calculate-order-cost", handler.CalculateOrderCost)
-		mobile.GET("/:id", handler.FindOrder)
+		mobile.POST("", handler.CreateOrder)
 	}
-}
-
-func (a *OrderHandler) FindOrder(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	id := c.Param("id")
-	data, errResp := a.orderUsecase.FindOrder(ctx, id)
-	if errResp.IsError {
-		a.logger.Error(errResp)
-		return validators.ErrorStatusBadRequest(c, errResp)
-	}
-	return validators.SuccessResponse(c, map[string]interface{}{"order": data})
-}
-
-func (a *OrderHandler) ListOrder(c echo.Context) error {
-	ctx := c.Request().Context()
-	var payload order.ListOrderDto
-
-	_ = c.Bind(&payload)
-
-	payload.Pagination.SetDefault()
-
-	result, paginationResult, errResp := a.orderUsecase.ListOrder(ctx, &payload)
-	if errResp.IsError {
-		a.logger.Error(errResp)
-		return validators.ErrorStatusBadRequest(c, errResp)
-	}
-	return validators.SuccessResponse(c, map[string]interface{}{"data": result, "meta": paginationResult})
 }
 
 func (a *OrderHandler) CalculateOrderCost(c echo.Context) error {
@@ -83,4 +50,29 @@ func (a *OrderHandler) CalculateOrderCost(c echo.Context) error {
 		return validators.ErrorResp(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{"order_calculate": orderCalculate})
+}
+
+func (a *OrderHandler) CreateOrder(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var orderDto order.CreateOrderDto
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &orderDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := c.Bind(&orderDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	orderResponse, errResp := a.orderUsecase.StoreOrder(ctx, &orderDto)
+	if errResp.IsError {
+		a.logger.Error(errResp.ErrorMessageObject.Text)
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"order": orderResponse})
 }
