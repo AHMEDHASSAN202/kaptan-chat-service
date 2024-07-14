@@ -50,8 +50,9 @@ func (oRec *AdminUseCase) Create(ctx context.Context, input *dto.CreateAdminDTO)
 		oRec.logger.Error("AdminUseCase -> Find Role -> ", err)
 		return "", validators.GetErrorResponse(&ctx, localization.E1001, nil, nil)
 	}
-
-	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Create Admin", UpdatedAt: time.Now()}
+	if input.AdminDetails.Id.IsZero() {
+		input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Create Admin", UpdatedAt: time.Now()}
+	}
 	adminDomain, err := builder.CreateUpdateAdminBuilder(nil, input, *role)
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> Create -> ", err)

@@ -4,6 +4,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	custom_validators2 "samm/internal/module/admin/custom_validators"
+	"samm/internal/module/kitchen/custom_validators"
 	"samm/internal/module/kitchen/domain"
 	"samm/internal/module/kitchen/dto/kitchen"
 	"samm/pkg/logger"
@@ -13,19 +14,21 @@ import (
 )
 
 type KitchenHandler struct {
-	kitchenUsecase       domain.KitchenUseCase
-	adminCustomValidator custom_validators2.AdminCustomValidator
-	validator            *validator.Validate
-	logger               logger.ILogger
+	kitchenUsecase         domain.KitchenUseCase
+	adminCustomValidator   custom_validators2.AdminCustomValidator
+	kitchenCustomValidator custom_validators.KitchenCustomValidator
+	validator              *validator.Validate
+	logger                 logger.ILogger
 }
 
 // InitKitchenController will initialize the article's HTTP controller
-func InitKitchenController(e *echo.Echo, us domain.KitchenUseCase, validator *validator.Validate, logger logger.ILogger, adminCustomValidator custom_validators2.AdminCustomValidator, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
+func InitKitchenController(e *echo.Echo, us domain.KitchenUseCase, validator *validator.Validate, logger logger.ILogger, adminCustomValidator custom_validators2.AdminCustomValidator, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares, kitchenCustomValidator custom_validators.KitchenCustomValidator) {
 	handler := &KitchenHandler{
-		kitchenUsecase:       us,
-		validator:            validator,
-		logger:               logger,
-		adminCustomValidator: adminCustomValidator,
+		kitchenUsecase:         us,
+		validator:              validator,
+		logger:                 logger,
+		adminCustomValidator:   adminCustomValidator,
+		kitchenCustomValidator: kitchenCustomValidator,
 	}
 	dashboard := e.Group("api/v1/admin/kitchen")
 	dashboard.Use(adminMiddlewares.AuthMiddleware)
@@ -44,20 +47,13 @@ func (a *KitchenHandler) CreateKitchen(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
 
-	validationErr := payload.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique())
+	validationErr := payload.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.kitchenCustomValidator.ValidateAccountAndLocationRequired())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
-	}
-	if len(payload.LocationIds) == 0 && len(payload.AccountIds) == 0 {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.ErrorResponse{
-			IsError: true,
-			ValidationErrors: map[string][]string{
-				"account_ids":   []string{"One Of location or account is required"},
-				"locations_ids": []string{"One Of location or account is required"},
-			},
-		})
 	}
 
 	errResp := a.kitchenUsecase.CreateKitchen(ctx, &payload)
@@ -76,19 +72,10 @@ func (a *KitchenHandler) UpdateKitchen(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := payload.Validate(c, a.validator)
+	validationErr := payload.Validate(c, a.validator, a.kitchenCustomValidator.ValidateAccountAndLocationRequired())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
-	}
-	if len(payload.LocationIds) == 0 && len(payload.AccountIds) == 0 {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.ErrorResponse{
-			IsError: true,
-			ValidationErrors: map[string][]string{
-				"account_ids":   []string{"One Of location or account is required"},
-				"locations_ids": []string{"One Of location or account is required"},
-			},
-		})
 	}
 
 	id := c.Param("id")

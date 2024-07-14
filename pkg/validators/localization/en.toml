@@ -194,3 +194,6 @@ other = "Can't delete location used before"
 description = "Account_Used_in_kitchen"
 other = "Can't delete Account used before"
 
+[Validate_Account_Location_validation]
+description = "Validate_Account_Location_validation"
+other = "One Of Account or location is required "
