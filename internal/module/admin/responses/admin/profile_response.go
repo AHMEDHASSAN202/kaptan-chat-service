@@ -5,6 +5,11 @@ import (
 	"samm/internal/module/admin/responses/role"
 )
 
+type Kitchen struct {
+	ID            string           `json:"id" bson:"_id"`
+	Name          LocalizationText `json:"name" bson:"name"`
+	AllowedStatus []string         `json:"allowed_status" bson:"allowed_status"`
+}
 type AdminProfileResponse struct {
 	ID         primitive.ObjectID    `json:"id"`
 	Name       string                `json:"name"`
@@ -13,6 +18,7 @@ type AdminProfileResponse struct {
 	Role       role.FindRoleResponse `json:"role"`
 	CountryIds []string              `json:"country_ids"`
 	Account    *Account              `json:"account"`
+	Kitchen    *Kitchen              `json:"account"`
 }
 
 type Account struct {

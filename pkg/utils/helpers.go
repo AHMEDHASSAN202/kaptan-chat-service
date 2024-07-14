@@ -247,8 +247,6 @@ func Encrypt(encryptionKey string, plaintextString string) string {
 	if encryptionKey == "" {
 		encryptionKey = os.Getenv("ENCRYPTION_KEY")
 	}
-
-	fmt.Println(encryptionKey, plaintextString)
 	key := []byte(encryptionKey)
 	plaintext := []byte(plaintextString)
 	plaintext = PKCS5Padding(plaintext, 16)
