@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	builder "samm/internal/module/admin/builder/admin"
+	"samm/internal/module/admin/consts"
 	"samm/internal/module/admin/domain"
 	dto "samm/internal/module/admin/dto/admin"
 	"samm/internal/module/admin/external"
@@ -120,6 +121,31 @@ func (oRec *AdminUseCase) Delete(ctx context.Context, adminId primitive.ObjectID
 	}
 
 	oRec.RemoveAdminFromCache(utils.ConvertObjectIdToStringId(admin.ID))
+
+	return validators.ErrorResponse{}
+}
+func (oRec *AdminUseCase) DeleteBy(ctx context.Context, id primitive.ObjectID, key string) validators.ErrorResponse {
+	var listDto dto.ListAdminDTO
+	listDto.Limit = 100
+	if key == consts.KITCHEN_TYPE {
+		listDto.KitchenId = utils.ConvertObjectIdToStringId(id)
+	} else {
+		listDto.AccountId = utils.ConvertObjectIdToStringId(id)
+	}
+	admins, _, err := oRec.repo.List(ctx, &listDto)
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> Delete -> ", err)
+		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+	for _, admin := range admins {
+		adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Delete Admin", UpdatedAt: time.Now()}
+		err = oRec.repo.Delete(ctx, &admin, adminDetails)
+		if err != nil {
+			oRec.logger.Error("AdminUseCase -> Delete -> ", err)
+			return validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
+		}
+		oRec.RemoveAdminFromCache(utils.ConvertObjectIdToStringId(admin.ID))
+	}
 
 	return validators.ErrorResponse{}
 }

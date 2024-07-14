@@ -13,17 +13,6 @@
   },
   {
     "type": "admin",
-    "subject": { "name": {"ar": "كيتشن", "en": "Kitchens" } },
-    "actions": [
-      { "key": "list-kitchens", "name": {"ar": "عرض الكل", "en": "List"} },
-      { "key": "create-kitchens", "name": {"ar": "انشاء جديد", "en": "Create"} },
-      { "key": "find-kitchens", "name": {"ar": "عرض", "en": "Find"} },
-      { "key": "update-kitchens", "name": {"ar": "تحديث", "en": "Update"} },
-      { "key": "delete-kitchens", "name": {"ar": "حذف", "en": "Delete"} }
-    ]
-  },
-  {
-    "type": "admin",
     "subject": { "name": {"ar": "البراندات", "en": "Brands" } },
     "actions": [
       { "key": "list-brands", "name": {"ar": "عرض الكل", "en": "List"} },
@@ -50,7 +39,7 @@
       { "key": "find-accounts", "name": {"ar": "عرض", "en": "Find"} },
       { "key": "update-accounts", "name": {"ar": "تحديث", "en": "Update"} },
       { "key": "delete-accounts", "name": {"ar": "حذف", "en": "Delete"} },
-      { "key": "portal-login-accounts", "name": {"ar": "الدخول للبورتال", "en": "Portal Login"}}
+      { "key": "portal-login-accounts", "name": {"ar": "الدخول للبورتال", "en": "Portal Login"} }
     ]
   },
   {
@@ -103,6 +92,17 @@
       { "key": "list-orders", "name": {"ar": "عرض كل الطلبات", "en": "List Orders"} }
     ]
   },
+  {
+    "type": "admin",
+    "subject": { "name": {"ar": "مجمع المطابخ", "en": "Kitchens" } },
+    "actions": [
+      { "key": "list-kitchens", "name": {"ar": "عرض الكل", "en": "List"} },
+      { "key": "create-kitchens", "name": {"ar": "انشاء جديد", "en": "Create"} },
+      { "key": "find-kitchens", "name": {"ar": "عرض", "en": "Find"} },
+      { "key": "update-kitchens", "name": {"ar": "تحديث", "en": "Update"} },
+      { "key": "delete-kitchens", "name": {"ar": "حذف", "en": "Delete"} }
+    ]
+  },
 
   {
     "type": "portal",
@@ -151,6 +151,19 @@
       { "key": "update-portal-admins", "name": {"ar": "تعديل", "en": "Update"} },
       { "key": "delete-portal-admins", "name": {"ar": "حذف", "en": "Delete"} },
       { "key": "update-status-portal-admins", "name": {"ar": "تعديل حالة", "en": "Update Status"} }
+    ]
+  },
+
+  {
+    "type": "kitchen",
+    "subject": { "name": {"ar": "صلاحيات المطابخ", "en": "Kitchen Permission" } },
+    "actions": [
+      { "key": "list-orders", "name": {"ar": "عرض الطلبات", "en": "List Orders"} },
+      { "key": "update-order-status", "name": {"ar": "تغيير حالة الطلب", "en": "Update Order Status"} },
+      { "key": "find-order", "name": {"ar": "عرض الطلب", "en": "Find Order"} },
+      { "key": "manage-items", "name": {"ar": "تحكم المنتجات", "en": "Manage Items"} },
+      { "key": "manage-locations", "name": {"ar": "تحكم الفروع", "en": "Manage Locations"} },
+      { "key": "manage-accounts", "name": {"ar": "تحكم الحسابات", "en": "Manage Accounts"} }
     ]
   }
 ]
