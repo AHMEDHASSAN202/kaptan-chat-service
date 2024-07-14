@@ -1,6 +1,7 @@
 package user
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/labstack/echo/v4"
 	"net/http"
@@ -96,6 +97,11 @@ func (m Middlewares) AuthorizationMiddleware(next echo.HandlerFunc) echo.Handler
 		}
 
 		c.Request().Header.Add("causer-details", string(jsonByte))
+
+		ctx = context.WithValue(ctx, "causer-id", causerId)
+		ctx = context.WithValue(ctx, "causer-type", causerType)
+		ctx = context.WithValue(ctx, "causer-details", user)
+		c.SetRequest(c.Request().WithContext(ctx))
 
 		return next(c)
 	}
