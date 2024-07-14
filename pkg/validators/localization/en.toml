@@ -185,3 +185,7 @@ other = "Account is required"
 [PAYMENT_PROCESS_RUNNING]
 description = "Payment is running"
 other = "Please Wait Payment is running"
+
+[CanNotBuildOrderResponse]
+description = "Internal server errors occurred. Please contact support."
+other = "Internal server errors occurred. Please contact support."

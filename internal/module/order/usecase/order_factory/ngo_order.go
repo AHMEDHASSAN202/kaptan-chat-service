@@ -4,10 +4,11 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"net/http"
-	"samm/internal/module/order/builder"
+	user2 "samm/internal/module/order/builder/user"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/external"
+	"samm/internal/module/order/responses/user"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -38,7 +39,7 @@ func (o *NgoOrder) Make() IOrder {
 	return o
 }
 
-func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
+func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrderResponse, validators.ErrorResponse) {
 	//validate
 	input := dto.(*order.CreateOrderDto)
 	validateErr := input.Validate(ctx, o.Deps.validator)
@@ -75,19 +76,26 @@ func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*domain.Order, 
 	}
 
 	//order builder
-	orderModel, errOrderModel := builder.CreateOrderBuilder(ctx, input, locationDoc, menuDetails)
+	orderModel, errOrderModel := user2.CreateOrderBuilder(ctx, input, locationDoc, menuDetails)
 	if errOrderModel.IsError {
 		o.logger.Error(hasMenuErr.ErrorMessageObject.Text)
 		return nil, hasMenuErr
 	}
 
-	_, errStoreOrder := o.orderRepo.StoreOrder(ctx, orderModel)
+	//save order
+	orderModel, errStoreOrder := o.orderRepo.StoreOrder(ctx, orderModel)
 	if errStoreOrder != nil {
 		o.logger.Error(errStoreOrder)
 		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusInternalServerError))
 	}
 
-	return nil, validators.ErrorResponse{}
+	//builder order response
+	orderResponse, err := user2.FindOrderBuilder(&ctx, orderModel)
+	if err.IsError {
+		return nil, err
+	}
+
+	return orderResponse, validators.ErrorResponse{}
 }
 
 func (o *NgoOrder) Find(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {

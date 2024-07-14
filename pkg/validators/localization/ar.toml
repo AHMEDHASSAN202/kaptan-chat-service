@@ -181,3 +181,7 @@ other = "الحساب مطلوب"
 [Mobile_item_unavailable]
 description = "Mobile_item_unavailable"
 other = "هذا العنصر غير متاح"
+
+[CanNotBuildOrderResponse]
+description = "Internal server error"
+other = "Internal server errors occurred. Please contact support."

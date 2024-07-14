@@ -61,13 +61,13 @@ type Item struct {
 
 type City struct {
 	Id   primitive.ObjectID `json:"_id" bson:"id"`
-	Name Name               `json:"name" bson:"name"`
+	Name LocalizationText   `json:"name" bson:"name"`
 }
 
 type Brand struct {
 	mgm.DefaultModel `bson:",inline"`
-	Name             Name   `json:"name" bson:"name"`
-	Logo             string `json:"logo" bson:"logo"`
+	Name             LocalizationText `json:"name" bson:"name"`
+	Logo             string           `json:"logo" bson:"logo"`
 }
 
 type PercentsDate struct {
@@ -89,9 +89,9 @@ type Country struct {
 
 type Location struct {
 	mgm.DefaultModel `bson:",inline"`
-	Name             Name               `json:"name" bson:"name"`
+	Name             LocalizationText   `json:"name" bson:"name"`
 	City             City               `json:"city" bson:"city"`
-	Street           Name               `json:"street" bson:"street"`
+	Street           LocalizationText   `json:"street" bson:"street"`
 	CoverImage       string             `json:"cover_image" bson:"cover_image"`
 	PreparationTime  int                `json:"preparation_time" bson:"preparation_time"`
 	Logo             string             `json:"logo" bson:"logo"`
@@ -145,11 +145,6 @@ type Order struct {
 	StatusLogs       []StatusLog       `json:"status_logs" bson:"status_logs"`
 	Notes            string            `json:"notes" bson:"notes"`
 	Payment          Payment           `json:"payment" bson:"payment"`
-}
-
-type Name struct {
-	Ar string `json:"ar" bson:"ar"`
-	En string `json:"en" bson:"en"`
 }
 
 type OrderUseCase interface {
