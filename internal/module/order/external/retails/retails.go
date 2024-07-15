@@ -1,7 +1,11 @@
 package retails
 
-import "samm/internal/module/retails/domain"
+import (
+	"samm/internal/module/retails/domain"
+	domain2 "samm/internal/module/user/domain"
+)
 
 type IService struct {
-	LocationUseCase domain.LocationUseCase
+	LocationUseCase   domain.LocationUseCase
+	CollectionUseCase domain2.CollectionMethodUseCase
 }

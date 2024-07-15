@@ -27,6 +27,11 @@ type Account struct {
 	Id   primitive.ObjectID `json:"id" bson:"_id"`
 	Name Name               `json:"name" bson:"name"`
 }
+type Kitchen struct {
+	Id            primitive.ObjectID `json:"id" bson:"_id"`
+	Name          Name               `json:"name" bson:"name"`
+	AllowedStatus []string           `json:"allowed_status" bson:"allowed_status"`
+}
 
 type Admin struct {
 	mgm.DefaultModel `bson:",inline"`
@@ -40,6 +45,7 @@ type Admin struct {
 	Tokens           []string           `json:"tokens" bson:"tokens,omitempty"`
 	MetaData         MetaData           `json:"meta_data" bson:"meta_data"`
 	Account          *Account           `json:"account" bson:"account,omitempty"`
+	Kitchen          *Kitchen           `json:"kitchen" bson:"kitchen,omitempty"`
 	AdminDetails     []dto.AdminDetails `json:"admin_details" bson:"admin_details,omitempty"`
 	DeletedAt        *time.Time         `json:"deleted_at" bson:"deleted_at"`
 }
@@ -48,6 +54,7 @@ type AdminUseCase interface {
 	Create(ctx context.Context, dto *admin.CreateAdminDTO) (string, validators.ErrorResponse)
 	Update(ctx context.Context, dto *admin.CreateAdminDTO) (string, validators.ErrorResponse)
 	Delete(ctx context.Context, adminId primitive.ObjectID, accountId string) validators.ErrorResponse
+	DeleteBy(ctx context.Context, id primitive.ObjectID, key string) validators.ErrorResponse
 	List(ctx context.Context, dto *admin.ListAdminDTO) (interface{}, validators.ErrorResponse)
 	Find(ctx context.Context, adminId primitive.ObjectID, accountId string) (interface{}, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, input *admin.ChangeAdminStatusDto) validators.ErrorResponse

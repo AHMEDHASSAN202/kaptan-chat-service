@@ -7,18 +7,18 @@ import (
 )
 
 type CollectionMethod struct {
-	ID     string         `json:"id"`
-	Type   string         `json:"type"`
-	Fields map[string]any `json:"fields"`
-	Values map[string]any `json:"values"`
+	ID     primitive.ObjectID `json:"id"`
+	Type   string             `json:"type"`
+	Fields map[string]any     `json:"fields"`
+	Values map[string]any     `json:"values"`
 }
 
 type User struct {
-	ID               string           `json:"id"`
-	Name             string           `json:"name"`
-	Phone            string           `json:"phone"`
-	Country          string           `json:"country"`
-	CollectionMethod CollectionMethod `json:"collection_method"`
+	ID               primitive.ObjectID `json:"id"`
+	Name             string             `json:"name"`
+	PhoneNumber      string             `json:"phone_number"`
+	Country          string             `json:"country"`
+	CollectionMethod CollectionMethod   `json:"collection_method"`
 }
 
 type ItemPriceSummary struct {
@@ -35,7 +35,7 @@ type OrderPriceSummary struct {
 }
 
 type Item struct {
-	ID           string                     `json:"id"`
+	ID           primitive.ObjectID         `json:"id"`
 	Name         responses.LocalizationText `json:"name"`
 	Desc         responses.LocalizationText `json:"desc"`
 	Type         string                     `json:"type"`
@@ -45,7 +45,7 @@ type Item struct {
 	Calories     int                        `json:"calories"`
 	Price        float64                    `json:"price"`
 	Image        string                     `json:"image"`
-	Qty          string                     `json:"qty"`
+	Qty          int                        `json:"qty"`
 	PriceSummary ItemPriceSummary           `json:"price_summary"`
 	Addons       []Item                     `json:"addons"`
 }
@@ -56,7 +56,7 @@ type City struct {
 }
 
 type Brand struct {
-	ID   string                     `json:"id"`
+	ID   primitive.ObjectID         `json:"id"`
 	Name responses.LocalizationText `json:"name"`
 	Logo string                     `json:"logo"`
 }
@@ -73,7 +73,7 @@ type Country struct {
 }
 
 type Location struct {
-	ID              string                     `json:"id"`
+	ID              primitive.ObjectID         `json:"id"`
 	Name            responses.LocalizationText `json:"name"`
 	City            City                       `json:"city"`
 	Street          responses.LocalizationText `json:"street"`
@@ -81,7 +81,7 @@ type Location struct {
 	PreparationTime int                        `json:"preparation_time"`
 	Logo            string                     `json:"logo"`
 	Phone           string                     `json:"phone"`
-	Brand           Brand                      `json:"brand"`
+	Brand           Brand                      `json:"brand_details"`
 	Country         Country                    `json:"country"`
 	AccountId       primitive.ObjectID         `json:"account_id"`
 }
@@ -97,24 +97,24 @@ type Payment struct {
 }
 
 type FindOrderResponse struct {
-	ID               string            `json:"id"`
-	SerialNum        string            `json:"serial_num"`
-	User             User              `json:"user"`
-	Items            []Item            `json:"items"`
-	Location         Location          `json:"location"`
-	PreparationTime  int               `json:"preparation_time"`
-	PriceSummary     OrderPriceSummary `json:"price_summary"`
-	Status           string            `json:"status"`
-	IsFavourite      bool              `json:"is_favourite"`
-	AcceptedAt       *time.Time        `json:"accepted_at"`
-	PaidAt           *time.Time        `json:"paid_at"`
-	PickedUpAt       *time.Time        `json:"pickedup_at"`
-	ReadyForPickUpAt *time.Time        `json:"ready_for_pickup_at"`
-	CancelledAt      *time.Time        `json:"cancelled_at"`
-	RejectedAt       *time.Time        `json:"rejected_at"`
-	NoShowAt         *time.Time        `json:"no_show_at"`
-	Cancelled        Rejected          `json:"cancelled,omitempty"`
-	Rejected         Rejected          `json:"rejected,omitempty"`
-	Notes            string            `json:"notes"`
-	Payment          Payment           `json:"payment"`
+	ID               primitive.ObjectID `json:"id"`
+	SerialNum        string             `json:"serial_num"`
+	User             User               `json:"user"`
+	Items            []Item             `json:"items"`
+	Location         Location           `json:"location"`
+	PreparationTime  int                `json:"preparation_time"`
+	PriceSummary     OrderPriceSummary  `json:"price_summary"`
+	Status           string             `json:"status"`
+	IsFavourite      bool               `json:"is_favourite"`
+	AcceptedAt       *time.Time         `json:"accepted_at"`
+	PaidAt           *time.Time         `json:"paid_at"`
+	PickedUpAt       *time.Time         `json:"pickedup_at"`
+	ReadyForPickUpAt *time.Time         `json:"ready_for_pickup_at"`
+	CancelledAt      *time.Time         `json:"cancelled_at"`
+	RejectedAt       *time.Time         `json:"rejected_at"`
+	NoShowAt         *time.Time         `json:"no_show_at"`
+	Cancelled        *Rejected          `json:"cancelled,omitempty"`
+	Rejected         *Rejected          `json:"rejected,omitempty"`
+	Notes            string             `json:"notes"`
+	Payment          Payment            `json:"payment"`
 }

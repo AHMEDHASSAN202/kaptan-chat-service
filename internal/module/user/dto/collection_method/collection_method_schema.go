@@ -37,7 +37,6 @@ func ValidatePayload(ctx context.Context, validate *validator.Validate, schemaMa
 
 	for _, field := range schema.Fields {
 		value, exists := payload[field.Key]
-		fmt.Println(value, exists, field.Key)
 		if field.IsRequired && !exists {
 			fmt.Errorf("missing required field: %s", field.Key)
 			return validators.GetErrorResponse(&ctx, localization.E1008, nil, nil)

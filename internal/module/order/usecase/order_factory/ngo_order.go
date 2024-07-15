@@ -9,6 +9,7 @@ import (
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/external"
 	"samm/internal/module/order/responses/user"
+	"samm/internal/module/order/usecase/helper"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -25,7 +26,7 @@ import (
 
 type Deps struct {
 	validator  *validator.Validate
-	extService *external.ExtService
+	extService external.ExtService
 	logger     logger.ILogger
 	orderRepo  domain.OrderRepository
 }
@@ -51,11 +52,11 @@ func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrder
 	locationDoc, errResponse := o.extService.RetailsIService.GetLocationDetails(ctx, input.LocationId)
 	if errResponse.IsError {
 		o.logger.Error(errResponse.ErrorMessageObject.Text)
-		return nil, validators.GetErrorResponse(&ctx, localization.Mobile_location_not_available_error, nil, utils.GetAsPointer(http.StatusUnprocessableEntity))
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.Mobile_location_not_available_error, nil)
 	}
 
 	//check is the location available for the order
-	hasLocErr := CheckIsLocationReadyForNewOrder(&ctx, locationDoc)
+	hasLocErr := helper.CheckIsLocationReadyForNewOrder(&ctx, locationDoc)
 	if hasLocErr.IsError {
 		o.logger.Error(hasLocErr.ErrorMessageObject.Text)
 		return nil, hasLocErr
@@ -65,21 +66,28 @@ func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrder
 	menuDetails, errResponse := o.extService.MenuIService.GetMenuItemsDetails(ctx, input.MenuItems, input.LocationId)
 	if errResponse.IsError {
 		o.logger.Error(errResponse.ErrorMessageObject.Text)
-		return nil, validators.GetErrorResponse(&ctx, localization.E1002Item, nil, nil)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusInternalServerError))
 	}
 
 	//check menu items are available for the order
-	hasMenuErr := CheckIsMenuItemsValid(&ctx, menuDetails, input.MenuItems)
+	hasMenuErr := helper.CheckIsMenuItemsValid(&ctx, menuDetails, input.MenuItems, true)
 	if hasMenuErr.IsError {
-		o.logger.Error(hasMenuErr.ErrorMessageObject.Text)
+		o.logger.Error(hasMenuErr)
 		return nil, hasMenuErr
 	}
 
+	//get user collection method
+	collectionMethod, hasCollectionMethodErr := o.extService.RetailsIService.FindCollectionMethod(ctx, input.CollectionMethodId, ctx.Value("causer-id").(string))
+	if hasCollectionMethodErr.IsError {
+		o.logger.Error(hasCollectionMethodErr)
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
+	}
+
 	//order builder
-	orderModel, errOrderModel := user2.CreateOrderBuilder(ctx, input, locationDoc, menuDetails)
+	orderModel, errOrderModel := user2.CreateOrderBuilder(ctx, input, locationDoc, menuDetails, collectionMethod)
 	if errOrderModel.IsError {
-		o.logger.Error(hasMenuErr.ErrorMessageObject.Text)
-		return nil, hasMenuErr
+		o.logger.Error(errOrderModel.ErrorMessageObject.Text)
+		return nil, errOrderModel
 	}
 
 	//save order

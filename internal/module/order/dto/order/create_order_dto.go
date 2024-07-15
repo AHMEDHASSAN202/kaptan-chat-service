@@ -11,6 +11,8 @@ type CreateOrderDto struct {
 	UserId             string     `header:"causer-id" validate:"required"`
 	CollectionMethodId string     `json:"collection_method_id" validate:"required"`
 	MenuItems          []MenuItem `json:"menu_items" validate:"required,dive"`
+	IsFavourite        bool       `json:"is_favourite" bson:"is_favourite"`
+	Notes              string     `json:"notes" bson:"notes"`
 }
 
 func (d *CreateOrderDto) Validate(ctx context.Context, validate *validator.Validate) validators.ErrorResponse {

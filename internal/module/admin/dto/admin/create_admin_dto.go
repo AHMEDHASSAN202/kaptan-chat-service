@@ -19,6 +19,11 @@ type Account struct {
 	Id   string `json:"id" validate:"required"`
 	Name Name   `json:"name" validate:"required"`
 }
+type Kitchen struct {
+	Id            string   `json:"id" validate:"required"`
+	Name          Name     `json:"name" validate:"required"`
+	AllowedStatus []string `json:"allowed_status"`
+}
 
 type CreateAdminDTO struct {
 	ID              primitive.ObjectID `json:"-"`
@@ -27,11 +32,12 @@ type CreateAdminDTO struct {
 	Status          string             `json:"status" validate:"oneof=active inactive"`
 	Password        string             `json:"password" validate:"Password_required_if_id_is_zero,omitempty,min=8"`
 	ConfirmPassword string             `json:"password_confirmation" validate:"required_with=Password,eqfield=Password"`
-	Type            string             `json:"type" validate:"required,oneof=admin portal"`
+	Type            string             `json:"type" validate:"required,oneof=admin portal kitchen"`
 	RoleId          string             `json:"role_id" validate:"required,mongodb,RoleExistsValidation"`
 	CountryIds      []string           `json:"country_ids" validate:"required,country_ids"`
 	AdminDetails    dto.AdminDetails   `json:"-"`
 	Account         *Account           `json:"account"`
+	Kitchen         *Kitchen           `json:"kitchen"`
 }
 
 func (input *CreateAdminDTO) Validate(c echo.Context, validate *validator.Validate, validateEmailIsUnique func(fl validator.FieldLevel) bool, passwordRequiredIfIdIsZero func(fl validator.FieldLevel) bool, roleExists func(fl validator.FieldLevel) bool) validators.ErrorResponse {

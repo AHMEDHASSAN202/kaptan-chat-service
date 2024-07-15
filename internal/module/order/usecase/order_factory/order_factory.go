@@ -3,6 +3,7 @@ package order_factory
 import (
 	"errors"
 	"github.com/go-playground/validator/v10"
+	"samm/internal/module/order/domain"
 	"samm/internal/module/order/external"
 	"samm/pkg/logger"
 )
@@ -11,11 +12,11 @@ type OrderFactory struct {
 	orderTypes map[string]func() IOrder
 }
 
-func NewOrderFactory(validator *validator.Validate, extService *external.ExtService, logger logger.ILogger) *OrderFactory {
+func NewOrderFactory(validator *validator.Validate, extService external.ExtService, logger logger.ILogger, orderRepo domain.OrderRepository) *OrderFactory {
 	return &OrderFactory{
 		orderTypes: map[string]func() IOrder{
 			"ktha": func() IOrder {
-				return &NgoOrder{Deps: Deps{validator: validator, extService: extService, logger: logger}}
+				return &NgoOrder{Deps: Deps{validator: validator, extService: extService, logger: logger, orderRepo: orderRepo}}
 			},
 		},
 	}

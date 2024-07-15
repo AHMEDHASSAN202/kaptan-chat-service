@@ -13,7 +13,7 @@ import (
 
 func FindOrderBuilder(ctx *context.Context, orderModel *domain.Order) (*user.FindOrderResponse, validators.ErrorResponse) {
 	orderResponse := user.FindOrderResponse{}
-	err := copier.Copy(&orderResponse, orderModel)
+	err := copier.CopyWithOption(&orderResponse, orderModel, copier.Option{DeepCopy: true})
 	if err != nil {
 		return nil, validators.GetErrorResponse(ctx, localization.CanNotBuildOrderResponse, nil, utils.GetAsPointer(http.StatusInternalServerError))
 	}

@@ -26,7 +26,7 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 	mobile := e.Group("api/v1/mobile/order")
 	{
 		mobile.POST("/calculate-order-cost", handler.CalculateOrderCost)
-		mobile.POST("", handler.CreateOrder)
+		mobile.POST("", handler.CreateOrder, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 	}
 }
 
@@ -70,7 +70,7 @@ func (a *OrderHandler) CreateOrder(c echo.Context) error {
 
 	orderResponse, errResp := a.orderUsecase.StoreOrder(ctx, &orderDto)
 	if errResp.IsError {
-		a.logger.Error(errResp.ErrorMessageObject.Text)
+		a.logger.Error(errResp)
 		return validators.ErrorResp(c, errResp)
 	}
 

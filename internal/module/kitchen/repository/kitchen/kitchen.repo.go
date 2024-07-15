@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+	"errors"
 	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,6 +12,7 @@ import (
 	"samm/internal/module/kitchen/domain"
 	"samm/internal/module/kitchen/dto/kitchen"
 	"samm/pkg/logger"
+	"samm/pkg/utils"
 	"time"
 )
 
@@ -47,9 +49,16 @@ func (l KitchenRepository) UpdateKitchen(kitchen *domain.Kitchen) (err error) {
 }
 func (l KitchenRepository) FindKitchen(ctx context.Context, Id primitive.ObjectID) (kitchen *domain.Kitchen, err error) {
 	domainData := domain.Kitchen{}
-	filter := bson.M{"deleted_at": nil, "_id": Id}
-	err = l.kitchenCollection.FirstWithCtx(ctx, filter, &domainData)
+	var filters []interface{}
 
+	filters = append(filters, bson.M{"$match": bson.M{"deleted_at": nil, "_id": Id}})
+	filters = append(filters, bson.M{"$lookup": bson.M{"from": "locations", "localField": "location_ids", "foreignField": "_id", "as": "locations"}})
+	filters = append(filters, bson.M{"$lookup": bson.M{"from": "accounts", "localField": "account_ids", "foreignField": "_id", "as": "accounts"}})
+
+	exists, err := l.kitchenCollection.SimpleAggregateFirstWithCtx(ctx, &domainData, filters...)
+	if !exists {
+		return &domainData, errors.New("Not Found")
+	}
 	return &domainData, err
 }
 
@@ -71,9 +80,18 @@ func (l *KitchenRepository) List(ctx *context.Context, dto *kitchen.ListKitchenD
 
 	if dto.Query != "" {
 		pattern := ".*" + dto.Query + ".*"
-		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name": bson.M{"$regex": pattern, "$options": "i"}}, {"phone_number": bson.M{"$regex": pattern, "$options": "i"}}}})
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name.ar": bson.M{"$regex": pattern, "$options": "i"}}, {"name.en": bson.M{"$regex": pattern, "$options": "i"}}}})
 	}
-
+	if dto.LocationId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{
+			"location_ids": utils.ConvertStringIdToObjectId(dto.LocationId),
+		})
+	}
+	if dto.AccountId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{
+			"account_ids": utils.ConvertStringIdToObjectId(dto.AccountId),
+		})
+	}
 	data, err := New(l.kitchenCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
 
 	if data == nil || data.Data == nil {
@@ -95,5 +113,3 @@ func (l *KitchenRepository) List(ctx *context.Context, dto *kitchen.ListKitchenD
 
 	return
 }
-
-
