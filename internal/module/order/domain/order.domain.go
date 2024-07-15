@@ -156,4 +156,5 @@ type OrderUseCase interface {
 
 type OrderRepository interface {
 	StoreOrder(ctx context.Context, order *Order) (*Order, error)
+	UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string) (bool, error)
 }

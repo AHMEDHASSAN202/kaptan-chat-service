@@ -5,15 +5,19 @@ import (
 	"github.com/go-playground/validator/v10"
 	"net/http"
 	user2 "samm/internal/module/order/builder/user"
+	"samm/internal/module/order/consts"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/external"
 	"samm/internal/module/order/responses/user"
 	"samm/internal/module/order/usecase/helper"
+	"samm/pkg/database/redis"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+	"strings"
+	"time"
 )
 
 //OrderFactory.Make("ktha")->Create()->sendNotification();
@@ -25,10 +29,11 @@ import (
 //OrderFactory.Make("ktha"->Find(id))->ToCancel(dto);
 
 type Deps struct {
-	validator  *validator.Validate
-	extService external.ExtService
-	logger     logger.ILogger
-	orderRepo  domain.OrderRepository
+	validator   *validator.Validate
+	extService  external.ExtService
+	logger      logger.ILogger
+	orderRepo   domain.OrderRepository
+	redisClient *redis.RedisClient
 }
 
 type NgoOrder struct {
@@ -90,12 +95,31 @@ func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrder
 		return nil, errOrderModel
 	}
 
+	//check if user has running orders
+	hasRunningOrders, errHasRunningOrders := o.orderRepo.UserHasOrders(ctx, orderModel.User.ID, []string{consts.OrderStatus.Initiated})
+	if errHasRunningOrders != nil {
+		o.logger.Error(errHasRunningOrders)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+	if hasRunningOrders {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.UserHasRunningOrders, nil)
+	}
+
+	//new lock to prevent user create to order in the same time
+	lockKey := strings.Replace(consts.CREATE_ORDER_LOCK_PREFIX, ":userId", utils.ConvertObjectIdToStringId(orderModel.User.ID), 1)
+	if errLock := redis.Lock(ctx, o.redisClient, o.logger, lockKey, time.Second*10); errLock.IsError {
+		return nil, errLock
+	}
+
 	//save order
 	orderModel, errStoreOrder := o.orderRepo.StoreOrder(ctx, orderModel)
 	if errStoreOrder != nil {
 		o.logger.Error(errStoreOrder)
 		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusInternalServerError))
 	}
+
+	//unlock the lock
+	redis.UnLock(ctx, o.redisClient, o.logger, lockKey)
 
 	//builder order response
 	orderResponse, err := user2.FindOrderBuilder(&ctx, orderModel)

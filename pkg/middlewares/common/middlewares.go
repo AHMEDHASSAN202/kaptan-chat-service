@@ -1,15 +1,18 @@
 package commmon
 
 import (
+	"samm/pkg/database/redis"
 	"samm/pkg/logger"
 )
 
 type ProviderMiddlewares struct {
-	logger logger.ILogger
+	logger      logger.ILogger
+	RedisClient *redis.RedisClient
 }
 
-func NewCommonMiddlewares(logger logger.ILogger) *ProviderMiddlewares {
+func NewCommonMiddlewares(logger logger.ILogger, redisClient *redis.RedisClient) *ProviderMiddlewares {
 	return &ProviderMiddlewares{
-		logger: logger,
+		logger:      logger,
+		RedisClient: redisClient,
 	}
 }

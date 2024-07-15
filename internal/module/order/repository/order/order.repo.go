@@ -3,6 +3,8 @@ package mongodb
 import (
 	"context"
 	"github.com/kamva/mgm/v3"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/order/domain"
 )
@@ -27,4 +29,12 @@ func (l OrderRepository) StoreOrder(ctx context.Context, order *domain.Order) (*
 	}
 	return order, nil
 
+}
+
+func (l OrderRepository) UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string) (bool, error) {
+	ordersCount, err := mgm.Coll(&domain.Order{}).CountDocuments(ctx, bson.M{"user._id": userId, "status": bson.M{"$in": orderStatus}})
+	if err != nil {
+		return false, err
+	}
+	return ordersCount >= 1, nil
 }
