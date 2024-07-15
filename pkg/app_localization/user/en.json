@@ -1,7 +1,7 @@
 {
     "intro_button_text": "Start now!",
     "userLocation_title": "Select your location",
-    "userLocation_subtitle": "'please select your current location to filter the nearest stores available to you'",
+    "userLocation_subtitle": "please select your current location to filter the nearest stores available to you",
     "useLocation_location_hint": "Select Area",
     "auth_signin_title": "Sign in",
     "auth_signin_subtitle": "Please sign in to complete your order",
