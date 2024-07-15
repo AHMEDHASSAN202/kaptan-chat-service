@@ -58,4 +58,5 @@ const (
     RoleHasAdminsValidation = "RoleHasAdminsValidation" // The role you are trying to delete is currently assigned to one or more admins. Please reassign these admins to a different role before attempting to delete this role.
     SKU_name_is_unique_rules_validation = "SKU_name_is_unique_rules_validation" // Feature not supported
     Timeformat = "Timeformat" // time format rule validation
+    Validate_Account_Location_validation = "Validate_Account_Location_validation" // Validate_Account_Location_validation
 )

@@ -38,28 +38,28 @@ func ValidatePayload(ctx context.Context, validate *validator.Validate, schemaMa
 	for _, field := range schema.Fields {
 		value, exists := payload[field.Key]
 		if field.IsRequired && !exists {
-			fmt.Errorf("missing required field: %s", field.Key)
+			fmt.Println(fmt.Sprintf("missing required field: %s", field.Key))
 			return validators.GetErrorResponse(&ctx, localization.E1008, nil, nil)
 		}
 
 		if exists {
 			switch field.Type {
-			case "TextPlate", "DropBox":
+			case "TextPlate", "Text", "DropBox":
 				if reflect.TypeOf(value).Kind() != reflect.String {
-					fmt.Errorf("field %s should be a string", field.Key)
+					fmt.Println(fmt.Sprintf("field %s should be a string", field.Key))
 					return validators.GetErrorResponse(&ctx, localization.E1008, nil, nil)
 				}
 				if field.IsRequired && value.(string) == "" {
-					fmt.Errorf("field %s should not be empty", field.Key)
+					fmt.Println(fmt.Sprintf("field %s should not be empty", field.Key))
 					return validators.GetErrorResponse(&ctx, localization.E1008, nil, nil)
 				}
 			case "CheckBox":
 				if reflect.TypeOf(value).Kind() != reflect.Bool {
-					fmt.Errorf("field %s should be a boolean", field.Key)
+					fmt.Println(fmt.Sprintf("field %s should be a boolean", field.Key))
 					return validators.GetErrorResponse(&ctx, localization.E1008, nil, nil)
 				}
 			default:
-				fmt.Errorf("unsupported field type: %s", field.Type)
+				fmt.Println(fmt.Sprintf("unsupported field type: %s", field.Type))
 				return validators.GetErrorResponse(&ctx, localization.E1008, nil, nil)
 			}
 		}

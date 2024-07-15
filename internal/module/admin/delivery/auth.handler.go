@@ -11,6 +11,7 @@ import (
 	"samm/pkg/logger"
 	"samm/pkg/middlewares/admin"
 	commmon "samm/pkg/middlewares/common"
+	"samm/pkg/middlewares/kitchen"
 	"samm/pkg/middlewares/portal"
 	"samm/pkg/utils"
 	dto2 "samm/pkg/utils/dto"
@@ -25,7 +26,7 @@ type AdminAuthHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitAdminAuthController(e *echo.Echo, adminUseCase domain.AdminUseCase, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, portalMiddlewares *portal.ProviderMiddlewares, adminCustomValidator custom_validators.AdminCustomValidator, commonMiddlewares *commmon.ProviderMiddlewares) {
+func InitAdminAuthController(e *echo.Echo, adminUseCase domain.AdminUseCase, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, portalMiddlewares *portal.ProviderMiddlewares, kitchenMiddlewares *kitchen.ProviderMiddlewares, adminCustomValidator custom_validators.AdminCustomValidator, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &AdminAuthHandler{
 		adminUseCase:         adminUseCase,
 		validator:            validator,
@@ -46,6 +47,13 @@ func InitAdminAuthController(e *echo.Echo, adminUseCase domain.AdminUseCase, val
 		portalAuth.POST("/login", handler.PortalLogin)
 		portalAuth.GET("/profile", handler.PortalProfile, portalMiddlewares.AuthMiddleware)
 		portalAuth.PUT("/profile", handler.UpdatePortalProfile, portalMiddlewares.AuthMiddleware)
+	}
+
+	kitchenAuth := e.Group("api/v1/kitchen/auth")
+	{
+		kitchenAuth.POST("/login", handler.KitchenLogin)
+		kitchenAuth.GET("/profile", handler.kitchenProfile, kitchenMiddlewares.AuthMiddleware)
+		kitchenAuth.PUT("/profile", handler.UpdateKitchenProfile, kitchenMiddlewares.AuthMiddleware)
 	}
 }
 
@@ -101,6 +109,32 @@ func (a *AdminAuthHandler) PortalLogin(c echo.Context) error {
 	return validators.SuccessResponse(c, map[string]interface{}{"profile": profile, "token": token})
 }
 
+func (a *AdminAuthHandler) KitchenLogin(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input dto.KitchenAuthDTO
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	profile, token, errResp := a.adminUseCase.KitchenLogin(ctx, &input)
+	if errResp.IsError {
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"profile": profile, "token": token})
+}
+
 func (a *AdminAuthHandler) AdminProfile(c echo.Context) error {
 	ctx := c.Request().Context()
 	if ctx == nil {
@@ -123,6 +157,27 @@ func (a *AdminAuthHandler) AdminProfile(c echo.Context) error {
 }
 
 func (a *AdminAuthHandler) PortalProfile(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input dto2.PortalHeaders
+	binder := &echo.DefaultBinder{}
+	err := binder.BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	profile, errResp := a.adminUseCase.KitchenProfile(ctx, dto.KitchenProfileDTO{AdminId: input.CauserId, CauserDetails: input.GetCauserDetailsAsMap()})
+	if errResp.IsError {
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"profile": profile})
+}
+
+func (a *AdminAuthHandler) kitchenProfile(c echo.Context) error {
 	ctx := c.Request().Context()
 	if ctx == nil {
 		ctx = context.Background()
@@ -196,6 +251,36 @@ func (a *AdminAuthHandler) UpdatePortalProfile(c echo.Context) error {
 	}
 
 	profile, errResp := a.adminUseCase.UpdatePortalProfile(ctx, &input)
+	if errResp.IsError {
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"profile": profile})
+}
+
+func (a *AdminAuthHandler) UpdateKitchenProfile(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input dto.UpdateKitchenProfileDTO
+	binder := &echo.DefaultBinder{}
+	if err := c.Bind(&input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	input.ID = utils.ConvertStringIdToObjectId(input.CauserId)
+	validationErr := input.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique(), a.adminCustomValidator.PasswordRequiredIfIdIsZero())
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	profile, errResp := a.adminUseCase.UpdateKitchenProfile(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}

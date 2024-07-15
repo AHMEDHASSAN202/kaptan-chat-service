@@ -17,6 +17,15 @@
       },
       {
         "name": {
+          "ar": "اسم السياره",
+          "en": "car name"
+        },
+        "type": "Text",
+        "isRequired": false,
+        "key": "car_name"
+      },
+      {
+        "name": {
           "ar": "لون السياره",
           "en": "car color"
         },

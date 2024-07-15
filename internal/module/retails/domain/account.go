@@ -18,6 +18,8 @@ type Account struct {
 	AllowedBrandIds []primitive.ObjectID `json:"allowed_brand_ids" bson:"allowed_brand_ids"`
 	Country         Country              `json:"country" bson:"country"`
 	Brands          []Brand              `json:"brands" bson:"-"`
+	Percent         float64              ` json:"percent" bson:"percent"`
+	BankAccount     BankAccount          `json:"bank_account" bson:"bank_account"`
 	LocationsCount  int                  `json:"locations_count" bson:"locations_count,omitempty"`
 	DeletedAt       *time.Time           `json:"-" bson:"deleted_at"`
 }

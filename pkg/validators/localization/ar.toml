@@ -190,6 +190,10 @@ other = "غير مسموح بحذف مطعم مستخدم"
 description = "Account_Used_in_kitchen"
 other = "غير مسموح بحذف حساب مستخدم"
 
+[Validate_Account_Location_validation]
+description = "Validate_Account_Location_validation"
+other = "المطاعم او حساب المطعم مطلوب "
+
 [CanNotBuildOrderResponse]
 description = "Internal server error"
 other = "Internal server errors occurred. Please contact support."

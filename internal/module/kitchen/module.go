@@ -2,6 +2,7 @@ package kitchen
 
 import (
 	"go.uber.org/fx"
+	"samm/internal/module/kitchen/custom_validators"
 	"samm/internal/module/kitchen/delivery"
 	kitchen_repo "samm/internal/module/kitchen/repository/kitchen"
 	kitchen_usecase "samm/internal/module/kitchen/usecase/kitchen"
@@ -11,6 +12,7 @@ import (
 var Module = fx.Options(
 	fx.Provide(
 		// App Config
+		custom_validators.InitNewCustomValidatorsKitchen,
 		kitchen_repo.NewKitchenMongoRepository,
 		kitchen_usecase.NewKitchenUseCase,
 	),
@@ -18,5 +20,3 @@ var Module = fx.Options(
 		delivery.InitKitchenController,
 	),
 )
-
-
