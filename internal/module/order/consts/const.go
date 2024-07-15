@@ -18,3 +18,5 @@ var (
 	ActorUser    = "user"
 	ActorKitchen = "kitchen"
 )
+
+const CREATE_ORDER_LOCK_PREFIX = "CREATE-ORDER-:userId"

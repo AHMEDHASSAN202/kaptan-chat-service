@@ -5,6 +5,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/external"
+	"samm/pkg/database/redis"
 	"samm/pkg/logger"
 )
 
@@ -12,11 +13,11 @@ type OrderFactory struct {
 	orderTypes map[string]func() IOrder
 }
 
-func NewOrderFactory(validator *validator.Validate, extService external.ExtService, logger logger.ILogger, orderRepo domain.OrderRepository) *OrderFactory {
+func NewOrderFactory(validator *validator.Validate, extService external.ExtService, logger logger.ILogger, orderRepo domain.OrderRepository, redisClient *redis.RedisClient) *OrderFactory {
 	return &OrderFactory{
 		orderTypes: map[string]func() IOrder{
 			"ktha": func() IOrder {
-				return &NgoOrder{Deps: Deps{validator: validator, extService: extService, logger: logger, orderRepo: orderRepo}}
+				return &NgoOrder{Deps: Deps{validator: validator, extService: extService, logger: logger, orderRepo: orderRepo, redisClient: redisClient}}
 			},
 		},
 	}
