@@ -10,6 +10,7 @@ import (
 	"samm/internal/module/admin/dto/admin_portal"
 	"samm/internal/module/admin/dto/auth"
 	role2 "samm/internal/module/admin/responses/role"
+	"samm/internal/module/kitchen/dto/kitchen"
 	"samm/pkg/utils"
 	"strings"
 )
@@ -31,36 +32,54 @@ func (i *AdminCustomValidator) ValidateEmailIsUnique() func(fl validator.FieldLe
 		val := fl.Field().Interface().(string)
 		//read the value of the top struct to get accountId
 		var adminId primitive.ObjectID
-
+		var adminType string
 		switch fl.Top().Interface().(type) {
 		case *admin.CreateAdminDTO:
+			adminType = consts.ADMIN_TYPE
 			adminDto, ok := fl.Top().Interface().(*admin.CreateAdminDTO)
 			if !ok {
 				return false
 			}
 			adminId = adminDto.ID
 		case *auth.UpdateAdminProfileDTO:
+			adminType = consts.ADMIN_TYPE
 			adminDto, ok := fl.Top().Interface().(*auth.UpdateAdminProfileDTO)
 			if !ok {
 				return false
 			}
 			adminId = adminDto.ID
 		case *auth.UpdatePortalProfileDTO:
+			adminType = consts.PORTAL_TYPE
 			adminDto, ok := fl.Top().Interface().(*auth.UpdatePortalProfileDTO)
 			if !ok {
 				return false
 			}
 			adminId = adminDto.ID
+		case *auth.UpdateKitchenProfileDTO:
+			adminType = consts.KITCHEN_TYPE
+			adminDto, ok := fl.Top().Interface().(*auth.UpdateKitchenProfileDTO)
+			if !ok {
+				return false
+			}
+			adminId = adminDto.ID
 		case *admin_portal.CreateAdminPortalDTO:
+			adminType = consts.PORTAL_TYPE
 			adminDto, ok := fl.Top().Interface().(*admin_portal.CreateAdminPortalDTO)
 			if !ok {
 				return false
 			}
 			adminId = adminDto.ID
-			//default:
-			//return false
+		case *kitchen.StoreKitchenDto:
+			adminType = consts.KITCHEN_TYPE
+			adminDto, ok := fl.Top().Interface().(*kitchen.StoreKitchenDto)
+			if !ok {
+				return false
+			}
+			adminId = adminDto.ID
+		default:
+			return false
 		}
-		isExists, err := i.adminUseCase.CheckEmailExists(context.Background(), strings.ToLower(val), adminId)
+		isExists, err := i.adminUseCase.CheckEmailExists(context.Background(), strings.ToLower(val), adminId, adminType)
 		if err.IsError {
 			return false
 		}
@@ -92,6 +111,12 @@ func (i *AdminCustomValidator) PasswordRequiredIfIdIsZero() func(fl validator.Fi
 			adminId = adminDto.ID
 		case *auth.UpdatePortalProfileDTO:
 			adminDto, ok := fl.Top().Interface().(*auth.UpdatePortalProfileDTO)
+			if !ok {
+				return false
+			}
+			adminId = adminDto.ID
+		case *auth.UpdateKitchenProfileDTO:
+			adminDto, ok := fl.Top().Interface().(*auth.UpdateKitchenProfileDTO)
 			if !ok {
 				return false
 			}

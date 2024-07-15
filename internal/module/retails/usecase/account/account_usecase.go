@@ -10,12 +10,15 @@ import (
 	"samm/internal/module/admin/consts"
 	domain2 "samm/internal/module/admin/domain"
 	"samm/internal/module/admin/dto/admin"
+	domain3 "samm/internal/module/kitchen/domain"
+	"samm/internal/module/kitchen/dto/kitchen"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/account"
 	"samm/internal/module/retails/dto/brand"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 	"time"
 )
 
@@ -25,6 +28,7 @@ type AccountUseCase struct {
 	brandUseCase    domain.BrandUseCase
 	adminUseCase    domain2.AdminUseCase
 	logger          logger.ILogger
+	kitchenUseCase  domain3.KitchenUseCase
 }
 
 func (l AccountUseCase) StoreAccount(ctx context.Context, payload *account.StoreAccountDto) (err validators.ErrorResponse) {
@@ -78,6 +82,10 @@ func (l AccountUseCase) UpdateAccount(ctx context.Context, id string, payload *a
 	accountDomain.Country.Name.En = payload.Country.Name.En
 	accountDomain.AllowedBrandIds = utils.ConvertStringIdsToObjectIds(payload.AllowedBrandIds)
 	accountDomain.UpdatedAt = time.Now()
+	accountDomain.BankAccount.AccountNumber = payload.BankAccount.AccountNumber
+	accountDomain.BankAccount.BankName = payload.BankAccount.BankName
+	accountDomain.BankAccount.CompanyName = payload.BankAccount.CompanyName
+	accountDomain.Percent = payload.Percent
 
 	errRe = l.repo.UpdateAccount(ctx, accountDomain)
 	if errRe != nil {
@@ -109,9 +117,17 @@ func (l AccountUseCase) CheckAccountEmail(ctx context.Context, email string, acc
 }
 func (l AccountUseCase) DeleteAccount(ctx context.Context, Id string) (err validators.ErrorResponse) {
 
+	// Check if it has any kitchen
+	listKitchen := kitchen.ListKitchenDto{
+		AccountId: Id,
+	}
+	kitchens := l.kitchenUseCase.KitchenExists(&ctx, &listKitchen)
+	if kitchens {
+		return validators.GetErrorResponse(&ctx, localization.Account_Used_in_kitchen, nil, nil)
+	}
+
 	erre := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
 		// Delete Account
-
 		errRe := l.repo.DeleteAccount(sc, utils.ConvertStringIdToObjectId(Id))
 		if errRe != nil {
 			return errRe
@@ -141,12 +157,13 @@ func (l AccountUseCase) ListAccount(ctx context.Context, payload *account.ListAc
 
 const tag = " AccountUseCase "
 
-func NewAccountUseCase(repo domain.AccountRepository, adminUseCase domain2.AdminUseCase, brandUseCase domain.BrandUseCase, locationUseCase domain.LocationUseCase, logger logger.ILogger) domain.AccountUseCase {
+func NewAccountUseCase(repo domain.AccountRepository, adminUseCase domain2.AdminUseCase, brandUseCase domain.BrandUseCase, locationUseCase domain.LocationUseCase, logger logger.ILogger, kitchenUseCase domain3.KitchenUseCase) domain.AccountUseCase {
 	return &AccountUseCase{
 		repo:            repo,
 		brandUseCase:    brandUseCase,
 		locationUseCase: locationUseCase,
 		adminUseCase:    adminUseCase,
 		logger:          logger,
+		kitchenUseCase:  kitchenUseCase,
 	}
 }

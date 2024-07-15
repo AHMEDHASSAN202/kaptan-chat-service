@@ -212,6 +212,22 @@ func GetErrorResponse(ctx *context.Context, code string, data map[string]interfa
 	}
 }
 
+func GetErrorResponseWithErrors(ctx *context.Context, code string, data map[string]interface{}) ErrorResponse {
+	ptr := http.StatusUnprocessableEntity
+	message := localization.GetTranslation(ctx, code, data, "")
+	return ErrorResponse{
+		ValidationErrors: map[string][]string{
+			code: []string{message},
+		},
+		IsError: true,
+		ErrorMessageObject: &Message{
+			Text: message,
+			Code: code,
+		},
+		StatusCode: ptr,
+	}
+}
+
 func SuccessResponse(c echo.Context, data any) error {
 	if data == nil {
 		data = make(map[string]interface{})

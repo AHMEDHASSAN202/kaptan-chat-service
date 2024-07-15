@@ -4,10 +4,12 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"net/http"
-	"samm/internal/module/order/builder"
+	user2 "samm/internal/module/order/builder/user"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/external"
+	"samm/internal/module/order/responses/user"
+	"samm/internal/module/order/usecase/helper"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -24,7 +26,7 @@ import (
 
 type Deps struct {
 	validator  *validator.Validate
-	extService *external.ExtService
+	extService external.ExtService
 	logger     logger.ILogger
 	orderRepo  domain.OrderRepository
 }
@@ -38,7 +40,7 @@ func (o *NgoOrder) Make() IOrder {
 	return o
 }
 
-func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
+func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrderResponse, validators.ErrorResponse) {
 	//validate
 	input := dto.(*order.CreateOrderDto)
 	validateErr := input.Validate(ctx, o.Deps.validator)
@@ -50,11 +52,11 @@ func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*domain.Order, 
 	locationDoc, errResponse := o.extService.RetailsIService.GetLocationDetails(ctx, input.LocationId)
 	if errResponse.IsError {
 		o.logger.Error(errResponse.ErrorMessageObject.Text)
-		return nil, validators.GetErrorResponse(&ctx, localization.Mobile_location_not_available_error, nil, utils.GetAsPointer(http.StatusUnprocessableEntity))
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.Mobile_location_not_available_error, nil)
 	}
 
 	//check is the location available for the order
-	hasLocErr := CheckIsLocationReadyForNewOrder(&ctx, locationDoc)
+	hasLocErr := helper.CheckIsLocationReadyForNewOrder(&ctx, locationDoc)
 	if hasLocErr.IsError {
 		o.logger.Error(hasLocErr.ErrorMessageObject.Text)
 		return nil, hasLocErr
@@ -64,30 +66,44 @@ func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*domain.Order, 
 	menuDetails, errResponse := o.extService.MenuIService.GetMenuItemsDetails(ctx, input.MenuItems, input.LocationId)
 	if errResponse.IsError {
 		o.logger.Error(errResponse.ErrorMessageObject.Text)
-		return nil, validators.GetErrorResponse(&ctx, localization.E1002Item, nil, nil)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusInternalServerError))
 	}
 
 	//check menu items are available for the order
-	hasMenuErr := CheckIsMenuItemsValid(&ctx, menuDetails, input.MenuItems)
+	hasMenuErr := helper.CheckIsMenuItemsValid(&ctx, menuDetails, input.MenuItems, true)
 	if hasMenuErr.IsError {
-		o.logger.Error(hasMenuErr.ErrorMessageObject.Text)
+		o.logger.Error(hasMenuErr)
 		return nil, hasMenuErr
+	}
+
+	//get user collection method
+	collectionMethod, hasCollectionMethodErr := o.extService.RetailsIService.FindCollectionMethod(ctx, input.CollectionMethodId, ctx.Value("causer-id").(string))
+	if hasCollectionMethodErr.IsError {
+		o.logger.Error(hasCollectionMethodErr)
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
 	}
 
 	//order builder
-	orderModel, errOrderModel := builder.CreateOrderBuilder(ctx, input, locationDoc, menuDetails)
+	orderModel, errOrderModel := user2.CreateOrderBuilder(ctx, input, locationDoc, menuDetails, collectionMethod)
 	if errOrderModel.IsError {
-		o.logger.Error(hasMenuErr.ErrorMessageObject.Text)
-		return nil, hasMenuErr
+		o.logger.Error(errOrderModel.ErrorMessageObject.Text)
+		return nil, errOrderModel
 	}
 
-	_, errStoreOrder := o.orderRepo.StoreOrder(ctx, orderModel)
+	//save order
+	orderModel, errStoreOrder := o.orderRepo.StoreOrder(ctx, orderModel)
 	if errStoreOrder != nil {
 		o.logger.Error(errStoreOrder)
 		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusInternalServerError))
 	}
 
-	return nil, validators.ErrorResponse{}
+	//builder order response
+	orderResponse, err := user2.FindOrderBuilder(&ctx, orderModel)
+	if err.IsError {
+		return nil, err
+	}
+
+	return orderResponse, validators.ErrorResponse{}
 }
 
 func (o *NgoOrder) Find(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {

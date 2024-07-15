@@ -133,6 +133,7 @@ func (a *AdminPortalHandler) CreateAdminPortal(c echo.Context) error {
 	id, errResp := a.adminUseCase.Create(ctx, &dto.CreateAdminDTO{
 		Name:       input.Name,
 		Email:      input.Email,
+		Status:     input.Status,
 		Password:   input.Password,
 		Type:       consts.PORTAL_TYPE,
 		RoleId:     input.RoleId,

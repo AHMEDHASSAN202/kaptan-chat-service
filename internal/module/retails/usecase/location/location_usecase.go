@@ -4,6 +4,8 @@ import (
 	"context"
 	mongopagination "github.com/gobeam/mongo-go-pagination"
 	commonDomain "samm/internal/module/common/domain"
+	domain2 "samm/internal/module/kitchen/domain"
+	"samm/internal/module/kitchen/dto/kitchen"
 	"samm/internal/module/retails/consts"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/location"
@@ -11,23 +13,26 @@ import (
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
+	"samm/pkg/validators/localization"
 )
 
 type LocationUseCase struct {
-	repo          domain.LocationRepository
-	brandUseCase  domain.BrandUseCase
-	commonUseCase commonDomain.CommonUseCase
-	logger        logger.ILogger
+	repo           domain.LocationRepository
+	brandUseCase   domain.BrandUseCase
+	commonUseCase  commonDomain.CommonUseCase
+	logger         logger.ILogger
+	kitchenUseCase domain2.KitchenUseCase
 }
 
 const tag = " LocationUseCase "
 
-func NewLocationUseCase(repo domain.LocationRepository, brandUseCase domain.BrandUseCase, commonUseCase commonDomain.CommonUseCase, logger logger.ILogger) domain.LocationUseCase {
+func NewLocationUseCase(repo domain.LocationRepository, brandUseCase domain.BrandUseCase, commonUseCase commonDomain.CommonUseCase, logger logger.ILogger, kitchenUseCase domain2.KitchenUseCase) domain.LocationUseCase {
 	return &LocationUseCase{
-		repo:          repo,
-		brandUseCase:  brandUseCase,
-		commonUseCase: commonUseCase,
-		logger:        logger,
+		repo:           repo,
+		brandUseCase:   brandUseCase,
+		commonUseCase:  commonUseCase,
+		logger:         logger,
+		kitchenUseCase: kitchenUseCase,
 	}
 }
 
@@ -95,6 +100,15 @@ func (l LocationUseCase) FindLocation(ctx context.Context, Id string) (location 
 }
 
 func (l LocationUseCase) DeleteLocation(ctx context.Context, Id string) (err validators.ErrorResponse) {
+
+	// Check if it has any kitchen
+	listKitchen := kitchen.ListKitchenDto{
+		LocationId: Id,
+	}
+	kitchens := l.kitchenUseCase.KitchenExists(&ctx, &listKitchen)
+	if kitchens {
+		return validators.GetErrorResponse(&ctx, localization.Location_Used_in_kitchen, nil, nil)
+	}
 	errRe := l.repo.DeleteLocation(ctx, utils.ConvertStringIdToObjectId(Id))
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)

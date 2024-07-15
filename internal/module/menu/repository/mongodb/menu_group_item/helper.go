@@ -146,15 +146,11 @@ func createIndexes(collection *mongo.Collection) {
 	)
 }
 
-func getProductAndModifierId(order *menu_group.FilterMenuGroupItemsForOrder) ([]primitive.ObjectID, []primitive.ObjectID) {
-	modifierIds := []primitive.ObjectID{}
+func getProductIds(order *menu_group.FilterMenuGroupItemsForOrder) []primitive.ObjectID {
 	productIds := []primitive.ObjectID{}
 
 	for _, item := range order.MenuItems {
 		productIds = append(productIds, utils.ConvertStringIdToObjectId(item.Id))
-		for _, modifier := range item.ModifierIds {
-			modifierIds = append(modifierIds, utils.ConvertStringIdToObjectId(modifier.Id))
-		}
 	}
-	return productIds, modifierIds
+	return productIds
 }

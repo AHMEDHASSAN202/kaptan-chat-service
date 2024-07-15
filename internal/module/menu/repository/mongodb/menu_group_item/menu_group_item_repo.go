@@ -253,7 +253,7 @@ func (i *menuGroupItemRepo) MobileGetMenuGroupItem(ctx context.Context, dto *men
 }
 
 func (i *menuGroupItemRepo) MobileFilterMenuGroupItemForOrder(ctx context.Context, dto *menu_group.FilterMenuGroupItemsForOrder) ([]menu_group2.MobileGetItem, error) {
-	productIds, modifierIds := getProductAndModifierId(dto)
+	productIds := getProductIds(dto)
 
 	matching := bson.M{
 		"$match": bson.M{"$and": []interface{}{
@@ -285,7 +285,7 @@ func (i *menuGroupItemRepo) MobileFilterMenuGroupItemForOrder(ctx context.Contex
 			"localField":   "modifier_groups.product_ids",
 			"foreignField": "_id",
 			"pipeline": []bson.M{
-				{"$match": bson.M{"status": "active", "deleted_at": nil, "_id": bson.M{"$in": modifierIds}}},
+				{"$match": bson.M{"status": "active", "deleted_at": nil}},
 			},
 			"as": "addons",
 		},

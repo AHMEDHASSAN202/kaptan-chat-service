@@ -34,20 +34,21 @@ type Kitchen struct {
 }
 
 type Admin struct {
-	mgm.DefaultModel `bson:",inline"`
-	Name             string             `json:"name" bson:"name"`
-	Email            string             `json:"email" bson:"email"`
-	Password         string             `json:"password" bson:"password,omitempty"`
-	Type             string             `json:"type" bson:"type"`
-	Role             Role               `json:"role" bson:"role"`
-	CountryIds       []string           `json:"country_ids" bson:"country_ids"`
-	Status           string             `json:"status" bson:"status"`
-	Tokens           []string           `json:"tokens" bson:"tokens,omitempty"`
-	MetaData         MetaData           `json:"meta_data" bson:"meta_data"`
-	Account          *Account           `json:"account" bson:"account,omitempty"`
-	Kitchen          *Kitchen           `json:"kitchen" bson:"kitchen,omitempty"`
-	AdminDetails     []dto.AdminDetails `json:"admin_details" bson:"admin_details,omitempty"`
-	DeletedAt        *time.Time         `json:"deleted_at" bson:"deleted_at"`
+	mgm.DefaultModel  `bson:",inline"`
+	Name              string             `json:"name" bson:"name"`
+	Email             string             `json:"email" bson:"email"`
+	Password          string             `json:"password" bson:"password,omitempty"`
+	EncryptedPassword string             `json:"encrypted_password" bson:"encrypted_password,omitempty"`
+	Type              string             `json:"type" bson:"type"`
+	Role              Role               `json:"role" bson:"role"`
+	CountryIds        []string           `json:"country_ids" bson:"country_ids"`
+	Status            string             `json:"status" bson:"status"`
+	Tokens            []string           `json:"tokens" bson:"tokens,omitempty"`
+	MetaData          MetaData           `json:"meta_data" bson:"meta_data"`
+	Account           *Account           `json:"account" bson:"account,omitempty"`
+	Kitchen           *Kitchen           `json:"kitchen" bson:"kitchen,omitempty"`
+	AdminDetails      []dto.AdminDetails `json:"admin_details" bson:"admin_details,omitempty"`
+	DeletedAt         *time.Time         `json:"deleted_at" bson:"deleted_at"`
 }
 
 type AdminUseCase interface {
@@ -58,13 +59,16 @@ type AdminUseCase interface {
 	List(ctx context.Context, dto *admin.ListAdminDTO) (interface{}, validators.ErrorResponse)
 	Find(ctx context.Context, adminId primitive.ObjectID, accountId string) (interface{}, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, input *admin.ChangeAdminStatusDto) validators.ErrorResponse
-	CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID) (bool, validators.ErrorResponse)
+	CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID, adminType string) (bool, validators.ErrorResponse)
 	CheckRoleExists(ctx context.Context, roleId primitive.ObjectID) (bool, validators.ErrorResponse)
 	AdminLogin(ctx context.Context, dto *auth.AdminAuthDTO) (interface{}, string, validators.ErrorResponse)
 	PortalLogin(ctx context.Context, dto *auth.PortalAuthDTO) (interface{}, string, validators.ErrorResponse)
+	KitchenLogin(ctx context.Context, input *auth.KitchenAuthDTO) (interface{}, string, validators.ErrorResponse)
 	Profile(ctx context.Context, profileDTO auth.ProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
+	KitchenProfile(ctx context.Context, profileDTO auth.KitchenProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 	UpdateAdminProfile(ctx context.Context, dto *auth.UpdateAdminProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 	UpdatePortalProfile(ctx context.Context, dto *auth.UpdatePortalProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
+	UpdateKitchenProfile(ctx context.Context, input *auth.UpdateKitchenProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 	SyncAccount(ctx context.Context, input admin.Account) validators.ErrorResponse
 	LoginAsPortal(ctx context.Context, portalDto *admin.LoginAsPortalDto) (interface{}, string, validators.ErrorResponse)
 }
@@ -78,7 +82,7 @@ type AdminRepository interface {
 	FindByToken(ctx context.Context, token string, adminType []string) (*Admin, error)
 	List(ctx context.Context, dto *admin.ListAdminDTO) ([]Admin, *mongopagination.PaginationData, error)
 	ChangeStatus(ctx context.Context, model *Admin, input *admin.ChangeAdminStatusDto, adminDetails dto.AdminDetails) error
-	CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID) (bool, error)
+	CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID, adminType string) (bool, error)
 	CheckRoleExists(ctx context.Context, roleId primitive.ObjectID) (bool, error)
 	FindByEmail(ctx context.Context, email string, adminType string) (*Admin, error)
 	SyncAccount(ctx context.Context, input admin.Account) error
