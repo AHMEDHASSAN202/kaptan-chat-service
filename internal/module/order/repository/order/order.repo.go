@@ -9,6 +9,7 @@ import (
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/pkg/logger"
+	"samm/pkg/utils"
 	"time"
 )
 
@@ -42,6 +43,25 @@ func (i *OrderRepository) ListOrderForDashboard(ctx *context.Context, dto *order
 
 	if dto.Status != "" {
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"status": dto.Status})
+	}
+
+	if dto.LocationId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"location._id": utils.ConvertStringIdToObjectId(dto.LocationId)})
+	}
+	if dto.AccountId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"location.account_id": utils.ConvertStringIdToObjectId(dto.AccountId)})
+	}
+	if dto.BrandId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"location.brand._id": utils.ConvertStringIdToObjectId(dto.BrandId)})
+	}
+	if dto.CountryId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"location.country._id": dto.CountryId})
+	}
+	if dto.SerialNum != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"serial_num": dto.SerialNum})
+	}
+	if dto.UserId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"user._id": utils.ConvertStringIdToObjectId(dto.UserId)})
 	}
 
 	if dto.From != "" {

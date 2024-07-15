@@ -55,7 +55,7 @@ type Item struct {
 	Calories         int              `json:"calories" bson:"calories"`
 	Price            float64          `json:"price" bson:"price"`
 	Image            string           `json:"image" bson:"image"`
-	Qty              string           `json:"qty" bson:"qty"`
+	Qty              int              `json:"qty" bson:"qty"`
 	PriceSummary     ItemPriceSummary `json:"price_summary" bson:"price_summary"`
 	Addons           []Item           `json:"addons" bson:"addons,omitempty"`
 }
