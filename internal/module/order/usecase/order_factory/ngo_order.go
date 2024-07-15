@@ -91,7 +91,7 @@ func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrder
 	}
 
 	//save order
-	orderModel, errStoreOrder := o.orderRepo.StoreOrder(ctx, orderModel)
+	errStoreOrder := o.orderRepo.StoreOrder(&ctx, orderModel)
 	if errStoreOrder != nil {
 		o.logger.Error(errStoreOrder)
 		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusInternalServerError))

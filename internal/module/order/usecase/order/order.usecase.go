@@ -2,9 +2,9 @@ package order
 
 import (
 	"context"
-	"net/http"
 	"encoding/json"
 	. "github.com/ahmetb/go-linq/v3"
+	"net/http"
 	"os"
 	"path/filepath"
 	"samm/internal/module/order/domain"
@@ -33,6 +33,13 @@ func NewOrderUseCase(repo domain.OrderRepository, extService external.ExtService
 		logger:       logger,
 		orderFactory: orderFactory,
 	}
+}
+func (l OrderUseCase) ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDto) (*responses.ListResponse, validators.ErrorResponse) {
+	ordersRes, paginationMeta, dbErr := l.repo.ListOrderForDashboard(&ctx, payload)
+	if dbErr != nil {
+		return nil, validators.GetErrorResponseFromErr(dbErr)
+	}
+	return responses.SetListResponse(ordersRes, paginationMeta), validators.ErrorResponse{}
 }
 
 func (l OrderUseCase) StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse) {

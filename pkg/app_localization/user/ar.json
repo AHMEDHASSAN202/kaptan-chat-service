@@ -1,4 +1,8 @@
 {
+    "intro_button_text": "ابدأ الآن!",
+    "userLocation_title": "حدد موقعك",
+    "userLocation_subtitle": "يرجى تحديد موقعك الحالي لتصفية أقرب المتاجر المتاحة لك",
+    "useLocation_location_hint": "اختر المنطقة",
     "auth_signin_title": "تسجيل الدخول",
     "auth_signin_subtitle": "الرجاء تسجيل الدخول لإكمال طلبك",
     "auth_signin_mobile_hint": "الجوال",
