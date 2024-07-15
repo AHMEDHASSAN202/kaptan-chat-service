@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/order/dto/order"
@@ -150,10 +151,12 @@ type Order struct {
 }
 
 type OrderUseCase interface {
-	StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse)
 	CalculateOrderCost(ctx context.Context, payload *order.CalculateOrderCostDto) (resp responses.CalculateOrderCostResp, err validators.ErrorResponse)
+	ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDto) (*responses.ListResponse, validators.ErrorResponse)
+	StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse)
 }
 
 type OrderRepository interface {
-	StoreOrder(ctx context.Context, order *Order) (*Order, error)
+	StoreOrder(ctx *context.Context, order *Order) (err error)
+	ListOrderForDashboard(ctx *context.Context, dto *order.ListOrderDto) (ordersRes *[]Order, paginationMeta *PaginationData, err error)
 }

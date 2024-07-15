@@ -26,12 +26,19 @@ func NewRegisterCustomValidator(c context.Context, validate *validator.Validate)
 		ValidationTag:          localization.Timeformat,
 		RegisterValidationFunc: ValidateTimeFormat,
 	}, CustomErrorTags{
+		ValidationTag:          localization.DateTimeFormat,
+		RegisterValidationFunc: ValidateDateTimeFormat,
+	}, CustomErrorTags{
 		ValidationTag:          localization.PhoneNumber_rule_validation,
 		RegisterValidationFunc: PhoneNumberValidator,
 	})
 }
 func ValidateTimeFormat(fl validator.FieldLevel) bool {
 	_, err := time.Parse(TimeFormat, fl.Field().String())
+	return err == nil
+}
+func ValidateDateTimeFormat(fl validator.FieldLevel) bool {
+	_, err := time.Parse(time.DateTime, fl.Field().String())
 	return err == nil
 }
 
