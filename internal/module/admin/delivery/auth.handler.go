@@ -168,8 +168,7 @@ func (a *AdminAuthHandler) PortalProfile(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-
-	profile, errResp := a.adminUseCase.KitchenProfile(ctx, dto.KitchenProfileDTO{AdminId: input.CauserId, CauserDetails: input.GetCauserDetailsAsMap()})
+	profile, errResp := a.adminUseCase.Profile(ctx, dto.ProfileDTO{AdminId: input.CauserId, AccountId: input.CauserAccountId, CauserDetails: input.GetCauserDetailsAsMap()})
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
@@ -189,8 +188,7 @@ func (a *AdminAuthHandler) kitchenProfile(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-
-	profile, errResp := a.adminUseCase.Profile(ctx, dto.ProfileDTO{AdminId: input.CauserId, AccountId: input.CauserAccountId, CauserDetails: input.GetCauserDetailsAsMap()})
+	profile, errResp := a.adminUseCase.KitchenProfile(ctx, dto.KitchenProfileDTO{AdminId: input.CauserId, CauserDetails: input.GetCauserDetailsAsMap()})
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}

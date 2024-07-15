@@ -18,7 +18,7 @@ type AdminProfileResponse struct {
 	Role       role.FindRoleResponse `json:"role"`
 	CountryIds []string              `json:"country_ids"`
 	Account    *Account              `json:"account"`
-	Kitchen    *Kitchen              `json:"account"`
+	Kitchen    *Kitchen              `json:"kitchen"`
 }
 
 type Account struct {
