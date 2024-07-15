@@ -77,13 +77,13 @@ type PercentsDate struct {
 	To      time.Time `json:"to" bson:"to"`
 	Percent float64   ` json:"percent" bson:"percent"`
 }
-
+type Name struct {
+	Ar string `json:"ar" bson:"ar"`
+	En string `json:"en" bson:"en"`
+}
 type Country struct {
-	Id   string `json:"id" bson:"_id"`
-	Name struct {
-		Ar string `json:"ar" bson:"ar"`
-		En string `json:"en" bson:"en"`
-	} `json:"name" bson:"name"`
+	Id          string `json:"id" bson:"_id"`
+	Name        Name   `json:"name" bson:"name"`
 	Timezone    string `json:"timezone" bson:"timezone"`
 	Currency    string `json:"currency" bson:"currency"`
 	PhonePrefix string `json:"phone_prefix" bson:"phone_prefix"`
@@ -108,6 +108,7 @@ type Location struct {
 type Rejected struct {
 	Id       string `json:"id" bson:"id"`
 	Note     string `json:"note" bson:"note"`
+	Name     Name   `json:"name" bson:"name"`
 	UserType string `json:"user_type" bson:"user_type"`
 }
 
@@ -122,8 +123,9 @@ type StatusLog struct {
 }
 
 type Payment struct {
-	Type string `json:"type" bson:"type"`
-	Num  string `json:"num" bson:"num"`
+	Id   primitive.ObjectID `json:"id" bson:"_id"`
+	Type string             `json:"type" bson:"type"`
+	Num  string             `json:"num" bson:"num"`
 }
 
 type Order struct {

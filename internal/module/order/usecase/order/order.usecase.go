@@ -3,7 +3,6 @@ package order
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	. "github.com/ahmetb/go-linq/v3"
 	"net/http"
 	"os"
@@ -133,21 +132,26 @@ func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.Cancel
 		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
 	}
 
-	rejectionReason, errRe := l.UserRejectionReasons(ctx, "", payload.CancelReasonId)
+	rejectionReasons, errRe := l.UserRejectionReasons(ctx, "", payload.CancelReasonId)
 	if errRe.IsError {
 		return nil, errRe
 	}
-	if len(rejectionReason) == 0 {
+	if len(rejectionReasons) == 0 {
 		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
 	}
+	rejectionReason := rejectionReasons[0]
 	now := time.Now().UTC()
 	updateSet := map[string]interface{}{
 		"status":       consts.OrderStatus.Cancelled,
 		"cancelled_at": now,
 		"updated_at":   now,
 		"cancelled": domain.Rejected{
-			Id:       payload.CancelReasonId,
-			Note:     "",
+			Id:   payload.CancelReasonId,
+			Note: payload.Note,
+			Name: domain.Name{
+				Ar: rejectionReason.Name.Ar,
+				En: rejectionReason.Name.En,
+			},
 			UserType: payload.CauserType,
 		},
 	}
@@ -160,16 +164,16 @@ func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.Cancel
 	statusLog.Status.New = consts.OrderStatus.Cancelled
 	statusLog.Status.Old = orderDomain.Status
 
+	// If Status Is Pending Call Payment To Release This Transaction
+	if orderDomain.Status == consts.OrderStatus.Pending {
+		l.extService.PaymentIService.AuthorizePayment(ctx, utils.ConvertObjectIdToStringId(orderDomain.Payment.Id), false)
+	}
+
 	orderDomain, err = l.repo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, statusLog, updateSet)
 
-	fmt.Println("err")
-	fmt.Println(err)
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
-
-	// If Status Is Pending Call Payment To Release This Transaction
-
 	// Send Notification
 
 	return orderDomain, validators.ErrorResponse{}

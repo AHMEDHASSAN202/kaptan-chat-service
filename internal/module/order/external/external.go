@@ -3,7 +3,9 @@ package external
 import (
 	menuDomain "samm/internal/module/menu/domain"
 	"samm/internal/module/order/external/menu"
+	"samm/internal/module/order/external/payment"
 	"samm/internal/module/order/external/retails"
+	domain3 "samm/internal/module/payment/domain"
 	"samm/internal/module/retails/domain"
 	domain2 "samm/internal/module/user/domain"
 )
@@ -11,11 +13,13 @@ import (
 type ExtService struct {
 	RetailsIService retails.IService
 	MenuIService    menu.IService
+	PaymentIService payment.IService
 }
 
-func NewExternalService(locationUseCase domain.LocationUseCase, collectionUseCase domain2.CollectionMethodUseCase, MenuUseCase menuDomain.MenuGroupItemRepository) ExtService {
+func NewExternalService(locationUseCase domain.LocationUseCase, collectionUseCase domain2.CollectionMethodUseCase, MenuUseCase menuDomain.MenuGroupItemRepository, paymentUseCase domain3.PaymentUseCase) ExtService {
 	return ExtService{
 		RetailsIService: retails.IService{LocationUseCase: locationUseCase, CollectionUseCase: collectionUseCase},
 		MenuIService:    menu.IService{MenuUseCase: MenuUseCase},
+		PaymentIService: payment.IService{PaymentUseCase: paymentUseCase},
 	}
 }
