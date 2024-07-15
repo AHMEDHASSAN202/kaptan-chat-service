@@ -88,7 +88,7 @@ func (a *OrderHandler) CalculateOrderCost(c echo.Context) error {
 	}
 	orderCalculate, errResp := a.orderUsecase.CalculateOrderCost(ctx, &calculateOrderCostDto)
 	if errResp.IsError {
-		a.logger.Error(errResp.ErrorMessageObject.Text)
+		a.logger.Error(errResp)
 		return validators.ErrorResp(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{"order_calculate": orderCalculate})

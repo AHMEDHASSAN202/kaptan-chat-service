@@ -14,6 +14,7 @@ import (
 	"samm/internal/module/kitchen/responses"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"time"
 )
@@ -67,7 +68,13 @@ func (l KitchenUseCase) CreateKitchen(ctx context.Context, payload *kitchen.Stor
 			Type:            consts.KITCHEN_TYPE,
 			RoleId:          consts.SUPER_KITCHEN_ROLE,
 			CountryIds:      []string{payload.Country.Id},
-			Kitchen:         &admin.Kitchen{Id: utils.ConvertObjectIdToStringId(kitchenDomain.ID), Name: admin.Name{Ar: kitchenDomain.Name.Ar, En: kitchenDomain.Name.En}, AllowedStatus: payload.AllowedStatus},
+			AdminDetails: dto.AdminDetails{
+				Id:        utils.ConvertStringIdToObjectId(payload.CauserId),
+				Name:      payload.CauserName,
+				Operation: "create admin for kitchen",
+				UpdatedAt: time.Now().UTC(),
+			},
+			Kitchen: &admin.Kitchen{Id: utils.ConvertObjectIdToStringId(kitchenDomain.ID), Name: admin.Name{Ar: kitchenDomain.Name.Ar, En: kitchenDomain.Name.En}, AllowedStatus: payload.AllowedStatus},
 		}
 		_, errR := l.adminUseCase.Create(ctx, &storeAdminDto)
 		if errR.IsError {
@@ -140,4 +147,14 @@ func (l KitchenUseCase) List(ctx *context.Context, dto *kitchen.ListKitchenDto) 
 		return nil, validators.GetErrorResponseFromErr(resErr)
 	}
 	return responses.SetListResponse(users, paginationMeta), validators.ErrorResponse{}
+}
+func (l KitchenUseCase) KitchenExists(ctx *context.Context, dto *kitchen.ListKitchenDto) bool {
+	users, _, resErr := l.repo.List(ctx, dto)
+	if resErr != nil {
+		return false
+	}
+	if users == nil {
+		return false
+	}
+	return len(*users) > 0
 }

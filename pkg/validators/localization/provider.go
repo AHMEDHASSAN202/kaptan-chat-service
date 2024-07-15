@@ -51,6 +51,16 @@ func getLangParam(c *context.Context, lang string) string {
 	return lang
 }
 
+func GetAttrByLang(ctx *context.Context, ifEn, ifAr string) string {
+	lang := getLangParam(ctx, "")
+	if lang == "en" {
+		return ifEn
+	} else if lang == "ar" {
+		return ifAr
+	}
+	return ""
+}
+
 // ErrorCode represents a single error code with its ID and description
 type ErrorCode struct {
 	ID          string

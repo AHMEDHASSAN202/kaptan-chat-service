@@ -177,7 +177,7 @@ other = "الفرع غير جاهز لاستقبال الطلبات الآن، �
 
 [Mobile_location_not_open_error]
 description = "Mobile_location_not_open_error"
-other = "الفرع مغلق الآن، يرجى المحاولة لاحقًا "
+other = "الفرع مغلق الآن، يرجى المحاولة لاحقًا"
 
 [AccountRequiredValidation]
 description = "AccountRequiredValidation"
@@ -186,3 +186,39 @@ other = "الحساب مطلوب"
 [Mobile_item_unavailable]
 description = "Mobile_item_unavailable"
 other = "هذا العنصر غير متاح"
+
+[Location_Used_in_kitchen]
+description = "Location_Used_in_kitchen"
+other = "غير مسموح بحذف مطعم مستخدم"
+
+[Account_Used_in_kitchen]
+description = "Account_Used_in_kitchen"
+other = "غير مسموح بحذف حساب مستخدم"
+
+[Validate_Account_Location_validation]
+description = "Validate_Account_Location_validation"
+other = "المطاعم او حساب المطعم مطلوب "
+
+[CanNotBuildOrderResponse]
+description = "Internal server error"
+other = "Internal server errors occurred. Please contact support."
+
+[MaxModifierGroupQty]
+description = "MaxModifierGroupQty"
+other = "The {{.modifier_group_name}} modifier group qty greater than available"
+
+[MinModifierGroupQty]
+description = "MinModifierGroupQty"
+other = "The {{.modifier_group_name}} modifier group qty less than available"
+
+[MinModifierQty]
+description = "MinModifierQty"
+other = "The {{.modifier_name}} modifier qty less than available"
+
+[MaxModifierQty]
+description = "MaxModifierQty"
+other = "The {{.modifier_name}} modifier qty greater than available"
+
+[OrderCollectionMethodError]
+description = "OrderCollectionMethodError"
+other = "The specified collection method was not found. Please check the method name and try again or use an alternative method."

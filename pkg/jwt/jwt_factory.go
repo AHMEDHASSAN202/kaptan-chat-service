@@ -9,6 +9,7 @@ type JwtServiceFactory interface {
 	AdminJwtService() JwtService
 	PortalJwtService() JwtService
 	UserJwtService() JwtService
+	KitchenJwtService() JwtService
 }
 
 type JwtFactory struct {
@@ -39,6 +40,14 @@ func (f *JwtFactory) UserJwtService() JwtService {
 		tempSecretKey:    f.jWTConfig.UserTempSigningKey,
 		tempExpiredHours: f.jWTConfig.UserTempExpires,
 		logger:           f.logger,
+	}
+}
+
+func (f *JwtFactory) KitchenJwtService() JwtService {
+	return &KitchenJwtService{
+		secretKey:    f.jWTConfig.KitchenSigningKey,
+		expiredHours: f.jWTConfig.PortalExpires,
+		logger:       f.logger,
 	}
 }
 

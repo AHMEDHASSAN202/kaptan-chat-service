@@ -5,7 +5,9 @@ package localization
 const (
     AccountRequiredValidation = "AccountRequiredValidation" // AccountRequiredValidation
     Account_Email_is_unique_rules_validation = "Account_Email_is_unique_rules_validation" // Email is Unique
+    Account_Used_in_kitchen = "Account_Used_in_kitchen" // Account_Used_in_kitchen
     App_type_is_unique_rules_validation = "App_type_is_unique_rules_validation" // Feature not supported
+    CanNotBuildOrderResponse = "CanNotBuildOrderResponse" // Internal server errors occurred. Please contact support.
     Cuisine_id_is_exists_rules_validation = "Cuisine_id_is_exists_rules_validation" // Cuisine Id Not Exist
     DateTimeFormat = "DateTimeFormat" // date time format rule validation
     E1000 = "E1000" // Database layer error
@@ -38,11 +40,17 @@ const (
     JwtTokenExpiredError = "JwtTokenExpiredError" // Error: the JSON Web Token has expired and cannot be verified
     JwtTokenInvalidError = "JwtTokenInvalidError" // The JSON Web Token is invalid and could not be verified
     JwtTokenParsingError = "JwtTokenParsingError" // Error: the JSON Web Token could not be parsed
+    Location_Used_in_kitchen = "Location_Used_in_kitchen" // Location_Used_in_kitchen
+    MaxModifierGroupQty = "MaxModifierGroupQty" // MaxModifierGroupQty
+    MaxModifierQty = "MaxModifierQty" // MaxModifierQty
+    MinModifierGroupQty = "MinModifierGroupQty" // MinModifierGroupQty
+    MinModifierQty = "MinModifierQty" // MinModifierQty
     Mobile_item_unavailable = "Mobile_item_unavailable" // Mobile_item_unavailable
     Mobile_location_not_available_error = "Mobile_location_not_available_error" // mobile_location_not_available_error
     Mobile_location_not_open_error = "Mobile_location_not_open_error" // Mobile_location_not_open_error
     Modifier_groups_ids_rules_validation = "Modifier_groups_ids_rules_validation" // Feature not supported
     Modifier_items_cant_contains_modifier_group = "Modifier_items_cant_contains_modifier_group" // Modifier items cant contains modifier group
+    OrderCollectionMethodError = "OrderCollectionMethodError" // OrderCollectionMethodError
     PAYMENT_PROCESS_RUNNING = "PAYMENT_PROCESS_RUNNING" // Payment is running
     Password_required_if_id_is_zero = "Password_required_if_id_is_zero" // password is a required field
     PhoneNumber_rule_validation = "PhoneNumber_rule_validation" // PhoneNumber is Wrong
@@ -51,4 +59,5 @@ const (
     RoleHasAdminsValidation = "RoleHasAdminsValidation" // The role you are trying to delete is currently assigned to one or more admins. Please reassign these admins to a different role before attempting to delete this role.
     SKU_name_is_unique_rules_validation = "SKU_name_is_unique_rules_validation" // Feature not supported
     Timeformat = "Timeformat" // time format rule validation
+    Validate_Account_Location_validation = "Validate_Account_Location_validation" // Validate_Account_Location_validation
 )

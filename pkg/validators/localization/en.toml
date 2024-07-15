@@ -189,3 +189,40 @@ other = "Account is required"
 [PAYMENT_PROCESS_RUNNING]
 description = "Payment is running"
 other = "Please Wait Payment is running"
+
+[CanNotBuildOrderResponse]
+description = "Internal server errors occurred. Please contact support."
+other = "Internal server errors occurred. Please contact support."
+
+[Location_Used_in_kitchen]
+description = "Location_Used_in_kitchen"
+other = "Can't delete location used before"
+
+[Account_Used_in_kitchen]
+description = "Account_Used_in_kitchen"
+other = "Can't delete Account used before"
+
+[Validate_Account_Location_validation]
+description = "Validate_Account_Location_validation"
+other = "One Of Account or location is required "
+
+[MaxModifierGroupQty]
+description = "MaxModifierGroupQty"
+other = "The {{.modifier_group_name}} modifier group qty greater than available"
+
+[MinModifierGroupQty]
+description = "MinModifierGroupQty"
+other = "The {{.modifier_group_name}} modifier group qty less than available"
+
+[MinModifierQty]
+description = "MinModifierQty"
+other = "The {{.modifier_name}} modifier qty less than available"
+
+[MaxModifierQty]
+description = "MaxModifierQty"
+other = "The {{.modifier_name}} modifier qty greater than available"
+
+[OrderCollectionMethodError]
+description = "OrderCollectionMethodError"
+other = "The specified collection method was not found. Please check the method name and try again or use an alternative method."
+

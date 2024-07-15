@@ -149,8 +149,8 @@ func (r *adminRepo) ChangeStatus(ctx context.Context, model *domain.Admin, input
 	return err
 }
 
-func (r *adminRepo) CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID) (bool, error) {
-	filter := bson.M{"email": email, "deleted_at": nil}
+func (r *adminRepo) CheckEmailExists(ctx context.Context, email string, adminId primitive.ObjectID, adminType string) (bool, error) {
+	filter := bson.M{"email": email, "deleted_at": nil, "type": adminType}
 	if !adminId.IsZero() {
 		filter["_id"] = bson.M{"$ne": adminId}
 	}

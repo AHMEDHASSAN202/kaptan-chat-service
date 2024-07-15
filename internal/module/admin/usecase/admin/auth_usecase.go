@@ -62,6 +62,28 @@ func (oRec *AdminUseCase) PortalLogin(ctx context.Context, input *dto.PortalAuth
 
 	return admin2.AdminProfileBuilder(admin), token, validators.ErrorResponse{}
 }
+func (oRec *AdminUseCase) KitchenLogin(ctx context.Context, input *dto.KitchenAuthDTO) (interface{}, string, validators.ErrorResponse) {
+	//find admin
+	admin, err := oRec.LoginHelper(ctx, input.Email, input.Password, consts.KITCHEN_TYPE)
+	if err.IsError {
+		return admin, "", err
+	}
+
+	//generate token
+	token, errToken := oRec.KitchenJwtService.GenerateToken(ctx, utils.ConvertObjectIdToStringId(admin.ID))
+	if err.IsError {
+		return admin, "", validators.GetErrorResponseFromErr(errToken)
+	}
+
+	//update token
+	admin.Tokens = append(admin.Tokens, token)
+	_, errUpdate := oRec.repo.Update(ctx, admin)
+	if errUpdate != nil {
+		return admin, "", validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
+	}
+
+	return admin2.AdminProfileBuilder(admin), token, validators.ErrorResponse{}
+}
 
 func (oRec *AdminUseCase) Profile(ctx context.Context, profileDTO dto.ProfileDTO) (*admin.AdminProfileResponse, validators.ErrorResponse) {
 	admin, errFindAdmin := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(profileDTO.AdminId))
@@ -86,6 +108,31 @@ func (oRec *AdminUseCase) Profile(ctx context.Context, profileDTO dto.ProfileDTO
 			}
 		}
 	}
+	return admin2.AdminProfileBuilder(admin), validators.ErrorResponse{}
+}
+func (oRec *AdminUseCase) KitchenProfile(ctx context.Context, profileDTO dto.KitchenProfileDTO) (*admin.AdminProfileResponse, validators.ErrorResponse) {
+	admin, errFindAdmin := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(profileDTO.AdminId))
+	if errFindAdmin != nil {
+		oRec.logger.Error("AdminUseCase -> Auth -> AdminLogin -> ", errFindAdmin)
+		return nil, validators.GetErrorResponse(&ctx, localization.ErrLoginEmail, nil, utils.GetAsPointer(http.StatusBadRequest)) //change message
+	}
+	if admin == nil {
+		oRec.logger.Error("AdminUseCase -> Auth -> AdminLogin -> Admin Is NULL")
+		return nil, validators.GetErrorResponse(&ctx, localization.ErrLoginEmail, nil, utils.GetAsPointer(http.StatusBadRequest)) //change message
+	}
+	//if profileDTO.AccountId != "" {
+	//	accountId := utils.SafeMapGet(profileDTO.CauserDetails, "id", "").(string)
+	//	name, ok := utils.SafeMapGet(profileDTO.CauserDetails, "name", nil).(map[string]interface{})
+	//	if ok {
+	//		admin.Account = &domain.Account{
+	//			Id: utils.ConvertStringIdToObjectId(accountId),
+	//			Name: domain.Name{
+	//				Ar: utils.SafeMapGet(name, "ar", "").(string),
+	//				En: utils.SafeMapGet(name, "en", "").(string),
+	//			},
+	//		}
+	//	}
+	//}
 	return admin2.AdminProfileBuilder(admin), validators.ErrorResponse{}
 }
 
@@ -120,6 +167,27 @@ func (oRec *AdminUseCase) UpdatePortalProfile(ctx context.Context, input *dto.Up
 
 	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.Name, Operation: "Update My Profile", UpdatedAt: time.Now()}
 	adminDomain, err := admin2.UpdatePortalProfileBuilder(admin, input)
+	if err != nil {
+		oRec.logger.Error("AdminUseCase -> UpdatePortalProfile -> ", err)
+	}
+
+	admin, errCreate := oRec.repo.Update(ctx, adminDomain)
+	if errCreate != nil {
+		oRec.logger.Error("AdminUseCase -> UpdatePortalProfile -> ", errCreate)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
+	}
+
+	return admin2.AdminProfileBuilder(admin), validators.ErrorResponse{}
+}
+func (oRec *AdminUseCase) UpdateKitchenProfile(ctx context.Context, input *dto.UpdateKitchenProfileDTO) (*admin.AdminProfileResponse, validators.ErrorResponse) {
+	admin, errFind := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(input.CauserId))
+	if errFind != nil {
+		oRec.logger.Error("AdminUseCase -> UpdatePortalProfile -> ", errFind)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.Name, Operation: "Update My Profile", UpdatedAt: time.Now()}
+	adminDomain, err := admin2.UpdateKitchenProfileBuilder(admin, input)
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> UpdatePortalProfile -> ", err)
 	}

@@ -46,6 +46,7 @@ type KitchenUseCase interface {
 	FindKitchen(ctx context.Context, Id string) (kitchen Kitchen, err validators.ErrorResponse)
 	DeleteKitchen(ctx context.Context, Id string) (err validators.ErrorResponse)
 	List(ctx *context.Context, dto *kitchen.ListKitchenDto) (*responses.ListResponse, validators.ErrorResponse)
+	KitchenExists(ctx *context.Context, dto *kitchen.ListKitchenDto) bool
 }
 
 type KitchenRepository interface {

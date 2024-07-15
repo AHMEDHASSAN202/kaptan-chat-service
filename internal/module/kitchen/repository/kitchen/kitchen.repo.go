@@ -12,6 +12,7 @@ import (
 	"samm/internal/module/kitchen/domain"
 	"samm/internal/module/kitchen/dto/kitchen"
 	"samm/pkg/logger"
+	"samm/pkg/utils"
 	"time"
 )
 
@@ -81,7 +82,16 @@ func (l *KitchenRepository) List(ctx *context.Context, dto *kitchen.ListKitchenD
 		pattern := ".*" + dto.Query + ".*"
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name.ar": bson.M{"$regex": pattern, "$options": "i"}}, {"name.en": bson.M{"$regex": pattern, "$options": "i"}}}})
 	}
-
+	if dto.LocationId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{
+			"location_ids": utils.ConvertStringIdToObjectId(dto.LocationId),
+		})
+	}
+	if dto.AccountId != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{
+			"account_ids": utils.ConvertStringIdToObjectId(dto.AccountId),
+		})
+	}
 	data, err := New(l.kitchenCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
 
 	if data == nil || data.Data == nil {

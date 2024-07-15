@@ -12,18 +12,18 @@ import (
 )
 
 type CollectionMethod struct {
-	mgm.DefaultModel `bson:",inline"`
-	Type             string         `json:"type" bson:"type"`
-	Fields           map[string]any `json:"fields" bson:"fields"`
-	Values           map[string]any `json:"values" bson:"values"`
+	ID     primitive.ObjectID `json:"id" bson:"_id"`
+	Type   string             `json:"type" bson:"type"`
+	Fields map[string]any     `json:"fields" bson:"fields"`
+	Values map[string]any     `json:"values" bson:"values"`
 }
 
 type User struct {
-	mgm.DefaultModel `bson:",inline"`
-	Name             string           `json:"name" bson:"name"`
-	Phone            string           `json:"phone" bson:"phone"`
-	Country          string           `json:"country" bson:"country"`
-	CollectionMethod CollectionMethod `json:"collection_method" bson:"collection_method"`
+	ID               primitive.ObjectID `json:"id" bson:"_id"`
+	Name             string             `json:"name" bson:"name"`
+	PhoneNumber      string             `json:"phone_number" bson:"phone_number"`
+	Country          string             `json:"country" bson:"country"`
+	CollectionMethod CollectionMethod   `json:"collection_method" bson:"collection_method"`
 }
 
 type LocalizationText struct {
@@ -45,30 +45,31 @@ type OrderPriceSummary struct {
 }
 
 type Item struct {
-	mgm.DefaultModel `bson:",inline"`
-	Name             LocalizationText `json:"name" bson:"name"`
-	Desc             LocalizationText `json:"desc" bson:"desc"`
-	Type             string           `json:"type" bson:"type,omitempty"`
-	Min              int              `json:"min" bson:"min,omitempty"`
-	Max              int              `json:"max" bson:"max,omitempty"`
-	SKU              string           `json:"sku" bson:"sku"`
-	Calories         int              `json:"calories" bson:"calories"`
-	Price            float64          `json:"price" bson:"price"`
-	Image            string           `json:"image" bson:"image"`
-	Qty              int              `json:"qty" bson:"qty"`
-	PriceSummary     ItemPriceSummary `json:"price_summary" bson:"price_summary"`
-	Addons           []Item           `json:"addons" bson:"addons,omitempty"`
+	ID           primitive.ObjectID `json:"id" bson:"_id"`
+	ItemId       primitive.ObjectID `json:"item_id" bson:"item_id"`
+	Name         LocalizationText   `json:"name" bson:"name"`
+	Desc         LocalizationText   `json:"desc" bson:"desc"`
+	Type         string             `json:"type" bson:"type,omitempty"`
+	Min          int                `json:"min" bson:"min,omitempty"`
+	Max          int                `json:"max" bson:"max,omitempty"`
+	SKU          string             `json:"sku" bson:"sku"`
+	Calories     int                `json:"calories" bson:"calories"`
+	Price        float64            `json:"price" bson:"price"`
+	Image        string             `json:"image" bson:"image"`
+	Qty          int                `json:"qty" bson:"qty"`
+	PriceSummary ItemPriceSummary   `json:"price_summary" bson:"price_summary"`
+	Addons       []Item             `json:"addons" bson:"addons,omitempty"`
 }
 
 type City struct {
-	Id   primitive.ObjectID `json:"_id" bson:"id"`
-	Name Name               `json:"name" bson:"name"`
+	Id   primitive.ObjectID `json:"id" bson:"id"`
+	Name LocalizationText   `json:"name" bson:"name"`
 }
 
 type Brand struct {
-	mgm.DefaultModel `bson:",inline"`
-	Name             Name   `json:"name" bson:"name"`
-	Logo             string `json:"logo" bson:"logo"`
+	ID   primitive.ObjectID `json:"id" bson:"_id"`
+	Name LocalizationText   `json:"name" bson:"name"`
+	Logo string             `json:"logo" bson:"logo"`
 }
 
 type PercentsDate struct {
@@ -89,24 +90,25 @@ type Country struct {
 }
 
 type Location struct {
-	mgm.DefaultModel `bson:",inline"`
-	Name             Name               `json:"name" bson:"name"`
-	City             City               `json:"city" bson:"city"`
-	Street           Name               `json:"street" bson:"street"`
-	CoverImage       string             `json:"cover_image" bson:"cover_image"`
-	PreparationTime  int                `json:"preparation_time" bson:"preparation_time"`
-	Logo             string             `json:"logo" bson:"logo"`
-	Phone            string             `json:"phone" bson:"phone"`
-	Brand            Brand              `json:"brand" bson:"brand"`
-	Percent          float64            ` json:"percent" bson:"percent"`
-	PercentsDate     []PercentsDate     `json:"percents_date" bson:"percents_date"`
-	Country          Country            `json:"country" bson:"country"`
-	AccountId        primitive.ObjectID `json:"account_id" bson:"account_id"`
+	ID              primitive.ObjectID `json:"id" bson:"_id"`
+	Name            LocalizationText   `json:"name" bson:"name"`
+	City            City               `json:"city" bson:"city"`
+	Street          LocalizationText   `json:"street" bson:"street"`
+	CoverImage      string             `json:"cover_image" bson:"cover_image"`
+	PreparationTime int                `json:"preparation_time" bson:"preparation_time"`
+	Logo            string             `json:"logo" bson:"logo"`
+	Phone           string             `json:"phone" bson:"phone"`
+	Brand           Brand              `json:"brand_details" bson:"brand_details"`
+	Percent         float64            `json:"percent" bson:"percent"`
+	PercentsDate    []PercentsDate     `json:"percents_date" bson:"percents_date"`
+	Country         Country            `json:"country" bson:"country"`
+	AccountId       primitive.ObjectID `json:"account_id" bson:"account_id"`
 }
 
 type Rejected struct {
-	Id   string `json:"id" bson:"id"`
-	Name string `json:"name" bson:"name"`
+	Id       string `json:"id" bson:"id"`
+	Note     string `json:"note" bson:"note"`
+	UserType string `json:"user_type" bson:"user_type"`
 }
 
 type StatusLog struct {
@@ -141,16 +143,11 @@ type Order struct {
 	CancelledAt      *time.Time        `json:"cancelled_at" bson:"cancelled_at"`
 	RejectedAt       *time.Time        `json:"rejected_at" bson:"rejected_at"`
 	NoShowAt         *time.Time        `json:"no_show_at" bson:"no_show_at"`
-	Cancelled        Rejected          `json:"cancelled,omitempty" bson:"cancelled,omitempty"`
-	Rejected         Rejected          `json:"rejected,omitempty" bson:"rejected,omitempty"`
+	Cancelled        *Rejected         `json:"cancelled,omitempty" bson:"cancelled,omitempty"`
+	Rejected         *Rejected         `json:"rejected,omitempty" bson:"rejected,omitempty"`
 	StatusLogs       []StatusLog       `json:"status_logs" bson:"status_logs"`
 	Notes            string            `json:"notes" bson:"notes"`
 	Payment          Payment           `json:"payment" bson:"payment"`
-}
-
-type Name struct {
-	Ar string `json:"ar" bson:"ar"`
-	En string `json:"en" bson:"en"`
 }
 
 type OrderUseCase interface {

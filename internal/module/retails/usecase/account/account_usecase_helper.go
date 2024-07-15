@@ -20,6 +20,10 @@ func CreateAccountBuilder(payload *account.StoreAccountDto) domain.Account {
 	accountDomain.Country.Name.Ar = payload.Country.Name.Ar
 	accountDomain.Country.Name.En = payload.Country.Name.En
 	accountDomain.AllowedBrandIds = utils.ConvertStringIdsToObjectIds(payload.AllowedBrandIds)
+	accountDomain.Percent = payload.Percent
+	accountDomain.BankAccount.AccountNumber = payload.BankAccount.AccountNumber
+	accountDomain.BankAccount.BankName = payload.BankAccount.BankName
+	accountDomain.BankAccount.CompanyName = payload.BankAccount.CompanyName
 
 	return accountDomain
 }
