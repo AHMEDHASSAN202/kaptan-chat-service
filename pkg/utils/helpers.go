@@ -16,6 +16,7 @@ import (
 	"math"
 	"os"
 	"reflect"
+	"runtime/debug"
 	"samm/pkg/logger"
 	"strings"
 	"time"
@@ -566,4 +567,17 @@ func CallMethod(obj interface{}, methodName string, args ...interface{}) []refle
 	}
 
 	return method.Call(in)
+}
+
+func TryCatch(f func()) func() error {
+	return func() (err error) {
+		defer func() {
+			if panicInfo := recover(); panicInfo != nil {
+				err = fmt.Errorf("%v, %s", panicInfo, string(debug.Stack()))
+				return
+			}
+		}()
+		f()
+		return err
+	}
 }

@@ -151,12 +151,13 @@ type Order struct {
 }
 
 type OrderUseCase interface {
+	StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse)
 	CalculateOrderCost(ctx context.Context, payload *order.CalculateOrderCostDto) (resp responses.CalculateOrderCostResp, err validators.ErrorResponse)
 	ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDto) (*responses.ListResponse, validators.ErrorResponse)
-	StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse)
 }
 
 type OrderRepository interface {
-	StoreOrder(ctx *context.Context, order *Order) (err error)
 	ListOrderForDashboard(ctx *context.Context, dto *order.ListOrderDto) (ordersRes *[]Order, paginationMeta *PaginationData, err error)
+	StoreOrder(ctx context.Context, order *Order) (*Order, error)
+	UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string) (bool, error)
 }
