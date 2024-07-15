@@ -155,6 +155,10 @@ type Name struct {
 type OrderUseCase interface {
 	StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse)
 	CalculateOrderCost(ctx context.Context, payload *order.CalculateOrderCostDto) (resp responses.CalculateOrderCostResp, err validators.ErrorResponse)
+
+	UserRejectionReasons(ctx context.Context, status string, id string) ([]UserRejectionReason, validators.ErrorResponse)
+
+	UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (Order, validators.ErrorResponse)
 }
 
 type OrderRepository interface {

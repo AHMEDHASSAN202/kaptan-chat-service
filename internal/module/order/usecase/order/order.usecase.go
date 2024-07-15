@@ -2,6 +2,10 @@ package order
 
 import (
 	"context"
+	"encoding/json"
+	. "github.com/ahmetb/go-linq/v3"
+	"os"
+	"path/filepath"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/external"
@@ -58,4 +62,49 @@ func (l OrderUseCase) CalculateOrderCost(ctx context.Context, payload *order.Cal
 		return resp, validators.GetErrorResponse(&ctx, localization.E1005, nil, nil)
 	}
 	return resp, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) UserRejectionReasons(ctx context.Context, status string, id string) ([]domain.UserRejectionReason, validators.ErrorResponse) {
+	userRejectionReason := make([]domain.UserRejectionReason, 0)
+	dir, err := os.Getwd()
+	if err != nil {
+		return userRejectionReason, validators.GetErrorResponseFromErr(err)
+	}
+
+	path := filepath.Join(dir, "internal", "module", "order", "assets", "user_cancel_reasons.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		l.logger.Error("Read Json File -> Error -> ", err)
+		return userRejectionReason, validators.GetErrorResponseFromErr(err)
+	}
+
+	if errRe := json.Unmarshal(data, &userRejectionReason); errRe != nil {
+		l.logger.Error("ListPermissions -> Error -> ", errRe)
+		return userRejectionReason, validators.GetErrorResponseFromErr(errRe)
+	}
+
+	// Handle Status
+	if status != "" {
+		From(userRejectionReason).Where(func(c interface{}) bool {
+			return c.(domain.UserRejectionReason).Status == status || c.(domain.UserRejectionReason).Status == "all"
+		}).ToSlice(&userRejectionReason)
+	}
+	if id != "" {
+		From(userRejectionReason).Where(func(c interface{}) bool {
+			return c.(domain.UserRejectionReason).Id == id
+		}).ToSlice(&userRejectionReason)
+	}
+
+	return userRejectionReason, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (domain.Order, validators.ErrorResponse) {
+	// Find Order
+
+	// Check Order User
+
+	// Check Status
+
+	//return
+	panic("Test")
 }

@@ -27,6 +27,8 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 	{
 		mobile.POST("/calculate-order-cost", handler.CalculateOrderCost)
 		mobile.POST("", handler.CreateOrder)
+		mobile.PUT("/:id/cancel", handler.CancelOrder)
+		mobile.GET("/user-rejection-reason/:status", handler.UserRejectionReason)
 	}
 }
 
@@ -75,4 +77,43 @@ func (a *OrderHandler) CreateOrder(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{"order": orderResponse})
+}
+func (a *OrderHandler) CancelOrder(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var orderDto order.CancelOrderDto
+
+	orderId := c.Param("id")
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &orderDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := c.Bind(&orderDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	orderDto.OrderId = orderId
+
+	orderResponse, errResp := a.orderUsecase.UserCancelOrder(ctx, &orderDto)
+	if errResp.IsError {
+		a.logger.Error(errResp.ErrorMessageObject.Text)
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"order": orderResponse})
+}
+func (a *OrderHandler) UserRejectionReason(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	status := c.Param("status")
+
+	rejectionReasons, errResp := a.orderUsecase.UserRejectionReasons(ctx, status, "")
+	if errResp.IsError {
+		a.logger.Error(errResp.ErrorMessageObject.Text)
+		return validators.ErrorResp(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"user_rejection_reasons": rejectionReasons})
 }
