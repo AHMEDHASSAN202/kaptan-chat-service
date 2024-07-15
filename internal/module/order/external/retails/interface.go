@@ -8,4 +8,5 @@ import (
 
 type Interface interface {
 	GetLocationDetails(ctx context.Context, id string) (responses.LocationDetails, validators.ErrorResponse)
+	FindCollectionMethod(ctx context.Context, id string, userId string) (responses.CollectionMethod, validators.ErrorResponse)
 }

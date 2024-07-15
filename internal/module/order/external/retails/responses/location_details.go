@@ -20,7 +20,7 @@ type Name struct {
 	En string `json:"en" validate:"required,min=3"`
 }
 type City struct {
-	Id   primitive.ObjectID `json:"_id" bson:"id"`
+	Id   primitive.ObjectID `json:"id" bson:"id"`
 	Name Name               `json:"name" bson:"name"`
 }
 type Coordinate struct {
@@ -28,7 +28,7 @@ type Coordinate struct {
 	Coordinates []float64 `json:"coordinates" bson:"coordinates"`
 }
 type BrandDetails struct {
-	Id       primitive.ObjectID `json:"_id" bson:"_id"`
+	Id       primitive.ObjectID `json:"id" bson:"_id"`
 	Name     Name               `json:"name" bson:"name"`
 	Logo     string             `json:"logo" bson:"logo"`
 	IsActive bool               `json:"is_active" bson:"is_active"`
@@ -41,7 +41,7 @@ type WorkingHour struct {
 	To        string `json:"to" bson:"to"`
 }
 type Country struct {
-	Id   string `json:"_id" bson:"_id"`
+	Id   string `json:"id" bson:"_id"`
 	Name struct {
 		Ar string `json:"ar" bson:"ar"`
 		En string `json:"en" bson:"en"`
@@ -52,26 +52,27 @@ type Country struct {
 }
 
 type CuisineDetails struct {
-	Id       string `json:"_id" bson:"_id"`
+	Id       string `json:"id" bson:"_id"`
 	Name     Name   `json:"name" bson:"name"`
 	Logo     string `json:"logo" bson:"logo"`
 	IsHidden bool   `json:"is_hidden" bson:"is_hidden"`
 }
 type LocationDetails struct {
-	Id              string        `json:"_id" bson:"_id"`
-	Name            Name          `json:"name" bson:"name"`
-	City            City          `json:"city" bson:"city"`
-	Street          Name          `json:"street" bson:"street"`
-	CoverImage      string        `json:"cover_image" bson:"cover_image"`
-	Logo            string        `json:"logo" bson:"logo"`
-	SnoozeTo        *time.Time    `json:"snooze_to" bson:"snooze_to"`
-	IsOpen          bool          `json:"is_open" bson:"is_open"`
-	WorkingHour     []WorkingHour `json:"working_hour" bson:"working_hour"`
-	Phone           string        `json:"phone" bson:"phone"`
-	Coordinate      Coordinate    `json:"coordinate" bson:"coordinate"`
-	BrandDetails    BrandDetails  `json:"brand_details" bson:"brand_details"`
-	PreparationTime int           `json:"preparation_time" bson:"preparation_time"`
-	Distance        float64       `json:"distance" bson:"distance"`
-	Country         Country       `json:"country" bson:"country"`
-	Status          Status        `json:"status" bson:"-"`
+	Id              primitive.ObjectID `json:"id" bson:"_id"`
+	Name            Name               `json:"name" bson:"name"`
+	City            City               `json:"city" bson:"city"`
+	Street          Name               `json:"street" bson:"street"`
+	CoverImage      string             `json:"cover_image" bson:"cover_image"`
+	Logo            string             `json:"logo" bson:"logo"`
+	SnoozeTo        *time.Time         `json:"snooze_to" bson:"snooze_to"`
+	IsOpen          bool               `json:"is_open" bson:"is_open"`
+	WorkingHour     []WorkingHour      `json:"working_hour" bson:"working_hour"`
+	Phone           string             `json:"phone" bson:"phone"`
+	Coordinate      Coordinate         `json:"coordinate" bson:"coordinate"`
+	BrandDetails    BrandDetails       `json:"brand_details" bson:"brand_details"`
+	PreparationTime int                `json:"preparation_time" bson:"preparation_time"`
+	Distance        float64            `json:"distance" bson:"distance"`
+	Country         Country            `json:"country" bson:"country"`
+	Status          Status             `json:"status" bson:"-"`
+	AccountId       primitive.ObjectID `json:"account_id" bson:"account_id"`
 }
