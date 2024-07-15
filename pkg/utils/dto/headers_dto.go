@@ -6,10 +6,11 @@ import (
 )
 
 type MobileHeaders struct {
-	CountryId string `header:"Country-Id"`
-	CauserId  string `header:"causer-id"`
-	Lat       string `header:"Lat"`
-	Lng       string `header:"Lng"`
+	CountryId  string `header:"Country-Id"`
+	CauserId   string `header:"causer-id"`
+	CauserType string `header:"causer-type"`
+	Lat        string `header:"Lat"`
+	Lng        string `header:"Lng"`
 }
 
 type AdminHeaders struct {

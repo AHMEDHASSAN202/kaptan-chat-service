@@ -3,10 +3,12 @@ package order
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	. "github.com/ahmetb/go-linq/v3"
 	"net/http"
 	"os"
 	"path/filepath"
+	"samm/internal/module/order/consts"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/external"
@@ -17,6 +19,7 @@ import (
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+	"time"
 )
 
 type OrderUseCase struct {
@@ -118,13 +121,56 @@ func (l OrderUseCase) UserRejectionReasons(ctx context.Context, status string, i
 	return userRejectionReason, validators.ErrorResponse{}
 }
 
-func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (domain.Order, validators.ErrorResponse) {
+func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*domain.Order, validators.ErrorResponse) {
 	// Find Order
-
-	// Check Order User
-
+	orderDomain, err := l.repo.FindOrder(&ctx, payload.OrderId, payload.UserId)
+	if err != nil {
+		return orderDomain, validators.GetErrorResponseFromErr(err)
+	}
 	// Check Status
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorUser, orderDomain.Status, consts.OrderStatus.Cancelled)
+	if !utils.Contains(nextStatuses, consts.OrderStatus.Cancelled) {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
 
-	//return
-	panic("Test")
+	rejectionReason, errRe := l.UserRejectionReasons(ctx, "", payload.CancelReasonId)
+	if errRe.IsError {
+		return nil, errRe
+	}
+	if len(rejectionReason) == 0 {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"status":       consts.OrderStatus.Cancelled,
+		"cancelled_at": now,
+		"updated_at":   now,
+		"cancelled": domain.Rejected{
+			Id:       payload.CancelReasonId,
+			Note:     "",
+			UserType: payload.CauserType,
+		},
+	}
+
+	statusLog := domain.StatusLog{
+		CauserId:   payload.UserId,
+		CauserType: payload.CauserType,
+		CreatedAt:  &now,
+	}
+	statusLog.Status.New = consts.OrderStatus.Cancelled
+	statusLog.Status.Old = orderDomain.Status
+
+	orderDomain, err = l.repo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, statusLog, updateSet)
+
+	fmt.Println("err")
+	fmt.Println(err)
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+
+	// If Status Is Pending Call Payment To Release This Transaction
+
+	// Send Notification
+
+	return orderDomain, validators.ErrorResponse{}
 }

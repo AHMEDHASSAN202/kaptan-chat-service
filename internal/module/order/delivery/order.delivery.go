@@ -32,7 +32,7 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 		mobile.POST("/calculate-order-cost", handler.CalculateOrderCost)
 		dashboard.GET("", handler.ListOrderForMobile)
 		mobile.POST("", handler.CreateOrder, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
-		mobile.PUT("/:id/cancel", handler.CancelOrder)
+		mobile.PUT("/:id/cancel", handler.CancelOrder, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 		mobile.GET("/user-rejection-reason/:status", handler.UserRejectionReason)
 	}
 }
@@ -79,6 +79,12 @@ func (a *OrderHandler) CancelOrder(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 	orderDto.OrderId = orderId
+
+	validationErr := orderDto.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
 
 	orderResponse, errResp := a.orderUsecase.UserCancelOrder(ctx, &orderDto)
 	if errResp.IsError {

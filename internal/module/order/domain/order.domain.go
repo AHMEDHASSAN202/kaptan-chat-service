@@ -157,10 +157,12 @@ type OrderUseCase interface {
 
 	UserRejectionReasons(ctx context.Context, status string, id string) ([]UserRejectionReason, validators.ErrorResponse)
 
-	UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (Order, validators.ErrorResponse)
+	UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*Order, validators.ErrorResponse)
 }
 
 type OrderRepository interface {
 	StoreOrder(ctx *context.Context, order *Order) (err error)
 	ListOrderForDashboard(ctx *context.Context, dto *order.ListOrderDto) (ordersRes *[]Order, paginationMeta *PaginationData, err error)
+	FindOrder(ctx *context.Context, id string, userId string) (order *Order, err error)
+	UpdateOrderStatus(ctx *context.Context, orderDomain *Order, previousStatus []string, statusLog StatusLog, updateSet interface{}) (order *Order, err error)
 }

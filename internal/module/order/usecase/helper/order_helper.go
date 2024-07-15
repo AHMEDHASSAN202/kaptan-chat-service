@@ -2,9 +2,14 @@ package helper
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
+	"os"
+	"path/filepath"
+	"samm/internal/module/order/consts"
+	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	extMenuResponses "samm/internal/module/order/external/menu/responses"
 	extLocResponses "samm/internal/module/order/external/retails/responses"
@@ -182,4 +187,35 @@ func GenerateSerialNumber() string {
 	randomNumber := rand.Intn(900000) + 10000
 	serialNumber := fmt.Sprintf("%s-%06d", currentTime, randomNumber)
 	return serialNumber
+}
+func GetNextAndPreviousStatusByType(actor string, currentStatus string, nextStatus string) (nextStatuses []string, previousStatus []string) {
+
+	var orderStatus map[string]domain.OrderStatusJson
+	dir, err := os.Getwd()
+	if err != nil {
+		return nextStatuses, previousStatus
+	}
+
+	path := filepath.Join(dir, "internal", "module", "order", "assets", "order_status.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nextStatuses, previousStatus
+	}
+
+	if errRe := json.Unmarshal(data, &orderStatus); errRe != nil {
+		return nextStatuses, previousStatus
+	}
+	statusRule := orderStatus[currentStatus]
+	nextStatusRule := orderStatus[nextStatus]
+
+	switch actor {
+	case consts.ActorAdmin:
+		return statusRule.AllowAdminToChange, nextStatusRule.PreviousStatus
+	case consts.ActorKitchen:
+		return statusRule.AllowKitchenToChange, nextStatusRule.PreviousStatus
+	case consts.ActorUser:
+		return statusRule.AllowUserToChange, nextStatusRule.PreviousStatus
+	}
+	return nextStatuses, previousStatus
+
 }

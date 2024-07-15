@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+	"fmt"
 	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -104,4 +105,27 @@ func (i *OrderRepository) ListOrderForDashboard(ctx *context.Context, dto *order
 	ordersRes = &orders
 
 	return
+}
+
+func (l OrderRepository) FindOrder(ctx *context.Context, id string, userId string) (order *domain.Order, err error) {
+	var orderDomain domain.Order
+	filter := bson.M{"user._id": utils.ConvertStringIdToObjectId(userId), "_id": utils.ConvertStringIdToObjectId(id)}
+	err = l.orderCollection.FirstWithCtx(*ctx, filter, &orderDomain)
+	return &orderDomain, err
+}
+
+func (l OrderRepository) UpdateOrderStatus(ctx *context.Context, orderDomain *domain.Order, previousStatus []string, statusLog domain.StatusLog, updateSet interface{}) (order *domain.Order, err error) {
+	fmt.Println("previousStatus => ", previousStatus)
+
+	filter := bson.M{"_id": orderDomain.ID, "status": bson.M{"$in": previousStatus}}
+	_, err = l.orderCollection.UpdateOne(*ctx, filter, bson.M{
+		"$set":  updateSet,
+		"$push": bson.M{"status_logs": statusLog},
+	})
+	fmt.Println("error Repo => ", err)
+	if err != nil {
+		return nil, err
+	}
+	return l.FindOrder(ctx, utils.ConvertObjectIdToStringId(orderDomain.ID), utils.ConvertObjectIdToStringId(orderDomain.User.ID))
+
 }
