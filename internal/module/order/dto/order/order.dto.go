@@ -3,7 +3,6 @@ package order
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 )
 
@@ -20,12 +19,6 @@ type StoreOrderDto struct {
 
 func (payload *StoreOrderDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
 	return validators.ValidateStruct(c.Request().Context(), validate, payload)
-}
-
-type ListOrderDto struct {
-	dto.Pagination
-	Status string `query:"status" `
-	Query  string `query:"query"`
 }
 
 type UpdateOrderDto struct {

@@ -9,6 +9,7 @@ import (
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/pkg/logger"
+	"time"
 )
 
 type OrderRepository struct {
@@ -18,10 +19,11 @@ type OrderRepository struct {
 
 const mongoOrderRepositoryTag = "OrderMongoRepository"
 
-func NewOrderMongoRepository(dbs *mongo.Database) domain.OrderRepository {
+func NewOrderMongoRepository(dbs *mongo.Database, logger logger.ILogger) domain.OrderRepository {
 	orderDbCollection := mgm.Coll(&domain.Order{})
 	return &OrderRepository{
 		orderCollection: orderDbCollection,
+		logger:          logger,
 	}
 }
 
@@ -38,21 +40,29 @@ func (i *OrderRepository) ListOrderForDashboard(ctx *context.Context, dto *order
 		bson.D{{"deleted_at", nil}},
 	}}}
 
-	if dto.Query != "" {
-		pattern := ".*" + dto.Query + ".*"
-		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"name": bson.M{"$regex": pattern, "$options": "i"}}, {"phone_number": bson.M{"$regex": pattern, "$options": "i"}}}})
+	if dto.Status != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"status": dto.Status})
 	}
 
-	//if dto.Status != "" {
-	//	if dto.Status == "active" {
-	//		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"is_active": true})
-	//	} else if dto.Status == "inactive" {
-	//		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"is_active": false})
-	//	}
-	//}
-	//if dto.Dob != "" {
-	//	matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"dob": dto.Dob})
-	//}
+	if dto.From != "" {
+		fromDate, dateErr := time.Parse(time.DateTime, dto.From)
+		if dateErr != nil {
+			i.logger.Error("Order Repo -> parsing date -> ", dateErr)
+			err = dateErr
+			return
+		}
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"created_at": bson.M{"$gte": fromDate}})
+	}
+
+	if dto.To != "" {
+		toDate, dateErr := time.Parse(time.DateTime, dto.To)
+		if dateErr != nil {
+			i.logger.Error("Order Repo -> parsing date -> ", dateErr)
+			err = dateErr
+			return
+		}
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"created_at": bson.M{"$lte": toDate}})
+	}
 
 	data, err := New(i.orderCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
 

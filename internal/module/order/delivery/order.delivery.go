@@ -42,6 +42,12 @@ func (a *OrderHandler) ListOrderForDashboard(c echo.Context) error {
 
 	payload.Pagination.SetDefault()
 
+	validationErr := payload.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
 	orders, errResp := a.orderUsecase.ListOrderForDashboard(ctx, &payload)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)

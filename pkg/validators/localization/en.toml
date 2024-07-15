@@ -98,6 +98,10 @@ other = "Cuisine Not Exist"
 description = "time format rule validation"
 other = "time format is not valid"
 
+[DateTimeFormat]
+description = "date time format rule validation"
+other = "date time format is not valid"
+
 [Invalid_mongo_ids_validation_rule]
 description = "Invalid mongo ids validation rule"
 other = "invalid id it should be objectId"
