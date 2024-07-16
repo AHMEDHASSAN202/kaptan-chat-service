@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
+	"samm/internal/module/order/dto/order/kitchen"
 	"samm/internal/module/order/external"
 	"samm/internal/module/order/responses"
 	"samm/internal/module/order/usecase/helper"
@@ -78,4 +79,18 @@ func (l OrderUseCase) CalculateOrderCost(ctx context.Context, payload *order.Cal
 		return resp, validators.GetErrorResponse(&ctx, localization.E1005, nil, nil)
 	}
 	return resp, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) KitchenAcceptOrder(ctx context.Context, payload *kitchen.AcceptOrderDto) (interface{}, validators.ErrorResponse) {
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	orderResponse, errCreate := orderFactory.Create(ctx, payload)
+	if errCreate.IsError {
+		return nil, errCreate
+	}
+
+	return orderResponse, validators.ErrorResponse{}
 }

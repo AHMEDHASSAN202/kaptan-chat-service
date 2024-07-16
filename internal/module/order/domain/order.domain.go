@@ -6,6 +6,7 @@ import (
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/order/dto/order"
+	"samm/internal/module/order/dto/order/kitchen"
 	"samm/internal/module/order/responses"
 	"samm/pkg/validators"
 	"time"
@@ -152,6 +153,7 @@ type Order struct {
 
 type OrderUseCase interface {
 	StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse)
+	KitchenAcceptOrder(ctx context.Context, payload *kitchen.AcceptOrderDto) (interface{}, validators.ErrorResponse)
 	CalculateOrderCost(ctx context.Context, payload *order.CalculateOrderCostDto) (resp responses.CalculateOrderCostResp, err validators.ErrorResponse)
 	ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDto) (*responses.ListResponse, validators.ErrorResponse)
 }

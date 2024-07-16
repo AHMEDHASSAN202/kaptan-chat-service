@@ -56,3 +56,11 @@ func (p *PortalHeaders) GetCauserDetailsAsMap() map[string]interface{} {
 	}
 	return causerDetails
 }
+
+type KitchenHeaders struct {
+	CauserId          string   `header:"causer-id"`
+	CauserType        string   `header:"causer-type"`
+	CauserName        string   `header:"causer-name"`
+	CauserPermissions []string `header:"causer-permissions"`
+	CauserDetails     string   `header:"causer-details"`
+}
