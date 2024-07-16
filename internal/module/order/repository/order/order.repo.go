@@ -163,7 +163,7 @@ func (i *OrderRepository) ListOrderForMobile(ctx *context.Context, dto *order.Li
 	return
 }
 
-func (l OrderRepository) FindOrder(ctx *context.Context, id string, userId string) (order *domain.Order, err error) {
+func (l OrderRepository) FindOrderByUser(ctx *context.Context, id string, userId string) (order *domain.Order, err error) {
 	var orderDomain domain.Order
 	filter := bson.M{"user._id": utils.ConvertStringIdToObjectId(userId), "_id": utils.ConvertStringIdToObjectId(id)}
 	err = l.orderCollection.FirstWithCtx(*ctx, filter, &orderDomain)
@@ -190,6 +190,6 @@ func (l OrderRepository) UpdateOrderStatus(ctx *context.Context, orderDomain *do
 	if err != nil {
 		return nil, err
 	}
-	return l.FindOrder(ctx, utils.ConvertObjectIdToStringId(orderDomain.ID), utils.ConvertObjectIdToStringId(orderDomain.User.ID))
+	return l.FindOrderByUser(ctx, utils.ConvertObjectIdToStringId(orderDomain.ID), utils.ConvertObjectIdToStringId(orderDomain.User.ID))
 
 }

@@ -177,5 +177,6 @@ type OrderRepository interface {
 	ListOrderForDashboard(ctx *context.Context, dto *order.ListOrderDtoForDashboard) (ordersRes *[]Order, paginationMeta *PaginationData, err error)
 	ListOrderForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error)
 	UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string) (bool, error)
+	FindOrderByUser(ctx *context.Context, id string, userId string) (order *Order, err error)
 	UpdateOrderStatus(ctx *context.Context, orderDomain *Order, previousStatus []string, statusLog *StatusLog, updateSet interface{}) (order *Order, err error)
 }

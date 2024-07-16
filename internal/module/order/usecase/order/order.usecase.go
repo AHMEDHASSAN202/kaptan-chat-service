@@ -2,14 +2,14 @@ package order
 
 import (
 	"context"
-	"errors"
 	"encoding/json"
+	"errors"
 	. "github.com/ahmetb/go-linq/v3"
 	"github.com/jinzhu/copier"
 	"net/http"
-	user2 "samm/internal/module/order/builder/user"
 	"os"
 	"path/filepath"
+	user2 "samm/internal/module/order/builder/user"
 	"samm/internal/module/order/consts"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
@@ -192,7 +192,7 @@ func (l OrderUseCase) UserRejectionReasons(ctx context.Context, status string, i
 
 func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*domain.Order, validators.ErrorResponse) {
 	// Find Order
-	orderDomain, err := l.repo.FindOrder(&ctx, payload.OrderId, payload.UserId)
+	orderDomain, err := l.repo.FindOrderByUser(&ctx, payload.OrderId, payload.UserId)
 	if err != nil {
 		return orderDomain, validators.GetErrorResponseFromErr(err)
 	}
@@ -250,7 +250,7 @@ func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.Cancel
 }
 func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*domain.Order, validators.ErrorResponse) {
 	// Find Order
-	orderDomain, err := l.repo.FindOrder(&ctx, payload.OrderId, payload.UserId)
+	orderDomain, err := l.repo.FindOrderByUser(&ctx, payload.OrderId, payload.UserId)
 	if err != nil {
 		return orderDomain, validators.GetErrorResponseFromErr(err)
 	}
