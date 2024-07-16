@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	. "github.com/ahmetb/go-linq/v3"
+	"github.com/jinzhu/copier"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -169,7 +170,44 @@ func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.Cancel
 		l.extService.PaymentIService.AuthorizePayment(ctx, utils.ConvertObjectIdToStringId(orderDomain.Payment.Id), false)
 	}
 
-	orderDomain, err = l.repo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, statusLog, updateSet)
+	orderDomain, err = l.repo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
+
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	// Send Notification
+
+	return orderDomain, validators.ErrorResponse{}
+}
+func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*domain.Order, validators.ErrorResponse) {
+	// Find Order
+	orderDomain, err := l.repo.FindOrder(&ctx, payload.OrderId, payload.UserId)
+	if err != nil {
+		return orderDomain, validators.GetErrorResponseFromErr(err)
+	}
+
+	if !utils.Contains([]string{consts.OrderStatus.Accepted, consts.OrderStatus.ReadyForPickup, consts.OrderStatus.NoShow}, orderDomain.Status) || orderDomain.ArrivedAt != nil {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"arrived_at": now,
+		"updated_at": now,
+	}
+	if payload.CollectionMethodId != "" {
+		//get user collection method
+		collectionMethod, hasCollectionMethodErr := l.extService.RetailsIService.FindCollectionMethod(ctx, payload.CollectionMethodId, payload.UserId)
+		if hasCollectionMethodErr.IsError {
+			l.logger.Error(hasCollectionMethodErr)
+			return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
+		}
+		var userCollectionMethod domain.CollectionMethod
+		copier.Copy(&userCollectionMethod, collectionMethod)
+		updateSet["user.collection_method"] = userCollectionMethod
+	}
+
+	orderDomain, err = l.repo.UpdateOrderStatus(&ctx, orderDomain, []string{}, nil, updateSet)
 
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)

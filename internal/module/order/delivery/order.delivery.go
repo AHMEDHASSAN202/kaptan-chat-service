@@ -33,6 +33,7 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 		dashboard.GET("", handler.ListOrderForMobile)
 		mobile.POST("", handler.CreateOrder, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 		mobile.PUT("/:id/cancel", handler.CancelOrder, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
+		mobile.PUT("/:id/arrived", handler.ArrivedOrder, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 		mobile.GET("/user-rejection-reason/:status", handler.UserRejectionReason)
 	}
 }
@@ -87,6 +88,39 @@ func (a *OrderHandler) CancelOrder(c echo.Context) error {
 	}
 
 	orderResponse, errResp := a.orderUsecase.UserCancelOrder(ctx, &orderDto)
+	if errResp.IsError {
+		a.logger.Error(errResp.ErrorMessageObject.Text)
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"order": orderResponse})
+}
+func (a *OrderHandler) ArrivedOrder(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var orderDto order.ArrivedOrderDto
+
+	orderId := c.Param("id")
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &orderDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := c.Bind(&orderDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	orderDto.OrderId = orderId
+
+	validationErr := orderDto.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	orderResponse, errResp := a.orderUsecase.UserArrivedOrder(ctx, &orderDto)
 	if errResp.IsError {
 		a.logger.Error(errResp.ErrorMessageObject.Text)
 		return validators.ErrorResp(c, errResp)

@@ -2,7 +2,6 @@ package mongodb
 
 import (
 	"context"
-	"fmt"
 	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson"
@@ -124,15 +123,23 @@ func (l OrderRepository) FindOrder(ctx *context.Context, id string, userId strin
 	return &orderDomain, err
 }
 
-func (l OrderRepository) UpdateOrderStatus(ctx *context.Context, orderDomain *domain.Order, previousStatus []string, statusLog domain.StatusLog, updateSet interface{}) (order *domain.Order, err error) {
-	fmt.Println("previousStatus => ", previousStatus)
+func (l OrderRepository) UpdateOrderStatus(ctx *context.Context, orderDomain *domain.Order, previousStatus []string, statusLog *domain.StatusLog, updateSet interface{}) (order *domain.Order, err error) {
+	filter := bson.M{"_id": orderDomain.ID}
 
-	filter := bson.M{"_id": orderDomain.ID, "status": bson.M{"$in": previousStatus}}
-	_, err = l.orderCollection.UpdateOne(*ctx, filter, bson.M{
-		"$set":  updateSet,
-		"$push": bson.M{"status_logs": statusLog},
-	})
-	fmt.Println("error Repo => ", err)
+	if len(previousStatus) > 0 {
+		filter = bson.M{"_id": orderDomain.ID, "status": bson.M{"$in": previousStatus}}
+	}
+	if statusLog != nil {
+		_, err = l.orderCollection.UpdateOne(*ctx, filter, bson.M{
+			"$set":  updateSet,
+			"$push": bson.M{"status_logs": statusLog},
+		})
+	} else {
+		_, err = l.orderCollection.UpdateOne(*ctx, filter, bson.M{
+			"$set": updateSet,
+		})
+	}
+
 	if err != nil {
 		return nil, err
 	}

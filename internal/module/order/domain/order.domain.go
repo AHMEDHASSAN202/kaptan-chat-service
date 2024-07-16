@@ -140,6 +140,7 @@ type Order struct {
 	IsFavourite      bool              `json:"is_favourite" bson:"is_favourite"`
 	AcceptedAt       *time.Time        `json:"accepted_at" bson:"accepted_at"`
 	PaidAt           *time.Time        `json:"paid_at" bson:"paid_at"`
+	ArrivedAt        *time.Time        `json:"arrived_at" bson:"arrived_at"`
 	PickedUpAt       *time.Time        `json:"pickedup_at" bson:"pickedup_at"`
 	ReadyForPickUpAt *time.Time        `json:"ready_for_pickup_at" bson:"ready_for_pickup_at"`
 	CancelledAt      *time.Time        `json:"cancelled_at" bson:"cancelled_at"`
@@ -160,6 +161,7 @@ type OrderUseCase interface {
 	UserRejectionReasons(ctx context.Context, status string, id string) ([]UserRejectionReason, validators.ErrorResponse)
 
 	UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*Order, validators.ErrorResponse)
+	UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*Order, validators.ErrorResponse)
 }
 
 type OrderRepository interface {
@@ -167,5 +169,5 @@ type OrderRepository interface {
 	StoreOrder(ctx context.Context, order *Order) (*Order, error)
 	UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string) (bool, error)
 	FindOrder(ctx *context.Context, id string, userId string) (order *Order, err error)
-	UpdateOrderStatus(ctx *context.Context, orderDomain *Order, previousStatus []string, statusLog StatusLog, updateSet interface{}) (order *Order, err error)
+	UpdateOrderStatus(ctx *context.Context, orderDomain *Order, previousStatus []string, statusLog *StatusLog, updateSet interface{}) (order *Order, err error)
 }
