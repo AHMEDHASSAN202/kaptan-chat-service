@@ -55,6 +55,8 @@
     "cart_button_text": "Order now",
     "cart_branchClosed_text1": "Sorry the store selected is now closed ,",
     "cart_branchClosed_text2": "try choosing a different location",
+    "cart_priceNotAvailable": "Unavailable",
+    "cart_itemNotAvailable": "Item no longer available",
     "cars_title": "My cars",
     "cars_defaultCar_label": "Default Car",
     "cars_otherCars_label": "Other saved cars",

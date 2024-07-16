@@ -55,6 +55,8 @@
     "cart_button_text": "اطلب الان!",
     "cart_branchClosed_text1": "نأسف المتجر الذي تم اختياره مغلق الآن،",
     "cart_branchClosed_text2": "حاول اختيار متجر آخر",
+    "cart_priceNotAvailable": "غير متوفر",
+    "cart_itemNotAvailable": "العنصر لم يعد متوفرا",
     "cars_title": "سياراتي",
     "cars_defaultCar_label": "السيارة الإفتراضية",
     "cars_otherCars_label": "السيارات المحفوظة الأخرى",
