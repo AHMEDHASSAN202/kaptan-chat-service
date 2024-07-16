@@ -60,11 +60,11 @@ func (l OrderUseCase) CalculateOrderCost(ctx context.Context, payload *order.Cal
 		return resp, validators.GetErrorResponse(&ctx, localization.Mobile_location_not_available_error, nil, nil)
 	}
 	//check is the location available for the order
-	hasLocErr := helper.CheckIsLocationReadyForNewOrder(&ctx, locationDoc)
-	if hasLocErr.IsError {
-		l.logger.Error(hasLocErr.ErrorMessageObject.Text)
-		return resp, hasLocErr
-	}
+	//hasLocErr := helper.CheckIsLocationReadyForNewOrder(&ctx, locationDoc)
+	//if hasLocErr.IsError {
+	//	l.logger.Error(hasLocErr.ErrorMessageObject.Text)
+	//	return resp, hasLocErr
+	//}
 	//find menus details
 	menuDetails, errResponse := l.extService.MenuIService.GetMenuItemsDetails(ctx, payload.MenuItems, payload.LocationId)
 	if errResponse.IsError {
