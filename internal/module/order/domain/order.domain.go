@@ -125,9 +125,10 @@ type StatusLog struct {
 }
 
 type Payment struct {
-	Id   primitive.ObjectID `json:"id" bson:"_id"`
-	Type string             `json:"type" bson:"type"`
-	Num  string             `json:"num" bson:"num"`
+	Id          primitive.ObjectID `json:"id" bson:"_id"`
+	PaymentType string             `json:"payment_type" bson:"payment_type"`
+	CardType    string             `json:"card_type" bson:"card_type"`
+	CardNumber  string             `json:"card_number" bson:"card_number"`
 }
 
 type Order struct {
@@ -168,6 +169,7 @@ type OrderUseCase interface {
 
 	UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
 	UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
+	SetOrderPaid(ctx context.Context, payload *order.OrderPaidDto) validators.ErrorResponse
 }
 
 type OrderRepository interface {

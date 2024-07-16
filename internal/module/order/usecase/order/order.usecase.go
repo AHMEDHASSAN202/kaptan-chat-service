@@ -289,3 +289,44 @@ func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.Arriv
 
 	return orderResponse, validators.ErrorResponse{}
 }
+func (l OrderUseCase) SetOrderPaid(ctx context.Context, payload *order.OrderPaidDto) validators.ErrorResponse {
+	// Find Order
+	orderDomain, err := l.repo.FindOrder(&ctx, payload.OrderId)
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	// Check Status
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorUser, orderDomain.Status, consts.OrderStatus.Pending)
+	if !utils.Contains(nextStatuses, consts.OrderStatus.Cancelled) {
+		return validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"status":  consts.OrderStatus.Pending,
+		"paid_at": now,
+		"cancelled": domain.Payment{
+			Id:          utils.ConvertStringIdToObjectId(payload.TransactionId),
+			PaymentType: payload.PaymentType,
+			CardType:    payload.CardType,
+			CardNumber:  payload.CardNumber,
+		},
+	}
+
+	statusLog := domain.StatusLog{
+		CauserId:   utils.ConvertObjectIdToStringId(orderDomain.User.ID),
+		CauserType: "user",
+		CreatedAt:  &now,
+	}
+	statusLog.Status.New = consts.OrderStatus.Pending
+	statusLog.Status.Old = orderDomain.Status
+
+	orderDomain, err = l.repo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
+
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	// Send Notification
+
+	return validators.ErrorResponse{}
+}

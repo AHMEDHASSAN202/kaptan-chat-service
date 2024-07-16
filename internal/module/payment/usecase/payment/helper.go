@@ -199,5 +199,9 @@ func PayApplePay(p PaymentUseCase, ctx context.Context, dto *payment.PayDto) (pa
 	return paymentResponse, errRe
 }
 func UpdateOrderStatus(p PaymentUseCase, ctx context.Context, transaction *domain.Payment) (err validators.ErrorResponse) {
+	//err = p.extService.OrderService.SetOrderPaid(ctx, transaction.TransactionId, *transaction)
+	//if err.IsError {
+	//	p.logger.Error("Unable to update order status => ", err)
+	//}
 	return
 }
