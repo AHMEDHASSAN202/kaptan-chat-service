@@ -11,6 +11,8 @@
     "home_search": "Search",
     "home_lastOrders": "Re-order your last options now!",
     "home_branches": "Stores nearest to you",
+    "home_branchesEmpty_title": "No stores found near you ,",
+    "home_branchesEmpty_subtitle": "try selecting a different a different location",
     "auth_signin_title": "Sign in",
     "auth_signin_subtitle": "Please sign in to complete your order",
     "auth_signin_mobile_hint": "Mobile",

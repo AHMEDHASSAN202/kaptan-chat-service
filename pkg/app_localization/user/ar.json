@@ -11,6 +11,8 @@
     "home_lastOrders": "أعد طلب خياراتك الأخيرة الآن!",
     "home_branches": "المتاجر الأقرب إليك",
     "home_search": "بحث",
+    "home_branchesEmpty_title": "لم يتم العثور على متاجر بالقرب منك،",
+    "home_branchesEmpty_subtitle": "حاول اختيار موقع مختلف",
     "auth_signin_title": "تسجيل الدخول",
     "auth_signin_subtitle": "الرجاء تسجيل الدخول لإكمال طلبك",
     "auth_signin_mobile_hint": "الجوال",
