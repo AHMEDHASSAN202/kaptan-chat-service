@@ -41,6 +41,7 @@ const (
     JwtTokenInvalidError = "JwtTokenInvalidError" // The JSON Web Token is invalid and could not be verified
     JwtTokenParsingError = "JwtTokenParsingError" // Error: the JSON Web Token could not be parsed
     Location_Used_in_kitchen = "Location_Used_in_kitchen" // Location_Used_in_kitchen
+    LockError = "LockError" // LockError
     MaxModifierGroupQty = "MaxModifierGroupQty" // MaxModifierGroupQty
     MaxModifierQty = "MaxModifierQty" // MaxModifierQty
     MinModifierGroupQty = "MinModifierGroupQty" // MinModifierGroupQty
@@ -59,5 +60,6 @@ const (
     RoleHasAdminsValidation = "RoleHasAdminsValidation" // The role you are trying to delete is currently assigned to one or more admins. Please reassign these admins to a different role before attempting to delete this role.
     SKU_name_is_unique_rules_validation = "SKU_name_is_unique_rules_validation" // Feature not supported
     Timeformat = "Timeformat" // time format rule validation
+    UserHasRunningOrders = "UserHasRunningOrders" // UserHasRunningOrders
     Validate_Account_Location_validation = "Validate_Account_Location_validation" // Validate_Account_Location_validation
 )

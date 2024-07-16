@@ -15,3 +15,5 @@ type OrderStates struct {
 var (
 	OrderStatus = OrderStates{Initiated: "initiated", Pending: "pending", TimedOut: "timedOut", Accepted: "accepted", Cancelled: "cancelled", Rejected: "rejected", ReadyForPickup: "ready_for_pickup", PickedUp: "pickedup", NoShow: "no_show"}
 )
+
+const CREATE_ORDER_LOCK_PREFIX = "CREATE-ORDER-:userId"

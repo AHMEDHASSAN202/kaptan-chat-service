@@ -222,3 +222,11 @@ other = "The {{.modifier_name}} modifier qty greater than available"
 [OrderCollectionMethodError]
 description = "OrderCollectionMethodError"
 other = "The specified collection method was not found. Please check the method name and try again or use an alternative method."
+
+[UserHasRunningOrders]
+description = "UserHasRunningOrders"
+other = "You have running orders and can't create a new order."
+
+[LockError]
+description = "LockError"
+other = "Too Many Requests - Try again later."

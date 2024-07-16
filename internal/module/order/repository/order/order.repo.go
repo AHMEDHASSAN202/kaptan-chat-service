@@ -30,12 +30,21 @@ func NewOrderMongoRepository(dbs *mongo.Database, logger logger.ILogger) domain.
 	}
 }
 
-func (l OrderRepository) StoreOrder(ctx *context.Context, order *domain.Order) (err error) {
-	_, err = l.orderCollection.InsertOne(*ctx, order)
+func (l OrderRepository) StoreOrder(ctx context.Context, order *domain.Order) (*domain.Order, error) {
+	_, err := mgm.Coll(&domain.Order{}).InsertOne(ctx, order)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return order, nil
+
+}
+
+func (l OrderRepository) UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string) (bool, error) {
+	ordersCount, err := mgm.Coll(&domain.Order{}).CountDocuments(ctx, bson.M{"user._id": userId, "status": bson.M{"$in": orderStatus}})
+	if err != nil {
+		return false, err
+	}
+	return ordersCount >= 1, nil
 }
 
 func (l OrderRepository) FindOrder(ctx *context.Context, Id primitive.ObjectID) (*domain.Order, error) {
