@@ -190,11 +190,11 @@ func (l OrderUseCase) UserRejectionReasons(ctx context.Context, status string, i
 	return userRejectionReason, validators.ErrorResponse{}
 }
 
-func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*domain.Order, validators.ErrorResponse) {
+func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse) {
 	// Find Order
 	orderDomain, err := l.repo.FindOrderByUser(&ctx, payload.OrderId, payload.UserId)
 	if err != nil {
-		return orderDomain, validators.GetErrorResponseFromErr(err)
+		return nil, validators.GetErrorResponseFromErr(err)
 	}
 	// Check Status
 	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorUser, orderDomain.Status, consts.OrderStatus.Cancelled)
@@ -246,13 +246,15 @@ func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.Cancel
 	}
 	// Send Notification
 
-	return orderDomain, validators.ErrorResponse{}
+	orderResponse, _ := user2.FindOrderBuilder(&ctx, orderDomain)
+
+	return orderResponse, validators.ErrorResponse{}
 }
-func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*domain.Order, validators.ErrorResponse) {
+func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse) {
 	// Find Order
 	orderDomain, err := l.repo.FindOrderByUser(&ctx, payload.OrderId, payload.UserId)
 	if err != nil {
-		return orderDomain, validators.GetErrorResponseFromErr(err)
+		return nil, validators.GetErrorResponseFromErr(err)
 	}
 
 	if !utils.Contains([]string{consts.OrderStatus.Accepted, consts.OrderStatus.ReadyForPickup, consts.OrderStatus.NoShow}, orderDomain.Status) || orderDomain.ArrivedAt != nil {
@@ -283,5 +285,7 @@ func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.Arriv
 	}
 	// Send Notification
 
-	return orderDomain, validators.ErrorResponse{}
+	orderResponse, _ := user2.FindOrderBuilder(&ctx, orderDomain)
+
+	return orderResponse, validators.ErrorResponse{}
 }

@@ -166,8 +166,8 @@ type OrderUseCase interface {
 
 	UserRejectionReasons(ctx context.Context, status string, id string) ([]UserRejectionReason, validators.ErrorResponse)
 
-	UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*Order, validators.ErrorResponse)
-	UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*Order, validators.ErrorResponse)
+	UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
+	UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
 }
 
 type OrderRepository interface {
