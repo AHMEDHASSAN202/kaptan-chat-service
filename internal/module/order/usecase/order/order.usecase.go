@@ -13,6 +13,7 @@ import (
 	"samm/internal/module/order/consts"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
+	"samm/internal/module/order/dto/order/kitchen"
 	"samm/internal/module/order/external"
 	"samm/internal/module/order/responses"
 	"samm/internal/module/order/responses/user"
@@ -92,15 +93,20 @@ func (l *OrderUseCase) FindOrderForMobile(ctx *context.Context, payload *order.F
 }
 
 func (l OrderUseCase) StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse) {
+	//create new instance from ktha factory
 	orderFactory, err := l.orderFactory.Make("ktha")
 	if err != nil {
 		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
 	}
 
+	//create order
 	orderResponse, errCreate := orderFactory.Create(ctx, payload)
 	if errCreate.IsError {
 		return nil, errCreate
 	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
 
 	return orderResponse, validators.ErrorResponse{}
 }
@@ -250,6 +256,7 @@ func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.Cancel
 
 	return orderResponse, validators.ErrorResponse{}
 }
+
 func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse) {
 	// Find Order
 	orderDomain, err := l.repo.FindOrderByUser(&ctx, payload.OrderId, payload.UserId)
@@ -289,6 +296,7 @@ func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.Arriv
 
 	return orderResponse, validators.ErrorResponse{}
 }
+
 func (l OrderUseCase) SetOrderPaid(ctx context.Context, payload *order.OrderPaidDto) validators.ErrorResponse {
 	// Find Order
 	orderDomain, err := l.repo.FindOrder(&ctx, payload.OrderId)
@@ -329,4 +337,46 @@ func (l OrderUseCase) SetOrderPaid(ctx context.Context, payload *order.OrderPaid
 	// Send Notification
 
 	return validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) KitchenAcceptOrder(ctx context.Context, payload *kitchen.AcceptOrderDto) (interface{}, validators.ErrorResponse) {
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	//accept order
+	orderResponse, errAccept := orderFactory.ToAcceptKitchen(ctx, payload)
+	if errAccept.IsError {
+		return nil, errAccept
+	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
+
+	return orderResponse, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) KitchenRejectedOrder(ctx context.Context, payload *kitchen.RejectedOrderDto) (interface{}, validators.ErrorResponse) {
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	//accept order
+	orderResponse, errRejected := orderFactory.ToRejectedKitchen(ctx, payload)
+	if errRejected.IsError {
+		return nil, errRejected
+	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
+
+	return orderResponse, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) KitchenRejectionReasons(ctx context.Context, status string, id string) ([]domain.KitchenRejectionReason, validators.ErrorResponse) {
+	return helper.KitchenRejectionReasons(ctx, status, id)
 }
