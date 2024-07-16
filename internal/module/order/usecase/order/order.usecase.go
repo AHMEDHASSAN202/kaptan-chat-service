@@ -2,6 +2,7 @@ package order
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
@@ -30,12 +31,49 @@ func NewOrderUseCase(repo domain.OrderRepository, extService external.ExtService
 		orderFactory: orderFactory,
 	}
 }
-func (l OrderUseCase) ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDto) (*responses.ListResponse, validators.ErrorResponse) {
+func (l OrderUseCase) ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDtoForDashboard) (*responses.ListResponse, validators.ErrorResponse) {
 	ordersRes, paginationMeta, dbErr := l.repo.ListOrderForDashboard(&ctx, payload)
 	if dbErr != nil {
 		return nil, validators.GetErrorResponseFromErr(dbErr)
 	}
 	return responses.SetListResponse(ordersRes, paginationMeta), validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) ListOrderForMobile(ctx context.Context, payload *order.ListOrderDtoForMobile) (*responses.ListResponse, validators.ErrorResponse) {
+	ordersRes, paginationMeta, dbErr := l.repo.ListOrderForMobile(&ctx, payload)
+	if dbErr != nil {
+		return nil, validators.GetErrorResponseFromErr(dbErr)
+	}
+	return responses.SetListResponse(ordersRes, paginationMeta), validators.ErrorResponse{}
+}
+
+func (l *OrderUseCase) FindOrderForDashboard(ctx *context.Context, id string) (*domain.Order, validators.ErrorResponse) {
+	order, err := l.repo.FindOrder(ctx, utils.ConvertStringIdToObjectId(id))
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	if order == nil {
+		return nil, validators.GetErrorResponseFromErr(errors.New(localization.E1002))
+	}
+
+	return order, validators.ErrorResponse{}
+}
+
+func (l *OrderUseCase) FindOrderForMobile(ctx *context.Context, payload *order.FindOrderMobileDto) (interface{}, validators.ErrorResponse) {
+	order, err := l.repo.FindOrderForMobile(ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	if order == nil {
+		return nil, validators.GetErrorResponseFromErr(errors.New(localization.E1002))
+	}
+
+	if order.User.ID.Hex() != payload.UserId {
+		l.logger.Error(" User >> unauthorized access ")
+		return nil, validators.GetErrorResponse(ctx, localization.E1006, nil, nil)
+	}
+
+	return order, validators.ErrorResponse{}
 }
 
 func (l OrderUseCase) StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse) {
@@ -78,4 +116,27 @@ func (l OrderUseCase) CalculateOrderCost(ctx context.Context, payload *order.Cal
 		return resp, validators.GetErrorResponse(&ctx, localization.E1005, nil, nil)
 	}
 	return resp, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) ToggleOrderFavourite(ctx *context.Context, payload order.ToggleOrderFavDto) (err validators.ErrorResponse) {
+	orderDomain, errRe := l.repo.FindOrder(ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+
+	if orderDomain.User.ID.Hex() != payload.UserId {
+		l.logger.Error(" User >> unauthorized access ")
+		return validators.GetErrorResponse(ctx, localization.E1006, nil, nil)
+	}
+
+	if orderDomain.IsFavourite {
+		orderDomain.IsFavourite = false
+	} else {
+		orderDomain.IsFavourite = true
+	}
+	errRe = l.repo.UpdateOrder(orderDomain)
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+	return
 }
