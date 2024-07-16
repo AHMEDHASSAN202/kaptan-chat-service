@@ -54,13 +54,6 @@ func (l OrderRepository) FindOrder(ctx *context.Context, Id primitive.ObjectID) 
 	return &domainData, err
 }
 
-func (l OrderRepository) FindOrderForMobile(ctx *context.Context, Id primitive.ObjectID) (*structs.MobileFindOrder, error) {
-	var orderData structs.MobileFindOrder
-	filter := bson.M{"_id": Id}
-	err := l.orderCollection.FirstWithCtx(*ctx, filter, &orderData)
-	return &orderData, err
-}
-
 func (l OrderRepository) UpdateOrder(order *domain.Order) (err error) {
 	//upsert := true
 	//opts := options.UpdateOptions{Upsert: &upsert}

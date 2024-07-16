@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	user2 "samm/internal/module/order/builder/user"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/external"
 	"samm/internal/module/order/responses"
+	"samm/internal/module/order/responses/user"
 	"samm/internal/module/order/usecase/helper"
 	"samm/internal/module/order/usecase/order_factory"
 	"samm/pkg/logger"
@@ -59,21 +61,27 @@ func (l *OrderUseCase) FindOrderForDashboard(ctx *context.Context, id string) (*
 	return order, validators.ErrorResponse{}
 }
 
-func (l *OrderUseCase) FindOrderForMobile(ctx *context.Context, payload *order.FindOrderMobileDto) (interface{}, validators.ErrorResponse) {
-	order, err := l.repo.FindOrderForMobile(ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
-	if err != nil {
-		return nil, validators.GetErrorResponseFromErr(err)
+func (l *OrderUseCase) FindOrderForMobile(ctx *context.Context, payload *order.FindOrderMobileDto) (orderResponse *user.FindOrderResponse, err validators.ErrorResponse) {
+	order, dbErr := l.repo.FindOrder(ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
+	if dbErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
 	}
 	if order == nil {
-		return nil, validators.GetErrorResponseFromErr(errors.New(localization.E1002))
+		err = validators.GetErrorResponseFromErr(errors.New(localization.E1002))
+		return
 	}
 
 	if order.User.ID.Hex() != payload.UserId {
 		l.logger.Error(" User >> unauthorized access ")
-		return nil, validators.GetErrorResponse(ctx, localization.E1006, nil, nil)
+		err = validators.GetErrorResponse(ctx, localization.E1006, nil, nil)
+		return
 	}
 
-	return order, validators.ErrorResponse{}
+	//builder order response
+	orderResponse, err = user2.FindOrderBuilder(ctx, order)
+
+	return
 }
 
 func (l OrderUseCase) StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse) {

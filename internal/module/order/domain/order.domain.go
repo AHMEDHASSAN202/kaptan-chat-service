@@ -8,6 +8,7 @@ import (
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/repository/structs"
 	"samm/internal/module/order/responses"
+	"samm/internal/module/order/responses/user"
 	"samm/pkg/validators"
 	"time"
 )
@@ -157,7 +158,7 @@ type OrderUseCase interface {
 	ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDtoForDashboard) (*responses.ListResponse, validators.ErrorResponse)
 	ListOrderForMobile(ctx context.Context, payload *order.ListOrderDtoForMobile) (*responses.ListResponse, validators.ErrorResponse)
 	FindOrderForDashboard(ctx *context.Context, id string) (*Order, validators.ErrorResponse)
-	FindOrderForMobile(ctx *context.Context, payload *order.FindOrderMobileDto) (interface{}, validators.ErrorResponse)
+	FindOrderForMobile(ctx *context.Context, payload *order.FindOrderMobileDto) (*user.FindOrderResponse, validators.ErrorResponse)
 	ToggleOrderFavourite(ctx *context.Context, payload order.ToggleOrderFavDto) (err validators.ErrorResponse)
 }
 
@@ -165,7 +166,6 @@ type OrderRepository interface {
 	StoreOrder(ctx context.Context, order *Order) (*Order, error)
 	UpdateOrder(order *Order) (err error)
 	FindOrder(ctx *context.Context, Id primitive.ObjectID) (*Order, error)
-	FindOrderForMobile(ctx *context.Context, Id primitive.ObjectID) (*structs.MobileFindOrder, error)
 	ListOrderForDashboard(ctx *context.Context, dto *order.ListOrderDtoForDashboard) (ordersRes *[]Order, paginationMeta *PaginationData, err error)
 	ListOrderForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error)
 	UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string) (bool, error)
