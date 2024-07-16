@@ -7,19 +7,38 @@ import (
 	"samm/pkg/validators"
 )
 
-type ListOrderDto struct {
+type ListOrderDtoForDashboard struct {
 	dto.Pagination
-	Status     string `query:"status" validate:"omitempty,oneof=initiated pending accepted ready_for_pickup pickedup no_show cancelled rejected timeout"`
-	From       string `query:"from" validate:"omitempty,DateTimeFormat"`
-	To         string `query:"to" validate:"omitempty,DateTimeFormat"`
-	AccountId  string `query:"account_id"`
-	BrandId    string `query:"brand_id"`
-	SerialNum  string `query:"serial_num"`
-	CountryId  string `query:"country_id"`
-	LocationId string `query:"location_id"`
-	UserId     string `query:"user_id"`
+	Status      string `query:"status" validate:"omitempty,oneof=initiated pending accepted ready_for_pickup pickedup no_show cancelled rejected timeout"`
+	IsFavourite bool   `query:"is_favourite"`
+	From        string `query:"from" validate:"omitempty,DateTimeFormat"`
+	To          string `query:"to" validate:"omitempty,DateTimeFormat"`
+	AccountId   string `query:"account_id"`
+	BrandId     string `query:"brand_id"`
+	SerialNum   string `query:"serial_num"`
+	CountryId   string `query:"country_id"`
+	LocationId  string `query:"location_id"`
+	UserId      string `query:"user_id"`
 }
 
-func (input *ListOrderDto) Validate(ctx context.Context, validate *validator.Validate) validators.ErrorResponse {
+func (input *ListOrderDtoForDashboard) Validate(ctx context.Context, validate *validator.Validate) validators.ErrorResponse {
 	return validators.ValidateStruct(ctx, validate, input)
+}
+
+type ListOrderDtoForMobile struct {
+	dto.Pagination
+	UserId string `header:"causer-id" validate:"required"`
+}
+
+func (input *ListOrderDtoForMobile) Validate(ctx context.Context, validate *validator.Validate) validators.ErrorResponse {
+	return validators.ValidateStruct(ctx, validate, input)
+}
+
+type FindOrderMobileDto struct {
+	UserId  string `header:"causer-id" validate:"required"`
+	OrderId string `json:"order_id"`
+}
+
+func (payload *FindOrderMobileDto) Validate(ctx context.Context, validate *validator.Validate) validators.ErrorResponse {
+	return validators.ValidateStruct(ctx, validate, payload)
 }

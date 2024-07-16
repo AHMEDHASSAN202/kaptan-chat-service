@@ -8,7 +8,8 @@ import (
 )
 
 type AcceptOrderDto struct {
-	PreparationTime int `json:"preparation_time" validate:"required"`
+	PreparationTime int    `json:"preparation_time" validate:"required"`
+	OrderId         string `param:"id" validate:"required,mongodb"`
 	dto.KitchenHeaders
 }
 

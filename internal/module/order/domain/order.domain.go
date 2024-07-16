@@ -7,7 +7,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/dto/order/kitchen"
+	"samm/internal/module/order/repository/structs"
 	"samm/internal/module/order/responses"
+	"samm/internal/module/order/responses/user"
 	"samm/pkg/validators"
 	"time"
 )
@@ -78,13 +80,13 @@ type PercentsDate struct {
 	To      time.Time `json:"to" bson:"to"`
 	Percent float64   ` json:"percent" bson:"percent"`
 }
-
+type Name struct {
+	Ar string `json:"ar" bson:"ar"`
+	En string `json:"en" bson:"en"`
+}
 type Country struct {
-	Id   string `json:"id" bson:"_id"`
-	Name struct {
-		Ar string `json:"ar" bson:"ar"`
-		En string `json:"en" bson:"en"`
-	} `json:"name" bson:"name"`
+	Id          string `json:"id" bson:"_id"`
+	Name        Name   `json:"name" bson:"name"`
 	Timezone    string `json:"timezone" bson:"timezone"`
 	Currency    string `json:"currency" bson:"currency"`
 	PhonePrefix string `json:"phone_prefix" bson:"phone_prefix"`
@@ -109,6 +111,7 @@ type Location struct {
 type Rejected struct {
 	Id       string `json:"id" bson:"id"`
 	Note     string `json:"note" bson:"note"`
+	Name     Name   `json:"name" bson:"name"`
 	UserType string `json:"user_type" bson:"user_type"`
 }
 
@@ -123,8 +126,10 @@ type StatusLog struct {
 }
 
 type Payment struct {
-	Type string `json:"type" bson:"type"`
-	Num  string `json:"num" bson:"num"`
+	Id          primitive.ObjectID `json:"id" bson:"_id"`
+	PaymentType string             `json:"payment_type" bson:"payment_type"`
+	CardType    string             `json:"card_type" bson:"card_type"`
+	CardNumber  string             `json:"card_number" bson:"card_number"`
 }
 
 type Order struct {
@@ -139,6 +144,7 @@ type Order struct {
 	IsFavourite      bool              `json:"is_favourite" bson:"is_favourite"`
 	AcceptedAt       *time.Time        `json:"accepted_at" bson:"accepted_at"`
 	PaidAt           *time.Time        `json:"paid_at" bson:"paid_at"`
+	ArrivedAt        *time.Time        `json:"arrived_at" bson:"arrived_at"`
 	PickedUpAt       *time.Time        `json:"pickedup_at" bson:"pickedup_at"`
 	ReadyForPickUpAt *time.Time        `json:"ready_for_pickup_at" bson:"ready_for_pickup_at"`
 	CancelledAt      *time.Time        `json:"cancelled_at" bson:"cancelled_at"`
@@ -154,12 +160,29 @@ type Order struct {
 type OrderUseCase interface {
 	StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse)
 	KitchenAcceptOrder(ctx context.Context, payload *kitchen.AcceptOrderDto) (interface{}, validators.ErrorResponse)
+	KitchenRejectedOrder(ctx context.Context, payload *kitchen.RejectedOrderDto) (interface{}, validators.ErrorResponse)
+	KitchenRejectionReasons(ctx context.Context, status string, id string) ([]KitchenRejectionReason, validators.ErrorResponse)
 	CalculateOrderCost(ctx context.Context, payload *order.CalculateOrderCostDto) (resp responses.CalculateOrderCostResp, err validators.ErrorResponse)
-	ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDto) (*responses.ListResponse, validators.ErrorResponse)
+	ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDtoForDashboard) (*responses.ListResponse, validators.ErrorResponse)
+	ListOrderForMobile(ctx context.Context, payload *order.ListOrderDtoForMobile) (*responses.ListResponse, validators.ErrorResponse)
+	FindOrderForDashboard(ctx *context.Context, id string) (*Order, validators.ErrorResponse)
+	FindOrderForMobile(ctx *context.Context, payload *order.FindOrderMobileDto) (*user.FindOrderResponse, validators.ErrorResponse)
+	ToggleOrderFavourite(ctx *context.Context, payload order.ToggleOrderFavDto) (err validators.ErrorResponse)
+
+	UserRejectionReasons(ctx context.Context, status string, id string) ([]UserRejectionReason, validators.ErrorResponse)
+
+	UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
+	UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
+	SetOrderPaid(ctx context.Context, payload *order.OrderPaidDto) validators.ErrorResponse
 }
 
 type OrderRepository interface {
-	ListOrderForDashboard(ctx *context.Context, dto *order.ListOrderDto) (ordersRes *[]Order, paginationMeta *PaginationData, err error)
 	StoreOrder(ctx context.Context, order *Order) (*Order, error)
+	UpdateOrder(order *Order) (err error)
+	FindOrder(ctx *context.Context, Id primitive.ObjectID) (*Order, error)
+	ListOrderForDashboard(ctx *context.Context, dto *order.ListOrderDtoForDashboard) (ordersRes *[]Order, paginationMeta *PaginationData, err error)
+	ListOrderForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error)
 	UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string) (bool, error)
+	FindOrderByUser(ctx *context.Context, id string, userId string) (order *Order, err error)
+	UpdateOrderStatus(ctx *context.Context, orderDomain *Order, previousStatus []string, statusLog *StatusLog, updateSet interface{}) (order *Order, err error)
 }

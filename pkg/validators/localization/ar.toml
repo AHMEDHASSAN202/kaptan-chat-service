@@ -230,3 +230,7 @@ other = "You have running orders and can't create a new order."
 [LockError]
 description = "LockError"
 other = "Too Many Requests - Try again later."
+
+[ChangeOrderStatusError]
+description = "ChangeOrderStatusError"
+other = "لا يمكن تغير حالة الطلب للحالة الجديدة"

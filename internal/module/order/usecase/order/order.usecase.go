@@ -2,18 +2,28 @@ package order
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	. "github.com/ahmetb/go-linq/v3"
+	"github.com/jinzhu/copier"
 	"net/http"
+	"os"
+	"path/filepath"
+	user2 "samm/internal/module/order/builder/user"
+	"samm/internal/module/order/consts"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/dto/order/kitchen"
 	"samm/internal/module/order/external"
 	"samm/internal/module/order/responses"
+	"samm/internal/module/order/responses/user"
 	"samm/internal/module/order/usecase/helper"
 	"samm/internal/module/order/usecase/order_factory"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+	"time"
 )
 
 type OrderUseCase struct {
@@ -31,7 +41,7 @@ func NewOrderUseCase(repo domain.OrderRepository, extService external.ExtService
 		orderFactory: orderFactory,
 	}
 }
-func (l OrderUseCase) ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDto) (*responses.ListResponse, validators.ErrorResponse) {
+func (l OrderUseCase) ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDtoForDashboard) (*responses.ListResponse, validators.ErrorResponse) {
 	ordersRes, paginationMeta, dbErr := l.repo.ListOrderForDashboard(&ctx, payload)
 	if dbErr != nil {
 		return nil, validators.GetErrorResponseFromErr(dbErr)
@@ -39,16 +49,64 @@ func (l OrderUseCase) ListOrderForDashboard(ctx context.Context, payload *order.
 	return responses.SetListResponse(ordersRes, paginationMeta), validators.ErrorResponse{}
 }
 
+func (l OrderUseCase) ListOrderForMobile(ctx context.Context, payload *order.ListOrderDtoForMobile) (*responses.ListResponse, validators.ErrorResponse) {
+	ordersRes, paginationMeta, dbErr := l.repo.ListOrderForMobile(&ctx, payload)
+	if dbErr != nil {
+		return nil, validators.GetErrorResponseFromErr(dbErr)
+	}
+	return responses.SetListResponse(ordersRes, paginationMeta), validators.ErrorResponse{}
+}
+
+func (l *OrderUseCase) FindOrderForDashboard(ctx *context.Context, id string) (*domain.Order, validators.ErrorResponse) {
+	order, err := l.repo.FindOrder(ctx, utils.ConvertStringIdToObjectId(id))
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	if order == nil {
+		return nil, validators.GetErrorResponseFromErr(errors.New(localization.E1002))
+	}
+
+	return order, validators.ErrorResponse{}
+}
+
+func (l *OrderUseCase) FindOrderForMobile(ctx *context.Context, payload *order.FindOrderMobileDto) (orderResponse *user.FindOrderResponse, err validators.ErrorResponse) {
+	order, dbErr := l.repo.FindOrder(ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
+	if dbErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
+	}
+	if order == nil {
+		err = validators.GetErrorResponseFromErr(errors.New(localization.E1002))
+		return
+	}
+
+	if order.User.ID.Hex() != payload.UserId {
+		l.logger.Error(" User >> unauthorized access ")
+		err = validators.GetErrorResponse(ctx, localization.E1006, nil, nil)
+		return
+	}
+
+	//builder order response
+	orderResponse, err = user2.FindOrderBuilder(ctx, order)
+
+	return
+}
+
 func (l OrderUseCase) StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse) {
+	//create new instance from ktha factory
 	orderFactory, err := l.orderFactory.Make("ktha")
 	if err != nil {
 		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
 	}
 
+	//create order
 	orderResponse, errCreate := orderFactory.Create(ctx, payload)
 	if errCreate.IsError {
 		return nil, errCreate
 	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
 
 	return orderResponse, validators.ErrorResponse{}
 }
@@ -61,11 +119,11 @@ func (l OrderUseCase) CalculateOrderCost(ctx context.Context, payload *order.Cal
 		return resp, validators.GetErrorResponse(&ctx, localization.Mobile_location_not_available_error, nil, nil)
 	}
 	//check is the location available for the order
-	hasLocErr := helper.CheckIsLocationReadyForNewOrder(&ctx, locationDoc)
-	if hasLocErr.IsError {
-		l.logger.Error(hasLocErr.ErrorMessageObject.Text)
-		return resp, hasLocErr
-	}
+	//hasLocErr := helper.CheckIsLocationReadyForNewOrder(&ctx, locationDoc)
+	//if hasLocErr.IsError {
+	//	l.logger.Error(hasLocErr.ErrorMessageObject.Text)
+	//	return resp, hasLocErr
+	//}
 	//find menus details
 	menuDetails, errResponse := l.extService.MenuIService.GetMenuItemsDetails(ctx, payload.MenuItems, payload.LocationId)
 	if errResponse.IsError {
@@ -81,16 +139,244 @@ func (l OrderUseCase) CalculateOrderCost(ctx context.Context, payload *order.Cal
 	return resp, validators.ErrorResponse{}
 }
 
+func (l OrderUseCase) ToggleOrderFavourite(ctx *context.Context, payload order.ToggleOrderFavDto) (err validators.ErrorResponse) {
+	orderDomain, errRe := l.repo.FindOrder(ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+
+	if orderDomain.User.ID.Hex() != payload.UserId {
+		l.logger.Error(" User >> unauthorized access ")
+		return validators.GetErrorResponse(ctx, localization.E1006, nil, nil)
+	}
+
+	if orderDomain.IsFavourite {
+		orderDomain.IsFavourite = false
+	} else {
+		orderDomain.IsFavourite = true
+	}
+	errRe = l.repo.UpdateOrder(orderDomain)
+	if errRe != nil {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+	return
+}
+
+func (l OrderUseCase) UserRejectionReasons(ctx context.Context, status string, id string) ([]domain.UserRejectionReason, validators.ErrorResponse) {
+	userRejectionReason := make([]domain.UserRejectionReason, 0)
+	dir, err := os.Getwd()
+	if err != nil {
+		return userRejectionReason, validators.GetErrorResponseFromErr(err)
+	}
+
+	path := filepath.Join(dir, "internal", "module", "order", "assets", "user_cancel_reasons.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		l.logger.Error("Read Json File -> Error -> ", err)
+		return userRejectionReason, validators.GetErrorResponseFromErr(err)
+	}
+
+	if errRe := json.Unmarshal(data, &userRejectionReason); errRe != nil {
+		l.logger.Error("ListPermissions -> Error -> ", errRe)
+		return userRejectionReason, validators.GetErrorResponseFromErr(errRe)
+	}
+
+	// Handle Status
+	if status != "" {
+		From(userRejectionReason).Where(func(c interface{}) bool {
+			return c.(domain.UserRejectionReason).Status == status || c.(domain.UserRejectionReason).Status == "all"
+		}).ToSlice(&userRejectionReason)
+	}
+	if id != "" {
+		From(userRejectionReason).Where(func(c interface{}) bool {
+			return c.(domain.UserRejectionReason).Id == id
+		}).ToSlice(&userRejectionReason)
+	}
+
+	return userRejectionReason, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse) {
+	// Find Order
+	orderDomain, err := l.repo.FindOrderByUser(&ctx, payload.OrderId, payload.UserId)
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	// Check Status
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorUser, orderDomain.Status, consts.OrderStatus.Cancelled)
+	if !utils.Contains(nextStatuses, consts.OrderStatus.Cancelled) {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	rejectionReasons, errRe := l.UserRejectionReasons(ctx, "", payload.CancelReasonId)
+	if errRe.IsError {
+		return nil, errRe
+	}
+	if len(rejectionReasons) == 0 {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+	rejectionReason := rejectionReasons[0]
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"status":       consts.OrderStatus.Cancelled,
+		"cancelled_at": now,
+		"updated_at":   now,
+		"cancelled": domain.Rejected{
+			Id:   payload.CancelReasonId,
+			Note: payload.Note,
+			Name: domain.Name{
+				Ar: rejectionReason.Name.Ar,
+				En: rejectionReason.Name.En,
+			},
+			UserType: payload.CauserType,
+		},
+	}
+
+	statusLog := domain.StatusLog{
+		CauserId:   payload.UserId,
+		CauserType: payload.CauserType,
+		CreatedAt:  &now,
+	}
+	statusLog.Status.New = consts.OrderStatus.Cancelled
+	statusLog.Status.Old = orderDomain.Status
+
+	// If Status Is Pending Call Payment To Release This Transaction
+	if orderDomain.Status == consts.OrderStatus.Pending {
+		l.extService.PaymentIService.AuthorizePayment(ctx, utils.ConvertObjectIdToStringId(orderDomain.Payment.Id), false)
+	}
+
+	orderDomain, err = l.repo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
+
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	// Send Notification
+
+	orderResponse, _ := user2.FindOrderBuilder(&ctx, orderDomain)
+
+	return orderResponse, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse) {
+	// Find Order
+	orderDomain, err := l.repo.FindOrderByUser(&ctx, payload.OrderId, payload.UserId)
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+
+	if !utils.Contains([]string{consts.OrderStatus.Accepted, consts.OrderStatus.ReadyForPickup, consts.OrderStatus.NoShow}, orderDomain.Status) || orderDomain.ArrivedAt != nil {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"arrived_at": now,
+		"updated_at": now,
+	}
+	if payload.CollectionMethodId != "" {
+		//get user collection method
+		collectionMethod, hasCollectionMethodErr := l.extService.RetailsIService.FindCollectionMethod(ctx, payload.CollectionMethodId, payload.UserId)
+		if hasCollectionMethodErr.IsError {
+			l.logger.Error(hasCollectionMethodErr)
+			return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
+		}
+		var userCollectionMethod domain.CollectionMethod
+		copier.Copy(&userCollectionMethod, collectionMethod)
+		updateSet["user.collection_method"] = userCollectionMethod
+	}
+
+	orderDomain, err = l.repo.UpdateOrderStatus(&ctx, orderDomain, []string{}, nil, updateSet)
+
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	// Send Notification
+
+	orderResponse, _ := user2.FindOrderBuilder(&ctx, orderDomain)
+
+	return orderResponse, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) SetOrderPaid(ctx context.Context, payload *order.OrderPaidDto) validators.ErrorResponse {
+	// Find Order
+	orderDomain, err := l.repo.FindOrder(&ctx, payload.OrderId)
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	// Check Status
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorUser, orderDomain.Status, consts.OrderStatus.Pending)
+	if !utils.Contains(nextStatuses, consts.OrderStatus.Cancelled) {
+		return validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"status":  consts.OrderStatus.Pending,
+		"paid_at": now,
+		"cancelled": domain.Payment{
+			Id:          utils.ConvertStringIdToObjectId(payload.TransactionId),
+			PaymentType: payload.PaymentType,
+			CardType:    payload.CardType,
+			CardNumber:  payload.CardNumber,
+		},
+	}
+
+	statusLog := domain.StatusLog{
+		CauserId:   utils.ConvertObjectIdToStringId(orderDomain.User.ID),
+		CauserType: "user",
+		CreatedAt:  &now,
+	}
+	statusLog.Status.New = consts.OrderStatus.Pending
+	statusLog.Status.Old = orderDomain.Status
+
+	orderDomain, err = l.repo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
+
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	// Send Notification
+
+	return validators.ErrorResponse{}
+}
+
 func (l OrderUseCase) KitchenAcceptOrder(ctx context.Context, payload *kitchen.AcceptOrderDto) (interface{}, validators.ErrorResponse) {
+	//create new instance from ktha factory
 	orderFactory, err := l.orderFactory.Make("ktha")
 	if err != nil {
 		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
 	}
 
-	orderResponse, errCreate := orderFactory.Create(ctx, payload)
-	if errCreate.IsError {
-		return nil, errCreate
+	//accept order
+	orderResponse, errAccept := orderFactory.ToAcceptKitchen(ctx, payload)
+	if errAccept.IsError {
+		return nil, errAccept
 	}
 
+	//send notifications
+	go orderFactory.SendNotifications()
+
 	return orderResponse, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) KitchenRejectedOrder(ctx context.Context, payload *kitchen.RejectedOrderDto) (interface{}, validators.ErrorResponse) {
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	//accept order
+	orderResponse, errRejected := orderFactory.ToRejectedKitchen(ctx, payload)
+	if errRejected.IsError {
+		return nil, errRejected
+	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
+
+	return orderResponse, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) KitchenRejectionReasons(ctx context.Context, status string, id string) ([]domain.KitchenRejectionReason, validators.ErrorResponse) {
+	return helper.KitchenRejectionReasons(ctx, status, id)
 }
