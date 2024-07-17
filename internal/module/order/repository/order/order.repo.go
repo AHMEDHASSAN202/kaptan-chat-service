@@ -82,11 +82,8 @@ func (i *OrderRepository) ListOrderForDashboard(ctx *context.Context, dto *order
 	if dto.CountryId != "" {
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"location.country._id": dto.CountryId})
 	}
-	if dto.SerialNum != "" {
-		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"serial_num": dto.SerialNum})
-	}
-	if dto.UserId != "" {
-		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"user._id": utils.ConvertStringIdToObjectId(dto.UserId)})
+	if dto.Query != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"serial_num": dto.Query}, {"user.phone_number": dto.Query}}})
 	}
 	if dto.IsFavourite {
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"is_favourite": true})
