@@ -55,6 +55,7 @@ const (
     OrderCollectionMethodError = "OrderCollectionMethodError" // OrderCollectionMethodError
     PAYMENT_PROCESS_RUNNING = "PAYMENT_PROCESS_RUNNING" // Payment is running
     Password_required_if_id_is_zero = "Password_required_if_id_is_zero" // password is a required field
+    PaymentError = "PaymentError" // PaymentError
     PhoneNumber_rule_validation = "PhoneNumber_rule_validation" // PhoneNumber is Wrong
     PreventDeleteRolesIdsValidation = "PreventDeleteRolesIdsValidation" // You are not allowed to delete main roles
     RoleExistsValidation = "RoleExistsValidation" // Role is not exists

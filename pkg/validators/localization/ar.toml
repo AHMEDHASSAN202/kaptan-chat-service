@@ -234,3 +234,7 @@ other = "Too Many Requests - Try again later."
 [ChangeOrderStatusError]
 description = "ChangeOrderStatusError"
 other = "لا يمكن تغير حالة الطلب للحالة الجديدة"
+
+[PaymentError]
+description = "PaymentError"
+other = "حدثت مشكلة أثناء معالجة الدفع. يرجى المحاولة مرة أخرى أو الاتصال بالدعم للحصول على المساعدة."
