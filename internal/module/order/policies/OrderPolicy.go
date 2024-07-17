@@ -31,7 +31,7 @@ func (p OrderPolicy) KitchenToAccept(order *domain.Order, ctx context.Context) b
 	if !utils.Contains(kitchenProfile.Kitchen.AllowedStatus, consts.OrderStatus.Accepted) {
 		return false
 	}
-	return utils.Contains(kitchenProfile.Kitchen.AccountIds, order.Location.AccountId) || utils.Contains(kitchenProfile.Kitchen.LocationIds, order.Location.ID)
+	return utils.Contains(kitchenProfile.Kitchen.AccountIds, order.Location.Account.Id) || utils.Contains(kitchenProfile.Kitchen.LocationIds, order.Location.ID)
 }
 
 func (p OrderPolicy) KitchenToRejected(order *domain.Order, ctx context.Context) bool {
@@ -39,7 +39,7 @@ func (p OrderPolicy) KitchenToRejected(order *domain.Order, ctx context.Context)
 	if !utils.Contains(kitchenProfile.Kitchen.AllowedStatus, consts.OrderStatus.Rejected) {
 		return false
 	}
-	return utils.Contains(kitchenProfile.Kitchen.AccountIds, order.Location.AccountId) || utils.Contains(kitchenProfile.Kitchen.LocationIds, order.Location.ID)
+	return utils.Contains(kitchenProfile.Kitchen.AccountIds, order.Location.Account.Id) || utils.Contains(kitchenProfile.Kitchen.LocationIds, order.Location.ID)
 }
 
 func (p OrderPolicy) KitchenToPickedUp(order *domain.Order, ctx context.Context) bool {
@@ -47,15 +47,15 @@ func (p OrderPolicy) KitchenToPickedUp(order *domain.Order, ctx context.Context)
 	if !(utils.Contains(kitchenProfile.Kitchen.AllowedStatus, consts.OrderStatus.PickedUp) || utils.Contains(kitchenProfile.Kitchen.AllowedStatus, "delivered")) {
 		return false
 	}
-	return utils.Contains(kitchenProfile.Kitchen.AccountIds, order.Location.AccountId) || utils.Contains(kitchenProfile.Kitchen.LocationIds, order.Location.ID)
+	return utils.Contains(kitchenProfile.Kitchen.AccountIds, order.Location.Account.Id) || utils.Contains(kitchenProfile.Kitchen.LocationIds, order.Location.ID)
 }
 
 func (p OrderPolicy) KitchenToNoShow(order *domain.Order, ctx context.Context) bool {
 	kitchenProfile := ctx.Value("causer-details").(*domain2.Admin)
-	return utils.Contains(kitchenProfile.Kitchen.AccountIds, order.Location.AccountId) || utils.Contains(kitchenProfile.Kitchen.LocationIds, order.Location.ID)
+	return utils.Contains(kitchenProfile.Kitchen.AccountIds, order.Location.Account.Id) || utils.Contains(kitchenProfile.Kitchen.LocationIds, order.Location.ID)
 }
 
 func (p OrderPolicy) KitchenToReadyForPickup(order *domain.Order, ctx context.Context) bool {
 	kitchenProfile := ctx.Value("causer-details").(*domain2.Admin)
-	return utils.Contains(kitchenProfile.Kitchen.AccountIds, order.Location.AccountId) || utils.Contains(kitchenProfile.Kitchen.LocationIds, order.Location.ID)
+	return utils.Contains(kitchenProfile.Kitchen.AccountIds, order.Location.Account.Id) || utils.Contains(kitchenProfile.Kitchen.LocationIds, order.Location.ID)
 }

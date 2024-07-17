@@ -57,6 +57,13 @@ type CuisineDetails struct {
 	Logo     string `json:"logo" bson:"logo"`
 	IsHidden bool   `json:"is_hidden" bson:"is_hidden"`
 }
+
+type AccountDetails struct {
+	Id              primitive.ObjectID   `json:"id" bson:"_id"`
+	Name            Name                 `json:"name" bson:"name"`
+	AllowedBrandIds []primitive.ObjectID `json:"allowed_brand_ids" bson:"allowed_brand_ids"`
+}
+
 type LocationDetails struct {
 	Id              primitive.ObjectID `json:"id" bson:"_id"`
 	Name            Name               `json:"name" bson:"name"`

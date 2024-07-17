@@ -91,6 +91,11 @@ type Country struct {
 	Currency    string `json:"currency" bson:"currency"`
 	PhonePrefix string `json:"phone_prefix" bson:"phone_prefix"`
 }
+type Account struct {
+	Id              primitive.ObjectID   `json:"id" bson:"_id"`
+	Name            Name                 `json:"name" bson:"name"`
+	AllowedBrandIds []primitive.ObjectID `json:"allowed_brand_ids" bson:"allowed_brand_ids"`
+}
 
 type Location struct {
 	ID              primitive.ObjectID `json:"id" bson:"_id"`
@@ -105,7 +110,7 @@ type Location struct {
 	Percent         float64            `json:"percent" bson:"percent"`
 	PercentsDate    []PercentsDate     `json:"percents_date" bson:"percents_date"`
 	Country         Country            `json:"country" bson:"country"`
-	AccountId       primitive.ObjectID `json:"account_id" bson:"account_id"`
+	Account         Account            `json:"account" bson:"account"`
 }
 
 type Rejected struct {

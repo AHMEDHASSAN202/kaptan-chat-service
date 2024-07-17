@@ -7,5 +7,6 @@ import (
 
 type IService struct {
 	LocationUseCase   domain.LocationUseCase
+	AccountUseCase    domain.AccountUseCase
 	CollectionUseCase domain2.CollectionMethodUseCase
 }

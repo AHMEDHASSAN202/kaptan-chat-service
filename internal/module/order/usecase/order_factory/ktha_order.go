@@ -64,6 +64,11 @@ func (o *KthaOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrde
 		o.logger.Error(errResponse.ErrorMessageObject.Text)
 		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.Mobile_location_not_available_error, nil)
 	}
+	accountDoc, errResponse := o.extService.RetailsIService.GetAccountDetails(ctx, utils.ConvertObjectIdToStringId(locationDoc.AccountId))
+	if errResponse.IsError {
+		o.logger.Error(errResponse.ErrorMessageObject.Text)
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.Mobile_location_not_available_error, nil)
+	}
 
 	//check is the location available for the order
 	hasLocErr := helper.CheckIsLocationReadyForNewOrder(&ctx, locationDoc)
@@ -94,7 +99,7 @@ func (o *KthaOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrde
 	}
 
 	//order builder
-	orderModel, errOrderModel := user2.CreateOrderBuilder(ctx, input, locationDoc, menuDetails, collectionMethod)
+	orderModel, errOrderModel := user2.CreateOrderBuilder(ctx, input, locationDoc, menuDetails, collectionMethod, accountDoc)
 	if errOrderModel.IsError {
 		o.logger.Error(errOrderModel.ErrorMessageObject.Text)
 		return nil, errOrderModel

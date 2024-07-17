@@ -16,9 +16,9 @@ type ExtService struct {
 	PaymentIService payment.IService
 }
 
-func NewExternalService(locationUseCase domain.LocationUseCase, collectionUseCase domain2.CollectionMethodUseCase, MenuUseCase menuDomain.MenuGroupItemRepository, paymentUseCase domain3.PaymentUseCase) ExtService {
+func NewExternalService(locationUseCase domain.LocationUseCase, collectionUseCase domain2.CollectionMethodUseCase, MenuUseCase menuDomain.MenuGroupItemRepository, paymentUseCase domain3.PaymentUseCase, accountUseCase domain.AccountUseCase) ExtService {
 	return ExtService{
-		RetailsIService: retails.IService{LocationUseCase: locationUseCase, CollectionUseCase: collectionUseCase},
+		RetailsIService: retails.IService{LocationUseCase: locationUseCase, CollectionUseCase: collectionUseCase, AccountUseCase: accountUseCase},
 		MenuIService:    menu.IService{MenuUseCase: MenuUseCase},
 		PaymentIService: payment.IService{PaymentUseCase: paymentUseCase},
 	}

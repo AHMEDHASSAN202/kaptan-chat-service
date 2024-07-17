@@ -74,7 +74,7 @@ func (i *OrderRepository) ListOrderForDashboard(ctx *context.Context, dto *order
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"location._id": utils.ConvertStringIdToObjectId(dto.LocationId)})
 	}
 	if dto.AccountId != "" {
-		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"location.account_id": utils.ConvertStringIdToObjectId(dto.AccountId)})
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"location.account._id": utils.ConvertStringIdToObjectId(dto.AccountId)})
 	}
 	if dto.BrandId != "" {
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"location.brand_details._id": utils.ConvertStringIdToObjectId(dto.BrandId)})
