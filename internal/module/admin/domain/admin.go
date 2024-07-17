@@ -28,9 +28,11 @@ type Account struct {
 	Name Name               `json:"name" bson:"name"`
 }
 type Kitchen struct {
-	Id            primitive.ObjectID `json:"id" bson:"_id"`
-	Name          Name               `json:"name" bson:"name"`
-	AllowedStatus []string           `json:"allowed_status" bson:"allowed_status"`
+	Id            primitive.ObjectID   `json:"id" bson:"_id"`
+	Name          Name                 `json:"name" bson:"name"`
+	LocationIds   []primitive.ObjectID `json:"location_ids" bson:"location_ids"`
+	AccountIds    []primitive.ObjectID `json:"account_ids" bson:"account_ids"`
+	AllowedStatus []string             `json:"allowed_status" bson:"allowed_status"`
 }
 
 type Admin struct {
