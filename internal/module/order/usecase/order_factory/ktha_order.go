@@ -3,6 +3,7 @@ package order_factory
 import (
 	"context"
 	"github.com/go-playground/validator/v10"
+	"github.com/jinzhu/copier"
 	"net/http"
 	kitchen2 "samm/internal/module/order/builder/kitchen"
 	user2 "samm/internal/module/order/builder/user"
@@ -502,10 +503,103 @@ func (o *KthaOrder) ToNoShowKitchen(ctx context.Context, dto interface{}) (*kitc
 	return orderResponse, validators.ErrorResponse{}
 }
 
-func (o *KthaOrder) ToArrived(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
-	return nil, validators.ErrorResponse{}
+func (o *KthaOrder) ToArrived(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse) {
+	// Find Order
+	orderDomain, err := o.orderRepo.FindOrderByUser(&ctx, payload.OrderId, payload.UserId)
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+
+	if !utils.Contains([]string{consts.OrderStatus.Accepted, consts.OrderStatus.ReadyForPickup, consts.OrderStatus.NoShow}, orderDomain.Status) || orderDomain.ArrivedAt != nil {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"arrived_at": now,
+		"updated_at": now,
+	}
+	if payload.CollectionMethodId != "" {
+		//get user collection method
+		collectionMethod, hasCollectionMethodErr := o.extService.RetailsIService.FindCollectionMethod(ctx, payload.CollectionMethodId, payload.UserId)
+		if hasCollectionMethodErr.IsError {
+			o.logger.Error(hasCollectionMethodErr)
+			return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
+		}
+		var userCollectionMethod domain.CollectionMethod
+		copier.Copy(&userCollectionMethod, collectionMethod)
+		updateSet["user.collection_method"] = userCollectionMethod
+	}
+
+	orderDomain, err = o.orderRepo.UpdateOrderStatus(&ctx, orderDomain, []string{}, nil, updateSet)
+
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	// Send Notification
+
+	orderResponse, _ := user2.FindOrderBuilder(&ctx, orderDomain)
+
+	return orderResponse, validators.ErrorResponse{}
 }
 
-func (o *KthaOrder) ToCancel(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
-	return nil, validators.ErrorResponse{}
+func (o *KthaOrder) ToCancel(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse) {
+
+	// Find Order
+	orderDomain, err := o.orderRepo.FindOrderByUser(&ctx, payload.OrderId, payload.UserId)
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	// Check Status
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorUser, orderDomain.Status, consts.OrderStatus.Cancelled)
+	if !utils.Contains(nextStatuses, consts.OrderStatus.Cancelled) {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	rejectionReasons, errRe := helper.UserRejectionReasons(ctx, "", payload.CancelReasonId)
+	if errRe.IsError {
+		return nil, errRe
+	}
+	if len(rejectionReasons) == 0 {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+	rejectionReason := rejectionReasons[0]
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"status":       consts.OrderStatus.Cancelled,
+		"cancelled_at": now,
+		"updated_at":   now,
+		"cancelled": domain.Rejected{
+			Id:   payload.CancelReasonId,
+			Note: payload.Note,
+			Name: domain.Name{
+				Ar: rejectionReason.Name.Ar,
+				En: rejectionReason.Name.En,
+			},
+			UserType: payload.CauserType,
+		},
+	}
+
+	statusLog := domain.StatusLog{
+		CauserId:   payload.UserId,
+		CauserType: payload.CauserType,
+		CreatedAt:  &now,
+	}
+	statusLog.Status.New = consts.OrderStatus.Cancelled
+	statusLog.Status.Old = orderDomain.Status
+
+	// If Status Is Pending Call Payment To Release This Transaction
+	if orderDomain.Status == consts.OrderStatus.Pending {
+		o.extService.PaymentIService.AuthorizePayment(ctx, utils.ConvertObjectIdToStringId(orderDomain.Payment.Id), false)
+	}
+
+	orderDomain, err = o.orderRepo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
+
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	// Send Notification
+	orderResponse, _ := user2.FindOrderBuilder(&ctx, orderDomain)
+
+	return orderResponse, validators.ErrorResponse{}
 }
