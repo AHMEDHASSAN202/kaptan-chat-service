@@ -6,6 +6,7 @@ import (
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/order/dto/order"
+	"samm/internal/module/order/dto/order/kitchen"
 	"samm/internal/module/order/repository/structs"
 	"samm/internal/module/order/responses"
 	"samm/internal/module/order/responses/user"
@@ -125,9 +126,10 @@ type StatusLog struct {
 }
 
 type Payment struct {
-	Id   primitive.ObjectID `json:"id" bson:"_id"`
-	Type string             `json:"type" bson:"type"`
-	Num  string             `json:"num" bson:"num"`
+	Id          primitive.ObjectID `json:"id" bson:"_id"`
+	PaymentType string             `json:"payment_type" bson:"payment_type"`
+	CardType    string             `json:"card_type" bson:"card_type"`
+	CardNumber  string             `json:"card_number" bson:"card_number"`
 }
 
 type Order struct {
@@ -157,6 +159,9 @@ type Order struct {
 
 type OrderUseCase interface {
 	StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse)
+	KitchenAcceptOrder(ctx context.Context, payload *kitchen.AcceptOrderDto) (interface{}, validators.ErrorResponse)
+	KitchenRejectedOrder(ctx context.Context, payload *kitchen.RejectedOrderDto) (interface{}, validators.ErrorResponse)
+	KitchenRejectionReasons(ctx context.Context, status string, id string) ([]KitchenRejectionReason, validators.ErrorResponse)
 	CalculateOrderCost(ctx context.Context, payload *order.CalculateOrderCostDto) (resp responses.CalculateOrderCostResp, err validators.ErrorResponse)
 	ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDtoForDashboard) (*responses.ListResponse, validators.ErrorResponse)
 	ListOrderForMobile(ctx context.Context, payload *order.ListOrderDtoForMobile) (*responses.ListResponse, validators.ErrorResponse)
@@ -168,6 +173,7 @@ type OrderUseCase interface {
 
 	UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
 	UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
+	SetOrderPaid(ctx context.Context, payload *order.OrderPaidDto) validators.ErrorResponse
 }
 
 type OrderRepository interface {

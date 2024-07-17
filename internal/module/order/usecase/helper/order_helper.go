@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	. "github.com/ahmetb/go-linq/v3"
 	"math/rand"
 	"net/http"
 	"os"
@@ -14,6 +15,7 @@ import (
 	extMenuResponses "samm/internal/module/order/external/menu/responses"
 	extLocResponses "samm/internal/module/order/external/retails/responses"
 	"samm/internal/module/order/responses"
+	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
@@ -218,4 +220,38 @@ func GetNextAndPreviousStatusByType(actor string, currentStatus string, nextStat
 	}
 	return nextStatuses, previousStatus
 
+}
+
+func KitchenRejectionReasons(ctx context.Context, status string, id string) ([]domain.KitchenRejectionReason, validators.ErrorResponse) {
+	kitchenRejectionReason := make([]domain.KitchenRejectionReason, 0)
+	dir, err := os.Getwd()
+	if err != nil {
+		return kitchenRejectionReason, validators.GetErrorResponseFromErr(err)
+	}
+
+	path := filepath.Join(dir, "internal", "module", "order", "assets", "kitchen_cancel_reasons.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		logger.Logger.Error(err)
+		return kitchenRejectionReason, validators.GetErrorResponseFromErr(err)
+	}
+
+	if errRe := json.Unmarshal(data, &kitchenRejectionReason); errRe != nil {
+		logger.Logger.Error(err)
+		return kitchenRejectionReason, validators.GetErrorResponseFromErr(errRe)
+	}
+
+	// Handle Status
+	if status != "" {
+		From(kitchenRejectionReason).Where(func(c interface{}) bool {
+			return c.(domain.KitchenRejectionReason).Status == status || c.(domain.KitchenRejectionReason).Status == "all"
+		}).ToSlice(&kitchenRejectionReason)
+	}
+	if id != "" {
+		From(kitchenRejectionReason).Where(func(c interface{}) bool {
+			return c.(domain.KitchenRejectionReason).Id == id
+		}).ToSlice(&kitchenRejectionReason)
+	}
+
+	return kitchenRejectionReason, validators.ErrorResponse{}
 }

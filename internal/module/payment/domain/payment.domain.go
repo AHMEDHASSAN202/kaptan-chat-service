@@ -11,16 +11,17 @@ import (
 
 type Payment struct {
 	mgm.DefaultModel `bson:",inline"`
-	TransactionId    primitive.ObjectID `json:"transaction_id"`
-	TransactionType  string             `json:"transaction_type"`
-	Status           string             `json:"status"`
-	Amount           float64            `json:"amount"`
-	Currency         string             `json:"currency"`
-	RequestId        string             `json:"request_id"`
-	Request          interface{}        `json:"request"`
-	Response         interface{}        `json:"response"`
-	PaymentType      string             `json:"payment_type"`
-	CardType         string             `json:"card_type"`
+	TransactionId    primitive.ObjectID `json:"transaction_id" bson:"transaction_id"`
+	TransactionType  string             `json:"transaction_type" bson:"transaction_type"`
+	Status           string             `json:"status" bson:"status"`
+	Amount           float64            `json:"amount" bson:"amount"`
+	Currency         string             `json:"currency" bson:"currency"`
+	RequestId        string             `json:"request_id" bson:"request_id"`
+	Request          interface{}        `json:"request" bson:"request"`
+	Response         interface{}        `json:"response" bson:"response"`
+	PaymentType      string             `json:"payment_type" bson:"payment_type"`
+	CardType         string             `json:"card_type" bson:"card_type"`
+	CardNumber       string             `json:"card_number" bson:"card_number"`
 }
 
 type PaymentUseCase interface {

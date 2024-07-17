@@ -4,6 +4,7 @@ import (
 	"go.uber.org/fx"
 	"samm/internal/module/order/delivery"
 	"samm/internal/module/order/external"
+	"samm/internal/module/order/policies"
 	order_repo "samm/internal/module/order/repository/order"
 	order_usecase "samm/internal/module/order/usecase/order"
 	"samm/internal/module/order/usecase/order_factory"
@@ -19,6 +20,6 @@ var Module = fx.Options(
 		external.NewExternalService,
 	),
 	fx.Invoke(
-		delivery.InitOrderController,
+		policies.NewIPolicy, delivery.InitOrderController,
 	),
 )

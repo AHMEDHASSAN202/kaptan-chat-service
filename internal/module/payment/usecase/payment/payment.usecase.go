@@ -5,6 +5,7 @@ import (
 	"samm/internal/module/payment/consts"
 	"samm/internal/module/payment/domain"
 	"samm/internal/module/payment/dto/payment"
+	"samm/internal/module/payment/external"
 	"samm/internal/module/payment/response"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
@@ -17,6 +18,7 @@ type PaymentUseCase struct {
 	myfatoorahService domain.MyFatoorahService
 	cardRepo          domain.CardRepository
 	logger            logger.ILogger
+	extService        external.ExtService
 }
 
 func (p PaymentUseCase) AuthorizePayment(ctx context.Context, payload *payment.AuthorizePayload) (payResponse response.PayResponse, err validators.ErrorResponse) {
@@ -136,5 +138,6 @@ func NewPaymentUseCase(repo domain.PaymentRepository, cardRepo domain.CardReposi
 		myfatoorahService: myfatoorahService,
 		cardRepo:          cardRepo,
 		logger:            logger,
+		//extService:        extService,
 	}
 }

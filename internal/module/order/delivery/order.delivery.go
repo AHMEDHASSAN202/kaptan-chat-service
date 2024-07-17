@@ -8,6 +8,7 @@ import (
 	"samm/pkg/logger"
 	"samm/pkg/middlewares/admin"
 	commmon "samm/pkg/middlewares/common"
+	"samm/pkg/middlewares/kitchen"
 	usermiddleware "samm/pkg/middlewares/user"
 	"samm/pkg/validators"
 )
@@ -19,7 +20,7 @@ type OrderHandler struct {
 }
 
 // InitOrderController will initialize the article's HTTP controller
-func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *validator.Validate, logger logger.ILogger, userMiddleware *usermiddleware.Middlewares, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
+func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *validator.Validate, logger logger.ILogger, userMiddleware *usermiddleware.Middlewares, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares, kitchenMiddlewares *kitchen.ProviderMiddlewares) {
 	handler := &OrderHandler{
 		orderUsecase: us,
 		validator:    validator,
@@ -41,6 +42,13 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 		mobile.PUT("/:id/cancel", handler.CancelOrder, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 		mobile.PUT("/:id/arrived", handler.ArrivedOrder, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 		mobile.GET("/user-rejection-reason/:status", handler.UserRejectionReason)
+	}
+
+	kitchen := e.Group("api/v1/kitchen/order")
+	{
+		kitchen.PUT("/:id/accept", handler.KitchenToAccept, kitchenMiddlewares.AuthMiddleware)
+		kitchen.PUT("/:id/rejected", handler.KitchenToRejected, kitchenMiddlewares.AuthMiddleware)
+		kitchen.GET("/rejection-reason/:status", handler.KitchenRejectionReason, kitchenMiddlewares.AuthMiddleware)
 	}
 }
 
