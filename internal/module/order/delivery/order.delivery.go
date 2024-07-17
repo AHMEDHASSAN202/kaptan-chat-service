@@ -46,6 +46,9 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 		kitchen.PUT("/:id/accept", handler.KitchenToAccept, kitchenMiddlewares.AuthMiddleware)
 		kitchen.PUT("/:id/rejected", handler.KitchenToRejected, kitchenMiddlewares.AuthMiddleware)
 		kitchen.GET("/rejection-reason/:status", handler.KitchenRejectionReason, kitchenMiddlewares.AuthMiddleware)
+		kitchen.PUT("/:id/ready-for-pickup", handler.KitchenToReadyForPickup, kitchenMiddlewares.AuthMiddleware)
+		kitchen.PUT("/:id/picked-up", handler.KitchenToPickedUp, kitchenMiddlewares.AuthMiddleware)
+		kitchen.PUT("/:id/no-show", handler.KitchenToNoShow, kitchenMiddlewares.AuthMiddleware)
 	}
 }
 

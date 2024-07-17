@@ -41,16 +41,16 @@ type Deps struct {
 	gate        *gate.Gate
 }
 
-type NgoOrder struct {
+type KthaOrder struct {
 	Order *domain.Order
 	Deps
 }
 
-func (o *NgoOrder) Make() IOrder {
+func (o *KthaOrder) Make() IOrder {
 	return o
 }
 
-func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrderResponse, validators.ErrorResponse) {
+func (o *KthaOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrderResponse, validators.ErrorResponse) {
 	//validate
 	input := dto.(*order.CreateOrderDto)
 	validateErr := input.Validate(ctx, o.Deps.validator)
@@ -138,23 +138,23 @@ func (o *NgoOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrder
 	return orderResponse, validators.ErrorResponse{}
 }
 
-func (o *NgoOrder) Find(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
+func (o *KthaOrder) Find(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
 	return nil, validators.ErrorResponse{}
 }
 
-func (o *NgoOrder) List(ctx context.Context, dto interface{}) ([]domain.Order, validators.ErrorResponse) {
+func (o *KthaOrder) List(ctx context.Context, dto interface{}) ([]domain.Order, validators.ErrorResponse) {
 	return nil, validators.ErrorResponse{}
 }
 
-func (o *NgoOrder) SendNotifications() validators.ErrorResponse {
+func (o *KthaOrder) SendNotifications() validators.ErrorResponse {
 	return validators.ErrorResponse{}
 }
 
-func (o *NgoOrder) ToPending(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
+func (o *KthaOrder) ToPending(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
 	return nil, validators.ErrorResponse{}
 }
 
-func (o *NgoOrder) ToAcceptKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse) {
+func (o *KthaOrder) ToAcceptKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse) {
 	//validate
 	input := dto.(*kitchen.AcceptOrderDto)
 	validateErr := input.Validate(ctx, o.Deps.validator)
@@ -179,6 +179,13 @@ func (o *NgoOrder) ToAcceptKitchen(ctx context.Context, dto interface{}) (*kitch
 	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorKitchen, orderDomain.Status, consts.OrderStatus.Accepted)
 	if !utils.Contains(nextStatuses, consts.OrderStatus.Accepted) {
 		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	//authorize order amount
+	_, paymentError := o.extService.PaymentIService.AuthorizePayment(ctx, utils.ConvertObjectIdToStringId(orderDomain.Payment.Id), true)
+	if paymentError.IsError {
+		o.logger.Error("PAYMENT_ERROR => ", paymentError)
+		//return nil, validators.GetErrorResponseWithErrors(&ctx, localization.PaymentError, nil)
 	}
 
 	//update data
@@ -217,7 +224,7 @@ func (o *NgoOrder) ToAcceptKitchen(ctx context.Context, dto interface{}) (*kitch
 	return orderResponse, validators.ErrorResponse{}
 }
 
-func (o *NgoOrder) ToRejectedKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse) {
+func (o *KthaOrder) ToRejectedKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse) {
 	//validate
 	input := dto.(*kitchen.RejectedOrderDto)
 	validateErr := input.Validate(ctx, o.Deps.validator)
@@ -252,6 +259,13 @@ func (o *NgoOrder) ToRejectedKitchen(ctx context.Context, dto interface{}) (*kit
 		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
 	}
 	rejectionReason := rejectionReasons[0]
+
+	//authorize order amount
+	_, paymentError := o.extService.PaymentIService.AuthorizePayment(ctx, utils.ConvertObjectIdToStringId(orderDomain.Payment.Id), true)
+	if paymentError.IsError {
+		o.logger.Error("PAYMENT_ERROR => ", paymentError)
+		//return nil, validators.GetErrorResponseWithErrors(&ctx, localization.PaymentError, nil)
+	}
 
 	//update data
 	now := time.Now().UTC()
@@ -297,10 +311,196 @@ func (o *NgoOrder) ToRejectedKitchen(ctx context.Context, dto interface{}) (*kit
 	return orderResponse, validators.ErrorResponse{}
 }
 
-func (o *NgoOrder) ToArrived(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
+func (o *KthaOrder) ToReadyForPickupKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse) {
+	//validate
+	input := dto.(*kitchen.ReadyForPickupOrderDto)
+	validateErr := input.Validate(ctx, o.Deps.validator)
+	if validateErr.IsError {
+		return nil, validateErr
+	}
+
+	//find order
+	orderDomain, err := o.orderRepo.FindOrder(&ctx, utils.ConvertStringIdToObjectId(input.OrderId))
+	if err != nil {
+		o.logger.Error(err)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	//authorize this order
+	if !o.gate.Authorize(orderDomain, "KitchenToReadyForPickup", ctx) {
+		o.logger.Error("ToAcceptKitchen -> UnAuthorized Accept -> ", orderDomain.ID)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
+
+	// Check Status
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorKitchen, orderDomain.Status, consts.OrderStatus.ReadyForPickup)
+	if !utils.Contains(nextStatuses, consts.OrderStatus.ReadyForPickup) {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	//update data
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"status":              consts.OrderStatus.ReadyForPickup,
+		"ready_for_pickup_at": now,
+		"updated_at":          now,
+	}
+	statusLog := domain.StatusLog{
+		CauserId:   input.CauserId,
+		CauserType: input.CauserType,
+		CreatedAt:  &now,
+	}
+	statusLog.Status.New = consts.OrderStatus.ReadyForPickup
+	statusLog.Status.Old = orderDomain.Status
+
+	//update domain
+	orderDomain, err = o.orderRepo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
+	if err != nil {
+		o.logger.Error(err)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
+	}
+
+	//set order object to factory
+	o.Order = orderDomain
+
+	//build response
+	orderResponse, errBuilder := kitchen2.FindOrderBuilder(&ctx, orderDomain)
+	if errBuilder.IsError {
+		o.logger.Error(errBuilder)
+		return nil, errBuilder
+	}
+
+	return orderResponse, validators.ErrorResponse{}
+}
+
+func (o *KthaOrder) ToPickedUpKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse) {
+	//validate
+	input := dto.(*kitchen.PickedUpOrderDto)
+	validateErr := input.Validate(ctx, o.Deps.validator)
+	if validateErr.IsError {
+		return nil, validateErr
+	}
+
+	//find order
+	orderDomain, err := o.orderRepo.FindOrder(&ctx, utils.ConvertStringIdToObjectId(input.OrderId))
+	if err != nil {
+		o.logger.Error(err)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	//authorize this order
+	if !o.gate.Authorize(orderDomain, "KitchenToPickedUp", ctx) {
+		o.logger.Error("ToAcceptKitchen -> UnAuthorized Accept -> ", orderDomain.ID)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
+
+	// Check Status
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorKitchen, orderDomain.Status, consts.OrderStatus.PickedUp)
+	if !utils.Contains(nextStatuses, consts.OrderStatus.PickedUp) {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	//update data
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"status":      consts.OrderStatus.PickedUp,
+		"pickedup_at": now,
+		"updated_at":  now,
+	}
+	statusLog := domain.StatusLog{
+		CauserId:   input.CauserId,
+		CauserType: input.CauserType,
+		CreatedAt:  &now,
+	}
+	statusLog.Status.New = consts.OrderStatus.PickedUp
+	statusLog.Status.Old = orderDomain.Status
+
+	//update domain
+	orderDomain, err = o.orderRepo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
+	if err != nil {
+		o.logger.Error(err)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
+	}
+
+	//set order object to factory
+	o.Order = orderDomain
+
+	//build response
+	orderResponse, errBuilder := kitchen2.FindOrderBuilder(&ctx, orderDomain)
+	if errBuilder.IsError {
+		o.logger.Error(errBuilder)
+		return nil, errBuilder
+	}
+
+	return orderResponse, validators.ErrorResponse{}
+}
+
+func (o *KthaOrder) ToNoShowKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse) {
+	//validate
+	input := dto.(*kitchen.NoShowOrderDto)
+	validateErr := input.Validate(ctx, o.Deps.validator)
+	if validateErr.IsError {
+		return nil, validateErr
+	}
+
+	//find order
+	orderDomain, err := o.orderRepo.FindOrder(&ctx, utils.ConvertStringIdToObjectId(input.OrderId))
+	if err != nil {
+		o.logger.Error(err)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	//authorize this order
+	if !o.gate.Authorize(orderDomain, "KitchenToNoShow", ctx) {
+		o.logger.Error("ToAcceptKitchen -> UnAuthorized Accept -> ", orderDomain.ID)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
+
+	// Check Status
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorKitchen, orderDomain.Status, consts.OrderStatus.NoShow)
+	if !utils.Contains(nextStatuses, consts.OrderStatus.NoShow) {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	//update data
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"status":     consts.OrderStatus.NoShow,
+		"no_show_at": now,
+		"updated_at": now,
+	}
+	statusLog := domain.StatusLog{
+		CauserId:   input.CauserId,
+		CauserType: input.CauserType,
+		CreatedAt:  &now,
+	}
+	statusLog.Status.New = consts.OrderStatus.NoShow
+	statusLog.Status.Old = orderDomain.Status
+
+	//update domain
+	orderDomain, err = o.orderRepo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
+	if err != nil {
+		o.logger.Error(err)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
+	}
+
+	//set order object to factory
+	o.Order = orderDomain
+
+	//build response
+	orderResponse, errBuilder := kitchen2.FindOrderBuilder(&ctx, orderDomain)
+	if errBuilder.IsError {
+		o.logger.Error(errBuilder)
+		return nil, errBuilder
+	}
+
+	return orderResponse, validators.ErrorResponse{}
+}
+
+func (o *KthaOrder) ToArrived(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
 	return nil, validators.ErrorResponse{}
 }
 
-func (o *NgoOrder) ToCancel(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
+func (o *KthaOrder) ToCancel(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
 	return nil, validators.ErrorResponse{}
 }

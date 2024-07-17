@@ -30,3 +30,15 @@ func (p OrderPolicy) KitchenToAccept(order *domain.Order, ctx context.Context) b
 func (p OrderPolicy) KitchenToRejected(order *domain.Order, ctx context.Context) bool {
 	return true
 }
+
+func (p OrderPolicy) KitchenToPickedUp(order *domain.Order, ctx context.Context) bool {
+	return true
+}
+
+func (p OrderPolicy) KitchenToNoShow(order *domain.Order, ctx context.Context) bool {
+	return true
+}
+
+func (p OrderPolicy) KitchenToReadyForPickup(order *domain.Order, ctx context.Context) bool {
+	return true
+}
