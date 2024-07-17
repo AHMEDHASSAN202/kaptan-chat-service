@@ -21,11 +21,11 @@ func ConvertDtoToCorrespondingDomain(dto modifier_group.CreateUpdateModifierGrou
 	if oldDoc == nil {
 		modifierGroupDoc.CreatedAt = time.Now()
 		modifierGroupDoc.AdminDetails = make([]utilsDto.AdminDetails, 0)
-		modifierGroupDoc.AdminDetails = append(modifierGroupDoc.AdminDetails, utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Malhat", Operation: "Create", UpdatedAt: time.Now()})
+		modifierGroupDoc.AdminDetails = append(modifierGroupDoc.AdminDetails, utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: dto.CauserName, Operation: "Create", UpdatedAt: time.Now()})
 	} else {
 		modifierGroupDoc.CreatedAt = oldDoc.CreatedAt
 		modifierGroupDoc.AdminDetails = oldDoc.AdminDetails
-		modifierGroupDoc.AdminDetails = append(modifierGroupDoc.AdminDetails, utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Malhat", Operation: "Update", UpdatedAt: time.Now()})
+		modifierGroupDoc.AdminDetails = append(modifierGroupDoc.AdminDetails, utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: dto.CauserName, Operation: "Update", UpdatedAt: time.Now()})
 	}
 	return modifierGroupDoc
 }

@@ -8,6 +8,7 @@ import (
 	"samm/internal/module/menu/dto/item"
 	"samm/internal/module/menu/responses"
 	responseItem "samm/internal/module/menu/responses/item"
+	"samm/pkg/utils/dto"
 
 	"samm/pkg/validators"
 	"time"
@@ -21,22 +22,22 @@ type ItemAvailability struct {
 
 type Item struct {
 	mgm.DefaultModel `bson:",inline"`
-	AccountId        primitive.ObjectID       `json:"account_id" bson:"account_id"`
-	Name             LocalizationText         `json:"name" bson:"name"`
-	Desc             LocalizationText         `json:"desc" bson:"desc"`
-	Type             string                   `json:"type" bson:"type"`
-	Min              int                      `json:"min" bson:"min"`
-	Max              int                      `json:"max" bson:"max"`
-	SKU              string                   `json:"sku" bson:"sku,omitempty"`
-	Calories         int                      `json:"calories" bson:"calories"`
-	Price            float64                  `json:"price" bson:"price"`
-	ModifierGroupIds []primitive.ObjectID     `json:"modifier_groups_ids" bson:"modifier_groups_ids"`
-	Availabilities   []ItemAvailability       `json:"availabilities" bson:"availabilities"`
-	Tags             []string                 `json:"tags" bson:"tags"`
-	Image            string                   `json:"image" bson:"image"`
-	AdminDetails     []map[string]interface{} `json:"admin_details" bson:"admin_details"`
-	Status           string                   `json:"status" bson:"status"`
-	DeletedAt        *time.Time               `json:"deleted_at" bson:"deleted_at"`
+	AccountId        primitive.ObjectID   `json:"account_id" bson:"account_id"`
+	Name             LocalizationText     `json:"name" bson:"name"`
+	Desc             LocalizationText     `json:"desc" bson:"desc"`
+	Type             string               `json:"type" bson:"type"`
+	Min              int                  `json:"min" bson:"min"`
+	Max              int                  `json:"max" bson:"max"`
+	SKU              string               `json:"sku" bson:"sku,omitempty"`
+	Calories         int                  `json:"calories" bson:"calories"`
+	Price            float64              `json:"price" bson:"price"`
+	ModifierGroupIds []primitive.ObjectID `json:"modifier_groups_ids" bson:"modifier_groups_ids"`
+	Availabilities   []ItemAvailability   `json:"availabilities" bson:"availabilities"`
+	Tags             []string             `json:"tags" bson:"tags"`
+	Image            string               `json:"image" bson:"image"`
+	AdminDetails     []dto.AdminDetails   `json:"admin_details" bson:"admin_details"`
+	Status           string               `json:"status" bson:"status"`
+	DeletedAt        *time.Time           `json:"deleted_at" bson:"deleted_at"`
 }
 
 type ItemUseCase interface {
@@ -45,7 +46,7 @@ type ItemUseCase interface {
 	GetById(ctx context.Context, id string) (responseItem.ItemResponse, validators.ErrorResponse)
 	List(ctx context.Context, dto *item.ListItemsDto) (*responses.ListResponse, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, id string, dto *item.ChangeItemStatusDto) validators.ErrorResponse
-	SoftDelete(ctx context.Context, id string) validators.ErrorResponse
+	SoftDelete(ctx context.Context, id string, input item.DeleteItemDto) validators.ErrorResponse
 	CheckExists(ctx context.Context, accountId, name string, exceptProductIds ...string) (bool, validators.ErrorResponse)
 }
 

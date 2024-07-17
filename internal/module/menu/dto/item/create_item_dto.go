@@ -39,6 +39,7 @@ type CreateItemDto struct {
 	Image             string               `json:"image" validate:"required"`
 	Status            string               `json:"status" validate:"oneof=active inactive"`
 	AdminDetails      []dto.AdminDetails   `json:"-"`
+	dto.PortalHeaders
 }
 
 var ModifierItemsCantContainsModifierGroup = func(fl validator.FieldLevel) bool {

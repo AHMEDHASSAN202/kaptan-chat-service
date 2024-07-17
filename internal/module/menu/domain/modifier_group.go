@@ -34,7 +34,7 @@ type ModifierGroupUseCase interface {
 	GetById(ctx context.Context, id string) (modifier_group_resp.ModifierGroupResp, validators.ErrorResponse)
 	List(ctx context.Context, dto *modifier_group.ListModifierGroupsDto) (*responses.ListResponse, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, id string, dto *modifier_group.ChangeModifierGroupStatusDto) validators.ErrorResponse
-	SoftDelete(ctx context.Context, id string) validators.ErrorResponse
+	SoftDelete(ctx context.Context, id string, input modifier_group.DeleteModifierGroupDto) validators.ErrorResponse
 }
 
 type ModifierGroupRepository interface {

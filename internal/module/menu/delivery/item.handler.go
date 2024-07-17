@@ -11,6 +11,7 @@ import (
 	"samm/pkg/logger"
 	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/middlewares/portal"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 )
@@ -54,6 +55,10 @@ func (a *ItemHandler) Create(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	err = (&echo.DefaultBinder{}).BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
 
 	validationErr := input.Validate(ctx, a.validator, a.itemCustomValidator.ValidateNameIsUnique())
 	if validationErr.IsError {
@@ -76,7 +81,12 @@ func (a *ItemHandler) CreateBulk(c echo.Context) error {
 
 	//bind payload from body
 	input := make([]item.CreateBulkItemDto, 0)
+	inputHeaders := dto.PortalHeaders{}
 	err := (&echo.DefaultBinder{}).BindBody(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	err = (&echo.DefaultBinder{}).BindHeaders(c, &inputHeaders)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
@@ -89,6 +99,7 @@ func (a *ItemHandler) CreateBulk(c echo.Context) error {
 
 	bulkInput := make([]item.CreateItemDto, 0)
 	copier.Copy(&bulkInput, &input)
+	copier.Copy(&bulkInput[0], &inputHeaders)
 	errResp := a.itemUsecase.Create(ctx, bulkInput)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
@@ -112,6 +123,10 @@ func (a *ItemHandler) Update(c echo.Context) error {
 	input.Id = id
 
 	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	err = (&echo.DefaultBinder{}).BindHeaders(c, &input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
@@ -191,8 +206,17 @@ func (a *ItemHandler) Delete(c echo.Context) error {
 	if id == "" {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
+	var input item.DeleteItemDto
+	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	err = (&echo.DefaultBinder{}).BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
 
-	errResp := a.itemUsecase.SoftDelete(ctx, id)
+	errResp := a.itemUsecase.SoftDelete(ctx, id, input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
@@ -215,6 +239,11 @@ func (a *ItemHandler) ChangeStatus(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	err = (&echo.DefaultBinder{}).BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
 	input.Id = id
 	validationErr := input.Validate(ctx, a.validator)
 	if validationErr.IsError {

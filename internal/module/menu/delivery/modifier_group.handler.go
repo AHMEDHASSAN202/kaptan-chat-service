@@ -51,6 +51,10 @@ func (a *ModifierGroupHandler) Create(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	err = (&echo.DefaultBinder{}).BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
 
 	for _, modifierGroupDoc := range input {
 		validationErr := modifierGroupDoc.Validate(c, a.validator)
@@ -83,6 +87,10 @@ func (a *ModifierGroupHandler) Update(c echo.Context) error {
 	input.Id = id
 
 	err := c.Bind(&input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	err = (&echo.DefaultBinder{}).BindHeaders(c, &input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
@@ -158,6 +166,10 @@ func (a *ModifierGroupHandler) ChangeStatus(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	err = (&echo.DefaultBinder{}).BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
 
 	validationErr := input.Validate(ctx, a.validator)
 	if validationErr.IsError {
@@ -184,7 +196,13 @@ func (a *ModifierGroupHandler) Delete(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
-	errResp := a.modifierGroupUsecase.SoftDelete(ctx, id)
+	var input modifier_group.DeleteModifierGroupDto
+	err := (&echo.DefaultBinder{}).BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	errResp := a.modifierGroupUsecase.SoftDelete(ctx, id, input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}

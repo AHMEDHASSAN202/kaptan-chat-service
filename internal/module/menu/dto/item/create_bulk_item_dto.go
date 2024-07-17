@@ -49,6 +49,10 @@ func (input *CreateBulkItemDto) validateItem(ctx context.Context, rowIndex int, 
 func (input *CreateBulkItemDto) Validate(ctx context.Context, payload []CreateBulkItemDto, validate *validator.Validate, validateNameIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {
 
 	validationErrs := validators.ErrorResponse{ValidationErrors: map[string][]string{}}
+
+	if len(payload) == 0 {
+		return validators.GetErrorResponse(&ctx, localization.E1001, nil, nil)
+	}
 	for index, itemDoc := range payload {
 		validationErr := itemDoc.validateItem(ctx, index, validate, validateNameIsUnique)
 		if validationErr.IsError {

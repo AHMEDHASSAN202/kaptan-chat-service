@@ -2,9 +2,12 @@ package item
 
 import (
 	"github.com/jinzhu/copier"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
 	"samm/pkg/utils"
+	pkgDto "samm/pkg/utils/dto"
+	utilsDto "samm/pkg/utils/dto"
 	"time"
 )
 
@@ -19,7 +22,11 @@ func convertDtoArrToCorrespondingDomain(dto []item.CreateItemDto) []domain.Item 
 		}
 		itemDocs[i].UpdatedAt = time.Now()
 		itemDocs[i].CreatedAt = time.Now()
-		itemDocs[i].AdminDetails = append(itemDocs[i].AdminDetails, utils.StructSliceToMapSlice(dto[i].AdminDetails)...)
+		if itemDocs[i].AdminDetails == nil {
+			itemDocs[i].AdminDetails = make([]pkgDto.AdminDetails, 0)
+		}
+		itemDocs[i].AdminDetails = append(itemDocs[i].AdminDetails, utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: dto[0].CauserName, Operation: "Create", UpdatedAt: time.Now()})
+
 		itemDocs[i].ModifierGroupIds = utils.ConvertStringIdsToObjectIds(dto[i].ModifierGroupsIds)
 	}
 	return itemDocs
@@ -32,6 +39,9 @@ func convertDtoToCorrespondingDomain(dto item.UpdateItemDto, itemDoc *domain.Ite
 	}
 	itemDoc.UpdatedAt = time.Now()
 	itemDoc.AccountId = utils.ConvertStringIdToObjectId(dto.AccountId)
-	itemDoc.AdminDetails = append(itemDoc.AdminDetails, utils.StructSliceToMapSlice(dto.AdminDetails)...)
+	if itemDoc.AdminDetails == nil {
+		itemDoc.AdminDetails = make([]pkgDto.AdminDetails, 0)
+	}
+	itemDoc.AdminDetails = append(itemDoc.AdminDetails, utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: dto.CauserName, Operation: "Update", UpdatedAt: time.Now()})
 	itemDoc.ModifierGroupIds = utils.ConvertStringIdsToObjectIds(dto.ModifierGroupsIds)
 }

@@ -27,6 +27,7 @@ type UpdateItemDto struct {
 	Image             string             `json:"image" validate:"required"`
 	Status            string             `json:"status" validate:"oneof=active inactive"`
 	AdminDetails      []dto.AdminDetails `json:"-"`
+	dto.PortalHeaders
 }
 
 func (input *UpdateItemDto) Validate(ctx context.Context, validate *validator.Validate, validateNameIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {

@@ -24,6 +24,7 @@ type CreateUpdateModifierGroupDto struct {
 	Status       string             `json:"status" validate:"required,oneof=active inactive"`
 	AccountId    string             `json:"account_id" validate:"required,mongodb"`
 	AdminDetails []dto.AdminDetails `json:"-"`
+	dto.PortalHeaders
 }
 
 func (input *CreateUpdateModifierGroupDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {

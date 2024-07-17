@@ -12,6 +12,7 @@ import (
 	"samm/pkg/gate"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
+	utilsDto "samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 	"time"
@@ -80,7 +81,7 @@ func (oRec *ItemUseCase) Update(ctx context.Context, dto item.UpdateItemDto) val
 	}
 	return validators.ErrorResponse{}
 }
-func (oRec *ItemUseCase) SoftDelete(ctx context.Context, id string) validators.ErrorResponse {
+func (oRec *ItemUseCase) SoftDelete(ctx context.Context, id string, input item.DeleteItemDto) validators.ErrorResponse {
 	idDoc := utils.ConvertStringIdToObjectId(id)
 	item, err := oRec.repo.GetByIds(ctx, []primitive.ObjectID{idDoc})
 	if err != nil || len(item) <= 0 {
@@ -96,6 +97,7 @@ func (oRec *ItemUseCase) SoftDelete(ctx context.Context, id string) validators.E
 
 	t := time.Now()
 	item[0].DeletedAt = &t
+	item[0].AdminDetails = append(item[0].AdminDetails, utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.CauserName, Operation: "Delete", UpdatedAt: time.Now()})
 	err = oRec.repo.SoftDelete(ctx, &item[0])
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
@@ -118,7 +120,7 @@ func (oRec *ItemUseCase) ChangeStatus(ctx context.Context, id string, dto *item.
 		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 	item[0].Status = dto.Status
-	item[0].AdminDetails = append(item[0].AdminDetails, utils.StructSliceToMapSlice(dto.AdminDetails)...)
+	item[0].AdminDetails = append(item[0].AdminDetails, utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: dto.CauserName, Operation: "Change Status", UpdatedAt: time.Now()})
 	err = oRec.repo.ChangeStatus(ctx, &item[0])
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
