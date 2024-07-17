@@ -2,11 +2,13 @@ package delivery
 
 import (
 	"context"
+	"github.com/jinzhu/copier"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/modifier_group"
 	"samm/pkg/logger"
 	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/middlewares/portal"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 
@@ -46,12 +48,13 @@ func (a *ModifierGroupHandler) Create(c echo.Context) error {
 		ctx = context.Background()
 	}
 
-	var input []modifier_group.CreateUpdateModifierGroupDto
+	var input []modifier_group.CreateModifierGroupDto
+	var inputHeaders dto.PortalHeaders
 	err := c.Bind(&input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-	err = (&echo.DefaultBinder{}).BindHeaders(c, &input)
+	err = (&echo.DefaultBinder{}).BindHeaders(c, &inputHeaders)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
@@ -63,8 +66,9 @@ func (a *ModifierGroupHandler) Create(c echo.Context) error {
 			return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 		}
 	}
-
-	errResp := a.modifierGroupUsecase.Create(ctx, input)
+	m := modifier_group.CreateUpdateModifierGroup{Data: input}
+	copier.Copy(&m, &inputHeaders)
+	errResp := a.modifierGroupUsecase.Create(ctx, m)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
@@ -83,7 +87,7 @@ func (a *ModifierGroupHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
 	}
 
-	var input modifier_group.CreateUpdateModifierGroupDto
+	var input modifier_group.UpdateModifierGroupDto
 	input.Id = id
 
 	err := c.Bind(&input)
@@ -140,7 +144,16 @@ func (a *ModifierGroupHandler) List(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	err = (&echo.DefaultBinder{}).BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
 
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
 	modiferGroupsWithPagination, errResp := a.modifierGroupUsecase.List(ctx, &input)
 	if errResp.IsError {
 		a.logger.Error(errResp)
@@ -156,17 +169,16 @@ func (a *ModifierGroupHandler) ChangeStatus(c echo.Context) error {
 		ctx = context.Background()
 	}
 
-	id := c.Param("id")
-	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
-	}
-
 	var input modifier_group.ChangeModifierGroupStatusDto
 	err := c.Bind(&input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 	err = (&echo.DefaultBinder{}).BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	err = (&echo.DefaultBinder{}).BindPathParams(c, &input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
@@ -177,7 +189,7 @@ func (a *ModifierGroupHandler) ChangeStatus(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	errResp := a.modifierGroupUsecase.ChangeStatus(ctx, id, &input)
+	errResp := a.modifierGroupUsecase.ChangeStatus(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
@@ -191,18 +203,17 @@ func (a *ModifierGroupHandler) Delete(c echo.Context) error {
 		ctx = context.Background()
 	}
 
-	id := c.Param("id")
-	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
-	}
-
 	var input modifier_group.DeleteModifierGroupDto
 	err := (&echo.DefaultBinder{}).BindHeaders(c, &input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	err = (&echo.DefaultBinder{}).BindPathParams(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
 
-	errResp := a.modifierGroupUsecase.SoftDelete(ctx, id, input)
+	errResp := a.modifierGroupUsecase.SoftDelete(ctx, input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}

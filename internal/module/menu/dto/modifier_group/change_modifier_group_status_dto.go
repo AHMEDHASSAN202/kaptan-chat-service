@@ -9,7 +9,7 @@ import (
 )
 
 type ChangeModifierGroupStatusDto struct {
-	Id           string             `json:"_"`
+	Id           string             `param:"id" validate:"required"`
 	Status       string             `json:"status" validate:"required,oneof=active inactive"`
 	AdminDetails []dto.AdminDetails `json:"-"`
 	dto.PortalHeaders

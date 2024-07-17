@@ -56,7 +56,7 @@ func (i *modifierGroupRepo) Update(ctx context.Context, id *primitive.ObjectID, 
 
 func (i *modifierGroupRepo) GetByIds(ctx context.Context, ids []primitive.ObjectID) ([]modifier_group_resp.ModifierGroupResp, error) {
 	modifierGroups := []modifier_group_resp.ModifierGroupResp{}
-	err := i.modifierGroupCollection.SimpleAggregate(&modifierGroups, bson.M{"$match": bson.M{"_id": bson.M{"$in": ids}}}, bson.M{"$lookup": bson.M{"foreignField": "_id", "as": "products", "from": i.itemCollection.Name(), "localField": "product_ids", "pipeline": bson.A{bson.M{"$project": bson.M{"name": 1, "min": 1, "max": 1, "desc": 1, "image": 1}}}}})
+	err := i.modifierGroupCollection.SimpleAggregate(&modifierGroups, bson.M{"$match": bson.M{"_id": bson.M{"$in": ids}, "deleted_at": nil}}, bson.M{"$lookup": bson.M{"foreignField": "_id", "as": "products", "from": i.itemCollection.Name(), "localField": "product_ids", "pipeline": bson.A{bson.M{"$project": bson.M{"name": 1, "min": 1, "max": 1, "desc": 1, "image": 1}}}}})
 	//err := i.modifierGroupCollection.SimpleFind(&modifierGroups, bson.M{"_id": bson.M{"$in": ids}})
 	return modifierGroups, err
 }

@@ -8,7 +8,7 @@ import (
 )
 
 type DeleteModifierGroupDto struct {
-	Id string `json:"_"`
+	Id string `param:"id" validate:"required"`
 	dto.PortalHeaders
 }
 

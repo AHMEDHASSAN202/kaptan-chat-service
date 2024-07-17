@@ -34,12 +34,11 @@ func NewModifierGroupUseCase(repo domain.ModifierGroupRepository, logger logger.
 	}
 }
 
-func (oRec *ModifierGroupUseCase) Create(ctx context.Context, dto []modifier_group.CreateUpdateModifierGroupDto) validators.ErrorResponse {
+func (oRec *ModifierGroupUseCase) Create(ctx context.Context, dto modifier_group.CreateUpdateModifierGroup) validators.ErrorResponse {
 
 	modifierGroupDocs := make([]domain.ModifierGroup, 0)
-	for index := range dto {
-		modifierGroupDocs = append(modifierGroupDocs, builder.ConvertDtoToCorrespondingDomain(dto[index], nil))
-
+	for index := range dto.Data {
+		modifierGroupDocs = append(modifierGroupDocs, builder.ConvertDtoToCorrespondingDomain(dto.Data[index], dto.CauserName, nil))
 	}
 
 	err := oRec.repo.Create(ctx, modifierGroupDocs)
@@ -49,7 +48,7 @@ func (oRec *ModifierGroupUseCase) Create(ctx context.Context, dto []modifier_gro
 	return validators.ErrorResponse{}
 }
 
-func (oRec *ModifierGroupUseCase) Update(ctx context.Context, dto modifier_group.CreateUpdateModifierGroupDto) validators.ErrorResponse {
+func (oRec *ModifierGroupUseCase) Update(ctx context.Context, dto modifier_group.UpdateModifierGroupDto) validators.ErrorResponse {
 	oldDoc, getByIdErr := oRec.GetById(ctx, dto.Id)
 	if getByIdErr.IsError {
 		return getByIdErr
@@ -57,13 +56,12 @@ func (oRec *ModifierGroupUseCase) Update(ctx context.Context, dto modifier_group
 	id := utils.ConvertStringIdToObjectId(dto.Id)
 	modifierGroup := domain.ModifierGroup{}
 	copier.Copy(&modifierGroup, &oldDoc)
-	doc := builder.ConvertDtoToCorrespondingDomain(dto, &modifierGroup)
-	if !oRec.gate.Authorize(doc, gate.MethodNames.Update, ctx) {
+	doc := builder.ConvertUpdateDtoToCorrespondingDomain(dto, dto.CauserName, &modifierGroup)
+	oRec.logger.Info(doc)
+	if !oRec.gate.Authorize(&doc, gate.MethodNames.Update, ctx) {
 		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Update Admin -> ", doc.ID)
 		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
-	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: dto.CauserName, Operation: "Update", UpdatedAt: time.Now()}
-	doc.AdminDetails = append(doc.AdminDetails, adminDetails)
 	err := oRec.repo.Update(ctx, &id, &doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
@@ -83,6 +81,10 @@ func (oRec *ModifierGroupUseCase) GetById(ctx context.Context, id string) (modif
 	if modifierGroupsResp.Products == nil {
 		modifierGroupsResp.Products = make([]map[string]any, 0)
 	}
+	if !oRec.gate.Authorize(&domain.ModifierGroup{AccountId: modifierGroupsResp.AccountId}, gate.MethodNames.Find, ctx) {
+		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Find Admin -> ", modifierGroupsResp.ID)
+		return modifier_group_resp.ModifierGroupResp{}, validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
 	return modifierGroupsResp, validators.ErrorResponse{}
 }
 
@@ -95,8 +97,16 @@ func (oRec *ModifierGroupUseCase) List(ctx context.Context, dto *modifier_group.
 	return responses.SetListResponse(modifierGroups, paginationResult), validators.ErrorResponse{}
 }
 
-func (oRec *ModifierGroupUseCase) ChangeStatus(ctx context.Context, id string, dto *modifier_group.ChangeModifierGroupStatusDto) validators.ErrorResponse {
-	idDoc := utils.ConvertStringIdToObjectId(id)
+func (oRec *ModifierGroupUseCase) ChangeStatus(ctx context.Context, dto *modifier_group.ChangeModifierGroupStatusDto) validators.ErrorResponse {
+	oldDoc, getByIdErr := oRec.GetById(ctx, dto.Id)
+	if getByIdErr.IsError {
+		return getByIdErr
+	}
+	if !oRec.gate.Authorize(&domain.ModifierGroup{AccountId: oldDoc.AccountId}, gate.MethodNames.Update, ctx) {
+		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Update Admin -> ", oldDoc.ID)
+		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
+	idDoc := utils.ConvertStringIdToObjectId(dto.Id)
 	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: dto.CauserName, Operation: "Change Status", UpdatedAt: time.Now()}
 	err := oRec.repo.ChangeStatus(ctx, &idDoc, dto, adminDetails)
 	if err != nil {
@@ -105,8 +115,17 @@ func (oRec *ModifierGroupUseCase) ChangeStatus(ctx context.Context, id string, d
 	return validators.ErrorResponse{}
 }
 
-func (oRec *ModifierGroupUseCase) SoftDelete(ctx context.Context, id string, dto modifier_group.DeleteModifierGroupDto) validators.ErrorResponse {
-	idDoc := utils.ConvertStringIdToObjectId(id)
+func (oRec *ModifierGroupUseCase) SoftDelete(ctx context.Context, dto modifier_group.DeleteModifierGroupDto) validators.ErrorResponse {
+	oldDoc, getByIdErr := oRec.GetById(ctx, dto.Id)
+	if getByIdErr.IsError {
+		return getByIdErr
+	}
+	if !oRec.gate.Authorize(&domain.ModifierGroup{AccountId: oldDoc.AccountId}, gate.MethodNames.Delete, ctx) {
+		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Delete Admin -> ", oldDoc.ID)
+		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
+
+	idDoc := utils.ConvertStringIdToObjectId(dto.Id)
 	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: dto.CauserName, Operation: "Delete", UpdatedAt: time.Now()}
 	err := oRec.repo.SoftDelete(ctx, &idDoc, adminDetails)
 	if err != nil {

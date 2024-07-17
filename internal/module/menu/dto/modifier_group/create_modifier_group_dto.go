@@ -14,7 +14,7 @@ type LocalizationText struct {
 	En string `json:"en" validate:"required,min=3"`
 }
 
-type CreateUpdateModifierGroupDto struct {
+type CreateModifierGroupDto struct {
 	Id           string             `json:"_"`
 	Name         LocalizationText   `json:"name" validate:"required"`
 	Type         string             `json:"type" validate:"required,oneof=required optional"`
@@ -24,10 +24,13 @@ type CreateUpdateModifierGroupDto struct {
 	Status       string             `json:"status" validate:"required,oneof=active inactive"`
 	AccountId    string             `json:"account_id" validate:"required,mongodb"`
 	AdminDetails []dto.AdminDetails `json:"-"`
+}
+type CreateUpdateModifierGroup struct {
+	Data []CreateModifierGroupDto
 	dto.PortalHeaders
 }
 
-func (input *CreateUpdateModifierGroupDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
+func (input *CreateModifierGroupDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {
 	validate.RegisterValidation("product_ids_rules", utils.ValidateIDsIsMongoObjectIds)
 	return validators.ValidateStruct(c.Request().Context(), validate, input)
 }
