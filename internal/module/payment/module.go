@@ -2,6 +2,7 @@ package payment
 
 import (
 	"go.uber.org/fx"
+	"samm/internal/module/order/domain"
 	"samm/internal/module/payment/delivery"
 	"samm/internal/module/payment/external"
 	"samm/internal/module/payment/gateways/myfatoorah"
@@ -25,5 +26,8 @@ var Module = fx.Options(
 	fx.Invoke(
 		delivery.InitCardController,
 		delivery.InitPaymentController,
+		func(a *external.ExtService, orderUseCase domain.OrderUseCase) {
+			a.SetOrderUseCase(orderUseCase)
+		},
 	),
 )

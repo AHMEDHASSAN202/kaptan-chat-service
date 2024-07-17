@@ -18,7 +18,17 @@ type PaymentUseCase struct {
 	myfatoorahService domain.MyFatoorahService
 	cardRepo          domain.CardRepository
 	logger            logger.ILogger
-	extService        external.ExtService
+	extService        *external.ExtService
+}
+
+func NewPaymentUseCase(repo domain.PaymentRepository, cardRepo domain.CardRepository, myfatoorahService domain.MyFatoorahService, logger logger.ILogger, extService *external.ExtService) domain.PaymentUseCase {
+	return &PaymentUseCase{
+		repo:              repo,
+		myfatoorahService: myfatoorahService,
+		cardRepo:          cardRepo,
+		logger:            logger,
+		extService:        extService,
+	}
 }
 
 func (p PaymentUseCase) AuthorizePayment(ctx context.Context, payload *payment.AuthorizePayload) (payResponse response.PayResponse, err validators.ErrorResponse) {
@@ -129,15 +139,5 @@ func (p PaymentUseCase) Pay(ctx context.Context, dto *payment.PayDto) (paymentRe
 		return PayCard(p, ctx, dto)
 	default:
 		return PayApplePay(p, ctx, dto)
-	}
-}
-
-func NewPaymentUseCase(repo domain.PaymentRepository, cardRepo domain.CardRepository, myfatoorahService domain.MyFatoorahService, logger logger.ILogger, extService external.ExtService) domain.PaymentUseCase {
-	return &PaymentUseCase{
-		repo:              repo,
-		myfatoorahService: myfatoorahService,
-		cardRepo:          cardRepo,
-		logger:            logger,
-		extService:        extService,
 	}
 }

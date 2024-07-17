@@ -9,8 +9,9 @@ type ExtService struct {
 	OrderService order.IService
 }
 
-func NewExternalService(orderUseCase domain.OrderUseCase) ExtService {
-	return ExtService{
-		OrderService: order.IService{OrderUseCase: orderUseCase},
-	}
+func NewExternalService() *ExtService {
+	return &ExtService{}
+}
+func (e *ExtService) SetOrderUseCase(orderUseCase domain.OrderUseCase) {
+	e.OrderService = order.IService{OrderUseCase: orderUseCase}
 }
