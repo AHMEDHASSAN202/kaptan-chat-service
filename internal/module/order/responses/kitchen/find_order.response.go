@@ -87,8 +87,10 @@ type Location struct {
 }
 
 type Rejected struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id       string                     `json:"id" bson:"id"`
+	Note     string                     `json:"note" bson:"note"`
+	Name     responses.LocalizationText `json:"name" bson:"name"`
+	UserType string                     `json:"user_type" bson:"user_type"`
 }
 
 type Payment struct {

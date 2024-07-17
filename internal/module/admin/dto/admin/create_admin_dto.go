@@ -22,6 +22,8 @@ type Account struct {
 type Kitchen struct {
 	Id            string   `json:"id" validate:"required"`
 	Name          Name     `json:"name" validate:"required"`
+	LocationIds   []string `json:"location_ids" validate:"required"`
+	AccountIds    []string `json:"account_ids" validate:"required"`
 	AllowedStatus []string `json:"allowed_status"`
 }
 

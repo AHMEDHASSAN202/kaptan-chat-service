@@ -18,7 +18,7 @@ func NewOrderFactory(validator *validator.Validate, extService external.ExtServi
 	return &OrderFactory{
 		orderTypes: map[string]func() IOrder{
 			"ktha": func() IOrder {
-				return &NgoOrder{Deps: Deps{validator: validator, extService: extService, logger: logger, orderRepo: orderRepo, redisClient: redisClient, gate: gate}}
+				return &KthaOrder{Deps: Deps{validator: validator, extService: extService, logger: logger, orderRepo: orderRepo, redisClient: redisClient, gate: gate}}
 			},
 		},
 	}

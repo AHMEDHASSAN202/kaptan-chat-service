@@ -380,3 +380,60 @@ func (l OrderUseCase) KitchenRejectedOrder(ctx context.Context, payload *kitchen
 func (l OrderUseCase) KitchenRejectionReasons(ctx context.Context, status string, id string) ([]domain.KitchenRejectionReason, validators.ErrorResponse) {
 	return helper.KitchenRejectionReasons(ctx, status, id)
 }
+
+func (l OrderUseCase) KitchenReadyForPickupOrder(ctx context.Context, payload *kitchen.ReadyForPickupOrderDto) (interface{}, validators.ErrorResponse) {
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	//accept order
+	orderResponse, errRejected := orderFactory.ToReadyForPickupKitchen(ctx, payload)
+	if errRejected.IsError {
+		return nil, errRejected
+	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
+
+	return orderResponse, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) KitchenPickedUpOrder(ctx context.Context, payload *kitchen.PickedUpOrderDto) (interface{}, validators.ErrorResponse) {
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	//accept order
+	orderResponse, errRejected := orderFactory.ToPickedUpKitchen(ctx, payload)
+	if errRejected.IsError {
+		return nil, errRejected
+	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
+
+	return orderResponse, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) KitchenNoShowOrder(ctx context.Context, payload *kitchen.NoShowOrderDto) (interface{}, validators.ErrorResponse) {
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	//accept order
+	orderResponse, errRejected := orderFactory.ToNoShowKitchen(ctx, payload)
+	if errRejected.IsError {
+		return nil, errRejected
+	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
+
+	return orderResponse, validators.ErrorResponse{}
+}

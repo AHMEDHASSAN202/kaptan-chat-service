@@ -74,7 +74,7 @@ func (l KitchenUseCase) CreateKitchen(ctx context.Context, payload *kitchen.Stor
 				Operation: "create admin for kitchen",
 				UpdatedAt: time.Now().UTC(),
 			},
-			Kitchen: &admin.Kitchen{Id: utils.ConvertObjectIdToStringId(kitchenDomain.ID), Name: admin.Name{Ar: kitchenDomain.Name.Ar, En: kitchenDomain.Name.En}, AllowedStatus: payload.AllowedStatus},
+			Kitchen: &admin.Kitchen{Id: utils.ConvertObjectIdToStringId(kitchenDomain.ID), Name: admin.Name{Ar: kitchenDomain.Name.Ar, En: kitchenDomain.Name.En}, AllowedStatus: payload.AllowedStatus, LocationIds: payload.LocationIds, AccountIds: payload.AccountIds},
 		}
 		_, errR := l.adminUseCase.Create(ctx, &storeAdminDto)
 		if errR.IsError {

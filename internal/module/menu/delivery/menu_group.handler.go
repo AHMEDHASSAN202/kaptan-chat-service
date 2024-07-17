@@ -40,7 +40,13 @@ func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator
 		portal.DELETE("/:id/:entity/:entity_id", handler.DeleteEntity, commonMiddlewares.PermissionMiddleware("update-menu-group", "portal-login-accounts"))
 	}
 
-	mobile := e.Group("api/v1/menu-group/:location_id")
+	mobileDeprecated := e.Group("api/v1/menu-group/:location_id")
+	{
+		mobileDeprecated.GET("/item", handler.MobileGetMenuGroupItems)
+		mobileDeprecated.GET("/item/:id", handler.MobileGetMenuGroupItem)
+	}
+
+	mobile := e.Group("api/v1/mobile/menu-group/:location_id")
 	{
 		mobile.GET("/item", handler.MobileGetMenuGroupItems)
 		mobile.GET("/item/:id", handler.MobileGetMenuGroupItem)

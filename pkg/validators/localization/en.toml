@@ -233,7 +233,12 @@ other = "You have running orders and can't create a new order."
 [LockError]
 description = "LockError"
 other = "Too Many Requests - Try again later."
+
 [ChangeOrderStatusError]
 description = "ChangeOrderStatusError"
 other = "Couldn't Change Order Status to new one"
+
+[PaymentError]
+description = "PaymentError"
+other = "There was an issue processing your payment. Please try again or contact support for assistance."
 
