@@ -38,7 +38,7 @@ func ValidateTimeFormat(fl validator.FieldLevel) bool {
 	return err == nil
 }
 func ValidateDateTimeFormat(fl validator.FieldLevel) bool {
-	_, err := time.Parse(time.DateTime, fl.Field().String())
+	_, err := time.Parse(time.RFC3339, fl.Field().String())
 	return err == nil
 }
 

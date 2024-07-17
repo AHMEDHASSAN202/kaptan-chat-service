@@ -90,7 +90,7 @@ func (i *OrderRepository) ListOrderForDashboard(ctx *context.Context, dto *order
 	}
 
 	if dto.From != "" {
-		fromDate, dateErr := time.Parse(time.DateTime, dto.From)
+		fromDate, dateErr := time.Parse(time.RFC3339, dto.From)
 		if dateErr != nil {
 			i.logger.Error("Order Repo -> parsing date -> ", dateErr)
 			err = dateErr
@@ -100,7 +100,7 @@ func (i *OrderRepository) ListOrderForDashboard(ctx *context.Context, dto *order
 	}
 
 	if dto.To != "" {
-		toDate, dateErr := time.Parse(time.DateTime, dto.To)
+		toDate, dateErr := time.Parse(time.RFC3339, dto.To)
 		if dateErr != nil {
 			i.logger.Error("Order Repo -> parsing date -> ", dateErr)
 			err = dateErr
