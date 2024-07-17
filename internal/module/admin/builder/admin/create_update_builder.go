@@ -20,7 +20,13 @@ func CreateUpdateAdminBuilder(admin *domain.Admin, input *dto.CreateAdminDTO, ro
 			admin.Account = &domain.Account{Id: utils.ConvertStringIdToObjectId(input.Account.Id), Name: domain.Name{Ar: input.Account.Name.Ar, En: input.Account.Name.En}}
 		}
 		if input.Kitchen != nil {
-			admin.Kitchen = &domain.Kitchen{Id: utils.ConvertStringIdToObjectId(input.Kitchen.Id), Name: domain.Name{Ar: input.Kitchen.Name.Ar, En: input.Kitchen.Name.En}, AllowedStatus: input.Kitchen.AllowedStatus}
+			admin.Kitchen = &domain.Kitchen{
+				Id:            utils.ConvertStringIdToObjectId(input.Kitchen.Id),
+				Name:          domain.Name{Ar: input.Kitchen.Name.Ar, En: input.Kitchen.Name.En},
+				AllowedStatus: input.Kitchen.AllowedStatus,
+				AccountIds:    utils.ConvertStringIdsToObjectIds(input.Kitchen.AccountIds),
+				LocationIds:   utils.ConvertStringIdsToObjectIds(input.Kitchen.LocationIds),
+			}
 		}
 	}
 	if input.Password != "" {

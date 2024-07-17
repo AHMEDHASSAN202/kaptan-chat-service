@@ -82,18 +82,15 @@ func (i *OrderRepository) ListOrderForDashboard(ctx *context.Context, dto *order
 	if dto.CountryId != "" {
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"location.country._id": dto.CountryId})
 	}
-	if dto.SerialNum != "" {
-		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"serial_num": dto.SerialNum})
-	}
-	if dto.UserId != "" {
-		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"user._id": utils.ConvertStringIdToObjectId(dto.UserId)})
+	if dto.Query != "" {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"$or": []bson.M{{"serial_num": dto.Query}, {"user.phone_number": dto.Query}}})
 	}
 	if dto.IsFavourite {
 		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"is_favourite": true})
 	}
 
 	if dto.From != "" {
-		fromDate, dateErr := time.Parse(time.DateTime, dto.From)
+		fromDate, dateErr := time.Parse(time.RFC3339, dto.From)
 		if dateErr != nil {
 			i.logger.Error("Order Repo -> parsing date -> ", dateErr)
 			err = dateErr
@@ -103,7 +100,7 @@ func (i *OrderRepository) ListOrderForDashboard(ctx *context.Context, dto *order
 	}
 
 	if dto.To != "" {
-		toDate, dateErr := time.Parse(time.DateTime, dto.To)
+		toDate, dateErr := time.Parse(time.RFC3339, dto.To)
 		if dateErr != nil {
 			i.logger.Error("Order Repo -> parsing date -> ", dateErr)
 			err = dateErr

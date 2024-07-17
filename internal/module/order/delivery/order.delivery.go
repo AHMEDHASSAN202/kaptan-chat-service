@@ -6,6 +6,8 @@ import (
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares/admin"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/middlewares/kitchen"
 	usermiddleware "samm/pkg/middlewares/user"
 	"samm/pkg/validators"
@@ -18,16 +20,17 @@ type OrderHandler struct {
 }
 
 // InitOrderController will initialize the article's HTTP controller
-func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *validator.Validate, logger logger.ILogger, userMiddleware *usermiddleware.Middlewares, kitchenMiddlewares *kitchen.ProviderMiddlewares) {
+func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *validator.Validate, logger logger.ILogger, userMiddleware *usermiddleware.Middlewares, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares, kitchenMiddlewares *kitchen.ProviderMiddlewares) {
 	handler := &OrderHandler{
 		orderUsecase: us,
 		validator:    validator,
 		logger:       logger,
 	}
 	dashboard := e.Group("api/v1/admin/order")
+	dashboard.Use(adminMiddlewares.AuthMiddleware)
 	{
-		dashboard.GET("", handler.ListOrderForDashboard)
-		dashboard.GET("/:id", handler.FindOrderForDashboard)
+		dashboard.GET("", handler.ListOrderForDashboard, commonMiddlewares.PermissionMiddleware("list-orders"))
+		dashboard.GET("/:id", handler.FindOrderForDashboard, commonMiddlewares.PermissionMiddleware("find-order"))
 	}
 	mobile := e.Group("api/v1/mobile/order")
 	{
@@ -175,7 +178,15 @@ func (a *OrderHandler) ListOrderForDashboard(c echo.Context) error {
 	ctx := c.Request().Context()
 	var payload order.ListOrderDtoForDashboard
 
-	_ = c.Bind(&payload)
+	binder := &echo.DefaultBinder{}
+	err := binder.BindHeaders(c, &payload)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	err = c.Bind(&payload)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
 
 	payload.Pagination.SetDefault()
 
