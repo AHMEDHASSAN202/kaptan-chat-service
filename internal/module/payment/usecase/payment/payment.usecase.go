@@ -132,12 +132,12 @@ func (p PaymentUseCase) Pay(ctx context.Context, dto *payment.PayDto) (paymentRe
 	}
 }
 
-func NewPaymentUseCase(repo domain.PaymentRepository, cardRepo domain.CardRepository, myfatoorahService domain.MyFatoorahService, logger logger.ILogger) domain.PaymentUseCase {
+func NewPaymentUseCase(repo domain.PaymentRepository, cardRepo domain.CardRepository, myfatoorahService domain.MyFatoorahService, logger logger.ILogger, extService external.ExtService) domain.PaymentUseCase {
 	return &PaymentUseCase{
 		repo:              repo,
 		myfatoorahService: myfatoorahService,
 		cardRepo:          cardRepo,
 		logger:            logger,
-		//extService:        extService,
+		extService:        extService,
 	}
 }
