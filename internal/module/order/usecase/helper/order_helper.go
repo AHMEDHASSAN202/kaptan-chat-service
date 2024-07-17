@@ -255,3 +255,36 @@ func KitchenRejectionReasons(ctx context.Context, status string, id string) ([]d
 
 	return kitchenRejectionReason, validators.ErrorResponse{}
 }
+func UserRejectionReasons(ctx context.Context, status string, id string) ([]domain.UserRejectionReason, validators.ErrorResponse) {
+	userRejectionReason := make([]domain.UserRejectionReason, 0)
+	dir, err := os.Getwd()
+	if err != nil {
+		return userRejectionReason, validators.GetErrorResponseFromErr(err)
+	}
+
+	path := filepath.Join(dir, "internal", "module", "order", "assets", "user_cancel_reasons.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		logger.Logger.Error("Read Json File -> Error -> ", err)
+		return userRejectionReason, validators.GetErrorResponseFromErr(err)
+	}
+
+	if errRe := json.Unmarshal(data, &userRejectionReason); errRe != nil {
+		logger.Logger.Error("ListPermissions -> Error -> ", errRe)
+		return userRejectionReason, validators.GetErrorResponseFromErr(errRe)
+	}
+
+	// Handle Status
+	if status != "" {
+		From(userRejectionReason).Where(func(c interface{}) bool {
+			return c.(domain.UserRejectionReason).Status == status || c.(domain.UserRejectionReason).Status == "all"
+		}).ToSlice(&userRejectionReason)
+	}
+	if id != "" {
+		From(userRejectionReason).Where(func(c interface{}) bool {
+			return c.(domain.UserRejectionReason).Id == id
+		}).ToSlice(&userRejectionReason)
+	}
+
+	return userRejectionReason, validators.ErrorResponse{}
+}

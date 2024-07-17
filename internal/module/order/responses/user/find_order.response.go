@@ -71,7 +71,14 @@ type Country struct {
 	Currency    string `json:"currency"`
 	PhonePrefix string `json:"phone_prefix"`
 }
-
+type Account struct {
+	Id   primitive.ObjectID `json:"id" bson:"_id"`
+	Name struct {
+		Ar string `json:"ar"`
+		En string `json:"en"`
+	} `json:"name" bson:"name"`
+	AllowedBrandIds []primitive.ObjectID `json:"allowed_brand_ids" bson:"allowed_brand_ids"`
+}
 type Location struct {
 	ID              primitive.ObjectID         `json:"id"`
 	Name            responses.LocalizationText `json:"name"`
@@ -83,7 +90,7 @@ type Location struct {
 	Phone           string                     `json:"phone"`
 	Brand           Brand                      `json:"brand_details"`
 	Country         Country                    `json:"country"`
-	AccountId       primitive.ObjectID         `json:"account_id"`
+	Account         Account                    `json:"account" bson:"account"`
 }
 
 type Rejected struct {

@@ -3,6 +3,7 @@ package order_factory
 import (
 	"context"
 	"samm/internal/module/order/domain"
+	"samm/internal/module/order/dto/order"
 	kitchen3 "samm/internal/module/order/responses/kitchen"
 	"samm/internal/module/order/responses/user"
 	"samm/pkg/validators"
@@ -17,6 +18,9 @@ type IOrder interface {
 	ToPending(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse)
 	ToAcceptKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse)
 	ToRejectedKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse)
-	ToArrived(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse)
-	ToCancel(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse)
+	ToReadyForPickupKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse)
+	ToPickedUpKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse)
+	ToNoShowKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse)
+	ToArrived(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
+	ToCancel(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
 }

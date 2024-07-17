@@ -18,6 +18,11 @@ type City struct {
 	Id   primitive.ObjectID `json:"id" bson:"id"`
 	Name LocalizationText   `json:"name" bson:"name"`
 }
+type Account struct {
+	Id              primitive.ObjectID   `json:"id" bson:"_id"`
+	Name            LocalizationText     `json:"name" bson:"name"`
+	AllowedBrandIds []primitive.ObjectID `json:"allowed_brand_ids" bson:"allowed_brand_ids"`
+}
 
 type Location struct {
 	ID         primitive.ObjectID `json:"id" bson:"_id"`
@@ -27,7 +32,7 @@ type Location struct {
 	CoverImage string             `json:"cover_image" bson:"cover_image"`
 	Logo       string             `json:"logo" bson:"logo"`
 	Brand      Brand              `json:"brand_details" bson:"brand_details"`
-	AccountId  primitive.ObjectID `json:"account_id" bson:"account_id"`
+	Account    Account            `json:"account" bson:"account"`
 }
 
 type ItemPriceSummary struct {

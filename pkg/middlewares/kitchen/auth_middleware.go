@@ -105,6 +105,7 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 
 		ctx = context.WithValue(ctx, "causer-id", utils.ConvertObjectIdToStringId(admin.ID))
 		ctx = context.WithValue(ctx, "causer-type", admin.Type)
+		ctx = context.WithValue(ctx, "causer-details", admin)
 		//ctx = context.WithValue(ctx, "causer-account-id", accountId)
 		c.SetRequest(c.Request().WithContext(ctx))
 

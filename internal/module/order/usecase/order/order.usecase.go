@@ -2,13 +2,8 @@ package order
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	. "github.com/ahmetb/go-linq/v3"
-	"github.com/jinzhu/copier"
 	"net/http"
-	"os"
-	"path/filepath"
 	user2 "samm/internal/module/order/builder/user"
 	"samm/internal/module/order/consts"
 	"samm/internal/module/order/domain"
@@ -163,136 +158,46 @@ func (l OrderUseCase) ToggleOrderFavourite(ctx *context.Context, payload order.T
 }
 
 func (l OrderUseCase) UserRejectionReasons(ctx context.Context, status string, id string) ([]domain.UserRejectionReason, validators.ErrorResponse) {
-	userRejectionReason := make([]domain.UserRejectionReason, 0)
-	dir, err := os.Getwd()
-	if err != nil {
-		return userRejectionReason, validators.GetErrorResponseFromErr(err)
-	}
-
-	path := filepath.Join(dir, "internal", "module", "order", "assets", "user_cancel_reasons.json")
-	data, err := os.ReadFile(path)
-	if err != nil {
-		l.logger.Error("Read Json File -> Error -> ", err)
-		return userRejectionReason, validators.GetErrorResponseFromErr(err)
-	}
-
-	if errRe := json.Unmarshal(data, &userRejectionReason); errRe != nil {
-		l.logger.Error("ListPermissions -> Error -> ", errRe)
-		return userRejectionReason, validators.GetErrorResponseFromErr(errRe)
-	}
-
-	// Handle Status
-	if status != "" {
-		From(userRejectionReason).Where(func(c interface{}) bool {
-			return c.(domain.UserRejectionReason).Status == status || c.(domain.UserRejectionReason).Status == "all"
-		}).ToSlice(&userRejectionReason)
-	}
-	if id != "" {
-		From(userRejectionReason).Where(func(c interface{}) bool {
-			return c.(domain.UserRejectionReason).Id == id
-		}).ToSlice(&userRejectionReason)
-	}
-
-	return userRejectionReason, validators.ErrorResponse{}
+	return helper.UserRejectionReasons(ctx, status, id)
 }
 
 func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse) {
-	// Find Order
-	orderDomain, err := l.repo.FindOrderByUser(&ctx, payload.OrderId, payload.UserId)
+
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
 	if err != nil {
-		return nil, validators.GetErrorResponseFromErr(err)
-	}
-	// Check Status
-	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorUser, orderDomain.Status, consts.OrderStatus.Cancelled)
-	if !utils.Contains(nextStatuses, consts.OrderStatus.Cancelled) {
-		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
 	}
 
-	rejectionReasons, errRe := l.UserRejectionReasons(ctx, "", payload.CancelReasonId)
-	if errRe.IsError {
-		return nil, errRe
-	}
-	if len(rejectionReasons) == 0 {
-		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
-	}
-	rejectionReason := rejectionReasons[0]
-	now := time.Now().UTC()
-	updateSet := map[string]interface{}{
-		"status":       consts.OrderStatus.Cancelled,
-		"cancelled_at": now,
-		"updated_at":   now,
-		"cancelled": domain.Rejected{
-			Id:   payload.CancelReasonId,
-			Note: payload.Note,
-			Name: domain.Name{
-				Ar: rejectionReason.Name.Ar,
-				En: rejectionReason.Name.En,
-			},
-			UserType: payload.CauserType,
-		},
+	//accept order
+	orderResponse, errAccept := orderFactory.ToCancel(ctx, payload)
+	if errAccept.IsError {
+		return nil, errAccept
 	}
 
-	statusLog := domain.StatusLog{
-		CauserId:   payload.UserId,
-		CauserType: payload.CauserType,
-		CreatedAt:  &now,
-	}
-	statusLog.Status.New = consts.OrderStatus.Cancelled
-	statusLog.Status.Old = orderDomain.Status
-
-	// If Status Is Pending Call Payment To Release This Transaction
-	if orderDomain.Status == consts.OrderStatus.Pending {
-		l.extService.PaymentIService.AuthorizePayment(ctx, utils.ConvertObjectIdToStringId(orderDomain.Payment.Id), false)
-	}
-
-	orderDomain, err = l.repo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
-
-	if err != nil {
-		return nil, validators.GetErrorResponseFromErr(err)
-	}
-	// Send Notification
-
-	orderResponse, _ := user2.FindOrderBuilder(&ctx, orderDomain)
+	//send notifications
+	go orderFactory.SendNotifications()
 
 	return orderResponse, validators.ErrorResponse{}
+
 }
 
 func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse) {
-	// Find Order
-	orderDomain, err := l.repo.FindOrderByUser(&ctx, payload.OrderId, payload.UserId)
+
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
 	if err != nil {
-		return nil, validators.GetErrorResponseFromErr(err)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
 	}
 
-	if !utils.Contains([]string{consts.OrderStatus.Accepted, consts.OrderStatus.ReadyForPickup, consts.OrderStatus.NoShow}, orderDomain.Status) || orderDomain.ArrivedAt != nil {
-		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	//accept order
+	orderResponse, errAccept := orderFactory.ToArrived(ctx, payload)
+	if errAccept.IsError {
+		return nil, errAccept
 	}
 
-	now := time.Now().UTC()
-	updateSet := map[string]interface{}{
-		"arrived_at": now,
-		"updated_at": now,
-	}
-	if payload.CollectionMethodId != "" {
-		//get user collection method
-		collectionMethod, hasCollectionMethodErr := l.extService.RetailsIService.FindCollectionMethod(ctx, payload.CollectionMethodId, payload.UserId)
-		if hasCollectionMethodErr.IsError {
-			l.logger.Error(hasCollectionMethodErr)
-			return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
-		}
-		var userCollectionMethod domain.CollectionMethod
-		copier.Copy(&userCollectionMethod, collectionMethod)
-		updateSet["user.collection_method"] = userCollectionMethod
-	}
-
-	orderDomain, err = l.repo.UpdateOrderStatus(&ctx, orderDomain, []string{}, nil, updateSet)
-
-	if err != nil {
-		return nil, validators.GetErrorResponseFromErr(err)
-	}
-	// Send Notification
-
-	orderResponse, _ := user2.FindOrderBuilder(&ctx, orderDomain)
+	//send notifications
+	go orderFactory.SendNotifications()
 
 	return orderResponse, validators.ErrorResponse{}
 }
@@ -379,4 +284,61 @@ func (l OrderUseCase) KitchenRejectedOrder(ctx context.Context, payload *kitchen
 
 func (l OrderUseCase) KitchenRejectionReasons(ctx context.Context, status string, id string) ([]domain.KitchenRejectionReason, validators.ErrorResponse) {
 	return helper.KitchenRejectionReasons(ctx, status, id)
+}
+
+func (l OrderUseCase) KitchenReadyForPickupOrder(ctx context.Context, payload *kitchen.ReadyForPickupOrderDto) (interface{}, validators.ErrorResponse) {
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	//accept order
+	orderResponse, errRejected := orderFactory.ToReadyForPickupKitchen(ctx, payload)
+	if errRejected.IsError {
+		return nil, errRejected
+	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
+
+	return orderResponse, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) KitchenPickedUpOrder(ctx context.Context, payload *kitchen.PickedUpOrderDto) (interface{}, validators.ErrorResponse) {
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	//accept order
+	orderResponse, errRejected := orderFactory.ToPickedUpKitchen(ctx, payload)
+	if errRejected.IsError {
+		return nil, errRejected
+	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
+
+	return orderResponse, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) KitchenNoShowOrder(ctx context.Context, payload *kitchen.NoShowOrderDto) (interface{}, validators.ErrorResponse) {
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	//accept order
+	orderResponse, errRejected := orderFactory.ToNoShowKitchen(ctx, payload)
+	if errRejected.IsError {
+		return nil, errRejected
+	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
+
+	return orderResponse, validators.ErrorResponse{}
 }
