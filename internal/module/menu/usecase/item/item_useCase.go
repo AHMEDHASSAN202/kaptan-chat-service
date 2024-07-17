@@ -2,13 +2,14 @@ package item
 
 import (
 	"context"
-	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"net/http"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
 	"samm/internal/module/menu/responses"
 	responseItem "samm/internal/module/menu/responses/item"
+	"samm/pkg/gate"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -20,13 +21,15 @@ type ItemUseCase struct {
 	repo       domain.ItemRepository
 	logger     logger.ILogger
 	skuUsecase domain.SKUUseCase
+	gate       *gate.Gate
 }
 
-func NewItemUseCase(repo domain.ItemRepository, logger logger.ILogger, skuUsecase domain.SKUUseCase) domain.ItemUseCase {
+func NewItemUseCase(repo domain.ItemRepository, logger logger.ILogger, skuUsecase domain.SKUUseCase, gate *gate.Gate) domain.ItemUseCase {
 	return &ItemUseCase{
 		repo:       repo,
 		logger:     logger,
 		skuUsecase: skuUsecase,
+		gate:       gate,
 	}
 }
 
@@ -62,6 +65,10 @@ func (oRec *ItemUseCase) Update(ctx context.Context, dto item.UpdateItemDto) val
 
 	convertDtoToCorrespondingDomain(dto, &item[0])
 	doc := &item[0]
+	if !oRec.gate.Authorize(doc, gate.MethodNames.Update, ctx) {
+		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Update Admin -> ", doc.ID)
+		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
 	err = oRec.repo.Update(ctx, &id, doc)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
@@ -82,6 +89,11 @@ func (oRec *ItemUseCase) SoftDelete(ctx context.Context, id string) validators.E
 		}
 		return validators.GetErrorResponseFromErr(err)
 	}
+	if !oRec.gate.Authorize(&item[0], gate.MethodNames.Delete, ctx) {
+		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Delete Admin -> ", item[0].ID)
+		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
+
 	t := time.Now()
 	item[0].DeletedAt = &t
 	err = oRec.repo.SoftDelete(ctx, &item[0])
@@ -94,12 +106,16 @@ func (oRec *ItemUseCase) SoftDelete(ctx context.Context, id string) validators.E
 func (oRec *ItemUseCase) ChangeStatus(ctx context.Context, id string, dto *item.ChangeItemStatusDto) validators.ErrorResponse {
 	idDoc := utils.ConvertStringIdToObjectId(id)
 	item, err := oRec.repo.GetByIds(ctx, []primitive.ObjectID{idDoc})
-	fmt.Println(item, err)
 	if err != nil || len(item) <= 0 {
 		if err == mongo.ErrNoDocuments {
 			return validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 		}
 		return validators.GetErrorResponseFromErr(err)
+	}
+
+	if !oRec.gate.Authorize(&item[0], gate.MethodNames.Update, ctx) {
+		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Update Admin -> ", item[0].ID)
+		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 	item[0].Status = dto.Status
 	item[0].AdminDetails = append(item[0].AdminDetails, utils.StructSliceToMapSlice(dto.AdminDetails)...)
@@ -127,7 +143,11 @@ func (oRec *ItemUseCase) GetById(ctx context.Context, id string) (responseItem.I
 		}
 		return responseItem.ItemResponse{}, validators.GetErrorResponseFromErr(err)
 	}
-
+	oRec.logger.Info(items)
+	if !oRec.gate.Authorize(&domain.Item{AccountId: items.AccountId}, gate.MethodNames.Find, ctx) {
+		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Find Admin -> ", items.ID)
+		return responseItem.ItemResponse{}, validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
 	return items, validators.ErrorResponse{}
 }
 

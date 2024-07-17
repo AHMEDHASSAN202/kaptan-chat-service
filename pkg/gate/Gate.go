@@ -5,6 +5,18 @@ import (
 	"samm/pkg/utils"
 )
 
+type methodNames struct {
+	Delete string
+	Update string
+	Find   string
+}
+
+var MethodNames = methodNames{
+	Delete: "Delete",
+	Update: "Update",
+	Find:   "Find",
+}
+
 type Gate struct {
 	Models map[string]interface{}
 }
