@@ -154,5 +154,14 @@
     "general_kcal": "Kcal",
     "general_min": "Min",
     "general_max": "Max",
-    "general_reorder": "Re-order"
+    "general_reorder": "Re-order",
+    "pickedup": "Picked up",
+    "initiated": "Waiting Payment",
+    "pending": "Waiting Approval",
+    "cancelled": "Cancelled",
+    "rejected": "Rejected",
+    "accepted": "Accepted",
+    "timedOut": "Timedout",
+    "no_show": "Not pickedup",
+    "ready_for_pickup": "Ready for pickup"
 }

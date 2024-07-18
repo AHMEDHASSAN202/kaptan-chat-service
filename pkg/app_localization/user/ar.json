@@ -154,5 +154,14 @@
     "general_kcal": "كالوري",
     "general_min": "الأدنى",
     "general_max": "الأقصى",
-    "general_reorder": "إعادة الطلب"
+    "general_reorder": "إعادة الطلب",
+    "pickedup": "تم التوصيل",
+    "initiated": "في انتظار الدفع",
+    "pending": "في انتظار الموافقة",
+    "cancelled": "تم الإلغاء",
+    "rejected": "مرفوض",
+    "accepted": "مقبول",
+    "timedOut": "لا يوجد رد من المتجر",
+    "no_show": "لم يتم التسليم",
+    "ready_for_pickup": "جاهز للإستلام"
 }
