@@ -101,6 +101,7 @@
     "orderSteps_orderPayment_savedCards": "Saved cards",
     "orderSteps_orderPayment_addNewCard": "Add new card",
     "orderSteps_orderPayment_newCardNumber": "New card number",
+    "orderSteps_orderPayment_newCardNumberHint": "0000   0000   0000    0000",
     "orderSteps_orderPayment_cardHolderName": "Cardholder name",
     "orderSteps_orderPayment_cardHolderNameHint": "Full Name",
     "orderSteps_orderPayment_expiryDate": "Expiry date",
