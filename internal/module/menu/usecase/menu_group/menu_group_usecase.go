@@ -199,3 +199,26 @@ func (oRec *MenuGroupUseCase) DeleteEntity(ctx context.Context, input *menu_grou
 
 	return validators.ErrorResponse{}
 }
+
+func (oRec *MenuGroupUseCase) ChangeMenuGroupItemStatus(ctx context.Context, input *menu_group.ChangeStatusMenuGroupItemDto) validators.ErrorResponse {
+	model, errFind := oRec.menuGroupItemRepo.FindMenuGroupItem(ctx, utils.ConvertStringIdToObjectId(input.Id))
+	if errFind != nil {
+		oRec.logger.Error("MenuGroupUseCase -> Find -> FindMenuGroupItem -> ", errFind)
+		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	//if !oRec.gate.Authorize(model, "Update", ctx) {
+	//	return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	//}
+
+	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.CauserName, Operation: "Change Status", UpdatedAt: time.Now()}
+	model.Status = input.Status
+	model.AdminDetails = append(model.AdminDetails, adminDetails)
+	err := oRec.menuGroupItemRepo.ChangeStatusByItemId(ctx, utils.ConvertStringIdToObjectId(input.Id), model)
+	if err != nil {
+		oRec.logger.Error("MenuGroupUseCase -> Find -> ChangeStatusByItemId -> ", err)
+		return validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
+	}
+
+	return validators.ErrorResponse{}
+}

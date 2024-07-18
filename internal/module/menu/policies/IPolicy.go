@@ -12,5 +12,6 @@ func NewIPolicy(g *gate.Gate) *IPolicy {
 	g.Register(&domain.MenuGroup{}, &MenuGroupPolicy{})
 	g.Register(&domain.Item{}, &ItemPolicy{})
 	g.Register(&domain.ModifierGroup{}, &ModifierGroupPolicy{})
+	g.Register(&domain.MenuGroupItem{}, &MenuGroupItemPolicy{})
 	return &IPolicy{}
 }

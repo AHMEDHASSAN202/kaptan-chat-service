@@ -54,9 +54,26 @@ func (i *menuGroupItemRepo) SyncMenuItemsChanges(ctx context.Context, itemDoc me
 	return nil
 }
 
+func (i *menuGroupItemRepo) FindMenuGroupItem(ctx context.Context, id primitive.ObjectID) (domain.MenuGroupItem, error) {
+	result := domain.MenuGroupItem{}
+	err := i.menuGroupItemCollection.FindByIDWithCtx(ctx, id, &result)
+	if err != nil {
+		return result, err
+	}
+	return result, err
+}
+
 func (i *menuGroupItemRepo) DeleteByItemId(ctx context.Context, itemId primitive.ObjectID) error {
 	filter := bson.M{"item_id": itemId}
 	_, err := i.menuGroupItemCollection.DeleteMany(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *menuGroupItemRepo) ChangeStatusByItemId(ctx context.Context, itemId primitive.ObjectID, model domain.MenuGroupItem) error {
+	_, err := i.menuGroupItemCollection.UpdateByID(ctx, itemId, bson.M{"$set": model})
 	if err != nil {
 		return err
 	}
@@ -291,11 +308,9 @@ func (i *menuGroupItemRepo) MobileFilterMenuGroupItemForOrder(ctx context.Contex
 		},
 	}
 
-	limit := bson.M{"$limit": 1}
-
 	products := make([]menu_group2.MobileGetItem, 0)
 
-	err := i.menuGroupItemCollection.SimpleAggregateWithCtx(ctx, &products, matching, modifierGroupLookup, addonsLookup, limit)
+	err := i.menuGroupItemCollection.SimpleAggregateWithCtx(ctx, &products, matching, modifierGroupLookup, addonsLookup)
 	if err != nil {
 		i.logger.Error("menuGroupItemRepo -> MobileGetMenuGroupItem -> ", err)
 		return nil, err

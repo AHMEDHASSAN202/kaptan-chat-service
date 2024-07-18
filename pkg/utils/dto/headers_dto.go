@@ -64,4 +64,6 @@ type KitchenHeaders struct {
 	CauserName        string   `header:"causer-name"`
 	CauserPermissions []string `header:"causer-permissions"`
 	CauserDetails     string   `header:"causer-details"`
+	CauserAccountIds  string   `header:"causer-account-ids"`
+	CauserLocationIds string   `header:"causer-location-ids"`
 }

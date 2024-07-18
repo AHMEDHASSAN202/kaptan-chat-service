@@ -103,7 +103,10 @@ func (l *appLogger) Info(args ...interface{}) {
 }
 
 func (l *appLogger) Infof(format string, args ...interface{}) {
-	l.logger.Infof(format, args...)
+	if format == "" {
+		format = "%+v"
+	}
+	l.logger.Infof(format, args)
 }
 
 func (l *appLogger) Trace(args ...interface{}) {

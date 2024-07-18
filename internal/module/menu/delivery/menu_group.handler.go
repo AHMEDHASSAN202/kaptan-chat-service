@@ -9,6 +9,7 @@ import (
 	"samm/internal/module/menu/dto/menu_group"
 	"samm/pkg/logger"
 	commmon "samm/pkg/middlewares/common"
+	"samm/pkg/middlewares/kitchen"
 	"samm/pkg/middlewares/portal"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -22,7 +23,7 @@ type MenuGroupHandler struct {
 }
 
 // InitMenuGroupController will initialize the article's HTTP controller
-func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
+func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator *validator.Validate, logger logger.ILogger, portalMiddlewares *portal.ProviderMiddlewares, kitchenMiddlewares *kitchen.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &MenuGroupHandler{
 		menuGroupUsecase: us,
 		validator:        validator,
@@ -50,6 +51,15 @@ func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator
 	{
 		mobile.GET("/item", handler.MobileGetMenuGroupItems)
 		mobile.GET("/item/:id", handler.MobileGetMenuGroupItem)
+	}
+	kitchen := e.Group("api/v1/kitchen/menu-group/:location_id")
+	{
+		kitchen.Use(kitchenMiddlewares.AuthMiddleware)
+
+		kitchen.GET("/item", handler.MobileGetMenuGroupItems)
+		kitchen.GET("/item/:id", handler.MobileGetMenuGroupItem)
+		kitchen.PUT("/item/:id/change-status", handler.ChangeMenuGroupItemStatus)
+
 	}
 }
 
@@ -266,6 +276,37 @@ func (a *MenuGroupHandler) DeleteEntity(c echo.Context) error {
 	}
 
 	errResp := a.menuGroupUsecase.DeleteEntity(ctx, &input)
+	if errResp.IsError {
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+func (a *MenuGroupHandler) ChangeMenuGroupItemStatus(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input menu_group.ChangeStatusMenuGroupItemDto
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := binder.BindBody(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := binder.BindPathParams(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.menuGroupUsecase.ChangeMenuGroupItemStatus(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}

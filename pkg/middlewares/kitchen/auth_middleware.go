@@ -11,6 +11,7 @@ import (
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+	"strings"
 	"time"
 )
 
@@ -82,17 +83,9 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 		c.Request().Header.Add("causer-id", utils.ConvertObjectIdToStringId(admin.ID))
 		c.Request().Header.Add("causer-type", admin.Type)
 		c.Request().Header.Add("causer-name", admin.Name)
+		c.Request().Header.Add("causer-account-ids", strings.Join(utils.ConvertObjectIdsToStringIds(admin.Kitchen.AccountIds), ","))
+		c.Request().Header.Add("causer-location-ids", strings.Join(utils.ConvertObjectIdsToStringIds(admin.Kitchen.LocationIds), ","))
 		c.Request().Header.Add("causer-permissions", string(jsonPermissionsByte))
-
-		//accountId := ""
-		//if admin.Account != nil {
-		//	accountId = utils.ConvertObjectIdToStringId(admin.Account.Id)
-		//} else if utils.SafeMapGet(data.CauserDetails, "id", "") != "" {
-		//	accountId = utils.SafeMapGet(data.CauserDetails, "id", "").(string)
-		//}
-		//
-		//c.Request().Header.Add("causer-account-id", accountId)
-		//c.Request().Header.Set("account-id", accountId)
 
 		if data.CauserDetails != nil {
 			jsonDetailsByte, err := json.Marshal(data.CauserDetails)
@@ -106,7 +99,6 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 		ctx = context.WithValue(ctx, "causer-id", utils.ConvertObjectIdToStringId(admin.ID))
 		ctx = context.WithValue(ctx, "causer-type", admin.Type)
 		ctx = context.WithValue(ctx, "causer-details", admin)
-		//ctx = context.WithValue(ctx, "causer-account-id", accountId)
 		c.SetRequest(c.Request().WithContext(ctx))
 
 		return next(c)
