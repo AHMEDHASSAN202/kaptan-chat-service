@@ -44,8 +44,16 @@ func (l OrderUseCase) ListOrderForDashboard(ctx context.Context, payload *order.
 	return responses.SetListResponse(ordersRes, paginationMeta), validators.ErrorResponse{}
 }
 
-func (l OrderUseCase) ListOrderForMobile(ctx context.Context, payload *order.ListOrderDtoForMobile) (*responses.ListResponse, validators.ErrorResponse) {
-	ordersRes, paginationMeta, dbErr := l.repo.ListOrderForMobile(&ctx, payload)
+func (l OrderUseCase) ListInprogressOrdersForMobile(ctx context.Context, payload *order.ListOrderDtoForMobile) (*responses.ListResponse, validators.ErrorResponse) {
+	ordersRes, paginationMeta, dbErr := l.repo.ListInprogressOrdersForMobile(&ctx, payload)
+	if dbErr != nil {
+		return nil, validators.GetErrorResponseFromErr(dbErr)
+	}
+	return responses.SetListResponse(ordersRes, paginationMeta), validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) ListCompletedOrdersForMobile(ctx context.Context, payload *order.ListOrderDtoForMobile) (*responses.ListResponse, validators.ErrorResponse) {
+	ordersRes, paginationMeta, dbErr := l.repo.ListCompletedOrdersForMobile(&ctx, payload)
 	if dbErr != nil {
 		return nil, validators.GetErrorResponseFromErr(dbErr)
 	}

@@ -36,7 +36,8 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 	{
 		mobile.POST("/calculate-order-cost", handler.CalculateOrderCost)
 		mobile.POST("", handler.CreateOrder, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
-		mobile.GET("", handler.ListOrderForMobile, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
+		mobile.GET("/in-progress", handler.ListInprogressOrdersForMobile, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
+		mobile.GET("/completed", handler.ListCompletedOrdersForMobile, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 		mobile.GET("/:id", handler.FindOrderForMobile, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 		mobile.PUT("/:id/toggle-favourite", handler.ToggleOrderFavourite, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 		mobile.PUT("/:id/cancel", handler.CancelOrder, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
@@ -230,7 +231,7 @@ func (a *OrderHandler) FindOrderForMobile(c echo.Context) error {
 	return validators.SuccessResponse(c, order)
 }
 
-func (a *OrderHandler) ListOrderForMobile(c echo.Context) error {
+func (a *OrderHandler) ListInprogressOrdersForMobile(c echo.Context) error {
 	ctx := c.Request().Context()
 	var payload order.ListOrderDtoForMobile
 
@@ -253,7 +254,38 @@ func (a *OrderHandler) ListOrderForMobile(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	orders, errResp := a.orderUsecase.ListOrderForMobile(ctx, &payload)
+	orders, errResp := a.orderUsecase.ListInprogressOrdersForMobile(ctx, &payload)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, orders)
+
+}
+
+func (a *OrderHandler) ListCompletedOrdersForMobile(c echo.Context) error {
+	ctx := c.Request().Context()
+	var payload order.ListOrderDtoForMobile
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := c.Bind(&payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	payload.Pagination.SetDefault()
+
+	validationErr := payload.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	orders, errResp := a.orderUsecase.ListCompletedOrdersForMobile(ctx, &payload)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
