@@ -33,7 +33,7 @@ type BrandUseCase interface {
 }
 
 type BrandRepository interface {
-	Create(doc *Brand) error
+	Create(ctx context.Context, doc *Brand) error
 	Update(doc *Brand) error
 	FindBrand(*context.Context, primitive.ObjectID) (*Brand, error)
 	FindWithCuisines(context.Context, primitive.ObjectID) (*Brand, error)

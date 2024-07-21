@@ -82,6 +82,10 @@ other = "يوجد بالفعل تكوين لهذا النوع من التطبي�
 description = "Feature not supported"
 other = "البريد الالكتروني مستخدم من قبل"
 
+[Account_id_is_not_exists]
+description = "Feature not supported"
+other = "حساب الفندور غير موجود بالنظام"
+
 [Cuisine_id_is_exists_rules_validation]
 description = "Feature not supported"
 other = "بعض المطابخ غير موجودة"

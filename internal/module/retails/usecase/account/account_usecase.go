@@ -155,6 +155,14 @@ func (l AccountUseCase) ListAccount(ctx context.Context, payload *account.ListAc
 
 }
 
+func (oRec AccountUseCase) CheckAccountExists(ctx context.Context, accountId string) (bool, validators.ErrorResponse) {
+	isExists, err := oRec.repo.CheckExists(ctx, accountId)
+	if err != nil {
+		return isExists, validators.GetErrorResponseFromErr(err)
+	}
+	return isExists, validators.ErrorResponse{}
+}
+
 const tag = " AccountUseCase "
 
 func NewAccountUseCase(repo domain.AccountRepository, adminUseCase domain2.AdminUseCase, brandUseCase domain.BrandUseCase, locationUseCase domain.LocationUseCase, logger logger.ILogger, kitchenUseCase domain3.KitchenUseCase) domain.AccountUseCase {

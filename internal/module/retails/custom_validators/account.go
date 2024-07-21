@@ -30,6 +30,16 @@ func (i *RetailCustomValidator) ValidateAccountEmailIsUnique(accountId string) f
 	}
 }
 
+func (i *RetailCustomValidator) ValidateAccountIsExists() func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
+		accountId := fl.Field().Interface().(string)
+		fmt.Println("accountId=> ", accountId)
+		isExists, _ := i.accountUseCase.CheckAccountExists(context.Background(), accountId)
+		fmt.Println("isExists=> ", isExists)
+		return isExists
+	}
+}
+
 func (i *RetailCustomValidator) ValidateCuisineIdsExists(cuisineIds []string) func(fl validator.FieldLevel) bool {
 	return func(fl validator.FieldLevel) bool {
 		//val := fl.Field().Interface().(string)

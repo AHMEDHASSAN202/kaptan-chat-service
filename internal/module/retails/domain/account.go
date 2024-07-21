@@ -31,6 +31,7 @@ type AccountUseCase interface {
 	CheckAccountEmail(ctx context.Context, email string, accountId string) bool
 	DeleteAccount(ctx context.Context, Id string) (err validators.ErrorResponse)
 	ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []Account, paginationResult mongopagination.PaginationData, err validators.ErrorResponse)
+	CheckAccountExists(ctx context.Context, accountId string) (bool, validators.ErrorResponse)
 }
 
 type AccountRepository interface {
@@ -40,4 +41,5 @@ type AccountRepository interface {
 	CheckAccountEmail(ctx context.Context, email string, accountId string) bool
 	DeleteAccount(ctx context.Context, Id primitive.ObjectID) (err error)
 	ListAccount(ctx context.Context, payload *account.ListAccountDto) (locations []Account, paginationResult mongopagination.PaginationData, err error)
+	CheckExists(ctx context.Context, id string) (bool, error)
 }

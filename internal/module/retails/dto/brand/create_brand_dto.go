@@ -17,12 +17,16 @@ type CreateBrandDto struct {
 	Logo       string   `json:"logo"`
 	IsActive   bool     `json:"is_active"`
 	CuisineIds []string `json:"cuisine_ids" validate:"Invalid_mongo_ids_validation_rule,Cuisine_id_is_exists_rules_validation"`
+	AccountId  string   `json:"account_id" validate:"omitempty,Account_id_is_not_exists"`
 }
 
-func (input *CreateBrandDto) Validate(ctx context.Context, validate *validator.Validate, validateCuisineExists func(fl validator.FieldLevel) bool) validators.ErrorResponse {
+func (input *CreateBrandDto) Validate(ctx context.Context, validate *validator.Validate, validateCuisineExists func(fl validator.FieldLevel) bool, validateAccountExists func(fl validator.FieldLevel) bool) validators.ErrorResponse {
 	return validators.ValidateStruct(ctx, validate, input, validators.CustomErrorTags{
 		ValidationTag:          localization.Cuisine_id_is_exists_rules_validation,
 		RegisterValidationFunc: validateCuisineExists,
+	}, validators.CustomErrorTags{
+		ValidationTag:          localization.Account_id_is_not_exists,
+		RegisterValidationFunc: validateAccountExists,
 	})
 }
 
