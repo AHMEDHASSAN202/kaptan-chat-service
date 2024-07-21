@@ -131,10 +131,41 @@ func (i *OrderRepository) ListOrderForDashboard(ctx *context.Context, dto *order
 	return
 }
 
-func (i *OrderRepository) ListOrderForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error) {
+func (i *OrderRepository) ListInprogressOrdersForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error) {
 	threeMonthsAgo := time.Now().UTC().AddDate(0, -3, 0)
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
 		bson.M{"created_at": bson.M{"$gte": threeMonthsAgo}},
+		bson.M{"status": bson.M{"$in": InProgressStatuses}},
+		bson.M{"user._id": utils.ConvertStringIdToObjectId(dto.UserId)},
+	}}}
+
+	data, err := New(i.orderCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
+
+	if data == nil || data.Data == nil {
+		return nil, nil, err
+	}
+
+	orders := make([]structs.MobileListOrders, 0)
+	for _, raw := range data.Data {
+		model := structs.MobileListOrders{}
+		err = bson.Unmarshal(raw, &model)
+		if err != nil {
+			i.logger.Error("Order Repo -> Mobile List -> ", err)
+			break
+		}
+		orders = append(orders, model)
+	}
+	paginationMeta = &data.Pagination
+	ordersRes = &orders
+
+	return
+}
+
+func (i *OrderRepository) ListCompletedOrdersForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error) {
+	threeMonthsAgo := time.Now().UTC().AddDate(0, -3, 0)
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.M{"created_at": bson.M{"$gte": threeMonthsAgo}},
+		bson.M{"status": bson.M{"$in": CompletedStatuses}},
 		bson.M{"user._id": utils.ConvertStringIdToObjectId(dto.UserId)},
 	}}}
 
