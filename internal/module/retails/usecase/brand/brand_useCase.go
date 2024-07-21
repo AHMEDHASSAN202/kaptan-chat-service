@@ -44,7 +44,7 @@ func (oRec *BrandUseCase) Create(ctx context.Context, dto *brand.CreateBrandDto)
 			}
 			accountDomain.AllowedBrandIds = append(accountDomain.AllowedBrandIds, doc.ID)
 			accErr = oRec.accountRepo.UpdateAccount(sc, accountDomain)
-			if accErr == nil {
+			if accErr != nil {
 				return accErr
 			}
 
