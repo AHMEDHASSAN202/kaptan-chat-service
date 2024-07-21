@@ -75,6 +75,8 @@
     "cart_branchClosed_text2": "try choosing a different location",
     "cart_priceNotAvailable": "Unavailable",
     "cart_itemNotAvailable": "Item no longer available",
+    "cart_collectionMethods_label": "Collection Method",
+    "cart_collectionMethods_addButtonText": "Add",
     "orderSteps_waitingApprovalSheet_title": "Current order status",
     "orderSteps_waitingApprovalSheet_subtitle": "Your order has been sent, waiting for approval",
     "orderSteps_orderTimeoutSheet_title": "Current order status",

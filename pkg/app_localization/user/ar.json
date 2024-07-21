@@ -75,6 +75,8 @@
     "cart_branchClosed_text2": "حاول اختيار متجر آخر",
     "cart_priceNotAvailable": "غير متوفر",
     "cart_itemNotAvailable": "العنصر لم يعد متوفرا",
+    "cart_collectionMethods_label": "طريقة التجميع",
+    "cart_collectionMethods_addButtonText": "أضف",
     "orderSteps_waitingApprovalSheet_title": "حالة الطلب الحالي",
     "orderSteps_waitingApprovalSheet_subtitle": "تم إرسال طلبك، في انتظار الموافقة",
     "orderSteps_orderTimeoutSheet_title": "حالة الطلب الحالي",
