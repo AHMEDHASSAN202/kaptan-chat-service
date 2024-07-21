@@ -32,8 +32,8 @@ func NewBrandRepository(dbs *mongo.Database, locationRepo domain.LocationReposit
 	}
 }
 
-func (i *brandRepo) Create(doc *domain.Brand) (err error) {
-	err = mgm.Coll(doc).Create(doc)
+func (i *brandRepo) Create(ctx context.Context, doc *domain.Brand) (err error) {
+	err = mgm.Coll(doc).CreateWithCtx(ctx, doc)
 	if err != nil {
 		return
 	}

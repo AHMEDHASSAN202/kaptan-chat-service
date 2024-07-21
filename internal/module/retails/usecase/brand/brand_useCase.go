@@ -2,8 +2,10 @@ package brand
 
 import (
 	"context"
+	"github.com/kamva/mgm/v3"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/brand"
 	"samm/internal/module/retails/responses"
@@ -15,20 +17,46 @@ import (
 )
 
 type BrandUseCase struct {
-	repo   domain.BrandRepository
-	logger logger.ILogger
+	repo        domain.BrandRepository
+	accountRepo domain.AccountRepository
+	logger      logger.ILogger
 }
 
-func NewBrandUseCase(repo domain.BrandRepository, logger logger.ILogger) domain.BrandUseCase {
+func NewBrandUseCase(repo domain.BrandRepository, accountRepo domain.AccountRepository, logger logger.ILogger) domain.BrandUseCase {
 	return &BrandUseCase{
-		repo:   repo,
-		logger: logger,
+		repo:        repo,
+		logger:      logger,
+		accountRepo: accountRepo,
 	}
 }
 
 func (oRec *BrandUseCase) Create(ctx context.Context, dto *brand.CreateBrandDto) (*domain.Brand, validators.ErrorResponse) {
 	doc := domainBuilderAtCreate(dto)
-	err := oRec.repo.Create(doc)
+	if dto.AccountId != "" {
+		transactionErr := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+			brandErr := oRec.repo.Create(sc, doc)
+			if brandErr != nil {
+				return brandErr
+			}
+			accountDomain, accErr := oRec.accountRepo.FindAccount(sc, utils.ConvertStringIdToObjectId(dto.AccountId))
+			if accErr != nil {
+				return accErr
+			}
+			accountDomain.AllowedBrandIds = append(accountDomain.AllowedBrandIds, doc.ID)
+			accErr = oRec.accountRepo.UpdateAccount(sc, accountDomain)
+			if accErr == nil {
+				return accErr
+			}
+
+			return session.CommitTransaction(sc)
+		})
+
+		if transactionErr != nil {
+			return nil, validators.GetErrorResponseFromErr(transactionErr)
+		}
+		return doc, validators.ErrorResponse{}
+	}
+	err := oRec.repo.Create(ctx, doc)
 	if err != nil {
 		return doc, validators.GetErrorResponseFromErr(err)
 	}

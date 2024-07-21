@@ -52,7 +52,7 @@ func (a *BrandHandler) Create(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-	validationErr := input.Validate(ctx, a.validator, a.customValidator.ValidateCuisineIdsExists(input.CuisineIds))
+	validationErr := input.Validate(ctx, a.validator, a.customValidator.ValidateCuisineIdsExists(input.CuisineIds), a.customValidator.ValidateAccountIsExists())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)

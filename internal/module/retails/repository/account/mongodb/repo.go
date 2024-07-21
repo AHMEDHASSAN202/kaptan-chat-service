@@ -122,3 +122,9 @@ func (l AccountRepository) ListAccount(ctx context.Context, payload *account.Lis
 	}
 	return models, data.Pagination, err
 }
+
+func (i AccountRepository) CheckExists(ctx context.Context, id string) (bool, error) {
+	filter := bson.M{"_id": utils.ConvertStringIdToObjectId(id), "deleted_at": nil}
+	count, err := i.accountCollection.CountDocuments(ctx, filter)
+	return count == 1, err
+}

@@ -6,6 +6,7 @@ const (
     AccountRequiredValidation = "AccountRequiredValidation" // AccountRequiredValidation
     Account_Email_is_unique_rules_validation = "Account_Email_is_unique_rules_validation" // Email is Unique
     Account_Used_in_kitchen = "Account_Used_in_kitchen" // Account_Used_in_kitchen
+    Account_id_is_not_exists = "Account_id_is_not_exists" // Account is not exists
     App_type_is_unique_rules_validation = "App_type_is_unique_rules_validation" // Feature not supported
     CanNotBuildOrderResponse = "CanNotBuildOrderResponse" // Internal server errors occurred. Please contact support.
     ChangeOrderStatusError = "ChangeOrderStatusError" // ChangeOrderStatusError
