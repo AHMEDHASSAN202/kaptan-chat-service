@@ -5,6 +5,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/copier"
 	"github.com/labstack/echo/v4"
+	"net/http"
 	"samm/internal/module/menu/custom_validators"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
@@ -41,6 +42,7 @@ func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustom
 		portal.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-menus", "portal-login-accounts"))
 		portal.PUT("/:id/change_status", handler.ChangeStatus, commonMiddlewares.PermissionMiddleware("update-status-menus", "portal-login-accounts"))
 		portal.DELETE("/:id", handler.Delete, commonMiddlewares.PermissionMiddleware("delete-menus", "portal-login-accounts"))
+		portal.POST("/export", handler.ExportItems, commonMiddlewares.PermissionMiddleware("create-menus", "portal-login-accounts"))
 	}
 }
 
@@ -257,4 +259,33 @@ func (a *ItemHandler) ChangeStatus(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+
+func (a *ItemHandler) ExportItems(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	input := dto.PortalHeaders{}
+	err := (&echo.DefaultBinder{}).BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	_, buf, errResp := a.itemUsecase.ExportItems(ctx, input)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	c.Response().Header().Set(echo.HeaderContentType, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; filename=items.xlsx")
+	c.Response().WriteHeader(http.StatusOK)
+
+	_, err = c.Response().Writer.Write(buf.Bytes())
+	if err != nil {
+		return validators.ErrorStatusBadRequest(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	return nil
 }
