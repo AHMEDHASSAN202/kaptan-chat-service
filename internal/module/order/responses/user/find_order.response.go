@@ -124,4 +124,5 @@ type FindOrderResponse struct {
 	Rejected         *Rejected          `json:"rejected,omitempty"`
 	Notes            string             `json:"notes"`
 	Payment          Payment            `json:"payment"`
+	ArrivedAt        *time.Time         `json:"arrived_at"`
 }
