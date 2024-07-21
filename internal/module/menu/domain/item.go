@@ -1,9 +1,11 @@
 package domain
 
 import (
+	"bytes"
 	"context"
 	mongopagination "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
+	"github.com/xuri/excelize/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/menu/dto/item"
 	"samm/internal/module/menu/responses"
@@ -48,6 +50,7 @@ type ItemUseCase interface {
 	ChangeStatus(ctx context.Context, id string, dto *item.ChangeItemStatusDto) validators.ErrorResponse
 	SoftDelete(ctx context.Context, id string, input item.DeleteItemDto) validators.ErrorResponse
 	CheckExists(ctx context.Context, accountId, name string, exceptProductIds ...string) (bool, validators.ErrorResponse)
+	ExportItems(ctx context.Context, dto dto.PortalHeaders) (*excelize.File, *bytes.Buffer, validators.ErrorResponse)
 }
 
 type ItemRepository interface {
@@ -59,4 +62,5 @@ type ItemRepository interface {
 	ChangeStatus(ctx context.Context, doc *Item) error
 	Create(ctx context.Context, doc []Item) error
 	CheckExists(ctx context.Context, accountId, name string, exceptProductIds ...string) (bool, error)
+	GetAllActiveItems(ctx context.Context, accountId string) (items []Item, err error)
 }

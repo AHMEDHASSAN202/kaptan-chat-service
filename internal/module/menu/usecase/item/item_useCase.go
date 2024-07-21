@@ -1,7 +1,10 @@
 package item
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"github.com/xuri/excelize/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
@@ -159,4 +162,53 @@ func (oRec *ItemUseCase) CheckExists(ctx context.Context, accountId, name string
 		return isExists, validators.GetErrorResponseFromErr(err)
 	}
 	return isExists, validators.ErrorResponse{}
+}
+
+func (oRec *ItemUseCase) ExportItems(ctx context.Context, dto utilsDto.PortalHeaders) (*excelize.File, *bytes.Buffer, validators.ErrorResponse) {
+	items, err := oRec.repo.GetAllActiveItems(ctx, dto.AccountId)
+	if err != nil {
+		oRec.logger.Error("ExportItems", "GetAllActiveItems", err)
+		return nil, nil, validators.GetErrorResponseFromErr(err)
+	}
+
+	f := excelize.NewFile()
+	defer func() {
+		if err := f.Close(); err != nil {
+			oRec.logger.Error(ctx, err)
+		}
+	}()
+
+	index, errS := f.NewSheet("Sheet1")
+	if errS != nil {
+		oRec.logger.Error(ctx, errS)
+		return nil, nil, validators.GetErrorResponseFromErr(errS)
+	}
+
+	f.SetCellValue("Sheet1", "A1", "Item Id")
+	f.SetCellValue("Sheet1", "B1", "Name En")
+	f.SetCellValue("Sheet1", "C1", "Name Ar")
+	f.SetCellValue("Sheet1", "D1", "Price")
+	f.SetCellValue("Sheet1", "E1", "Category Name En")
+	f.SetCellValue("Sheet1", "F1", "Category Name Ar")
+
+	if items != nil && len(items) >= 1 {
+		for key, itemDomain := range items {
+			cellNumber := fmt.Sprintf("%v", key+2)
+			fmt.Println(utils.ConvertObjectIdToStringId(itemDomain.ID))
+			f.SetCellValue("Sheet1", "A"+cellNumber, utils.ConvertObjectIdToStringId(itemDomain.ID))
+			f.SetCellValue("Sheet1", "B"+cellNumber, itemDomain.Name.En)
+			f.SetCellValue("Sheet1", "C"+cellNumber, itemDomain.Name.Ar)
+			f.SetCellValue("Sheet1", "D"+cellNumber, itemDomain.Price)
+		}
+	}
+
+	f.SetActiveSheet(index)
+
+	buf, err := f.WriteToBuffer()
+	if err != nil {
+		oRec.logger.Error(ctx, err)
+		return nil, nil, validators.GetErrorResponseFromErr(err)
+	}
+
+	return f, buf, validators.ErrorResponse{}
 }
