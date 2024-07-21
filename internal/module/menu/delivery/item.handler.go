@@ -42,7 +42,7 @@ func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustom
 		portal.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-menus", "portal-login-accounts"))
 		portal.PUT("/:id/change_status", handler.ChangeStatus, commonMiddlewares.PermissionMiddleware("update-status-menus", "portal-login-accounts"))
 		portal.DELETE("/:id", handler.Delete, commonMiddlewares.PermissionMiddleware("delete-menus", "portal-login-accounts"))
-		portal.POST("/export", handler.ExportItems, commonMiddlewares.PermissionMiddleware("create-menus", "portal-login-accounts"))
+		portal.GET("/export", handler.ExportItems, commonMiddlewares.PermissionMiddleware("create-menus", "portal-login-accounts"))
 	}
 }
 
