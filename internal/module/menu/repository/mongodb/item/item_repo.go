@@ -194,3 +194,9 @@ func (i *itemRepo) CheckExists(ctx context.Context, accountId, name string, _exc
 
 	return c > 0, err
 }
+
+func (i *itemRepo) GetAllActiveItems(ctx context.Context, accountId string) (items []domain.Item, err error) {
+	filter := bson.M{"account_id": utils.ConvertStringIdToObjectId(accountId), "status": "active", "deleted_at": nil}
+	err = i.itemCollection.SimpleFind(&items, filter)
+	return items, err
+}

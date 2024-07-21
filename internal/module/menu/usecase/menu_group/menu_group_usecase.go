@@ -40,7 +40,7 @@ func NewMenuGroupUseCase(repo domain.MenuGroupRepository, itemRepo domain.ItemRe
 }
 
 func (oRec *MenuGroupUseCase) Create(ctx context.Context, dto *menu_group.CreateMenuGroupDTO) (string, validators.ErrorResponse) {
-	dto.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Create Menu", UpdatedAt: time.Now()}
+	dto.AdminDetails = utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(dto.CauserId), Name: dto.CauserName, Operation: "Create Menu", UpdatedAt: time.Now()}
 
 	err := oRec.InjectItemsToDTO(ctx, dto)
 	if err.IsError {
@@ -69,7 +69,7 @@ func (oRec *MenuGroupUseCase) Update(ctx context.Context, dto *menu_group.Create
 		return "", validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
-	dto.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Update Menu", UpdatedAt: time.Now()}
+	dto.AdminDetails = utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(dto.CauserId), Name: dto.CauserName, Operation: "Update Menu", UpdatedAt: time.Now()}
 	err := oRec.InjectItemsToDTO(ctx, dto)
 	if err.IsError {
 		oRec.logger.Error("MenuGroupUseCase -> Update -> ", err)
@@ -151,7 +151,7 @@ func (oRec *MenuGroupUseCase) ChangeStatus(ctx context.Context, id primitive.Obj
 		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
-	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Change Menu Status", UpdatedAt: time.Now()}
+	adminDetails := utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(input.CauserId), Name: input.CauserName, Operation: "Change Menu Status", UpdatedAt: time.Now()}
 
 	var err error
 	if input.Entity == consts.ITEM_CHANGE_STATUS_ENTITY {
@@ -182,7 +182,7 @@ func (oRec *MenuGroupUseCase) DeleteEntity(ctx context.Context, input *menu_grou
 		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
-	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", UpdatedAt: time.Now()}
+	adminDetails := utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(input.CauserId), Name: input.CauserName, UpdatedAt: time.Now()}
 
 	var err error
 	if input.Entity == consts.ITEM_CHANGE_STATUS_ENTITY {
@@ -211,7 +211,7 @@ func (oRec *MenuGroupUseCase) ChangeMenuGroupItemStatus(ctx context.Context, inp
 	//	return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	//}
 
-	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.CauserName, Operation: "Change Status", UpdatedAt: time.Now()}
+	adminDetails := utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(input.CauserId), Name: input.CauserName, Operation: "Change Status", UpdatedAt: time.Now()}
 	model.Status = input.Status
 	model.AdminDetails = append(model.AdminDetails, adminDetails)
 	err := oRec.menuGroupItemRepo.ChangeStatusByItemId(ctx, utils.ConvertStringIdToObjectId(input.Id), model)
