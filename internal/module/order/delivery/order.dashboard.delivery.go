@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"github.com/labstack/echo/v4"
+	"net/http"
 	"samm/internal/module/order/dto/order"
 	"samm/pkg/validators"
 )
@@ -80,6 +81,7 @@ func (a *OrderHandler) CancelOrderForDashboard(c echo.Context) error {
 	orderResponse, errResp := a.orderUsecase.DashboardCancelOrder(ctx, &orderDto)
 	if errResp.IsError {
 		a.logger.Error(errResp.ErrorMessageObject.Text)
+		errResp.StatusCode = http.StatusBadRequest
 		return validators.ErrorResp(c, errResp)
 	}
 
@@ -113,6 +115,7 @@ func (a *OrderHandler) PickedUpOrderForDashboard(c echo.Context) error {
 	orderResponse, errResp := a.orderUsecase.DashboardPickedOrder(ctx, &orderDto)
 	if errResp.IsError {
 		a.logger.Error(errResp.ErrorMessageObject.Text)
+		errResp.StatusCode = http.StatusBadRequest
 		return validators.ErrorResp(c, errResp)
 	}
 
