@@ -89,7 +89,8 @@
     "type": "admin",
     "subject": { "name": {"ar": "الحسابات والطلبات", "en": "Accounting And Orders" } },
     "actions": [
-      { "key": "list-orders", "name": {"ar": "عرض كل الطلبات", "en": "List Orders"} }
+      { "key": "list-orders", "name": {"ar": "عرض كل الطلبات", "en": "List Orders"} },
+      { "key": "update-order-status", "name": {"ar": "تغير حالات الطلبات", "en": "Change Order Status"} }
     ]
   },
   {

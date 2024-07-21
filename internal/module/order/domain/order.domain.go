@@ -116,7 +116,7 @@ type Location struct {
 type Rejected struct {
 	Id       string `json:"id" bson:"id"`
 	Note     string `json:"note" bson:"note"`
-	Name     Name   `json:"name" bson:"name"`
+	Name     *Name  `json:"name" bson:"name"`
 	UserType string `json:"user_type" bson:"user_type"`
 }
 
@@ -177,6 +177,8 @@ type OrderUseCase interface {
 	FindOrderForDashboard(ctx *context.Context, id string) (*Order, validators.ErrorResponse)
 	FindOrderForMobile(ctx *context.Context, payload *order.FindOrderMobileDto) (*user.FindOrderResponse, validators.ErrorResponse)
 	ToggleOrderFavourite(ctx *context.Context, payload order.ToggleOrderFavDto) (err validators.ErrorResponse)
+	DashboardCancelOrder(ctx context.Context, payload *order.DashboardCancelOrderDto) (*Order, validators.ErrorResponse)
+	DashboardPickedOrder(ctx context.Context, payload *order.DashboardPickedUpOrderDto) (*Order, validators.ErrorResponse)
 
 	UserRejectionReasons(ctx context.Context, status string, id string) ([]UserRejectionReason, validators.ErrorResponse)
 

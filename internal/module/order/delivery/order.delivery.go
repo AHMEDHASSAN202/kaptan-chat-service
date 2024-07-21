@@ -31,6 +31,8 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 	{
 		dashboard.GET("", handler.ListOrderForDashboard, commonMiddlewares.PermissionMiddleware("list-orders"))
 		dashboard.GET("/:id", handler.FindOrderForDashboard, commonMiddlewares.PermissionMiddleware("find-order"))
+		dashboard.PUT("/:id/cancel", handler.CancelOrderForDashboard, commonMiddlewares.PermissionMiddleware("update-order-status"))
+		dashboard.PUT("/:id/pickedup", handler.PickedUpOrderForDashboard, commonMiddlewares.PermissionMiddleware("update-order-status"))
 	}
 	mobile := e.Group("api/v1/mobile/order")
 	{
@@ -157,52 +159,6 @@ func (a *OrderHandler) UserRejectionReason(c echo.Context) error {
 		return validators.ErrorResp(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{"user_rejection_reasons": rejectionReasons})
-}
-
-func (a *OrderHandler) FindOrderForDashboard(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	id := c.Param("id")
-	if id == "" {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil, nil))
-	}
-
-	order, errResp := a.orderUsecase.FindOrderForDashboard(&ctx, id)
-	if errResp.IsError {
-		return validators.ErrorStatusBadRequest(c, errResp)
-	}
-
-	return validators.SuccessResponse(c, order)
-}
-
-func (a *OrderHandler) ListOrderForDashboard(c echo.Context) error {
-	ctx := c.Request().Context()
-	var payload order.ListOrderDtoForDashboard
-
-	binder := &echo.DefaultBinder{}
-	err := binder.BindHeaders(c, &payload)
-	if err != nil {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
-	}
-	err = c.Bind(&payload)
-	if err != nil {
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
-	}
-
-	payload.Pagination.SetDefault()
-
-	validationErr := payload.Validate(ctx, a.validator)
-	if validationErr.IsError {
-		a.logger.Error(validationErr)
-		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
-	}
-
-	orders, errResp := a.orderUsecase.ListOrderForDashboard(ctx, &payload)
-	if errResp.IsError {
-		return validators.ErrorStatusBadRequest(c, errResp)
-	}
-	return validators.SuccessResponse(c, orders)
-
 }
 
 func (a *OrderHandler) FindOrderForMobile(c echo.Context) error {

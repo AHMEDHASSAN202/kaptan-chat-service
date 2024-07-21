@@ -3,7 +3,7 @@
     "allow_user_to_change": [
       "cancelled"
     ],
-    "allow_admin_to_change": [],
+    "allow_admin_to_change": ["cancelled"],
     "allow_kitchen_to_change": [],
     "previous_status" : []
   },
@@ -11,19 +11,19 @@
     "allow_user_to_change": [
       "cancelled"
     ],
-    "allow_admin_to_change": ["accepted", "rejected"],
+    "allow_admin_to_change": ["cancelled"],
     "allow_kitchen_to_change": ["accepted", "rejected"],
     "previous_status" : ["initiated"]
   },
   "accepted": {
     "allow_user_to_change": [],
-    "allow_admin_to_change": [],
+    "allow_admin_to_change": ["pickedup"],
     "allow_kitchen_to_change": ["ready_for_pickup", "pickedup", "no_show"],
     "previous_status" : ["pending"]
   },
   "ready_for_pickup": {
     "allow_user_to_change": [],
-    "allow_admin_to_change": [],
+    "allow_admin_to_change": ["pickedup"],
     "allow_kitchen_to_change": ["pickedup", "no_show"],
     "previous_status" : ["accepted"]
   },

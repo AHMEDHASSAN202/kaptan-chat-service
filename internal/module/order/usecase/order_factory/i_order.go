@@ -23,4 +23,6 @@ type IOrder interface {
 	ToNoShowKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse)
 	ToArrived(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
 	ToCancel(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
+	ToCancelDashboard(ctx context.Context, payload *order.DashboardCancelOrderDto) (*domain.Order, validators.ErrorResponse)
+	ToPickedUpDashboard(ctx context.Context, payload *order.DashboardPickedUpOrderDto) (*domain.Order, validators.ErrorResponse)
 }

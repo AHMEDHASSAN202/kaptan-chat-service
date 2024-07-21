@@ -189,6 +189,46 @@ func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.Cancel
 	return orderResponse, validators.ErrorResponse{}
 
 }
+func (l OrderUseCase) DashboardCancelOrder(ctx context.Context, payload *order.DashboardCancelOrderDto) (*domain.Order, validators.ErrorResponse) {
+
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	//accept order
+	orderResponse, errAccept := orderFactory.ToCancelDashboard(ctx, payload)
+	if errAccept.IsError {
+		return nil, errAccept
+	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
+
+	return orderResponse, validators.ErrorResponse{}
+
+}
+func (l OrderUseCase) DashboardPickedOrder(ctx context.Context, payload *order.DashboardPickedUpOrderDto) (*domain.Order, validators.ErrorResponse) {
+
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	//accept order
+	orderResponse, errAccept := orderFactory.ToPickedUpDashboard(ctx, payload)
+	if errAccept.IsError {
+		return nil, errAccept
+	}
+
+	//send notifications
+	go orderFactory.SendNotifications()
+
+	return orderResponse, validators.ErrorResponse{}
+
+}
 
 func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse) {
 

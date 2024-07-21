@@ -282,7 +282,7 @@ func (o *KthaOrder) ToRejectedKitchen(ctx context.Context, dto interface{}) (*ki
 		"rejected": domain.Rejected{
 			Id:   input.RejectedReasonId,
 			Note: input.Note,
-			Name: domain.Name{
+			Name: &domain.Name{
 				Ar: rejectionReason.Name.Ar,
 				En: rejectionReason.Name.En,
 			},
@@ -537,7 +537,8 @@ func (o *KthaOrder) ToArrived(ctx context.Context, payload *order.ArrivedOrderDt
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
 	// Send Notification
-
+	//set order object to factory
+	o.Order = orderDomain
 	orderResponse, _ := user2.FindOrderBuilder(&ctx, orderDomain)
 
 	return orderResponse, validators.ErrorResponse{}
@@ -572,7 +573,7 @@ func (o *KthaOrder) ToCancel(ctx context.Context, payload *order.CancelOrderDto)
 		"cancelled": domain.Rejected{
 			Id:   payload.CancelReasonId,
 			Note: payload.Note,
-			Name: domain.Name{
+			Name: &domain.Name{
 				Ar: rejectionReason.Name.Ar,
 				En: rejectionReason.Name.En,
 			},
@@ -598,8 +599,97 @@ func (o *KthaOrder) ToCancel(ctx context.Context, payload *order.CancelOrderDto)
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
+	//set order object to factory
+	o.Order = orderDomain
 	// Send Notification
 	orderResponse, _ := user2.FindOrderBuilder(&ctx, orderDomain)
 
 	return orderResponse, validators.ErrorResponse{}
+}
+func (o *KthaOrder) ToCancelDashboard(ctx context.Context, payload *order.DashboardCancelOrderDto) (*domain.Order, validators.ErrorResponse) {
+
+	// Find Order
+	orderDomain, err := o.orderRepo.FindOrder(&ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	// Check Status
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorAdmin, orderDomain.Status, consts.OrderStatus.Cancelled)
+	if !utils.Contains(nextStatuses, consts.OrderStatus.Cancelled) {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"status":       consts.OrderStatus.Cancelled,
+		"cancelled_at": now,
+		"updated_at":   now,
+		"cancelled": domain.Rejected{
+			Id:       "",
+			Note:     payload.Note,
+			Name:     nil,
+			UserType: payload.CauserType,
+		},
+	}
+
+	statusLog := domain.StatusLog{
+		CauserId:   payload.CauserId,
+		CauserType: payload.CauserType,
+		CreatedAt:  &now,
+	}
+	statusLog.Status.New = consts.OrderStatus.Cancelled
+	statusLog.Status.Old = orderDomain.Status
+
+	// If Status Is Pending Call Payment To Release This Transaction
+	if orderDomain.Status == consts.OrderStatus.Pending {
+		o.extService.PaymentIService.AuthorizePayment(ctx, utils.ConvertObjectIdToStringId(orderDomain.Payment.Id), false)
+	}
+
+	orderDomain, err = o.orderRepo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
+	//set order object to factory
+	o.Order = orderDomain
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	return orderDomain, validators.ErrorResponse{}
+}
+func (o *KthaOrder) ToPickedUpDashboard(ctx context.Context, payload *order.DashboardPickedUpOrderDto) (*domain.Order, validators.ErrorResponse) {
+
+	//find order
+	orderDomain, err := o.orderRepo.FindOrder(&ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
+	if err != nil {
+		o.logger.Error(err)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
+	}
+
+	// Check Status
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorAdmin, orderDomain.Status, consts.OrderStatus.PickedUp)
+	if !utils.Contains(nextStatuses, consts.OrderStatus.PickedUp) {
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	//update data
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"status":      consts.OrderStatus.PickedUp,
+		"pickedup_at": now,
+		"updated_at":  now,
+	}
+	statusLog := domain.StatusLog{
+		CauserId:   payload.CauserId,
+		CauserType: payload.CauserType,
+		CreatedAt:  &now,
+	}
+	statusLog.Status.New = consts.OrderStatus.PickedUp
+	statusLog.Status.Old = orderDomain.Status
+
+	//update domain
+	orderDomain, err = o.orderRepo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
+	if err != nil {
+		o.logger.Error(err)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
+	}
+	//set order object to factory
+	o.Order = orderDomain
+
+	return orderDomain, validators.ErrorResponse{}
 }
