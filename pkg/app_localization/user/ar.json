@@ -199,6 +199,8 @@
     "general_min": "الأدنى",
     "general_max": "الأقصى",
     "general_reorder": "إعادة الطلب",
+    "general_confirmButtonText": "حسنا",
+    "general_cancelButtonText": "إلغاء",
     "pickedup": "تم التوصيل",
     "initiated": "في انتظار الدفع",
     "pending": "في انتظار الموافقة",

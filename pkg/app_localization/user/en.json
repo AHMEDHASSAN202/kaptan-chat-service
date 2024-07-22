@@ -199,6 +199,8 @@
     "general_min": "Min",
     "general_max": "Max",
     "general_reorder": "Re-order",
+    "general_confirmButtonText": "Ok",
+    "general_cancelButtonText": "Cancel",
     "pickedup": "Picked up",
     "initiated": "Waiting Payment",
     "pending": "Waiting Approval",
