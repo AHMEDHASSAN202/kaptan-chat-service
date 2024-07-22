@@ -95,19 +95,19 @@ type Location struct {
 
 	AllowedCollectionMethodIds []string `json:"allowed_collection_method_ids" bson:"allowed_collection_method_ids"`
 
-	AdminDetails []AdminDetail `json:"admin_details" bson:"admin_details"`
-	DeletedAt    *time.Time    `json:"-" bson:"deleted_at"`
+	AdminDetails []utilsDto.AdminDetails `json:"admin_details" bson:"admin_details,omitempty"`
+	DeletedAt    *time.Time              `json:"-" bson:"deleted_at"`
 }
 
 type LocationUseCase interface {
 	StoreLocation(ctx context.Context, payload *location.StoreLocationDto) (err validators.ErrorResponse)
 	BulkStoreLocation(ctx context.Context, payload location.StoreBulkLocationDto) (err validators.ErrorResponse)
 	UpdateLocation(ctx context.Context, id string, payload *location.StoreLocationDto) (err validators.ErrorResponse)
-	ToggleLocationStatus(ctx context.Context, id string) (err validators.ErrorResponse)
+	ToggleLocationStatus(ctx context.Context, id string, adminDetails *utilsDto.AdminHeaders) (err validators.ErrorResponse)
 	FindLocation(ctx context.Context, Id string) (location responses.LocationResp, err validators.ErrorResponse)
 	ToggleSnooze(ctx context.Context, dto *location.LocationToggleSnoozeDto) validators.ErrorResponse
 
-	DeleteLocation(ctx context.Context, Id string) (err validators.ErrorResponse)
+	DeleteLocation(ctx context.Context, Id string, adminDetails *utilsDto.AdminHeaders) (err validators.ErrorResponse)
 	DeleteLocationByAccountId(ctx context.Context, accountId string, causer *utilsDto.AdminDetails) (err validators.ErrorResponse)
 	ListLocation(ctx context.Context, payload *location.ListLocationDto) (locations []Location, paginationResult mongopagination.PaginationData, err validators.ErrorResponse)
 	ListMobileLocation(ctx context.Context, payload *location.ListLocationMobileDto) (locations []LocationMobile, paginationResult *mongopagination.PaginationData, err validators.ErrorResponse)

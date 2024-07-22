@@ -11,6 +11,7 @@ import (
 	"samm/pkg/middlewares/admin"
 	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/utils"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 )
@@ -55,6 +56,11 @@ func (a *LocationHandler) StoreLocation(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	binder := &echo.DefaultBinder{}
+	if err = binder.BindHeaders(c, &payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
 
 	validationErr := payload.Validate(c, a.validator)
 	if validationErr.IsError {
@@ -75,6 +81,11 @@ func (a *LocationHandler) BulkStoreLocation(c echo.Context) error {
 	var payload location.StoreBulkLocationDto
 	err := c.Bind(&payload)
 	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	binder := &echo.DefaultBinder{}
+	if err = binder.BindHeaders(c, &payload); err != nil {
+		a.logger.Error(err)
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -99,6 +110,11 @@ func (a *LocationHandler) UpdateLocation(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	binder := &echo.DefaultBinder{}
+	if err = binder.BindHeaders(c, &payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
 
 	validationErr := payload.Validate(c, a.validator)
 	if validationErr.IsError {
@@ -117,7 +133,14 @@ func (a *LocationHandler) ToggleLocationActive(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
-	errResp := a.locationUsecase.ToggleLocationStatus(ctx, id)
+	binder := &echo.DefaultBinder{}
+	var adminHeaders dto.AdminHeaders
+	if err := binder.BindHeaders(c, &adminHeaders); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	errResp := a.locationUsecase.ToggleLocationStatus(ctx, id, &adminHeaders)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
@@ -139,7 +162,14 @@ func (a *LocationHandler) DeleteLocation(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
-	errResp := a.locationUsecase.DeleteLocation(ctx, id)
+	binder := &echo.DefaultBinder{}
+	var adminHeaders dto.AdminHeaders
+	if err := binder.BindHeaders(c, &adminHeaders); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	errResp := a.locationUsecase.DeleteLocation(ctx, id, &adminHeaders)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
@@ -177,6 +207,11 @@ func (a *LocationHandler) ToggleSnooze(c echo.Context) error {
 
 	err := c.Bind(&input)
 	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	binder := &echo.DefaultBinder{}
+	if err = binder.BindHeaders(c, &input); err != nil {
+		a.logger.Error(err)
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 

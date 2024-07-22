@@ -15,6 +15,7 @@ import (
 	utilsDto "samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+	"time"
 )
 
 type LocationUseCase struct {
@@ -71,17 +72,22 @@ func (l LocationUseCase) UpdateLocation(ctx context.Context, id string, payload 
 	}
 	return
 }
-func (l LocationUseCase) ToggleLocationStatus(ctx context.Context, id string) (err validators.ErrorResponse) {
+func (l LocationUseCase) ToggleLocationStatus(ctx context.Context, id string, adminDetails *utilsDto.AdminHeaders) (err validators.ErrorResponse) {
 	domainLocation, errRe := l.repo.FindLocation(ctx, utils.ConvertStringIdToObjectId(id))
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)
 	}
+	var operation string
 	if domainLocation.Status == consts.LocationStatusActive {
 		domainLocation.Status = consts.LocationStatusInActive
+		operation = "De-Active Location"
 	} else {
 		domainLocation.Status = consts.LocationStatusActive
+		operation = "Active Location"
 	}
-	// todo handle admin_details for status change
+
+	causerDetails := utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(adminDetails.CauserId), Name: adminDetails.CauserName, Type: adminDetails.CauserType, Operation: operation, UpdatedAt: time.Now()}
+	domainLocation.AdminDetails = append(domainLocation.AdminDetails, causerDetails)
 
 	errRe = l.repo.UpdateLocation(ctx, domainLocation)
 	if errRe != nil {
@@ -100,7 +106,7 @@ func (l LocationUseCase) FindLocation(ctx context.Context, Id string) (location 
 	return location, validators.ErrorResponse{}
 }
 
-func (l LocationUseCase) DeleteLocation(ctx context.Context, Id string) (err validators.ErrorResponse) {
+func (l LocationUseCase) DeleteLocation(ctx context.Context, Id string, adminDetails *utilsDto.AdminHeaders) (err validators.ErrorResponse) {
 
 	// Check if it has any kitchen
 	listKitchen := kitchen.ListKitchenDto{
@@ -110,10 +116,20 @@ func (l LocationUseCase) DeleteLocation(ctx context.Context, Id string) (err val
 	if kitchens {
 		return validators.GetErrorResponse(&ctx, localization.Location_Used_in_kitchen, nil, nil)
 	}
-	errRe := l.repo.DeleteLocation(ctx, utils.ConvertStringIdToObjectId(Id))
-	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe)
+	//errRe := l.repo.DeleteLocation(ctx, utils.ConvertStringIdToObjectId(Id))
+	locationData, locErr := l.repo.FindLocation(ctx, utils.ConvertStringIdToObjectId(Id))
+	if locErr != nil {
+		return validators.GetErrorResponseFromErr(locErr)
 	}
+	now := time.Now().UTC()
+	locationData.DeletedAt = &now
+	locationData.UpdatedAt = now
+	locationData.AdminDetails = append(locationData.AdminDetails, utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(adminDetails.CauserId), Name: adminDetails.CauserName, Type: adminDetails.CauserType, Operation: "Delete Location", UpdatedAt: time.Now()})
+	locErr = l.repo.UpdateLocation(ctx, locationData)
+	if locErr != nil {
+		return validators.GetErrorResponseFromErr(locErr)
+	}
+
 	return validators.ErrorResponse{}
 }
 
