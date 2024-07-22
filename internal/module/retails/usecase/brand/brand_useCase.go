@@ -11,6 +11,7 @@ import (
 	"samm/internal/module/retails/responses"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 	"time"
@@ -116,13 +117,15 @@ func (oRec *BrandUseCase) ChangeStatus(ctx *context.Context, dto *brand.ChangeBr
 	return validators.ErrorResponse{}
 }
 
-func (oRec *BrandUseCase) SoftDelete(ctx *context.Context, id string) validators.ErrorResponse {
+func (oRec *BrandUseCase) SoftDelete(ctx *context.Context, id string, adminDetails *dto.AdminHeaders) validators.ErrorResponse {
 	brand, err := oRec.repo.FindBrand(ctx, utils.ConvertStringIdToObjectId(id))
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
+	causerDetails := dto.AdminDetails{Id: utils.ConvertStringIdToObjectId(adminDetails.CauserId), Name: adminDetails.CauserName, Type: adminDetails.CauserType, Operation: "Delete Brand", UpdatedAt: time.Now()}
 	currentTime := time.Now()
 	brand.DeletedAt = &currentTime
+	brand.AdminDetails = append(brand.AdminDetails, causerDetails)
 	err = oRec.repo.SoftDelete(brand)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)

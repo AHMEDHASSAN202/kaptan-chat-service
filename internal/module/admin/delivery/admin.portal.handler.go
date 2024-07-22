@@ -16,6 +16,7 @@ import (
 	dto2 "samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+	"time"
 )
 
 type AdminPortalHandler struct {
@@ -213,7 +214,9 @@ func (a *AdminPortalHandler) DeleteAdminPortal(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	errResp := a.adminUseCase.Delete(ctx, utils.ConvertStringIdToObjectId(input.ID), input.AccountId)
+	causerDetails := dto2.AdminDetails{Id: utils.ConvertStringIdToObjectId(input.CauserId), Name: input.CauserName, Type: input.CauserType, Operation: "Delete Admin", UpdatedAt: time.Now()}
+
+	errResp := a.adminUseCase.Delete(ctx, utils.ConvertStringIdToObjectId(input.ID), input.AccountId, &causerDetails)
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
@@ -242,10 +245,13 @@ func (a *AdminPortalHandler) ChangeStatusAdminPortal(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
+	causerDetails := dto2.AdminDetails{Id: utils.ConvertStringIdToObjectId(input.CauserId), Name: input.CauserName, Type: input.CauserType, Operation: "Change Admin Status", UpdatedAt: time.Now()}
+
 	errResp := a.adminUseCase.ChangeStatus(ctx, &dto.ChangeAdminStatusDto{
-		Id:        input.Id,
-		Status:    input.Status,
-		AccountId: input.AccountId,
+		Id:           input.Id,
+		Status:       input.Status,
+		AccountId:    input.AccountId,
+		AdminDetails: causerDetails,
 	})
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)

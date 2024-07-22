@@ -17,6 +17,7 @@ import (
 	"samm/internal/module/retails/dto/brand"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
+	utilsDto "samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 	"time"
@@ -86,6 +87,7 @@ func (l AccountUseCase) UpdateAccount(ctx context.Context, id string, payload *a
 	accountDomain.BankAccount.BankName = payload.BankAccount.BankName
 	accountDomain.BankAccount.CompanyName = payload.BankAccount.CompanyName
 	accountDomain.Percent = payload.Percent
+	accountDomain.AdminDetails = append(accountDomain.AdminDetails, utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(payload.CauserId), Name: payload.CauserName, Type: payload.CauserType, Operation: "Update Account", UpdatedAt: time.Now()})
 
 	errRe = l.repo.UpdateAccount(ctx, accountDomain)
 	if errRe != nil {
@@ -115,7 +117,7 @@ func (l AccountUseCase) FindAccount(ctx context.Context, Id string) (account dom
 func (l AccountUseCase) CheckAccountEmail(ctx context.Context, email string, accountId string) bool {
 	return l.repo.CheckAccountEmail(ctx, email, accountId)
 }
-func (l AccountUseCase) DeleteAccount(ctx context.Context, Id string) (err validators.ErrorResponse) {
+func (l AccountUseCase) DeleteAccount(ctx context.Context, Id string, adminDetails *utilsDto.AdminHeaders) (err validators.ErrorResponse) {
 
 	// Check if it has any kitchen
 	listKitchen := kitchen.ListKitchenDto{
@@ -127,13 +129,24 @@ func (l AccountUseCase) DeleteAccount(ctx context.Context, Id string) (err valid
 	}
 
 	erre := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+		causerDetails := utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(adminDetails.CauserId), Name: adminDetails.CauserName, Type: adminDetails.CauserType, Operation: "Delete Account", UpdatedAt: time.Now()}
 		// Delete Account
-		errRe := l.repo.DeleteAccount(sc, utils.ConvertStringIdToObjectId(Id))
-		if errRe != nil {
-			return errRe
+		// find
+		accountData, accErr := l.repo.FindAccount(ctx, utils.ConvertStringIdToObjectId(Id))
+		if accErr != nil {
+			return accErr
+		}
+		now := time.Now().UTC()
+		accountData.DeletedAt = &now
+		accountData.UpdatedAt = now
+		accountData.AdminDetails = append(accountData.AdminDetails, causerDetails)
+		// update
+		accErr = l.repo.UpdateAccount(sc, accountData)
+		if accErr != nil {
+			return accErr
 		}
 		// Delete Locations
-		errRee := l.locationUseCase.DeleteLocationByAccountId(sc, Id)
+		errRee := l.locationUseCase.DeleteLocationByAccountId(sc, Id, &causerDetails)
 		if errRee.IsError {
 			return errors.New(errRee.ErrorMessageObject.Text)
 		}

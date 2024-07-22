@@ -56,8 +56,8 @@ type Admin struct {
 type AdminUseCase interface {
 	Create(ctx context.Context, dto *admin.CreateAdminDTO) (string, validators.ErrorResponse)
 	Update(ctx context.Context, dto *admin.CreateAdminDTO) (string, validators.ErrorResponse)
-	Delete(ctx context.Context, adminId primitive.ObjectID, accountId string) validators.ErrorResponse
-	DeleteBy(ctx context.Context, id primitive.ObjectID, key string) validators.ErrorResponse
+	Delete(ctx context.Context, adminId primitive.ObjectID, accountId string, causerDetails *dto.AdminDetails) validators.ErrorResponse
+	DeleteBy(ctx context.Context, id primitive.ObjectID, key string, causer *dto.AdminDetails) validators.ErrorResponse
 	List(ctx context.Context, dto *admin.ListAdminDTO) (interface{}, validators.ErrorResponse)
 	Find(ctx context.Context, adminId primitive.ObjectID, accountId string) (interface{}, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, input *admin.ChangeAdminStatusDto) validators.ErrorResponse

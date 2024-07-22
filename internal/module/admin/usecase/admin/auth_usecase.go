@@ -2,7 +2,6 @@ package admin
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	admin2 "samm/internal/module/admin/builder/admin"
 	"samm/internal/module/admin/consts"
@@ -143,7 +142,8 @@ func (oRec *AdminUseCase) UpdateAdminProfile(ctx context.Context, input *dto.Upd
 		return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.Name, Operation: "Update My Profile", UpdatedAt: time.Now()}
+	//input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.Name, Operation: "Update My Profile", UpdatedAt: time.Now()}
+	input.AdminDetails = utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(input.CauserId), Name: input.CauserName, Type: input.CauserType, Operation: "Update My Profile", UpdatedAt: time.Now()}
 	adminDomain, err := admin2.UpdateAdminProfileBuilder(admin, input)
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> UpdateAdminProfile -> ", err)
@@ -165,7 +165,8 @@ func (oRec *AdminUseCase) UpdatePortalProfile(ctx context.Context, input *dto.Up
 		return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.Name, Operation: "Update My Profile", UpdatedAt: time.Now()}
+	//input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.Name, Operation: "Update My Profile", UpdatedAt: time.Now()}
+	input.AdminDetails = utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(input.CauserId), Name: input.CauserName, Type: input.CauserType, Operation: "Update My Profile", UpdatedAt: time.Now()}
 	adminDomain, err := admin2.UpdatePortalProfileBuilder(admin, input)
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> UpdatePortalProfile -> ", err)
@@ -186,7 +187,8 @@ func (oRec *AdminUseCase) UpdateKitchenProfile(ctx context.Context, input *dto.U
 		return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 
-	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.Name, Operation: "Update My Profile", UpdatedAt: time.Now()}
+	//input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: input.Name, Operation: "Update My Profile", UpdatedAt: time.Now()}
+	input.AdminDetails = utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(input.CauserId), Name: input.CauserName, Type: input.CauserType, Operation: "Update My Profile", UpdatedAt: time.Now()}
 	adminDomain, err := admin2.UpdateKitchenProfileBuilder(admin, input)
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> UpdatePortalProfile -> ", err)

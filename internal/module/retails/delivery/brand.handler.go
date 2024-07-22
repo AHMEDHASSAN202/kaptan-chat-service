@@ -11,6 +11,7 @@ import (
 	"samm/pkg/middlewares/admin"
 	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/utils"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 )
@@ -52,6 +53,12 @@ func (a *BrandHandler) Create(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	binder := &echo.DefaultBinder{}
+	if err = binder.BindHeaders(c, &input); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
 	validationErr := input.Validate(ctx, a.validator, a.customValidator.ValidateCuisineIdsExists(input.CuisineIds), a.customValidator.ValidateAccountIsExists())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
@@ -82,6 +89,12 @@ func (a *BrandHandler) Update(c echo.Context) error {
 
 	err := c.Bind(&input)
 	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	binder := &echo.DefaultBinder{}
+	if err = binder.BindHeaders(c, &input); err != nil {
+		a.logger.Error(err)
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
@@ -189,7 +202,14 @@ func (a *BrandHandler) Delete(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, "E1002", nil, nil))
 	}
 
-	errResp := a.brandUsecase.SoftDelete(&ctx, id)
+	binder := &echo.DefaultBinder{}
+	var adminHeaders dto.AdminHeaders
+	if err := binder.BindHeaders(c, &adminHeaders); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	errResp := a.brandUsecase.SoftDelete(&ctx, id, &adminHeaders)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}

@@ -14,6 +14,7 @@ import (
 	"samm/internal/module/retails/dto/location"
 	"samm/pkg/database/mongodb"
 	"samm/pkg/utils"
+	utilsDto "samm/pkg/utils/dto"
 	"strconv"
 	"time"
 )
@@ -89,11 +90,11 @@ func (l locationRepository) DeleteLocation(ctx context.Context, Id primitive.Obj
 	return l.UpdateLocation(ctx, locationData)
 }
 
-func (l locationRepository) DeleteLocationByAccountId(ctx context.Context, accountId primitive.ObjectID) (err error) {
+func (l locationRepository) DeleteLocationByAccountId(ctx context.Context, accountId primitive.ObjectID, causer *utilsDto.AdminDetails) (err error) {
 	now := time.Now().UTC()
 
 	filter := bson.M{"deleted_at": nil, "account_id": accountId}
-	update := bson.M{"$set": bson.M{"deleted_at": now}}
+	update := bson.M{"$set": bson.M{"deleted_at": now}, "$push": bson.M{"admin_details": causer}}
 	_, err = l.locationCollection.UpdateMany(ctx, filter, update)
 	return
 }
@@ -167,8 +168,12 @@ func (i *locationRepository) UpdateBulkByBrandCuisine(ctx context.Context, cuisi
 	return nil
 }
 
-func (i *locationRepository) SoftDeleteBulkByBrandId(ctx context.Context, brandId primitive.ObjectID) error {
-	_, err := i.locationCollection.UpdateMany(ctx, bson.M{"brand_details._id": brandId}, bson.M{"$set": bson.M{"deleted_at": time.Now()}})
+func (i *locationRepository) SoftDeleteBulkByBrandId(ctx context.Context, brandId primitive.ObjectID, causer *utilsDto.AdminDetails) error {
+	update := bson.M{"$set": bson.M{"deleted_at": time.Now()}}
+	if causer.Id != primitive.NilObjectID {
+		update["$push"] = bson.M{"admin_details": causer}
+	}
+	_, err := i.locationCollection.UpdateMany(ctx, bson.M{"brand_details._id": brandId}, update)
 	if err != nil {
 		return err
 	}

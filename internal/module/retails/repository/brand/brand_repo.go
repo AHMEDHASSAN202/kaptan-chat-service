@@ -14,6 +14,7 @@ import (
 	"samm/pkg/database/mongodb"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
+	utilsDto "samm/pkg/utils/dto"
 )
 
 type brandRepo struct {
@@ -85,7 +86,11 @@ func (i *brandRepo) SoftDelete(doc *domain.Brand) error {
 		if err != nil {
 			return err
 		}
-		err = i.locationRepo.SoftDeleteBulkByBrandId(sc, doc.ID)
+		var causer utilsDto.AdminDetails
+		if len(doc.AdminDetails) > 0 {
+			causer = doc.AdminDetails[len(doc.AdminDetails)-1]
+		}
+		err = i.locationRepo.SoftDeleteBulkByBrandId(sc, doc.ID, &causer)
 		if err != nil {
 			return err
 		}

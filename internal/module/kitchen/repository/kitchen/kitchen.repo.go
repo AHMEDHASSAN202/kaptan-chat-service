@@ -13,6 +13,7 @@ import (
 	"samm/internal/module/kitchen/dto/kitchen"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
+	"samm/pkg/utils/dto"
 	"time"
 )
 
@@ -62,7 +63,7 @@ func (l KitchenRepository) FindKitchen(ctx context.Context, Id primitive.ObjectI
 	return &domainData, err
 }
 
-func (l KitchenRepository) DeleteKitchen(ctx context.Context, Id primitive.ObjectID) (err error) {
+func (l KitchenRepository) DeleteKitchen(ctx context.Context, Id primitive.ObjectID, causer *dto.AdminDetails) (err error) {
 	kitchenData, err := l.FindKitchen(ctx, Id)
 	if err != nil {
 		return err
@@ -70,6 +71,7 @@ func (l KitchenRepository) DeleteKitchen(ctx context.Context, Id primitive.Objec
 	now := time.Now().UTC()
 	kitchenData.DeletedAt = &now
 	kitchenData.UpdatedAt = now
+	kitchenData.AdminDetails = append(kitchenData.AdminDetails, *causer)
 	return l.UpdateKitchen(kitchenData)
 }
 

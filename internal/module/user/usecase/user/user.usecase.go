@@ -10,6 +10,7 @@ import (
 	"samm/pkg/jwt"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 	"time"
@@ -219,16 +220,21 @@ func (oRec *UserUseCase) List(ctx *context.Context, dto *user.ListUserDto) (*res
 	return responses.SetListResponse(users, paginationMeta), validators.ErrorResponse{}
 }
 
-func (l UserUseCase) ToggleUserActivation(ctx *context.Context, userId string) (err validators.ErrorResponse) {
+func (l UserUseCase) ToggleUserActivation(ctx *context.Context, userId string, adminHeader *dto.AdminHeaders) (err validators.ErrorResponse) {
 	userDomain, errRe := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(userId))
+	var operation string
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)
 	}
 	if userDomain.IsActive {
 		userDomain.IsActive = false
+		operation = "De-Active User"
 	} else {
 		userDomain.IsActive = true
+		operation = "Active User"
 	}
+	causerDetails := dto.AdminDetails{Id: utils.ConvertStringIdToObjectId(adminHeader.CauserId), Name: adminHeader.CauserName, Type: adminHeader.CauserType, Operation: operation, UpdatedAt: time.Now()}
+	userDomain.AdminDetails = append(userDomain.AdminDetails, causerDetails)
 	errRe = l.repo.UpdateUser(ctx, userDomain)
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)

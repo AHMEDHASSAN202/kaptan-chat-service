@@ -12,6 +12,7 @@ import (
 	"samm/internal/module/retails/dto/cuisine"
 	"samm/pkg/database/mongodb"
 	"samm/pkg/logger"
+	utilsDto "samm/pkg/utils/dto"
 	"time"
 )
 
@@ -77,8 +78,11 @@ func (i *cuisineRepo) GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) 
 	return &cuisines, err
 }
 
-func (i *cuisineRepo) SoftDelete(ctx *context.Context, id primitive.ObjectID) error {
+func (i *cuisineRepo) SoftDelete(ctx *context.Context, id primitive.ObjectID, causer *utilsDto.AdminDetails) error {
 	update := bson.M{"$set": bson.M{"deleted_at": time.Now()}}
+	if causer.Id != primitive.NilObjectID {
+		update["$push"] = bson.M{"admin_details": causer}
+	}
 	_, err := i.cuisineCollection.UpdateByID(*ctx, id, update)
 	if err != nil {
 		return err

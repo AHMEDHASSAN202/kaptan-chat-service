@@ -12,6 +12,7 @@ import (
 	"samm/internal/module/retails/responses"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
+	utilsDto "samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 )
@@ -116,8 +117,8 @@ func (l LocationUseCase) DeleteLocation(ctx context.Context, Id string) (err val
 	return validators.ErrorResponse{}
 }
 
-func (l LocationUseCase) DeleteLocationByAccountId(ctx context.Context, AccountId string) (err validators.ErrorResponse) {
-	errRe := l.repo.DeleteLocationByAccountId(ctx, utils.ConvertStringIdToObjectId(AccountId))
+func (l LocationUseCase) DeleteLocationByAccountId(ctx context.Context, AccountId string, causer *utilsDto.AdminDetails) (err validators.ErrorResponse) {
+	errRe := l.repo.DeleteLocationByAccountId(ctx, utils.ConvertStringIdToObjectId(AccountId), causer)
 	if errRe != nil {
 		return validators.GetErrorResponseFromErr(errRe)
 	}

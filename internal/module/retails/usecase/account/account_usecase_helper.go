@@ -4,6 +4,7 @@ import (
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/account"
 	"samm/pkg/utils"
+	utilsDto "samm/pkg/utils/dto"
 	"time"
 )
 
@@ -24,6 +25,7 @@ func CreateAccountBuilder(payload *account.StoreAccountDto) domain.Account {
 	accountDomain.BankAccount.AccountNumber = payload.BankAccount.AccountNumber
 	accountDomain.BankAccount.BankName = payload.BankAccount.BankName
 	accountDomain.BankAccount.CompanyName = payload.BankAccount.CompanyName
+	accountDomain.AdminDetails = append(accountDomain.AdminDetails, utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(payload.CauserId), Name: payload.CauserName, Type: payload.CauserType, Operation: "Create Account", UpdatedAt: time.Now()})
 
 	return accountDomain
 }
