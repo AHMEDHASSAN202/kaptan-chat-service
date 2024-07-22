@@ -110,10 +110,11 @@ func buildItemsAndSummary(order *domain.Order, dto *order.CreateOrderDto, items 
 				Min:  modifier.Min,
 				Max:  modifier.Max,
 				//SKU:      modifier.SKU,
-				Calories: modifier.Calories,
-				Price:    modifier.Price,
-				Image:    modifier.Image,
-				Qty:      int(addon.Qty),
+				Calories:        modifier.Calories,
+				Price:           modifier.Price,
+				Image:           modifier.Image,
+				Qty:             int(addon.Qty),
+				ModifierGroupId: getModifierGroupId(menuItem.ModifierGroups, modifier.ID),
 			}
 
 			for _, doc := range modifierDocs {
@@ -151,4 +152,16 @@ func buildItemsAndSummary(order *domain.Order, dto *order.CreateOrderDto, items 
 		TotalPriceBeforeDiscount: totalMenusValueBefore,
 		TotalPriceAfterDiscount:  totalMenusValueAfter,
 	}
+}
+
+func getModifierGroupId(modifierGroups []responses2.ModifierGroup, addonId primitive.ObjectID) *primitive.ObjectID {
+	if modifierGroups == nil {
+		return nil
+	}
+	for _, group := range modifierGroups {
+		if utils.Contains(group.ProductIds, addonId) {
+			return &group.ID
+		}
+	}
+	return nil
 }

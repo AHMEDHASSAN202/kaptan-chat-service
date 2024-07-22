@@ -35,19 +35,20 @@ type OrderPriceSummary struct {
 }
 
 type Item struct {
-	ID           primitive.ObjectID         `json:"id"`
-	Name         responses.LocalizationText `json:"name"`
-	Desc         responses.LocalizationText `json:"desc"`
-	Type         string                     `json:"type"`
-	Min          int                        `json:"min"`
-	Max          int                        `json:"max"`
-	SKU          string                     `json:"sku"`
-	Calories     int                        `json:"calories"`
-	Price        float64                    `json:"price"`
-	Image        string                     `json:"image"`
-	Qty          int                        `json:"qty"`
-	PriceSummary ItemPriceSummary           `json:"price_summary"`
-	Addons       []Item                     `json:"addons"`
+	ID              primitive.ObjectID         `json:"id"`
+	Name            responses.LocalizationText `json:"name"`
+	Desc            responses.LocalizationText `json:"desc"`
+	Type            string                     `json:"type"`
+	Min             int                        `json:"min"`
+	Max             int                        `json:"max"`
+	SKU             string                     `json:"sku"`
+	Calories        int                        `json:"calories"`
+	Price           float64                    `json:"price"`
+	Image           string                     `json:"image"`
+	Qty             int                        `json:"qty"`
+	PriceSummary    ItemPriceSummary           `json:"price_summary"`
+	ModifierGroupId *primitive.ObjectID        `json:"modifier_group_id"`
+	Addons          []Item                     `json:"addons"`
 }
 
 type City struct {
@@ -79,6 +80,10 @@ type Account struct {
 	} `json:"name" bson:"name"`
 	AllowedBrandIds []primitive.ObjectID `json:"allowed_brand_ids" bson:"allowed_brand_ids"`
 }
+type Coordinate struct {
+	Type        string    `json:"type" bson:"type"`
+	Coordinates []float64 `json:"coordinates" bson:"coordinates"`
+}
 type Location struct {
 	ID              primitive.ObjectID         `json:"id"`
 	Name            responses.LocalizationText `json:"name"`
@@ -91,6 +96,7 @@ type Location struct {
 	Brand           Brand                      `json:"brand_details"`
 	Country         Country                    `json:"country"`
 	Account         Account                    `json:"account" bson:"account"`
+	Coordinate      Coordinate                 `json:"coordinate" bson:"coordinate"`
 }
 
 type Rejected struct {

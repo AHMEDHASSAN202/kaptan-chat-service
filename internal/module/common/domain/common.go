@@ -24,6 +24,7 @@ type CommonUseCase interface {
 	ListAssets(ctx context.Context, hasColors, hasBrands bool) (data interface{}, err validators.ErrorResponse)
 	ListCollectionMethods(ctx context.Context) (data interface{}, errResp validators.ErrorResponse)
 	FindCollectionMethodByType(ctx context.Context, collectionMethodType string) (data map[string]interface{}, errResp validators.ErrorResponse)
+	FindCollectionMethodByDefaultId(ctx context.Context, collectionMethodDefaultId string) (data map[string]interface{}, errResp validators.ErrorResponse)
 	UploadFile(ctx context.Context, file *multipart.FileHeader, filePath string) (string, validators.ErrorResponse)
 	ReadFile(ctx context.Context, filePath string) (string, validators.ErrorResponse)
 }

@@ -53,6 +53,14 @@ func (l CollectionMethodUseCase) UpdateCollectionMethod(ctx context.Context, id 
 	return
 }
 func (l CollectionMethodUseCase) FindCollectionMethod(ctx context.Context, Id string, userId string) (user domain.CollectionMethods, err validators.ErrorResponse) {
+	//find the default location id
+	collectionMethod, _ := l.commonUseCase.FindCollectionMethodByDefaultId(ctx, Id)
+	if collectionMethod != nil {
+		if val, ok := collectionMethod["type"].(string); ok {
+			return domain.CollectionMethods{Type: val, UserId: utils.ConvertStringIdToObjectId(userId)}, err
+		}
+	}
+	////find the user collection method
 	domainCollectionMethod, errRe := l.repo.FindCollectionMethod(ctx, utils.ConvertStringIdToObjectId(Id), utils.ConvertStringIdToObjectId(userId))
 	if errRe != nil {
 		if errRe == mongo.ErrNoDocuments {
