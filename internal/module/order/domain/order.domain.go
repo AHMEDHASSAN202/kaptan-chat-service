@@ -48,20 +48,21 @@ type OrderPriceSummary struct {
 }
 
 type Item struct {
-	ID           primitive.ObjectID `json:"id" bson:"_id"`
-	ItemId       primitive.ObjectID `json:"item_id" bson:"item_id"`
-	Name         LocalizationText   `json:"name" bson:"name"`
-	Desc         LocalizationText   `json:"desc" bson:"desc"`
-	Type         string             `json:"type" bson:"type,omitempty"`
-	Min          int                `json:"min" bson:"min,omitempty"`
-	Max          int                `json:"max" bson:"max,omitempty"`
-	SKU          string             `json:"sku" bson:"sku"`
-	Calories     int                `json:"calories" bson:"calories"`
-	Price        float64            `json:"price" bson:"price"`
-	Image        string             `json:"image" bson:"image"`
-	Qty          int                `json:"qty" bson:"qty"`
-	PriceSummary ItemPriceSummary   `json:"price_summary" bson:"price_summary"`
-	Addons       []Item             `json:"addons" bson:"addons,omitempty"`
+	ID              primitive.ObjectID  `json:"id" bson:"_id"`
+	ItemId          primitive.ObjectID  `json:"item_id" bson:"item_id"`
+	Name            LocalizationText    `json:"name" bson:"name"`
+	Desc            LocalizationText    `json:"desc" bson:"desc"`
+	Type            string              `json:"type" bson:"type,omitempty"`
+	Min             int                 `json:"min" bson:"min,omitempty"`
+	Max             int                 `json:"max" bson:"max,omitempty"`
+	SKU             string              `json:"sku" bson:"sku"`
+	Calories        int                 `json:"calories" bson:"calories"`
+	Price           float64             `json:"price" bson:"price"`
+	Image           string              `json:"image" bson:"image"`
+	Qty             int                 `json:"qty" bson:"qty"`
+	PriceSummary    ItemPriceSummary    `json:"price_summary" bson:"price_summary"`
+	ModifierGroupId *primitive.ObjectID `json:"modifier_group_id" bson:"modifier_group_id,omitempty"`
+	Addons          []Item              `json:"addons" bson:"addons,omitempty"`
 }
 
 type City struct {

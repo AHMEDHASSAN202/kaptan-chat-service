@@ -35,19 +35,20 @@ type OrderPriceSummary struct {
 }
 
 type Item struct {
-	ID           primitive.ObjectID         `json:"id"`
-	Name         responses.LocalizationText `json:"name"`
-	Desc         responses.LocalizationText `json:"desc"`
-	Type         string                     `json:"type"`
-	Min          int                        `json:"min"`
-	Max          int                        `json:"max"`
-	SKU          string                     `json:"sku"`
-	Calories     int                        `json:"calories"`
-	Price        float64                    `json:"price"`
-	Image        string                     `json:"image"`
-	Qty          int                        `json:"qty"`
-	PriceSummary ItemPriceSummary           `json:"price_summary"`
-	Addons       []Item                     `json:"addons"`
+	ID              primitive.ObjectID         `json:"id"`
+	Name            responses.LocalizationText `json:"name"`
+	Desc            responses.LocalizationText `json:"desc"`
+	Type            string                     `json:"type"`
+	Min             int                        `json:"min"`
+	Max             int                        `json:"max"`
+	SKU             string                     `json:"sku"`
+	Calories        int                        `json:"calories"`
+	Price           float64                    `json:"price"`
+	Image           string                     `json:"image"`
+	Qty             int                        `json:"qty"`
+	PriceSummary    ItemPriceSummary           `json:"price_summary"`
+	ModifierGroupId *primitive.ObjectID        `json:"modifier_group_id"`
+	Addons          []Item                     `json:"addons"`
 }
 
 type City struct {
