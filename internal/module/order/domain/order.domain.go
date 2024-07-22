@@ -97,6 +97,10 @@ type Account struct {
 	Name            Name                 `json:"name" bson:"name"`
 	AllowedBrandIds []primitive.ObjectID `json:"allowed_brand_ids" bson:"allowed_brand_ids"`
 }
+type Coordinate struct {
+	Type        string    `json:"type" bson:"type"`
+	Coordinates []float64 `json:"coordinates" bson:"coordinates"`
+}
 
 type Location struct {
 	ID              primitive.ObjectID `json:"id" bson:"_id"`
@@ -112,6 +116,7 @@ type Location struct {
 	PercentsDate    []PercentsDate     `json:"percents_date" bson:"percents_date"`
 	Country         Country            `json:"country" bson:"country"`
 	Account         Account            `json:"account" bson:"account"`
+	Coordinate      Coordinate         `json:"coordinate" bson:"coordinate"`
 }
 
 type Rejected struct {

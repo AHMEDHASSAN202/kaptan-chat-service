@@ -80,6 +80,10 @@ type Account struct {
 	} `json:"name" bson:"name"`
 	AllowedBrandIds []primitive.ObjectID `json:"allowed_brand_ids" bson:"allowed_brand_ids"`
 }
+type Coordinate struct {
+	Type        string    `json:"type" bson:"type"`
+	Coordinates []float64 `json:"coordinates" bson:"coordinates"`
+}
 type Location struct {
 	ID              primitive.ObjectID         `json:"id"`
 	Name            responses.LocalizationText `json:"name"`
@@ -92,6 +96,7 @@ type Location struct {
 	Brand           Brand                      `json:"brand_details"`
 	Country         Country                    `json:"country"`
 	Account         Account                    `json:"account" bson:"account"`
+	Coordinate      Coordinate                 `json:"coordinate" bson:"coordinate"`
 }
 
 type Rejected struct {
