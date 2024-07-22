@@ -111,9 +111,9 @@ func (oRec *RoleUseCase) Find(ctx context.Context, roleId primitive.ObjectID) (i
 }
 
 func (oRec *RoleUseCase) removeAdminFromCache(roleType string) {
-	go func() {
-		if err := oRec.redisClient.DeleteKeysWithPrefix(roleType); err != nil {
-			oRec.logger.Error("Can't Delete Admin From Cache -> ", err)
-		}
-	}()
+	//go func() {
+	if err := oRec.redisClient.DeleteKeysWithPrefix(roleType); err != nil {
+		oRec.logger.Error("Can't Delete Admin From Cache -> ", err)
+	}
+	//}()
 }
