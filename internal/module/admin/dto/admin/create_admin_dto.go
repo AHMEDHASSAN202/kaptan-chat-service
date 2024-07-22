@@ -40,6 +40,7 @@ type CreateAdminDTO struct {
 	AdminDetails    dto.AdminDetails   `json:"-"`
 	Account         *Account           `json:"account"`
 	Kitchen         *Kitchen           `json:"kitchen"`
+	dto.AdminHeaders
 }
 
 func (input *CreateAdminDTO) Validate(c echo.Context, validate *validator.Validate, validateEmailIsUnique func(fl validator.FieldLevel) bool, passwordRequiredIfIdIsZero func(fl validator.FieldLevel) bool, roleExists func(fl validator.FieldLevel) bool) validators.ErrorResponse {

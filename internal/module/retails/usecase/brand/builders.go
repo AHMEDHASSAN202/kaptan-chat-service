@@ -6,6 +6,8 @@ import (
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/brand"
 	"samm/pkg/utils"
+	utilsDto "samm/pkg/utils/dto"
+	"time"
 )
 
 var LocationBrandAtt = []string{"name.ar", "name.en", "logo", "is_active"}
@@ -15,6 +17,7 @@ func domainBuilderAtCreate(dto *brand.CreateBrandDto) *domain.Brand {
 	copier.Copy(&brandDoc, dto)
 	brandDoc.ID = primitive.NewObjectID()
 	brandDoc.CuisineIds = utils.ConvertStringIdsToObjectIds(dto.CuisineIds)
+	brandDoc.AdminDetails = append(brandDoc.AdminDetails, utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(dto.CauserId), Name: dto.CauserName, Type: dto.CauserType, Operation: "Create Brand", UpdatedAt: time.Now()})
 	return &brandDoc
 }
 
@@ -23,6 +26,8 @@ func domainBuilderAtUpdate(dto *brand.UpdateBrandDto, domainData *domain.Brand) 
 	copier.Copy(&brandDoc, dto)
 	brandDoc.ID = utils.ConvertStringIdToObjectId(dto.Id)
 	brandDoc.CuisineIds = utils.ConvertStringIdsToObjectIds(dto.CuisineIds)
+	brandDoc.AdminDetails = domainData.AdminDetails
+	brandDoc.AdminDetails = append(brandDoc.AdminDetails, utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(dto.CauserId), Name: dto.CauserName, Type: dto.CauserType, Operation: "Update Brand", UpdatedAt: time.Now()})
 	return &brandDoc
 }
 

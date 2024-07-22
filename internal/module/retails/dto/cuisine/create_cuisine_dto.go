@@ -3,6 +3,7 @@ package cuisine
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 )
 
@@ -15,6 +16,7 @@ type CreateCuisineDto struct {
 	Name     Name   `json:"name" validate:"required"`
 	Logo     string `json:"logo"`
 	IsHidden bool   `json:"is_hidden"`
+	dto.AdminHeaders
 }
 
 func (input *CreateCuisineDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {

@@ -63,6 +63,7 @@ type UpdateKitchenDto struct {
 
 	AccountIds  []string `json:"account_ids" validate:"required,Validate_Account_Location_validation"`
 	LocationIds []string `json:"location_ids" validate:"required,Validate_Account_Location_validation"`
+	dto.AdminHeaders
 }
 
 func (payload *UpdateKitchenDto) Validate(c echo.Context, validate *validator.Validate, validateAccountAndLocation func(fl validator.FieldLevel) bool) validators.ErrorResponse {
@@ -73,4 +74,9 @@ func (payload *UpdateKitchenDto) Validate(c echo.Context, validate *validator.Va
 		ValidationTag:          localization.Validate_Account_Location_validation,
 		RegisterValidationFunc: validateAccountAndLocation,
 	})
+}
+
+type DeleteKitchenDto struct {
+	Id string
+	dto.AdminHeaders
 }

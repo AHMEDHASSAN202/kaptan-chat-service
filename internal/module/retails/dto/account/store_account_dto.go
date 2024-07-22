@@ -3,6 +3,7 @@ package account
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 )
@@ -37,6 +38,7 @@ type StoreAccountDto struct {
 	AllowedBrandIds []string    `json:"allowed_brand_ids" validate:"required,min=1"`
 	Percent         float64     `json:"percent" validate:"required"`
 	BankAccount     BankAccount `json:"bank_account" validate:"required"`
+	dto.AdminHeaders
 }
 
 func (payload *StoreAccountDto) Validate(c echo.Context, validate *validator.Validate, validateEmailIsUnique func(fl validator.FieldLevel) bool) validators.ErrorResponse {

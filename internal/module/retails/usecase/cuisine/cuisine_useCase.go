@@ -9,9 +9,11 @@ import (
 	"samm/internal/module/retails/responses"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 	"strings"
+	"time"
 )
 
 type CuisineUseCase struct {
@@ -47,9 +49,10 @@ func (oRec *CuisineUseCase) Update(ctx *context.Context, dto *cuisine.UpdateCuis
 	}
 	return validators.ErrorResponse{}
 }
-func (oRec *CuisineUseCase) SoftDelete(ctx *context.Context, id string) validators.ErrorResponse {
+func (oRec *CuisineUseCase) SoftDelete(ctx *context.Context, id string, adminDetails *dto.AdminHeaders) validators.ErrorResponse {
 	idDoc := utils.ConvertStringIdToObjectId(id)
-	err := oRec.repo.SoftDelete(ctx, idDoc)
+	causerDetails := dto.AdminDetails{Id: utils.ConvertStringIdToObjectId(adminDetails.CauserId), Name: adminDetails.CauserName, Type: adminDetails.CauserType, Operation: "Delete Brand", UpdatedAt: time.Now()}
+	err := oRec.repo.SoftDelete(ctx, idDoc, &causerDetails)
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
