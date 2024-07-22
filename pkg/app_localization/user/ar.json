@@ -201,6 +201,7 @@
     "general_reorder": "إعادة الطلب",
     "general_confirmButtonText": "حسنا",
     "general_cancelButtonText": "إلغاء",
+    "general_calculating": "جاري الحساب ...",
     "pickedup": "تم التوصيل",
     "initiated": "في انتظار الدفع",
     "pending": "في انتظار الموافقة",

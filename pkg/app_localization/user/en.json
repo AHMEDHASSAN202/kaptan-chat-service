@@ -201,6 +201,7 @@
     "general_reorder": "Re-order",
     "general_confirmButtonText": "Ok",
     "general_cancelButtonText": "Cancel",
+    "general_calculating": "Calculating ...",
     "pickedup": "Picked up",
     "initiated": "Waiting Payment",
     "pending": "Waiting Approval",
