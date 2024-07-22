@@ -60,6 +60,7 @@
       "en": "Walk through"
     },
     "logo": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQXRcLMKwyPn7pMg7Ts1QX5WIDEZXBMAZjZQw&s",
-    "type": "walk_through"
+    "type": "walk_through",
+    "default_id": "667ffeae37dd851d0801daea"
   }
 ]

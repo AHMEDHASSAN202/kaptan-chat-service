@@ -19,23 +19,25 @@ type Meta struct {
 }
 
 type LocationMobile struct {
-	mgm.DefaultModel `bson:",inline"`
-	Name             Name               `json:"name" bson:"name"`
-	City             City               `json:"city" bson:"city"`
-	Street           Name               `json:"street" bson:"street"`
-	CoverImage       string             `json:"cover_image" bson:"cover_image"`
-	Logo             string             `json:"logo" bson:"logo"`
-	SnoozeTo         *time.Time         `json:"snooze_to" bson:"snooze_to"`
-	IsOpen           bool               `json:"is_open" bson:"is_open"`
-	WorkingHour      []WorkingHour      `json:"working_hour" bson:"working_hour"`
-	Phone            string             `json:"phone" bson:"phone"`
-	Coordinate       Coordinate         `json:"coordinate" bson:"coordinate"`
-	BrandDetails     BrandDetails       `json:"brand_details" bson:"brand_details"`
-	PreparationTime  int                `json:"preparation_time" bson:"preparation_time"`
-	Distance         float64            `json:"distance" bson:"distance"`
-	Country          Country            `json:"country" bson:"country"`
-	Status           Status             `json:"status" bson:"-"`
-	AccountId        primitive.ObjectID `json:"account_id" bson:"account_id"`
+	mgm.DefaultModel           `bson:",inline"`
+	Name                       Name               `json:"name" bson:"name"`
+	City                       City               `json:"city" bson:"city"`
+	Street                     Name               `json:"street" bson:"street"`
+	CoverImage                 string             `json:"cover_image" bson:"cover_image"`
+	Logo                       string             `json:"logo" bson:"logo"`
+	SnoozeTo                   *time.Time         `json:"snooze_to" bson:"snooze_to"`
+	IsOpen                     bool               `json:"is_open" bson:"is_open"`
+	WorkingHour                []WorkingHour      `json:"working_hour" bson:"working_hour"`
+	Phone                      string             `json:"phone" bson:"phone"`
+	Coordinate                 Coordinate         `json:"coordinate" bson:"coordinate"`
+	BrandDetails               BrandDetails       `json:"brand_details" bson:"brand_details"`
+	PreparationTime            int                `json:"preparation_time" bson:"preparation_time"`
+	Distance                   float64            `json:"distance" bson:"distance"`
+	Country                    Country            `json:"country" bson:"country"`
+	Status                     Status             `json:"status" bson:"-"`
+	AccountId                  primitive.ObjectID `json:"account_id" bson:"account_id"`
+	AllowedCollectionMethodIds []string           `json:"-" bson:"allowed_collection_method_ids"`
+	AllowedCollectionMethods   []interface{}      `json:"allowed_collection_methods,omitempty"`
 }
 
 func (payload *LocationMobile) SetOpenStatus() {

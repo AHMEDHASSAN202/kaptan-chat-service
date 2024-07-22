@@ -160,5 +160,17 @@ func (l LocationUseCase) FindMobileLocation(ctx context.Context, Id string, payl
 	if errRe != nil {
 		return *domainLocation, validators.GetErrorResponseFromErr(errRe)
 	}
+	if payload.WithCollectionMethod {
+		populateMobileCollectionMethods(ctx, l, domainLocation)
+	}
 	return *domainLocation, validators.ErrorResponse{}
+}
+
+func populateMobileCollectionMethods(ctx context.Context, l LocationUseCase, loc *domain.LocationMobile) {
+	collectionMethods := make([]interface{}, 0)
+	for _, collectionMethodId := range loc.AllowedCollectionMethodIds {
+		c, _ := l.commonUseCase.FindCollectionMethodByType(ctx, collectionMethodId)
+		collectionMethods = append(collectionMethods, c)
+	}
+	loc.AllowedCollectionMethods = collectionMethods
 }

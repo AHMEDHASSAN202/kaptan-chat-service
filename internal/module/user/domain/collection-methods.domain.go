@@ -12,8 +12,8 @@ type CollectionMethods struct {
 	mgm.DefaultModel `bson:",inline"`
 	Type             string             `json:"type" bson:"type"`
 	UserId           primitive.ObjectID `json:"user_id" bson:"user_id"`
-	Fields           map[string]any     `json:"fields" bson:"fields"`
-	Values           map[string]any     `json:"values" bson:"values"`
+	Fields           map[string]any     `json:"fields,omitempty" bson:"fields"`
+	Values           map[string]any     `json:"values,omitempty" bson:"values"`
 	DeletedAt        *time.Time         `json:"deleted_at,omitempty" bson:"deleted_at,omitempty"`
 }
 

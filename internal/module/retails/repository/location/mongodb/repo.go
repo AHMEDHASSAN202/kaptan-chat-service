@@ -237,6 +237,7 @@ func (l locationRepository) ListMobileLocation(ctx context.Context, payload *loc
 			"city":             1,
 			"street":           1,
 			"cover_image":      1,
+			"account_id":       1,
 			"logo":             1,
 			"phone":            1,
 			"coordinate":       1,

@@ -75,6 +75,22 @@ func (l CommonUseCase) FindCollectionMethodByType(ctx context.Context, collectio
 	return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 
 }
+func (l CommonUseCase) FindCollectionMethodByDefaultId(ctx context.Context, collectionMethodDefaultId string) (data map[string]interface{}, errResp validators.ErrorResponse) {
+	IcollectionMethodsResult, _ := l.ListCollectionMethods(ctx)
+	collectionMethodsResult, ok := IcollectionMethodsResult.([]map[string]interface{})
+	if !ok {
+		return nil, validators.GetErrorResponse(&ctx, localization.E1004, nil, nil)
+	}
+	for _, m := range collectionMethodsResult {
+		if m["default_id"] == collectionMethodDefaultId {
+			return m, validators.ErrorResponse{}
+		}
+	}
+
+	return nil, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
+
+}
+
 func (l CommonUseCase) ListCountries(ctx context.Context) (data interface{}, err validators.ErrorResponse) {
 
 	return CountriesBuilder(), validators.ErrorResponse{}

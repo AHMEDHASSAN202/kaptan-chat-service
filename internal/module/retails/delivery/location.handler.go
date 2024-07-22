@@ -234,6 +234,7 @@ func (a *LocationHandler) FindMobileLocation(c echo.Context) error {
 	var payload location.FindLocationMobileDto
 	b := &echo.DefaultBinder{}
 	b.BindHeaders(c, &payload)
+	b.BindQueryParams(c, &payload)
 	data, errResp := a.locationUsecase.FindMobileLocation(ctx, id, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
