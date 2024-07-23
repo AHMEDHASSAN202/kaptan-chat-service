@@ -9,7 +9,7 @@ import (
 type CreateOrderDto struct {
 	LocationId         string     `json:"location_id" validate:"required,mongodb"`
 	UserId             string     `header:"causer-id" validate:"required"`
-	CollectionMethodId string     `json:"collection_method_id" validate:"required"`
+	CollectionMethodId string     `json:"collection_method_id"`
 	MenuItems          []MenuItem `json:"menu_items" validate:"required,dive"`
 	IsFavourite        bool       `json:"is_favourite" bson:"is_favourite"`
 	Notes              string     `json:"notes" bson:"notes"`

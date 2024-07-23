@@ -12,6 +12,7 @@ import (
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/dto/order/kitchen"
 	"samm/internal/module/order/external"
+	"samm/internal/module/order/external/retails/responses"
 	kitchen3 "samm/internal/module/order/responses/kitchen"
 	"samm/internal/module/order/responses/user"
 	"samm/internal/module/order/usecase/helper"
@@ -93,10 +94,14 @@ func (o *KthaOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrde
 	}
 
 	//get user collection method
-	collectionMethod, hasCollectionMethodErr := o.extService.RetailsIService.FindCollectionMethod(ctx, input.CollectionMethodId, ctx.Value("causer-id").(string))
-	if hasCollectionMethodErr.IsError {
-		o.logger.Error(hasCollectionMethodErr)
-		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
+	var collectionMethod *responses.CollectionMethod
+	if input.CollectionMethodId != "" {
+		collectionMethodResp, hasCollectionMethodErr := o.extService.RetailsIService.FindCollectionMethod(ctx, input.CollectionMethodId, ctx.Value("causer-id").(string))
+		if hasCollectionMethodErr.IsError {
+			o.logger.Error(hasCollectionMethodErr)
+			return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
+		}
+		collectionMethod = &collectionMethodResp
 	}
 
 	//order builder
