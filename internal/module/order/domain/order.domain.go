@@ -26,7 +26,7 @@ type User struct {
 	Name             string             `json:"name" bson:"name"`
 	PhoneNumber      string             `json:"phone_number" bson:"phone_number"`
 	Country          string             `json:"country" bson:"country"`
-	CollectionMethod CollectionMethod   `json:"collection_method" bson:"collection_method"`
+	CollectionMethod *CollectionMethod  `json:"collection_method" bson:"collection_method"`
 }
 
 type LocalizationText struct {

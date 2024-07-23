@@ -18,7 +18,7 @@ import (
 
 // CreateOrderBuilder that creates a new order based on the provided data.
 // It also includes a helper function buildItemsAndSummary that populates the order with items and calculates the order summary.
-func CreateOrderBuilder(ctx context.Context, dto *order.CreateOrderDto, location responses.LocationDetails, items []responses2.MenuDetailsResponse, collectionMethod responses.CollectionMethod, accountDoc responses.AccountDetails) (*domain.Order, validators.ErrorResponse) {
+func CreateOrderBuilder(ctx context.Context, dto *order.CreateOrderDto, location responses.LocationDetails, items []responses2.MenuDetailsResponse, collectionMethod *responses.CollectionMethod, accountDoc responses.AccountDetails) (*domain.Order, validators.ErrorResponse) {
 	orderModel := domain.Order{}
 	orderModel.ID = primitive.NewObjectID()
 	orderModel.CreatedAt = time.Now().UTC()
@@ -36,8 +36,13 @@ func CreateOrderBuilder(ctx context.Context, dto *order.CreateOrderDto, location
 	if err := copier.Copy(&orderModel.User, ctx.Value("causer-details")); err != nil {
 		logger.Logger.Error(err)
 	}
-	if err := copier.Copy(&orderModel.User.CollectionMethod, collectionMethod); err != nil {
-		logger.Logger.Error(err)
+	if collectionMethod != nil {
+		var collectionMethodObj domain.CollectionMethod
+		if err := copier.Copy(&collectionMethodObj, collectionMethod); err != nil {
+			logger.Logger.Error(err)
+		} else {
+			orderModel.User.CollectionMethod = &collectionMethodObj
+		}
 	}
 	if err := copier.Copy(&orderModel.Location.Account, accountDoc); err != nil {
 		logger.Logger.Error(err)
