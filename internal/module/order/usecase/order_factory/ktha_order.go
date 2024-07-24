@@ -524,17 +524,15 @@ func (o *KthaOrder) ToArrived(ctx context.Context, payload *order.ArrivedOrderDt
 		"arrived_at": now,
 		"updated_at": now,
 	}
-	if payload.CollectionMethodId != "" {
-		//get user collection method
-		collectionMethod, hasCollectionMethodErr := o.extService.RetailsIService.FindCollectionMethod(ctx, payload.CollectionMethodId, payload.UserId)
-		if hasCollectionMethodErr.IsError {
-			o.logger.Error(hasCollectionMethodErr)
-			return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
-		}
-		var userCollectionMethod domain.CollectionMethod
-		copier.Copy(&userCollectionMethod, collectionMethod)
-		updateSet["user.collection_method"] = userCollectionMethod
+
+	collectionMethod, hasCollectionMethodErr := o.extService.RetailsIService.FindCollectionMethod(ctx, payload.CollectionMethodId, payload.UserId)
+	if hasCollectionMethodErr.IsError {
+		o.logger.Error(hasCollectionMethodErr)
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
 	}
+	var userCollectionMethod domain.CollectionMethod
+	copier.Copy(&userCollectionMethod, collectionMethod)
+	updateSet["user.collection_method"] = userCollectionMethod
 
 	orderDomain, err = o.orderRepo.UpdateOrderStatus(&ctx, orderDomain, []string{}, nil, updateSet)
 

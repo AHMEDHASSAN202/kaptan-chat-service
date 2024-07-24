@@ -10,7 +10,7 @@ import (
 type ArrivedOrderDto struct {
 	OrderId            string
 	UserId             string `header:"causer-id" validate:"required"`
-	CollectionMethodId string `json:"collection_method_id"`
+	CollectionMethodId string `json:"collection_method_id" validate:"required"`
 
 	dto.MobileHeaders
 }
