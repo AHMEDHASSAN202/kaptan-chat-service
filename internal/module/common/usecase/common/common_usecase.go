@@ -147,6 +147,6 @@ func (l CommonUseCase) UploadFile(ctx context.Context, file *multipart.FileHeade
 		return "", validators.GetErrorResponseFromErr(err)
 	}
 
-	fileLocation := filepath.Join(l.awsConfig.EndPoint, l.awsConfig.BucketName, key)
+	fileLocation := l.awsConfig.EndPoint + filepath.Join("/", l.awsConfig.BucketName, key)
 	return fileLocation, validators.ErrorResponse{}
 }
