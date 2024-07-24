@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"mime"
 	"mime/multipart"
 	"path/filepath"
 	"samm/internal/module/common/domain"
@@ -130,11 +131,16 @@ func (l CommonUseCase) UploadFile(ctx context.Context, file *multipart.FileHeade
 	defer src.Close()
 
 	key := filepath.Join(filePath, strconv.Itoa(int(time.Now().Unix()))+filepath.Base(file.Filename))
+	ext := filepath.Ext(filePath)
+
+	// Guess content type based on extension
+	contentType := mime.TypeByExtension(ext)
 
 	_, err = l.awsS3.PutObject(&s3.PutObjectInput{
-		Body:   src,
-		Bucket: aws.String(l.awsConfig.BucketName),
-		Key:    aws.String(key),
+		Body:        src,
+		Bucket:      aws.String(l.awsConfig.BucketName),
+		Key:         aws.String(key),
+		ContentType: aws.String(contentType),
 	})
 	if err != nil {
 		fmt.Printf("Failed to upload data to %s/%s, %s\n", "bucket", "key", err.Error())
