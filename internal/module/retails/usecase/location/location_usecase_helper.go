@@ -12,6 +12,7 @@ import (
 	"samm/internal/module/retails/dto/location"
 	"samm/internal/module/retails/responses"
 	"samm/pkg/utils"
+	utilsDto "samm/pkg/utils/dto"
 	"strings"
 	"time"
 )
@@ -48,6 +49,7 @@ func LocationBuilder(ctx context.Context, payload *location.StoreLocationDto, l 
 	locationDomain.WorkingHourEid = mapWorkingHours(locationDomain.WorkingHourEid)
 	locationDomain.WorkingHourRamadan = mapWorkingHours(locationDomain.WorkingHourRamadan)
 	locationDomain.AllowedCollectionMethodIds = payload.AllowedCollectionMethodIds
+	locationDomain.AdminDetails = append(locationDomain.AdminDetails, utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(payload.CauserId), Name: payload.CauserName, Type: payload.CauserType, Operation: "Create Location", UpdatedAt: time.Now()})
 	locationDomain.CreatedAt = time.Now().UTC()
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return &locationDomain
@@ -90,7 +92,7 @@ func LocationBulkBuilder(ctx context.Context, payload location.LocationDto, dto 
 	// Set Branch Signature
 
 	locationDomain.BranchSignature = GenerateLocationBulkSignature(payload)
-
+	locationDomain.AdminDetails = append(locationDomain.AdminDetails, utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(dto.CauserId), Name: dto.CauserName, Type: dto.CauserType, Operation: "Create Bulk Location", UpdatedAt: time.Now()})
 	locationDomain.CreatedAt = time.Now().UTC()
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return &locationDomain
@@ -123,6 +125,7 @@ func UpdateLocationBuilder(ctx context.Context, payload *location.StoreLocationD
 	locationDomain.WorkingHour = mapWorkingHours(locationDomain.WorkingHour)
 	locationDomain.WorkingHourEid = mapWorkingHours(locationDomain.WorkingHourEid)
 	locationDomain.WorkingHourRamadan = mapWorkingHours(locationDomain.WorkingHourRamadan)
+	locationDomain.AdminDetails = append(locationDomain.AdminDetails, utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(payload.CauserId), Name: payload.CauserName, Type: payload.CauserType, Operation: "Update Location", UpdatedAt: time.Now()})
 
 	locationDomain.UpdatedAt = time.Now().UTC()
 	return locationDomain
@@ -172,6 +175,7 @@ func domainBuilderToggleSnooze(dto *location.LocationToggleSnoozeDto, domainData
 	}
 	domainData.UpdatedAt = time.Now()
 	domainData.SnoozeTo = &snoozedTill
+	domainData.AdminDetails = append(domainData.AdminDetails, utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(dto.CauserId), Name: dto.CauserName, Type: dto.CauserType, Operation: "Location Toggle Snooze", UpdatedAt: time.Now()})
 	return domainData
 }
 func mapWorkingHours(workingHours []domain.WorkingHour) []domain.WorkingHour {

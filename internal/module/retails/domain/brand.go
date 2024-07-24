@@ -7,6 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/retails/dto/brand"
 	"samm/internal/module/retails/responses"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"time"
 )
@@ -19,6 +20,7 @@ type Brand struct {
 	CuisineIds       []primitive.ObjectID `json:"cuisine_ids" validate:"cuisine_ids_rule"`
 	DeletedAt        *time.Time           `json:"deleted_at" bson:"deleted_at"`
 	Cuisines         *[]Cuisine           `json:"cuisines" bson:"cuisines"`
+	AdminDetails     []dto.AdminDetails   `json:"admin_details" bson:"admin_details,omitempty"`
 }
 
 type BrandUseCase interface {
@@ -29,7 +31,7 @@ type BrandUseCase interface {
 	GetById(ctx *context.Context, id string) (*Brand, validators.ErrorResponse)
 	List(ctx *context.Context, dto *brand.ListBrandDto) (*responses.ListResponse, validators.ErrorResponse)
 	ChangeStatus(ctx *context.Context, dto *brand.ChangeBrandStatusDto) validators.ErrorResponse
-	SoftDelete(ctx *context.Context, id string) validators.ErrorResponse
+	SoftDelete(ctx *context.Context, id string, adminDetails *dto.AdminHeaders) validators.ErrorResponse
 }
 
 type BrandRepository interface {

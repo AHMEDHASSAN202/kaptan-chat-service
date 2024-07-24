@@ -18,7 +18,7 @@ type User struct {
 	Name             string             `json:"name"`
 	PhoneNumber      string             `json:"phone_number"`
 	Country          string             `json:"country"`
-	CollectionMethod CollectionMethod   `json:"collection_method"`
+	CollectionMethod *CollectionMethod  `json:"collection_method"`
 }
 
 type ItemPriceSummary struct {

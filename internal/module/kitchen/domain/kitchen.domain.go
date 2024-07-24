@@ -8,6 +8,7 @@ import (
 	"samm/internal/module/kitchen/dto/kitchen"
 	"samm/internal/module/kitchen/responses"
 	"samm/internal/module/retails/domain"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"time"
 )
@@ -29,10 +30,11 @@ type Kitchen struct {
 	AccountIds       []primitive.ObjectID `json:"account_ids" bson:"account_ids"`
 	LocationIds      []primitive.ObjectID `json:"location_ids" bson:"location_ids"`
 	//AllowedStatus    []string             `json:"allowed_status" bson:"allowed_status"`
-	Country   Country           `json:"country" bson:"country"`
-	DeletedAt *time.Time        `json:"-" bson:"deleted_at"`
-	Locations []domain.Location `json:"locations" bson:"locations,omitempty"`
-	Accounts  []domain.Account  `json:"accounts" bson:"accounts,omitempty"`
+	Country      Country            `json:"country" bson:"country"`
+	DeletedAt    *time.Time         `json:"-" bson:"deleted_at"`
+	Locations    []domain.Location  `json:"locations" bson:"locations,omitempty"`
+	Accounts     []domain.Account   `json:"accounts" bson:"accounts,omitempty"`
+	AdminDetails []dto.AdminDetails `json:"admin_details" bson:"admin_details,omitempty"`
 }
 
 type Name struct {
@@ -44,7 +46,7 @@ type KitchenUseCase interface {
 	CreateKitchen(ctx context.Context, payload *kitchen.StoreKitchenDto) (err validators.ErrorResponse)
 	UpdateKitchen(ctx context.Context, id string, payload *kitchen.UpdateKitchenDto) (err validators.ErrorResponse)
 	FindKitchen(ctx context.Context, Id string) (kitchen Kitchen, err validators.ErrorResponse)
-	DeleteKitchen(ctx context.Context, Id string) (err validators.ErrorResponse)
+	DeleteKitchen(ctx context.Context, payload *kitchen.DeleteKitchenDto) (err validators.ErrorResponse)
 	List(ctx *context.Context, dto *kitchen.ListKitchenDto) (*responses.ListResponse, validators.ErrorResponse)
 	KitchenExists(ctx *context.Context, dto *kitchen.ListKitchenDto) bool
 }
@@ -53,6 +55,6 @@ type KitchenRepository interface {
 	CreateKitchen(kitchen *Kitchen) (err error)
 	UpdateKitchen(kitchen *Kitchen) (err error)
 	FindKitchen(ctx context.Context, Id primitive.ObjectID) (kitchen *Kitchen, err error)
-	DeleteKitchen(ctx context.Context, Id primitive.ObjectID) (err error)
+	DeleteKitchen(ctx context.Context, Id primitive.ObjectID, causer *dto.AdminDetails) (err error)
 	List(ctx *context.Context, dto *kitchen.ListKitchenDto) (usersRes *[]Kitchen, paginationMeta *PaginationData, err error)
 }

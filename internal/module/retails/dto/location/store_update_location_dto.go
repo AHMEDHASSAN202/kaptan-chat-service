@@ -3,6 +3,7 @@ package location
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"time"
 )
@@ -73,6 +74,7 @@ type StoreLocationDto struct {
 	AccountId                  string         `json:"account_id" validate:"required,mongodb"`
 	Country                    Country        `json:"country" validate:"required"`
 	AllowedCollectionMethodIds []string       `json:"allowed_collection_method_ids" validate:"required,min=1"`
+	dto.AdminHeaders
 }
 
 func (payload *StoreLocationDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {

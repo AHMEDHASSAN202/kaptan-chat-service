@@ -53,6 +53,7 @@ func (l KitchenUseCase) CreateKitchen(ctx context.Context, payload *kitchen.Stor
 		kitchenDomain.Country.Name.Ar = payload.Country.Name.Ar
 		kitchenDomain.Country.Name.En = payload.Country.Name.En
 		kitchenDomain.ID = primitive.NewObjectID()
+		kitchenDomain.AdminDetails = append(kitchenDomain.AdminDetails, dto.AdminDetails{Id: utils.ConvertStringIdToObjectId(payload.CauserId), Name: payload.CauserName, Type: payload.CauserType, Operation: "create kitchen", UpdatedAt: time.Now()})
 
 		dbErr := l.repo.CreateKitchen(&kitchenDomain)
 		if dbErr != nil {
@@ -106,6 +107,7 @@ func (l KitchenUseCase) UpdateKitchen(ctx context.Context, id string, payload *k
 	kitchenDomain.Country.Timezone = payload.Country.Timezone
 	kitchenDomain.Country.Name.Ar = payload.Country.Name.Ar
 	kitchenDomain.Country.Name.En = payload.Country.Name.En
+	kitchenDomain.AdminDetails = append(kitchenDomain.AdminDetails, dto.AdminDetails{Id: utils.ConvertStringIdToObjectId(payload.CauserId), Name: payload.CauserName, Type: payload.CauserType, Operation: "update kitchen", UpdatedAt: time.Now()})
 
 	dbErr = l.repo.UpdateKitchen(kitchenDomain)
 	if dbErr != nil {
@@ -121,15 +123,15 @@ func (l KitchenUseCase) FindKitchen(ctx context.Context, Id string) (kitchen dom
 	return *domainKitchen, validators.ErrorResponse{}
 }
 
-func (l KitchenUseCase) DeleteKitchen(ctx context.Context, Id string) (err validators.ErrorResponse) {
+func (l KitchenUseCase) DeleteKitchen(ctx context.Context, payload *kitchen.DeleteKitchenDto) (err validators.ErrorResponse) {
 
 	erre := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
-
-		delErr := l.repo.DeleteKitchen(sc, utils.ConvertStringIdToObjectId(Id))
+		causerDetails := dto.AdminDetails{Id: utils.ConvertStringIdToObjectId(payload.CauserId), Name: payload.CauserName, Type: payload.CauserType, Operation: "Delete Kitchen", UpdatedAt: time.Now()}
+		delErr := l.repo.DeleteKitchen(sc, utils.ConvertStringIdToObjectId(payload.Id), &causerDetails)
 		if delErr != nil {
 			return delErr
 		}
-		delErre := l.adminUseCase.DeleteBy(sc, utils.ConvertStringIdToObjectId(Id), consts.KITCHEN_TYPE)
+		delErre := l.adminUseCase.DeleteBy(sc, utils.ConvertStringIdToObjectId(payload.Id), consts.KITCHEN_TYPE, &causerDetails)
 		if delErre.IsError {
 			return errors.New(delErre.ErrorMessageObject.Text)
 		}

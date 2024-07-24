@@ -76,6 +76,9 @@ func (a *KitchenHandler) UpdateKitchen(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+
 	validationErr := payload.Validate(c, a.validator, a.kitchenCustomValidator.ValidateAccountAndLocationRequired())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
@@ -104,9 +107,16 @@ func (a *KitchenHandler) FindKitchen(c echo.Context) error {
 
 func (a *KitchenHandler) DeleteKitchen(c echo.Context) error {
 	ctx := c.Request().Context()
-
 	id := c.Param("id")
-	errResp := a.kitchenUsecase.DeleteKitchen(ctx, id)
+	var payload kitchen.DeleteKitchenDto
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	payload.Id = id
+
+	errResp := a.kitchenUsecase.DeleteKitchen(ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)

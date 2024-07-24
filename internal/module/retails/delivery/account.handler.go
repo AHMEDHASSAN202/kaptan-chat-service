@@ -52,6 +52,11 @@ func (a *AccountHandler) StoreAccount(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
+	binder := &echo.DefaultBinder{}
+	if err = binder.BindHeaders(c, &payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
 
 	validationErr := payload.Validate(c, a.validator, a.adminCustomValidator.ValidateEmailIsUnique())
 	if validationErr.IsError {
@@ -75,6 +80,12 @@ func (a *AccountHandler) UpdateAccount(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 	id := c.Param("id")
+
+	binder := &echo.DefaultBinder{}
+	if err = binder.BindHeaders(c, &payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
 
 	validationErr := payload.Validate(c, a.validator, a.retailCustomValidator.ValidateAccountEmailIsUnique(id))
 	if validationErr.IsError {
@@ -104,7 +115,14 @@ func (a *AccountHandler) DeleteAccount(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
-	errResp := a.accountUsecase.DeleteAccount(ctx, id)
+	binder := &echo.DefaultBinder{}
+	var adminHeaders dto.AdminHeaders
+	if err := binder.BindHeaders(c, &adminHeaders); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	errResp := a.accountUsecase.DeleteAccount(ctx, id, &adminHeaders)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)

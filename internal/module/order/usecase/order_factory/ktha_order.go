@@ -12,6 +12,7 @@ import (
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/dto/order/kitchen"
 	"samm/internal/module/order/external"
+	"samm/internal/module/order/external/retails/responses"
 	kitchen3 "samm/internal/module/order/responses/kitchen"
 	"samm/internal/module/order/responses/user"
 	"samm/internal/module/order/usecase/helper"
@@ -93,10 +94,14 @@ func (o *KthaOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrde
 	}
 
 	//get user collection method
-	collectionMethod, hasCollectionMethodErr := o.extService.RetailsIService.FindCollectionMethod(ctx, input.CollectionMethodId, ctx.Value("causer-id").(string))
-	if hasCollectionMethodErr.IsError {
-		o.logger.Error(hasCollectionMethodErr)
-		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
+	var collectionMethod *responses.CollectionMethod
+	if input.CollectionMethodId != "" {
+		collectionMethodResp, hasCollectionMethodErr := o.extService.RetailsIService.FindCollectionMethod(ctx, input.CollectionMethodId, ctx.Value("causer-id").(string))
+		if hasCollectionMethodErr.IsError {
+			o.logger.Error(hasCollectionMethodErr)
+			return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
+		}
+		collectionMethod = &collectionMethodResp
 	}
 
 	//order builder
@@ -107,7 +112,7 @@ func (o *KthaOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrde
 	}
 
 	//check if user has running orders
-	hasRunningOrders, errHasRunningOrders := o.orderRepo.UserHasOrders(ctx, orderModel.User.ID, []string{consts.OrderStatus.Initiated})
+	hasRunningOrders, errHasRunningOrders := o.orderRepo.UserHasOrders(ctx, orderModel.User.ID, []string{consts.OrderStatus.Initiated}, 4)
 	if errHasRunningOrders != nil {
 		o.logger.Error(errHasRunningOrders)
 		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusInternalServerError))
@@ -519,17 +524,15 @@ func (o *KthaOrder) ToArrived(ctx context.Context, payload *order.ArrivedOrderDt
 		"arrived_at": now,
 		"updated_at": now,
 	}
-	if payload.CollectionMethodId != "" {
-		//get user collection method
-		collectionMethod, hasCollectionMethodErr := o.extService.RetailsIService.FindCollectionMethod(ctx, payload.CollectionMethodId, payload.UserId)
-		if hasCollectionMethodErr.IsError {
-			o.logger.Error(hasCollectionMethodErr)
-			return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
-		}
-		var userCollectionMethod domain.CollectionMethod
-		copier.Copy(&userCollectionMethod, collectionMethod)
-		updateSet["user.collection_method"] = userCollectionMethod
+
+	collectionMethod, hasCollectionMethodErr := o.extService.RetailsIService.FindCollectionMethod(ctx, payload.CollectionMethodId, payload.UserId)
+	if hasCollectionMethodErr.IsError {
+		o.logger.Error(hasCollectionMethodErr)
+		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.OrderCollectionMethodError, nil)
 	}
+	var userCollectionMethod domain.CollectionMethod
+	copier.Copy(&userCollectionMethod, collectionMethod)
+	updateSet["user.collection_method"] = userCollectionMethod
 
 	orderDomain, err = o.orderRepo.UpdateOrderStatus(&ctx, orderDomain, []string{}, nil, updateSet)
 

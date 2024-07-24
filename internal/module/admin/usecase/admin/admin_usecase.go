@@ -53,7 +53,7 @@ func (oRec *AdminUseCase) Create(ctx context.Context, input *dto.CreateAdminDTO)
 		return "", validators.GetErrorResponse(&ctx, localization.E1001, nil, nil)
 	}
 	if input.AdminDetails.Id.IsZero() {
-		input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Create Admin", UpdatedAt: time.Now()}
+		input.AdminDetails = utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(input.CauserId), Name: input.CauserName, Type: input.CauserType, Operation: "Create Admin", UpdatedAt: time.Now()}
 	}
 	adminDomain, err := builder.CreateUpdateAdminBuilder(nil, input, *role)
 	if err != nil {
@@ -87,7 +87,7 @@ func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO)
 		return "", validators.GetErrorResponse(&ctx, localization.E1001, nil, nil)
 	}
 
-	input.AdminDetails = utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Update Admin", UpdatedAt: time.Now()}
+	input.AdminDetails = utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(input.CauserId), Name: input.CauserName, Type: input.CauserType, Operation: "Update Admin", UpdatedAt: time.Now()}
 	adminDomain, err := builder.CreateUpdateAdminBuilder(admin, input, *role)
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> Update -> ", err)
@@ -104,7 +104,7 @@ func (oRec *AdminUseCase) Update(ctx context.Context, input *dto.CreateAdminDTO)
 	return utils.ConvertObjectIdToStringId(admin.ID), validators.ErrorResponse{}
 }
 
-func (oRec *AdminUseCase) Delete(ctx context.Context, adminId primitive.ObjectID, accountId string) validators.ErrorResponse {
+func (oRec *AdminUseCase) Delete(ctx context.Context, adminId primitive.ObjectID, accountId string, causerDetails *utilsDto.AdminDetails) validators.ErrorResponse {
 	admin, err := oRec.repo.Find(ctx, adminId)
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> Delete -> ", err)
@@ -116,8 +116,8 @@ func (oRec *AdminUseCase) Delete(ctx context.Context, adminId primitive.ObjectID
 		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
-	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Delete Admin", UpdatedAt: time.Now()}
-	err = oRec.repo.Delete(ctx, admin, adminDetails)
+	//adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Delete Admin", UpdatedAt: time.Now()}
+	err = oRec.repo.Delete(ctx, admin, *causerDetails)
 	if err != nil {
 		oRec.logger.Error("AdminUseCase -> Delete -> ", err)
 		return validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
@@ -127,7 +127,7 @@ func (oRec *AdminUseCase) Delete(ctx context.Context, adminId primitive.ObjectID
 
 	return validators.ErrorResponse{}
 }
-func (oRec *AdminUseCase) DeleteBy(ctx context.Context, id primitive.ObjectID, key string) validators.ErrorResponse {
+func (oRec *AdminUseCase) DeleteBy(ctx context.Context, id primitive.ObjectID, key string, causer *utilsDto.AdminDetails) validators.ErrorResponse {
 	var listDto dto.ListAdminDTO
 	listDto.Limit = 100
 	if key == consts.KITCHEN_TYPE {
@@ -141,8 +141,8 @@ func (oRec *AdminUseCase) DeleteBy(ctx context.Context, id primitive.ObjectID, k
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, utils.GetAsPointer(http.StatusNotFound))
 	}
 	for _, admin := range admins {
-		adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Delete Admin", UpdatedAt: time.Now()}
-		err = oRec.repo.Delete(ctx, &admin, adminDetails)
+		//adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Delete Admin", UpdatedAt: time.Now()}
+		err = oRec.repo.Delete(ctx, &admin, *causer)
 		if err != nil {
 			oRec.logger.Error("AdminUseCase -> Delete -> ", err)
 			return validators.GetErrorResponse(&ctx, localization.E1000, nil, nil)
@@ -192,8 +192,8 @@ func (oRec *AdminUseCase) ChangeStatus(ctx context.Context, input *dto.ChangeAdm
 		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 
-	adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Change Admin Status", UpdatedAt: time.Now()}
-	err := oRec.repo.ChangeStatus(ctx, admin, input, adminDetails)
+	//adminDetails := utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: "Hassan", Operation: "Change Admin Status", UpdatedAt: time.Now()}
+	err := oRec.repo.ChangeStatus(ctx, admin, input, input.AdminDetails)
 	if err != nil {
 		return validators.GetErrorResponse(&ctx, localization.E1002, nil, nil)
 	}

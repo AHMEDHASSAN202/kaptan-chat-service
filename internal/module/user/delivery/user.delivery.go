@@ -221,7 +221,14 @@ func (a *UserHandler) ToggleUserActivation(c echo.Context) error {
 	ctx := c.Request().Context()
 
 	id := c.Param("id")
-	errResp := a.userUsecase.ToggleUserActivation(&ctx, id)
+	binder := &echo.DefaultBinder{}
+	var adminHeaders dto.AdminHeaders
+	if err := binder.BindHeaders(c, &adminHeaders); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	errResp := a.userUsecase.ToggleUserActivation(&ctx, id, &adminHeaders)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)

@@ -12,6 +12,7 @@ type ChangeAdminStatusDto struct {
 	Status       string           `json:"status" validate:"oneof=active inactive"`
 	AccountId    string           `json:"account_id"`
 	AdminDetails dto.AdminDetails `json:"-"`
+	dto.AdminHeaders
 }
 
 func (input *ChangeAdminStatusDto) Validate(c echo.Context, validate *validator.Validate) validators.ErrorResponse {

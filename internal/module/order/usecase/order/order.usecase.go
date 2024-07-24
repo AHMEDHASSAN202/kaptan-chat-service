@@ -3,6 +3,8 @@ package order
 import (
 	"context"
 	"errors"
+	"github.com/kamva/mgm/v3"
+	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	user2 "samm/internal/module/order/builder/user"
 	"samm/internal/module/order/consts"
@@ -54,6 +56,14 @@ func (l OrderUseCase) ListInprogressOrdersForMobile(ctx context.Context, payload
 
 func (l OrderUseCase) ListCompletedOrdersForMobile(ctx context.Context, payload *order.ListOrderDtoForMobile) (*responses.ListResponse, validators.ErrorResponse) {
 	ordersRes, paginationMeta, dbErr := l.repo.ListCompletedOrdersForMobile(&ctx, payload)
+	if dbErr != nil {
+		return nil, validators.GetErrorResponseFromErr(dbErr)
+	}
+	return responses.SetListResponse(ordersRes, paginationMeta), validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) ListLastOrdersForMobile(ctx context.Context, payload *order.ListOrderDtoForMobile) (*responses.ListResponse, validators.ErrorResponse) {
+	ordersRes, paginationMeta, dbErr := l.repo.ListLastOrdersForMobile(&ctx, payload)
 	if dbErr != nil {
 		return nil, validators.GetErrorResponseFromErr(dbErr)
 	}
@@ -143,9 +153,9 @@ func (l OrderUseCase) CalculateOrderCost(ctx context.Context, payload *order.Cal
 }
 
 func (l OrderUseCase) ToggleOrderFavourite(ctx *context.Context, payload order.ToggleOrderFavDto) (err validators.ErrorResponse) {
-	orderDomain, errRe := l.repo.FindOrder(ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
-	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe)
+	orderDomain, dbErr := l.repo.FindOrder(ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
+	if dbErr != nil {
+		return validators.GetErrorResponseFromErr(dbErr)
 	}
 
 	if orderDomain.User.ID.Hex() != payload.UserId {
@@ -155,12 +165,26 @@ func (l OrderUseCase) ToggleOrderFavourite(ctx *context.Context, payload order.T
 
 	if orderDomain.IsFavourite {
 		orderDomain.IsFavourite = false
+		dbErr = l.repo.UpdateOrder(*ctx, orderDomain)
+		if dbErr != nil {
+			return validators.GetErrorResponseFromErr(dbErr)
+		}
 	} else {
 		orderDomain.IsFavourite = true
-	}
-	errRe = l.repo.UpdateOrder(orderDomain)
-	if errRe != nil {
-		return validators.GetErrorResponseFromErr(errRe)
+		transactionErr := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+			dbErr = l.repo.UpdateUserAllOrdersFavorite(sc, orderDomain.User.ID.Hex())
+			if dbErr != nil {
+				return dbErr
+			}
+			dbErr = l.repo.UpdateOrder(sc, orderDomain)
+			if dbErr != nil {
+				return dbErr
+			}
+			return session.CommitTransaction(sc)
+		})
+		if transactionErr != nil {
+			return validators.GetErrorResponseFromErr(transactionErr)
+		}
 	}
 	return
 }
