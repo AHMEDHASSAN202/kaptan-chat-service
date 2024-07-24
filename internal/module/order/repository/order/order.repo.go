@@ -54,10 +54,10 @@ func (l OrderRepository) FindOrder(ctx *context.Context, Id primitive.ObjectID) 
 	return &domainData, err
 }
 
-func (l OrderRepository) UpdateOrder(order *domain.Order) (err error) {
+func (l OrderRepository) UpdateOrder(ctx context.Context, order *domain.Order) (err error) {
 	//upsert := true
 	//opts := options.UpdateOptions{Upsert: &upsert}
-	err = l.orderCollection.Update(order)
+	err = l.orderCollection.UpdateWithCtx(ctx, order)
 	return
 }
 
@@ -191,6 +191,34 @@ func (i *OrderRepository) ListCompletedOrdersForMobile(ctx *context.Context, dto
 	return
 }
 
+func (i *OrderRepository) ListLastOrdersForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error) {
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.M{"status": bson.M{"$in": CompletedStatuses}},
+		bson.M{"user._id": utils.ConvertStringIdToObjectId(dto.UserId)},
+	}}}
+
+	data, err := New(i.orderCollection.Collection).Context(*ctx).Limit(3).Page(dto.Page).Sort("is_favourite", -1).Sort("created_at", -1).Aggregate(matching)
+
+	if data == nil || data.Data == nil {
+		return nil, nil, err
+	}
+
+	orders := make([]structs.MobileListOrders, 0)
+	for _, raw := range data.Data {
+		model := structs.MobileListOrders{}
+		err = bson.Unmarshal(raw, &model)
+		if err != nil {
+			i.logger.Error("Order Repo -> Mobile List Last Orders -> ", err)
+			break
+		}
+		orders = append(orders, model)
+	}
+	paginationMeta = &data.Pagination
+	ordersRes = &orders
+
+	return
+}
+
 func (l OrderRepository) FindOrderByUser(ctx *context.Context, id string, userId string) (order *domain.Order, err error) {
 	var orderDomain domain.Order
 	filter := bson.M{"user._id": utils.ConvertStringIdToObjectId(userId), "_id": utils.ConvertStringIdToObjectId(id)}
@@ -220,4 +248,12 @@ func (l OrderRepository) UpdateOrderStatus(ctx *context.Context, orderDomain *do
 	}
 	return l.FindOrderByUser(ctx, utils.ConvertObjectIdToStringId(orderDomain.ID), utils.ConvertObjectIdToStringId(orderDomain.User.ID))
 
+}
+
+func (l OrderRepository) UpdateUserAllOrdersFavorite(ctx context.Context, userId string) (err error) {
+	filter := bson.M{"user._id": utils.ConvertStringIdToObjectId(userId), "is_favourite": true}
+	_, err = l.orderCollection.UpdateMany(ctx, filter, bson.M{
+		"$set": bson.M{"is_favourite": false},
+	})
+	return
 }
