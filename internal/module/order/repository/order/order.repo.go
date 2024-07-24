@@ -39,12 +39,12 @@ func (l OrderRepository) StoreOrder(ctx context.Context, order *domain.Order) (*
 
 }
 
-func (l OrderRepository) UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string) (bool, error) {
+func (l OrderRepository) UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string, gt int64) (bool, error) {
 	ordersCount, err := mgm.Coll(&domain.Order{}).CountDocuments(ctx, bson.M{"user._id": userId, "status": bson.M{"$in": orderStatus}})
 	if err != nil {
 		return false, err
 	}
-	return ordersCount >= 1, nil
+	return ordersCount >= gt, nil
 }
 
 func (l OrderRepository) FindOrder(ctx *context.Context, Id primitive.ObjectID) (*domain.Order, error) {

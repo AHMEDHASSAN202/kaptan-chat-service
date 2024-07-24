@@ -202,7 +202,7 @@ type OrderRepository interface {
 	ListInprogressOrdersForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error)
 	ListCompletedOrdersForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error)
 	ListLastOrdersForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error)
-	UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string) (bool, error)
+	UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string, gt int64) (bool, error)
 	FindOrderByUser(ctx *context.Context, id string, userId string) (order *Order, err error)
 	UpdateOrderStatus(ctx *context.Context, orderDomain *Order, previousStatus []string, statusLog *StatusLog, updateSet interface{}) (order *Order, err error)
 	UpdateUserAllOrdersFavorite(ctx context.Context, userId string) (err error)

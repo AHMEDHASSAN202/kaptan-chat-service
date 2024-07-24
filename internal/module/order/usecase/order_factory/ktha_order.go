@@ -112,7 +112,7 @@ func (o *KthaOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrde
 	}
 
 	//check if user has running orders
-	hasRunningOrders, errHasRunningOrders := o.orderRepo.UserHasOrders(ctx, orderModel.User.ID, []string{consts.OrderStatus.Initiated})
+	hasRunningOrders, errHasRunningOrders := o.orderRepo.UserHasOrders(ctx, orderModel.User.ID, []string{consts.OrderStatus.Initiated}, 4)
 	if errHasRunningOrders != nil {
 		o.logger.Error(errHasRunningOrders)
 		return nil, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusInternalServerError))

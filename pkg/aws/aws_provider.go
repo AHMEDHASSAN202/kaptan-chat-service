@@ -1,65 +1,38 @@
 package aws
 
 import (
-	"context"
-
-	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
 	pkgConfig "samm/pkg/config"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-
-	"github.com/aws/aws-sdk-go-v2/config"
-
-	"github.com/aws/aws-sdk-go-v2/credentials"
-
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
-func Init(awsConfig *pkgConfig.AwsConfig) *s3.Client {
-
+func Init(awsConfig *pkgConfig.AwsConfig) *s3.S3 {
 	accessKeyID := awsConfig.AccessKey
 
 	secretAccessKey := awsConfig.SecretKey
-
-	cfg, err := config.LoadDefaultConfig(context.TODO(),
-
-		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(accessKeyID, secretAccessKey, "")),
-
-		config.WithRegion(awsConfig.Region),
-
-		config.WithEndpointResolverWithOptions(
-
-			aws.EndpointResolverWithOptionsFunc(
-
-				func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-
-					if service == s3.ServiceID {
-
-						return aws.Endpoint{
-
-							URL: awsConfig.EndPoint,
-
-							SigningRegion: awsConfig.Region,
-						}, nil
-
-					}
-
-					return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-
-				},
-			),
-		),
-	)
-
-	if err != nil {
-
-		fmt.Println("Configuration error:", err)
-
-		return nil
-
+	s3Config := &aws.Config{
+		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
+		Endpoint:         aws.String(awsConfig.EndPoint),
+		Region:           aws.String(awsConfig.Region),
+		DisableSSL:       aws.Bool(false),
+		S3ForcePathStyle: aws.Bool(true),
 	}
+	newSession := session.New(s3Config)
 
-	client := s3.NewFromConfig(cfg)
+	s3Client := s3.New(newSession)
 
-	return client
+	//**just for test to read the buckets
+	//result, err := s3Client.ListBuckets(&s3.ListBucketsInput{})
+	//if err != nil {
+	//	fmt.Printf("unable to list buckets, %v", err)
+	//}
+	//
+	//for _, bucket := range result.Buckets {
+	//	fmt.Printf("* %s\n", aws.StringValue(bucket.Name))
+	//}
+	//
+	//fmt.Printf("Successfully uploaded %q to %q\n", "keyName", "bucketName")
+	return s3Client
 }
