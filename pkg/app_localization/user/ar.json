@@ -104,7 +104,7 @@
     "orderSteps_orderDetails_carSelectedNone": "لا يوجد",
     "orderSteps_orderDetails_selectCar": "اختر السيارة",
     "orderSteps_orderDetails_addNewCar": "اضف جديد",
-    "orderSteps_orderDetails_waitingOrderMessage": "اجلس واسترخي في سيارتك n/ وسيتم تقديم طلبك إليك!",
+    "orderSteps_orderDetails_waitingOrderMessage": "اجلس واسترخي في سيارتك وسيتم تقديم طلبك إليك!",
     "orderSteps_addCar_titleIfNoCarsExist": "يرجى إضافة تفاصيل سيارتك لضمان تسليم طلبك إليك",
     "orderSteps_addCar_subtitleIfNoCarsExist": "لم يتم حفظ أي سيارات، أضف سيارات جديدة",
     "orderSteps_addCar_titleIfCarsExist": "إضافة تفاصيل السيارة الجديدة",
