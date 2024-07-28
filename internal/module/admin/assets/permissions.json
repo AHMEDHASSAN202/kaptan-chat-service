@@ -104,7 +104,16 @@
       { "key": "delete-kitchens", "name": {"ar": "حذف", "en": "Delete"} }
     ]
   },
-
+  {
+    "type": "admin",
+    "subject": { "name": {"ar": "الاشعارات", "en": "Notification" } },
+    "actions": [
+      { "key": "list-notifications", "name": {"ar": "عرض الكل", "en": "List"} },
+      { "key": "create-notifications", "name": {"ar": "انشاء جديد", "en": "Create"} },
+      { "key": "find-notifications", "name": {"ar": "عرض", "en": "Find"} },
+      { "key": "delete-notifications", "name": {"ar": "حذف", "en": "Delete"} }
+    ]
+  },
   {
     "type": "portal",
     "subject": { "name": {"ar": "المنتجات والاضافات", "en": "Menus & Modifiers" } },
