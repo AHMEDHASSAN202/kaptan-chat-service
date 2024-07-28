@@ -34,6 +34,7 @@ type Kitchen struct {
 	DeletedAt    *time.Time         `json:"-" bson:"deleted_at"`
 	Locations    []domain.Location  `json:"locations" bson:"locations,omitempty"`
 	Accounts     []domain.Account   `json:"accounts" bson:"accounts,omitempty"`
+	PlayerIds    []string           `json:"-" bson:"player_ids"`
 	AdminDetails []dto.AdminDetails `json:"admin_details" bson:"admin_details,omitempty"`
 }
 
@@ -49,6 +50,7 @@ type KitchenUseCase interface {
 	DeleteKitchen(ctx context.Context, payload *kitchen.DeleteKitchenDto) (err validators.ErrorResponse)
 	List(ctx *context.Context, dto *kitchen.ListKitchenDto) (*responses.ListResponse, validators.ErrorResponse)
 	KitchenExists(ctx *context.Context, dto *kitchen.ListKitchenDto) bool
+	UpdateKitchenPlayerId(ctx context.Context, payload *kitchen.UpdateKitchenPlayerIdDto) (err validators.ErrorResponse)
 }
 
 type KitchenRepository interface {

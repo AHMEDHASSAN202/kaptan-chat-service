@@ -10,6 +10,7 @@ import (
 	"samm/pkg/logger"
 	"samm/pkg/middlewares/admin"
 	commmon "samm/pkg/middlewares/common"
+	kitchen2 "samm/pkg/middlewares/kitchen"
 	"samm/pkg/validators"
 )
 
@@ -22,7 +23,7 @@ type KitchenHandler struct {
 }
 
 // InitKitchenController will initialize the article's HTTP controller
-func InitKitchenController(e *echo.Echo, us domain.KitchenUseCase, validator *validator.Validate, logger logger.ILogger, adminCustomValidator custom_validators2.AdminCustomValidator, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares, kitchenCustomValidator custom_validators.KitchenCustomValidator) {
+func InitKitchenController(e *echo.Echo, us domain.KitchenUseCase, validator *validator.Validate, logger logger.ILogger, adminCustomValidator custom_validators2.AdminCustomValidator, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares, kitchenCustomValidator custom_validators.KitchenCustomValidator, kitchenMiddlewares *kitchen2.ProviderMiddlewares) {
 	handler := &KitchenHandler{
 		kitchenUsecase:         us,
 		validator:              validator,
@@ -39,8 +40,10 @@ func InitKitchenController(e *echo.Echo, us domain.KitchenUseCase, validator *va
 	dashboard.GET("/:id", handler.FindKitchen, commonMiddlewares.PermissionMiddleware("find-kitchens"))
 	dashboard.DELETE("/:id", handler.DeleteKitchen, commonMiddlewares.PermissionMiddleware("delete-kitchens"))
 
-	//mobile_kitchen := e.Group("api/v1/mobile-kitchen")
-	//mobile_kitchen.Use(adminMiddlewares.AuthMiddleware)
+	kitchenMobile := e.Group("api/v1/kitchen")
+	{
+		kitchenMobile.PUT("/update-player-id", handler.UpdateKitchenPlayerId, kitchenMiddlewares.AuthMiddleware)
+	}
 
 }
 func (a *KitchenHandler) CreateKitchen(c echo.Context) error {

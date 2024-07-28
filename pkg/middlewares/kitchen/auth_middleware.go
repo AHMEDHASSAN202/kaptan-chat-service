@@ -83,6 +83,7 @@ func (m ProviderMiddlewares) AuthMiddleware(next echo.HandlerFunc) echo.HandlerF
 		c.Request().Header.Add("causer-id", utils.ConvertObjectIdToStringId(admin.ID))
 		c.Request().Header.Add("causer-type", admin.Type)
 		c.Request().Header.Add("causer-name", admin.Name)
+		c.Request().Header.Add("causer-kitchen-id", utils.ConvertObjectIdToStringId(admin.Kitchen.Id))
 		c.Request().Header.Add("causer-account-ids", strings.Join(utils.ConvertObjectIdsToStringIds(admin.Kitchen.AccountIds), ","))
 		c.Request().Header.Add("causer-location-ids", strings.Join(utils.ConvertObjectIdsToStringIds(admin.Kitchen.LocationIds), ","))
 		c.Request().Header.Add("causer-permissions", string(jsonPermissionsByte))

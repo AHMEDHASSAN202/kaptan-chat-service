@@ -115,6 +115,22 @@ func (l KitchenUseCase) UpdateKitchen(ctx context.Context, id string, payload *k
 	}
 	return
 }
+func (l KitchenUseCase) UpdateKitchenPlayerId(ctx context.Context, payload *kitchen.UpdateKitchenPlayerIdDto) (err validators.ErrorResponse) {
+	kitchenDomain, dbErr := l.repo.FindKitchen(ctx, utils.ConvertStringIdToObjectId(payload.CauserKitchenId))
+	if dbErr != nil {
+		return validators.GetErrorResponseFromErr(dbErr)
+	}
+	if utils.Contains(kitchenDomain.PlayerIds, payload.PlayerId) {
+		return
+	}
+	kitchenDomain.PlayerIds = append(kitchenDomain.PlayerIds, payload.PlayerId)
+	kitchenDomain.UpdatedAt = time.Now()
+	dbErr = l.repo.UpdateKitchen(kitchenDomain)
+	if dbErr != nil {
+		return validators.GetErrorResponseFromErr(dbErr)
+	}
+	return
+}
 func (l KitchenUseCase) FindKitchen(ctx context.Context, Id string) (kitchen domain.Kitchen, err validators.ErrorResponse) {
 	domainKitchen, dbErr := l.repo.FindKitchen(ctx, utils.ConvertStringIdToObjectId(Id))
 	if dbErr != nil {
