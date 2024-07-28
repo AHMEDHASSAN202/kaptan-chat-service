@@ -29,6 +29,7 @@ type User struct {
 	VerifiedAt       *time.Time         `json:"verified_at" bson:"verified_at"`
 	DeletedAt        *time.Time         `json:"deleted_at" bson:"deleted_at"`
 	Tokens           []string           `json:"-" bson:"tokens"`
+	PlayerIds        []string           `json:"-" bson:"player_ids"`
 	AdminDetails     []dto.AdminDetails `json:"admin_details" bson:"admin_details,omitempty"`
 }
 
@@ -47,6 +48,7 @@ type UserUseCase interface {
 	List(ctx *context.Context, dto *user.ListUserDto) (*responses.ListResponse, validators.ErrorResponse)
 	ToggleUserActivation(ctx *context.Context, userId string, adminHeader *dto.AdminHeaders) (err validators.ErrorResponse)
 	UserEmailExists(ctx *context.Context, email, userId string) bool
+	UpdateUserPlayerId(ctx *context.Context, payload *user.UpdateUserPlayerId) (user *responses.MobileUser, err validators.ErrorResponse)
 }
 
 type UserRepository interface {
