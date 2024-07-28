@@ -11,7 +11,7 @@ import (
 	"samm/internal/module/notification/consts"
 	"samm/internal/module/notification/domain"
 	"samm/internal/module/notification/dto/notification"
-	"samm/internal/module/notification/responses/Notification"
+	Notification2 "samm/internal/module/notification/responses/notification"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"time"
@@ -107,7 +107,7 @@ func (l *NotificationRepository) List(ctx *context.Context, dto *notification.Li
 
 	return
 }
-func (l *NotificationRepository) ListMobile(ctx *context.Context, dto *notification.ListNotificationMobileDto) (usersRes *[]Notification.NotificationMobile, paginationMeta *PaginationData, err error) {
+func (l *NotificationRepository) ListMobile(ctx *context.Context, dto *notification.ListNotificationMobileDto) (usersRes *[]Notification2.NotificationMobile, paginationMeta *PaginationData, err error) {
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
 		bson.D{{"deleted_at", nil}},
 		bson.D{{"country_id", dto.CountryId}},
@@ -126,9 +126,9 @@ func (l *NotificationRepository) ListMobile(ctx *context.Context, dto *notificat
 		return nil, nil, err
 	}
 
-	items := make([]Notification.NotificationMobile, 0)
+	items := make([]Notification2.NotificationMobile, 0)
 	for _, raw := range data.Data {
-		model := Notification.NotificationMobile{}
+		model := Notification2.NotificationMobile{}
 		err = bson.Unmarshal(raw, &model)
 		if err != nil {
 			l.logger.Error("notification Repo -> List -> ", err)

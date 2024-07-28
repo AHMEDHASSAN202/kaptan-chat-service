@@ -7,7 +7,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/notification/dto/notification"
 	"samm/internal/module/notification/responses"
-	Notification2 "samm/internal/module/notification/responses/Notification"
+	Notification2 "samm/internal/module/notification/responses/notification"
 	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"time"

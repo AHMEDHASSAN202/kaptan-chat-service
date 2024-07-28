@@ -1,4 +1,4 @@
-package Notification
+package notification
 
 import (
 	"github.com/kamva/mgm/v3"
