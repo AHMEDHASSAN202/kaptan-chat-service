@@ -38,10 +38,8 @@ type Item struct {
 	ID              primitive.ObjectID         `json:"id"`
 	Name            responses.LocalizationText `json:"name"`
 	Desc            responses.LocalizationText `json:"desc"`
-	Type            string                     `json:"type"`
 	Min             int                        `json:"min"`
 	Max             int                        `json:"max"`
-	SKU             string                     `json:"sku"`
 	Calories        int                        `json:"calories"`
 	Price           float64                    `json:"price"`
 	Image           string                     `json:"image"`
