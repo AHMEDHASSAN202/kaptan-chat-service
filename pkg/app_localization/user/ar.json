@@ -193,7 +193,7 @@
     "visa": "بطاقة فيزا",
     "master": "ماستر كارد",
     "debit": "بطاقة ائتمان",
-    "visa_image": "https://32m6xe.stackhero-network.com/samm-dev-assets/ali/1722204035visa.png",
+    "visa_image": "/samm-dev-assets/ali/1722204035visa.png",
     "master_image": "xyz",
     "debit_image": "xyz",
     "alert_deleteCar_title": "حذف سيارة",
