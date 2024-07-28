@@ -49,13 +49,13 @@ type OrderPriceSummary struct {
 
 type Item struct {
 	ID              primitive.ObjectID  `json:"id" bson:"_id"`
-	ItemId          primitive.ObjectID  `json:"item_id" bson:"item_id"`
+	ItemId          primitive.ObjectID  `json:"item_id" bson:"item_id,omitempty"`
 	Name            LocalizationText    `json:"name" bson:"name"`
 	Desc            LocalizationText    `json:"desc" bson:"desc"`
 	Type            string              `json:"type" bson:"type,omitempty"`
 	Min             int                 `json:"min" bson:"min,omitempty"`
 	Max             int                 `json:"max" bson:"max,omitempty"`
-	SKU             string              `json:"sku" bson:"sku"`
+	SKU             string              `json:"sku" bson:"sku,omitempty"`
 	Calories        int                 `json:"calories" bson:"calories"`
 	Price           float64             `json:"price" bson:"price"`
 	Image           string              `json:"image" bson:"image"`
