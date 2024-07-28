@@ -49,6 +49,7 @@
     "personal_details_gender_female": "أنثى",
     "personal_details_button_text": "حفظ التفاصيل",
     "branch_AddToBasket_buttonText": "اضف الى السلة",
+    "branch_itemDetails_addonGroupValidationMessage": "الرجاء اختيار ما تفضله",
     "orders_currentOrders": "الطلبات الحالية",
     "orders_previousOrders": "الطلبات السابقة",
     "orders_currentOrders_viewOrderButton": "عرض الطلب",
@@ -192,7 +193,7 @@
     "visa": "بطاقة فيزا",
     "master": "ماستر كارد",
     "debit": "بطاقة ائتمان",
-    "visa_image": "xyz",
+    "visa_image": "https://32m6xe.stackhero-network.com/samm-dev-assets/ali/1722204035visa.png",
     "master_image": "xyz",
     "debit_image": "xyz",
     "alert_deleteCar_title": "حذف سيارة",
@@ -232,5 +233,6 @@
     "no_show": "لم يتم التسليم",
     "ready_for_pickup": "جاهز للإستلام",
     "applePay": "ابل باي",
-    "creditCard": "بطاقة إئتمان"
+    "creditCard": "بطاقة إئتمان",
+    "internet_failed_message": "لا يوجد اتصال بالإنترنت"
 }
