@@ -7,8 +7,9 @@ import (
 	"samm/internal/module/example"
 	"samm/internal/module/kitchen"
 	"samm/internal/module/menu"
-	"samm/internal/module/payment"
+	"samm/internal/module/notification"
 	"samm/internal/module/order"
+	"samm/internal/module/payment"
 	"samm/internal/module/retails"
 	"samm/internal/module/user"
 	"samm/pkg/aws"
@@ -52,6 +53,7 @@ func main() {
 			common.Module,
 			user.Module,
 			kitchen.Module,
+			notification.Module,
 			payment.Module,
 			middlewares.Module,
 			fx.Invoke(echo.RunServers, localization.InitLocalization),

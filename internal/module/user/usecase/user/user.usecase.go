@@ -245,3 +245,19 @@ func (l UserUseCase) ToggleUserActivation(ctx *context.Context, userId string, a
 func (l UserUseCase) UserEmailExists(ctx *context.Context, email, userId string) bool {
 	return l.repo.UserEmailExists(ctx, email, userId)
 }
+func (l UserUseCase) UpdateUserPlayerId(ctx *context.Context, payload *user.UpdateUserPlayerId) (user *responses.MobileUser, err validators.ErrorResponse) {
+	userDomain, dbErr := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(payload.CauserId))
+	if dbErr != nil {
+		return nil, validators.GetErrorResponseFromErr(dbErr)
+	}
+	if utils.Contains(userDomain.PlayerIds, payload.PlayerId) {
+		return reposeBuilderAtUpdateProfile(userDomain), validators.ErrorResponse{}
+	}
+	userDomain.PlayerIds = append(userDomain.PlayerIds, payload.PlayerId)
+	userDomain.UpdatedAt = time.Now()
+	dbErr = l.repo.UpdateUser(ctx, userDomain)
+	if dbErr != nil {
+		return nil, validators.GetErrorResponseFromErr(dbErr)
+	}
+	return reposeBuilderAtUpdateProfile(userDomain), validators.ErrorResponse{}
+}
