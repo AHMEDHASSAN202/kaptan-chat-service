@@ -215,11 +215,17 @@ func (l OrderUseCase) ReportMissedItem(ctx context.Context, payload *order.Repor
 
 	for i, item := range orderDoc.Items {
 		if val, ok := missingItemMap[item.MobileId]; ok {
+			if orderDoc.Items[i].MissedItemReport == nil {
+				orderDoc.Items[i].MissedItemReport = &domain.MissedItem{}
+			}
 			orderDoc.Items[i].MissedItemReport.Id = val.Id
 			orderDoc.Items[i].MissedItemReport.Qty = val.Qty
 			orderDoc.MetaData.HasMissingItems = true
 			for addonIndex, addon := range item.Addons {
 				if val, ok := missingAddonMap[item.MobileId][addon.ID.Hex()]; ok {
+					if orderDoc.Items[i].Addons[addonIndex].MissedItemReport == nil {
+						orderDoc.Items[i].Addons[addonIndex].MissedItemReport = &domain.MissedItem{}
+					}
 					orderDoc.Items[i].Addons[addonIndex].MissedItemReport.Id = val.Id
 					orderDoc.Items[i].Addons[addonIndex].MissedItemReport.Qty = val.Qty
 				}
