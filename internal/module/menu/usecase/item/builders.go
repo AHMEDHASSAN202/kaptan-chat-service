@@ -28,6 +28,8 @@ func convertDtoArrToCorrespondingDomain(dto []item.CreateItemDto) []domain.Item 
 		itemDocs[i].AdminDetails = append(itemDocs[i].AdminDetails, utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: dto[0].CauserName, Operation: "Create", UpdatedAt: time.Now()})
 
 		itemDocs[i].ModifierGroupIds = utils.ConvertStringIdsToObjectIds(dto[i].ModifierGroupsIds)
+		itemDocs[i].ApprovalStatus = utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL
+		itemDocs[i].ID = primitive.NewObjectID()
 	}
 	return itemDocs
 }
@@ -44,4 +46,5 @@ func convertDtoToCorrespondingDomain(dto item.UpdateItemDto, itemDoc *domain.Ite
 	}
 	itemDoc.AdminDetails = append(itemDoc.AdminDetails, utilsDto.AdminDetails{Id: primitive.NewObjectID(), Name: dto.CauserName, Operation: "Update", UpdatedAt: time.Now()})
 	itemDoc.ModifierGroupIds = utils.ConvertStringIdsToObjectIds(dto.ModifierGroupsIds)
+	itemDoc.ApprovalStatus = utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL
 }

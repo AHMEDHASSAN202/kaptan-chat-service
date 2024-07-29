@@ -73,7 +73,7 @@ func (oRec *ItemUseCase) Update(ctx context.Context, dto item.UpdateItemDto) val
 		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Update Admin -> ", doc.ID)
 		return validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
-	err = oRec.repo.Update(ctx, &id, doc)
+	err = oRec.repo.Update(ctx, &id, doc, &item[0])
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}

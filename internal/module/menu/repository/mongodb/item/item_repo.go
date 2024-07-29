@@ -8,6 +8,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	domain2 "samm/internal/module/common/domain"
+	"samm/internal/module/common/dto"
+	item2 "samm/internal/module/menu/builder/item"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
 	"samm/internal/module/menu/repository/structs/menu_group_item"
@@ -22,9 +25,10 @@ type itemRepo struct {
 	itemCollection    *mgm.Collection
 	logger            logger.ILogger
 	menuGroupItemRepo domain.MenuGroupItemRepository
+	approvalRepo      domain2.ApprovalRepository
 }
 
-func NewItemRepository(dbs *mongo.Database, logger logger.ILogger, menuGroupItemRepo domain.MenuGroupItemRepository) domain.ItemRepository {
+func NewItemRepository(dbs *mongo.Database, logger logger.ILogger, menuGroupItemRepo domain.MenuGroupItemRepository, approvalRepo domain2.ApprovalRepository) domain.ItemRepository {
 	itemCollection := mgm.Coll(&domain.Item{})
 	//text search menu cuisine
 	mongodb.CreateIndex(itemCollection.Collection, false, bson.E{"name.ar", mongodb.IndexType.Text}, bson.E{"name.en", mongodb.IndexType.Text}, bson.E{"tags", mongodb.IndexType.Text},
@@ -35,6 +39,7 @@ func NewItemRepository(dbs *mongo.Database, logger logger.ILogger, menuGroupItem
 		itemCollection:    itemCollection,
 		logger:            logger,
 		menuGroupItemRepo: menuGroupItemRepo,
+		approvalRepo:      approvalRepo,
 	}
 }
 
@@ -70,6 +75,12 @@ func (i *itemRepo) Create(ctx context.Context, doc []domain.Item) error {
 		if err != nil {
 			return err
 		}
+
+		err = i.approvalRepo.CreateOrUpdate(sc, item2.CreateItemsApprovalBuilder(doc))
+		if err != nil {
+			return err
+		}
+
 		return session.CommitTransaction(sc)
 	})
 	if err != nil {
@@ -79,7 +90,7 @@ func (i *itemRepo) Create(ctx context.Context, doc []domain.Item) error {
 	return nil
 }
 
-func (i *itemRepo) Update(ctx context.Context, id *primitive.ObjectID, doc *domain.Item) error {
+func (i *itemRepo) Update(ctx context.Context, id *primitive.ObjectID, doc *domain.Item, oldDoc *domain.Item) error {
 	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
 		doc.ID = *id
 		err := i.itemCollection.UpdateWithCtx(sc, doc)
@@ -96,6 +107,14 @@ func (i *itemRepo) Update(ctx context.Context, id *primitive.ObjectID, doc *doma
 			i.logger.Error("ItemRepository -> SyncMenuItemsChanges -> ", err)
 			return err
 		}
+
+		if needToApprove, n, o := needToApproval(doc, oldDoc); needToApprove {
+			err = i.approvalRepo.CreateOrUpdate(sc, []dto.CreateApprovalDto{item2.CreateItemApprovalBuilder(doc, n, o)})
+			if err != nil {
+				return err
+			}
+		}
+
 		return session.CommitTransaction(sc)
 	})
 
@@ -116,6 +135,10 @@ func (i *itemRepo) SoftDelete(ctx context.Context, doc *domain.Item) error {
 		err = i.menuGroupItemRepo.DeleteByItemId(sc, doc.ID)
 		if err != nil {
 			i.logger.Error("ItemRepository -> SyncMenuItemsChanges -> ", err)
+			return err
+		}
+		err = i.approvalRepo.DeleteByEntity(sc, doc.ID, "items")
+		if err != nil {
 			return err
 		}
 		return session.CommitTransaction(sc)
@@ -199,4 +222,29 @@ func (i *itemRepo) GetAllActiveItems(ctx context.Context, accountId string) (ite
 	filter := bson.M{"account_id": utils.ConvertStringIdToObjectId(accountId), "status": "active", "deleted_at": nil}
 	err = i.itemCollection.SimpleFind(&items, filter)
 	return items, err
+}
+
+func needToApproval(doc *domain.Item, oldDoc *domain.Item) (bool, map[string]interface{}, map[string]interface{}) {
+	if doc.ApprovalStatus != utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL {
+		return false, nil, nil
+	}
+	n := map[string]interface{}{}
+	o := map[string]interface{}{}
+	if doc.Name.Ar != oldDoc.Name.Ar || doc.Name.En != oldDoc.Name.En {
+		n["name"] = utils.StructToMap(doc.Name, "bson")
+		o["name"] = utils.StructToMap(oldDoc.Name, "bson")
+	}
+	if doc.Desc.Ar != oldDoc.Desc.Ar || doc.Desc.En != oldDoc.Desc.En {
+		n["desc"] = utils.StructToMap(doc.Desc, "bson")
+		o["desc"] = utils.StructToMap(oldDoc.Desc, "bson")
+	}
+	if doc.Price != oldDoc.Price {
+		n["price"] = doc.Price
+		o["price"] = oldDoc.Price
+	}
+	if doc.Image != oldDoc.Image {
+		n["image"] = doc.Image
+		o["image"] = oldDoc.Image
+	}
+	return len(n) >= 1, n, o
 }

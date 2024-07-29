@@ -581,3 +581,19 @@ func TryCatch(f func()) func() error {
 		return err
 	}
 }
+
+func StructToMap(data interface{}, tagKey string) map[string]interface{} {
+	result := make(map[string]interface{})
+	v := reflect.ValueOf(data)
+	t := reflect.TypeOf(data)
+	for i := 0; i < v.NumField(); i++ {
+		field := t.Field(i)
+		value := v.Field(i).Interface()
+		tag := field.Tag.Get(tagKey)
+		if tag == "" {
+			tag = field.Name
+		}
+		result[tag] = value
+	}
+	return result
+}
