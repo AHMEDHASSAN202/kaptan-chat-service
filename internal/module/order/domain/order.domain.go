@@ -47,8 +47,8 @@ type OrderPriceSummary struct {
 	TotalPriceAfterDiscount  float64 `json:"total_price_after_discount" bson:"total_price_after_discount"`
 }
 type MissedItem struct {
-	Id  string `json:"id"`
-	Qty int64  `json:"qty"`
+	Id  string `json:"id,omitempty" bson:"id,omitempty"`
+	Qty int64  `json:"qty,omitempty" bson:"qty,omitempty"`
 }
 type Item struct {
 	ID               primitive.ObjectID  `json:"id" bson:"_id"`
@@ -149,7 +149,7 @@ type Payment struct {
 }
 
 type MetaData struct {
-	HasMissingItems bool `json:"has_missing_items" bson:"has_missing_items"`
+	HasMissingItems bool `json:"has_missing_items,omitempty" bson:"has_missing_items,omitempty"`
 }
 
 type Order struct {
@@ -175,7 +175,7 @@ type Order struct {
 	StatusLogs       []StatusLog       `json:"status_logs" bson:"status_logs"`
 	Notes            string            `json:"notes" bson:"notes"`
 	Payment          Payment           `json:"payment" bson:"payment"`
-	MetaData         MetaData          `json:"meta_data" bson:"meta_data"`
+	MetaData         MetaData          `json:"meta_data,omitempty" bson:"meta_data,omitempty"`
 }
 
 type OrderUseCase interface {

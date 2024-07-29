@@ -35,18 +35,19 @@ type OrderPriceSummary struct {
 }
 
 type Item struct {
-	ID              primitive.ObjectID         `json:"id"`
-	Name            responses.LocalizationText `json:"name"`
-	Desc            responses.LocalizationText `json:"desc"`
-	Min             int                        `json:"min"`
-	Max             int                        `json:"max"`
-	Calories        int                        `json:"calories"`
-	Price           float64                    `json:"price"`
-	Image           string                     `json:"image"`
-	Qty             int                        `json:"qty"`
-	PriceSummary    ItemPriceSummary           `json:"price_summary"`
-	ModifierGroupId *primitive.ObjectID        `json:"modifier_group_id"`
-	Addons          []Item                     `json:"addons"`
+	ID               primitive.ObjectID         `json:"id"`
+	Name             responses.LocalizationText `json:"name"`
+	Desc             responses.LocalizationText `json:"desc"`
+	Min              int                        `json:"min"`
+	Max              int                        `json:"max"`
+	Calories         int                        `json:"calories"`
+	Price            float64                    `json:"price"`
+	Image            string                     `json:"image"`
+	Qty              int                        `json:"qty"`
+	PriceSummary     ItemPriceSummary           `json:"price_summary"`
+	ModifierGroupId  *primitive.ObjectID        `json:"modifier_group_id"`
+	Addons           []Item                     `json:"addons"`
+	MissedItemReport MissedItem                 `json:"missed_item_report,omitempty"`
 }
 
 type City struct {
@@ -129,4 +130,12 @@ type FindOrderResponse struct {
 	Notes            string             `json:"notes"`
 	Payment          Payment            `json:"payment"`
 	ArrivedAt        *time.Time         `json:"arrived_at"`
+	MetaData         MetaData           `json:"meta_data" bson:"meta_data"`
+}
+type MetaData struct {
+	HasMissingItems bool `json:"has_missing_items" bson:"has_missing_items"`
+}
+type MissedItem struct {
+	Id  string `json:"id,omitempty"`
+	Qty int64  `json:"qty,omitempty"`
 }
