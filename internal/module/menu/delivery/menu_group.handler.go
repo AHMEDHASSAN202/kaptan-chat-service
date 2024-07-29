@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/menu/consts"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/menu_group"
@@ -47,11 +48,13 @@ func InitMenuGroupController(e *echo.Echo, us domain.MenuGroupUseCase, validator
 		mobileDeprecated.GET("/item/:id", handler.MobileGetMenuGroupItem)
 	}
 
-	mobile := e.Group("api/v1/mobile/menu-group/:location_id")
+	mobile := e.Group("api/v1/mobile/menu-group")
 	{
-		mobile.GET("/item", handler.MobileGetMenuGroupItems)
-		mobile.GET("/item/:id", handler.MobileGetMenuGroupItem)
+		mobile.GET("/:location_id/item", handler.MobileGetMenuGroupItems)
+		mobile.GET("/:location_id/item/:id", handler.MobileGetMenuGroupItem)
+		mobile.GET("/item/search", handler.MobileSearchMenuGroupItems)
 	}
+
 	kitchen := e.Group("api/v1/kitchen/menu-group/:location_id")
 	{
 		kitchen.Use(kitchenMiddlewares.AuthMiddleware)
@@ -321,6 +324,37 @@ func (a *MenuGroupHandler) MobileGetMenuGroupItems(c echo.Context) error {
 	}
 
 	var input menu_group.GetMenuGroupItemsDTO
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&input); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	data, errResp := a.menuGroupUsecase.MobileGetMenuGroupItems(ctx, input)
+	if errResp.IsError {
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"menu_group_items": data})
+}
+
+func (a *MenuGroupHandler) MobileSearchMenuGroupItems(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input menu_group.GetMenuGroupItemsDTO
+	input.LocationId = primitive.NilObjectID.Hex()
+
 	binder := &echo.DefaultBinder{}
 	if err := binder.BindHeaders(c, &input); err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))

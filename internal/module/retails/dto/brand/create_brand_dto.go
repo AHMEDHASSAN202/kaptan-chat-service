@@ -17,7 +17,7 @@ type CreateBrandDto struct {
 	Name       Name     `json:"name" validate:"required"`
 	Logo       string   `json:"logo"`
 	IsActive   bool     `json:"is_active"`
-	CuisineIds []string `json:"cuisine_ids" validate:"Invalid_mongo_ids_validation_rule,Cuisine_id_is_exists_rules_validation"`
+	CuisineIds []string `json:"cuisine_ids" validate:"omitempty,Invalid_mongo_ids_validation_rule,Cuisine_id_is_exists_rules_validation"`
 	AccountId  string   `json:"account_id" validate:"omitempty,Account_id_is_not_exists"`
 	dto.AdminHeaders
 }

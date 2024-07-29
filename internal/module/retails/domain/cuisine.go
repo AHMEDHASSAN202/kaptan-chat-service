@@ -45,5 +45,5 @@ type CuisineRepository interface {
 	GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) (*[]Cuisine, error)
 	List(ctx *context.Context, query *cuisine.ListCuisinesDto) (*[]Cuisine, *PaginationData, error)
 	ChangeStatus(ctx *context.Context, status *cuisine.ChangeCuisineStatusDto) error
-	SoftDelete(ctx *context.Context, id primitive.ObjectID, causer *dto.AdminDetails) error
+	SoftDelete(ctx context.Context, id primitive.ObjectID, causer *dto.AdminDetails) error
 }

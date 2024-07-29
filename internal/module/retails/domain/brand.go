@@ -43,6 +43,7 @@ type BrandRepository interface {
 	List(ctx *context.Context, query *brand.ListBrandDto) (*[]Brand, *PaginationData, error)
 	UpdateBrandAndLocations(doc *Brand) error
 	SoftDelete(doc *Brand) error
+	DeleteCuisinesFromBrand(ctx context.Context, cuisineId primitive.ObjectID) (err error)
 }
 
 //func (model *Brand) Updated(ctx context.Context, result *mongo.UpdateResult) error {
