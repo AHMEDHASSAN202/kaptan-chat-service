@@ -67,7 +67,7 @@ type Item struct {
 	PriceSummary     ItemPriceSummary    `json:"price_summary" bson:"price_summary"`
 	ModifierGroupId  *primitive.ObjectID `json:"modifier_group_id" bson:"modifier_group_id,omitempty"`
 	Addons           []Item              `json:"addons" bson:"addons,omitempty"`
-	MissedItemReport MissedItem          `json:"missed_item_report,omitempty" bson:"missed_item_report,omitempty"`
+	MissedItemReport *MissedItem         `json:"missed_item_report,omitempty" bson:"missed_item_report,omitempty"`
 }
 
 type City struct {
