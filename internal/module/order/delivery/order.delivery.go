@@ -46,6 +46,7 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 		mobile.PUT("/:id/cancel", handler.CancelOrder, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 		mobile.PUT("/:id/arrived", handler.ArrivedOrder, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 		mobile.GET("/user-rejection-reason/:status", handler.UserRejectionReason)
+		mobile.PUT("/:id/report-missing-item", handler.ReportMissingItem, userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 	}
 
 	kitchen := e.Group("api/v1/kitchen/order")
@@ -321,6 +322,38 @@ func (a *OrderHandler) ToggleOrderFavourite(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 	errResp := a.orderUsecase.ToggleOrderFavourite(&ctx, payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{})
+}
+
+func (a *OrderHandler) ReportMissingItem(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var payload order.ReportMissingItemDto
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := binder.BindPathParams(c, &payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := binder.BindBody(c, &payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := payload.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	_, errResp := a.orderUsecase.ReportMissedItem(ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)

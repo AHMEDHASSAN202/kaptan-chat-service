@@ -46,23 +46,28 @@ type OrderPriceSummary struct {
 	TotalPriceBeforeDiscount float64 `json:"total_price_before_discount" bson:"total_price_before_discount"`
 	TotalPriceAfterDiscount  float64 `json:"total_price_after_discount" bson:"total_price_after_discount"`
 }
-
+type MissedItem struct {
+	Id  string `json:"id"`
+	Qty int64  `json:"qty"`
+}
 type Item struct {
-	ID              primitive.ObjectID  `json:"id" bson:"_id"`
-	ItemId          primitive.ObjectID  `json:"item_id" bson:"item_id"`
-	Name            LocalizationText    `json:"name" bson:"name"`
-	Desc            LocalizationText    `json:"desc" bson:"desc"`
-	Type            string              `json:"type" bson:"type,omitempty"`
-	Min             int                 `json:"min" bson:"min,omitempty"`
-	Max             int                 `json:"max" bson:"max,omitempty"`
-	SKU             string              `json:"sku" bson:"sku"`
-	Calories        int                 `json:"calories" bson:"calories"`
-	Price           float64             `json:"price" bson:"price"`
-	Image           string              `json:"image" bson:"image"`
-	Qty             int                 `json:"qty" bson:"qty"`
-	PriceSummary    ItemPriceSummary    `json:"price_summary" bson:"price_summary"`
-	ModifierGroupId *primitive.ObjectID `json:"modifier_group_id" bson:"modifier_group_id,omitempty"`
-	Addons          []Item              `json:"addons" bson:"addons,omitempty"`
+	ID               primitive.ObjectID  `json:"id" bson:"_id"`
+	ItemId           primitive.ObjectID  `json:"item_id" bson:"item_id"`
+	MobileId         string              `json:"mobile_id" bson:"mobile_id"`
+	Name             LocalizationText    `json:"name" bson:"name"`
+	Desc             LocalizationText    `json:"desc" bson:"desc"`
+	Type             string              `json:"type" bson:"type,omitempty"`
+	Min              int                 `json:"min" bson:"min,omitempty"`
+	Max              int                 `json:"max" bson:"max,omitempty"`
+	SKU              string              `json:"sku" bson:"sku"`
+	Calories         int                 `json:"calories" bson:"calories"`
+	Price            float64             `json:"price" bson:"price"`
+	Image            string              `json:"image" bson:"image"`
+	Qty              int                 `json:"qty" bson:"qty"`
+	PriceSummary     ItemPriceSummary    `json:"price_summary" bson:"price_summary"`
+	ModifierGroupId  *primitive.ObjectID `json:"modifier_group_id" bson:"modifier_group_id,omitempty"`
+	Addons           []Item              `json:"addons" bson:"addons,omitempty"`
+	MissedItemReport MissedItem          `json:"missed_item_report" bson:"missed_item_report"`
 }
 
 type City struct {
@@ -143,6 +148,10 @@ type Payment struct {
 	CardNumber  string             `json:"card_number" bson:"card_number"`
 }
 
+type MetaData struct {
+	HasMissingItems bool `json:"has_missing_items" bson:"has_missing_items"`
+}
+
 type Order struct {
 	mgm.DefaultModel `bson:",inline"`
 	SerialNum        string            `json:"serial_num" bson:"serial_num"`
@@ -166,10 +175,12 @@ type Order struct {
 	StatusLogs       []StatusLog       `json:"status_logs" bson:"status_logs"`
 	Notes            string            `json:"notes" bson:"notes"`
 	Payment          Payment           `json:"payment" bson:"payment"`
+	MetaData         MetaData          `json:"meta_data" bson:"meta_data"`
 }
 
 type OrderUseCase interface {
 	StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse)
+	ReportMissedItem(ctx context.Context, payload *order.ReportMissingItemDto) (interface{}, validators.ErrorResponse)
 	KitchenAcceptOrder(ctx context.Context, payload *kitchen.AcceptOrderDto) (interface{}, validators.ErrorResponse)
 	KitchenRejectedOrder(ctx context.Context, payload *kitchen.RejectedOrderDto) (interface{}, validators.ErrorResponse)
 	KitchenPickedUpOrder(ctx context.Context, payload *kitchen.PickedUpOrderDto) (interface{}, validators.ErrorResponse)

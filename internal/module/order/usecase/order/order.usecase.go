@@ -192,6 +192,48 @@ func (l OrderUseCase) ToggleOrderFavourite(ctx *context.Context, payload order.T
 func (l OrderUseCase) UserRejectionReasons(ctx context.Context, status string, id string) ([]domain.UserRejectionReason, validators.ErrorResponse) {
 	return helper.UserRejectionReasons(ctx, status, id)
 }
+func (l OrderUseCase) ReportMissedItem(ctx context.Context, payload *order.ReportMissingItemDto) (interface{}, validators.ErrorResponse) {
+	orderDoc, err := l.repo.FindOrder(&ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
+	if err != nil {
+		l.logger.Error("ReportMissedItem", err.Error())
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+
+	//todo: check if user own the order
+
+	missingItemMap := make(map[string]order.MissedItems)
+	missingAddonMap := make(map[string]map[string]order.MissedItems)
+	for _, item := range payload.MissingItems {
+		missingItemMap[item.Id] = item
+		for _, addon := range item.MissingAddons {
+			if missingAddonMap[item.Id] == nil {
+				missingAddonMap[item.Id] = make(map[string]order.MissedItems)
+			}
+			missingAddonMap[item.Id][addon.Id] = addon
+		}
+	}
+
+	for i, item := range orderDoc.Items {
+		if val, ok := missingItemMap[item.MobileId]; ok {
+			orderDoc.Items[i].MissedItemReport.Id = val.Id
+			orderDoc.Items[i].MissedItemReport.Qty = val.Qty
+			orderDoc.MetaData.HasMissingItems = true
+			for addonIndex, addon := range item.Addons {
+				if val, ok := missingAddonMap[item.MobileId][addon.ID.Hex()]; ok {
+					orderDoc.Items[i].Addons[addonIndex].MissedItemReport.Id = val.Id
+					orderDoc.Items[i].Addons[addonIndex].MissedItemReport.Qty = val.Qty
+				}
+			}
+		}
+	}
+	err = l.repo.UpdateOrder(ctx, orderDoc)
+	if err != nil {
+		l.logger.Error("ReportMissedItem", err)
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+
+	return nil, validators.ErrorResponse{}
+}
 
 func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse) {
 

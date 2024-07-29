@@ -78,8 +78,9 @@ func buildItemsAndSummary(order *domain.Order, dto *order.CreateOrderDto, items 
 	for _, item := range dto.MenuItems {
 		menuItem := itemsMap[item.Id]
 		menuItemOrder := domain.Item{
-			ID:     menuItem.ID,
-			ItemId: menuItem.ItemId,
+			ID:       menuItem.ID,
+			ItemId:   menuItem.ItemId,
+			MobileId: item.MobileId,
 			Name: domain.LocalizationText{
 				En: menuItem.Name.En,
 				Ar: menuItem.Name.Ar,
