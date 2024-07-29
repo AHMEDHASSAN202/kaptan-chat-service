@@ -149,7 +149,7 @@ type Payment struct {
 }
 
 type MetaData struct {
-	HasMissingItems bool `json:"has_missing_items,omitempty" bson:"has_missing_items,omitempty"`
+	HasMissingItems bool `json:"has_missing_items" bson:"has_missing_items"`
 }
 
 type Order struct {
@@ -175,7 +175,7 @@ type Order struct {
 	StatusLogs       []StatusLog       `json:"status_logs" bson:"status_logs"`
 	Notes            string            `json:"notes" bson:"notes"`
 	Payment          Payment           `json:"payment" bson:"payment"`
-	MetaData         MetaData          `json:"meta_data,omitempty" bson:"meta_data,omitempty"`
+	MetaData         MetaData          `json:"meta_data" bson:"meta_data"`
 }
 
 type OrderUseCase interface {
