@@ -159,3 +159,10 @@ func (i brandRepo) FindWithCuisines(ctx context.Context, Id primitive.ObjectID) 
 	}
 	return nil, errors.New("Not Found")
 }
+
+func (l brandRepo) DeleteCuisinesFromBrand(ctx context.Context, cuisineId primitive.ObjectID) (err error) {
+	//filter := bson.M{"deleted_at": nil}
+	update := bson.M{"$pull": bson.M{"cuisineids": cuisineId}}
+	_, err = l.brandCollection.UpdateMany(ctx, bson.M{}, update)
+	return
+}
