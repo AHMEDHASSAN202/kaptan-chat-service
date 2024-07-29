@@ -9,6 +9,8 @@
     "userLocation_saveAddressButtonText": "حفظ العنوان",
     "userLocation_savedLocation": "الأماكن المحفوظة",
     "userLocation_showInMap": "عرض في الخريطة",
+    "userLocation_current": "موقعك الحالي",
+    "userLocation_custom": "موقع محدد",
     "dashboard_home": "الرئيسية",
     "dashboard_rewards": "المكافآت",
     "dashboard_orders": "طلباتي",

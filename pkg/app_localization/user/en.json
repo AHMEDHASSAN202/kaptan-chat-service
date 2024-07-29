@@ -9,6 +9,8 @@
     "userLocation_saveAddressButtonText": "Save address",
     "userLocation_savedLocation": "Saved Locations",
     "userLocation_showInMap": "Show in map",
+    "userLocation_current": "Current location",
+    "userLocation_custom": "Custom location",
     "dashboard_home": "Home",
     "dashboard_rewards": "Rewards",
     "dashboard_orders": "Orders",
