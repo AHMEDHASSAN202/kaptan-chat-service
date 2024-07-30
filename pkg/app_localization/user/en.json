@@ -22,6 +22,8 @@
     "home_branchesEmpty_title": "No stores found near you ,",
     "home_branchesEmpty_subtitle": "try selecting a different a different location",
     "home_lastOrders_more": "More...",
+    "homeSearch_emptyResult_title": "No results found ,",
+    "homeSearch_emptyResult_subtitle": "try searching a different key word",
     "auth_signin_title": "Sign in",
     "auth_signin_subtitle": "Please sign in to complete your order",
     "auth_signin_mobile_hint": "Mobile",
@@ -242,5 +244,6 @@
     "ready_for_pickup": "Ready for pickup",
     "applePay": "Apple pay",
     "creditCard": "Credit card",
-    "internet_failed_message": "No internet connection"
+    "internet_failed_message": "No internet connection",
+    "cuisine_all": "All"
 }
