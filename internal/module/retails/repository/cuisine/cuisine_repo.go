@@ -98,10 +98,14 @@ func (i *cuisineRepo) ChangeStatus(ctx *context.Context, dto *cuisine.ChangeCuis
 	return nil
 }
 
-func (i *cuisineRepo) List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (cuisinesRes *[]domain.Cuisine, paginationMeta *PaginationData, err error) {
+func (i *cuisineRepo) List(ctx *context.Context, isMobile bool, dto *cuisine.ListCuisinesDto) (cuisinesRes *[]domain.Cuisine, paginationMeta *PaginationData, err error) {
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
 		bson.D{{"deleted_at", nil}},
 	}}}
+
+	if isMobile {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"is_hidden": false})
+	}
 
 	if dto.Query != "" {
 		pattern := ".*" + dto.Query + ".*"
