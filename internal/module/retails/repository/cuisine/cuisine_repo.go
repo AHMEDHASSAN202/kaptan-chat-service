@@ -129,3 +129,10 @@ func (i *cuisineRepo) List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (
 
 	return
 }
+
+func (i *cuisineRepo) CheckNameExists(ctx context.Context, name string) (bool, error) {
+	filter := bson.M{"$or": bson.A{bson.M{"name.ar": name}, bson.M{"name.en": name}}, "deleted_at": nil}
+	c, err := i.cuisineCollection.CountDocuments(ctx, filter)
+
+	return c > 0, err
+}

@@ -78,6 +78,10 @@ other = "These features are not supported: {{.Feature}}"
 description = "Feature not supported"
 other = "item name is added before"
 
+[Cuisine_name_is_unique_rules_validation]
+description = "Feature not supported"
+other = "cuisine name is added before"
+
 [SKU_name_is_unique_rules_validation]
 description = "Feature not supported"
 other = "This name is already exists, SKU name must be unique."

@@ -58,3 +58,14 @@ func (i *RetailCustomValidator) ValidateCuisineIdsExists(cuisineIds []string) fu
 		return true
 	}
 }
+
+func (i *RetailCustomValidator) ValidateCuisineNameUnique() func(fl validator.FieldLevel) bool {
+	return func(fl validator.FieldLevel) bool {
+		cuisineName := fl.Field().Interface().(string)
+		isExists, err := i.cuisineUsecase.CheckNameExists(context.Background(), cuisineName)
+		if err.IsError {
+			return false
+		}
+		return !isExists
+	}
+}
