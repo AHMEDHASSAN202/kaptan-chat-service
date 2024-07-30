@@ -31,10 +31,12 @@ type CuisineUseCase interface {
 	Update(ctx *context.Context, dto *cuisine.UpdateCuisineDto) validators.ErrorResponse
 	Find(ctx *context.Context, id string) (*Cuisine, validators.ErrorResponse)
 	GetById(ctx *context.Context, id string) (*Cuisine, validators.ErrorResponse)
-	List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse)
+	ListCuisinesForDashboard(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse)
+	ListCuisinesForMobile(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse)
 	ChangeStatus(ctx *context.Context, dto *cuisine.ChangeCuisineStatusDto) validators.ErrorResponse
 	SoftDelete(ctx *context.Context, id string, adminDetails *dto.AdminHeaders) validators.ErrorResponse
 	CheckExists(ctx *context.Context, ids []string) validators.ErrorResponse
+	CheckNameExists(ctx context.Context, name string) (bool, validators.ErrorResponse)
 }
 
 type CuisineRepository interface {
@@ -43,7 +45,8 @@ type CuisineRepository interface {
 	UpdateCuisineAndLocations(doc *Cuisine) error
 	Find(ctx *context.Context, Id primitive.ObjectID) (*Cuisine, error)
 	GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) (*[]Cuisine, error)
-	List(ctx *context.Context, query *cuisine.ListCuisinesDto) (*[]Cuisine, *PaginationData, error)
+	List(ctx *context.Context, isMobile bool, query *cuisine.ListCuisinesDto) (*[]Cuisine, *PaginationData, error)
 	ChangeStatus(ctx *context.Context, status *cuisine.ChangeCuisineStatusDto) error
-	SoftDelete(ctx *context.Context, id primitive.ObjectID, causer *dto.AdminDetails) error
+	SoftDelete(ctx context.Context, id primitive.ObjectID, causer *dto.AdminDetails) error
+	CheckNameExists(ctx context.Context, name string) (bool, error)
 }

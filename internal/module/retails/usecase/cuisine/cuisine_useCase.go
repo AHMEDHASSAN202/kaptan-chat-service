@@ -2,8 +2,10 @@ package cuisine
 
 import (
 	"context"
+	"github.com/kamva/mgm/v3"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/cuisine"
 	"samm/internal/module/retails/responses"
@@ -17,14 +19,16 @@ import (
 )
 
 type CuisineUseCase struct {
-	repo   domain.CuisineRepository
-	logger logger.ILogger
+	repo      domain.CuisineRepository
+	brandRepo domain.BrandRepository
+	logger    logger.ILogger
 }
 
-func NewCuisineUseCase(repo domain.CuisineRepository, logger logger.ILogger) domain.CuisineUseCase {
+func NewCuisineUseCase(repo domain.CuisineRepository, brandRepo domain.BrandRepository, logger logger.ILogger) domain.CuisineUseCase {
 	return &CuisineUseCase{
-		repo:   repo,
-		logger: logger,
+		repo:      repo,
+		logger:    logger,
+		brandRepo: brandRepo,
 	}
 }
 
@@ -52,9 +56,20 @@ func (oRec *CuisineUseCase) Update(ctx *context.Context, dto *cuisine.UpdateCuis
 func (oRec *CuisineUseCase) SoftDelete(ctx *context.Context, id string, adminDetails *dto.AdminHeaders) validators.ErrorResponse {
 	idDoc := utils.ConvertStringIdToObjectId(id)
 	causerDetails := dto.AdminDetails{Id: utils.ConvertStringIdToObjectId(adminDetails.CauserId), Name: adminDetails.CauserName, Type: adminDetails.CauserType, Operation: "Delete Brand", UpdatedAt: time.Now()}
-	err := oRec.repo.SoftDelete(ctx, idDoc, &causerDetails)
-	if err != nil {
-		return validators.GetErrorResponseFromErr(err)
+	transactionErr := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+		brandErr := oRec.brandRepo.DeleteCuisinesFromBrand(sc, idDoc)
+		if brandErr != nil {
+			return brandErr
+		}
+		cuisineErr := oRec.repo.SoftDelete(sc, idDoc, &causerDetails)
+		if cuisineErr != nil {
+			return cuisineErr
+		}
+		return session.CommitTransaction(sc)
+	})
+
+	if transactionErr != nil {
+		return validators.GetErrorResponseFromErr(transactionErr)
 	}
 	return validators.ErrorResponse{}
 }
@@ -67,12 +82,20 @@ func (oRec *CuisineUseCase) ChangeStatus(ctx *context.Context, dto *cuisine.Chan
 	return validators.ErrorResponse{}
 }
 
-func (oRec *CuisineUseCase) List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse) {
-	cuisines, paginationMeta, resErr := oRec.repo.List(ctx, dto)
+func (oRec *CuisineUseCase) ListCuisinesForDashboard(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse) {
+	cuisines, paginationMeta, resErr := oRec.repo.List(ctx, false, dto)
 	if resErr != nil {
 		return nil, validators.GetErrorResponseFromErr(resErr)
 	}
 	return responses.SetListResponse(cuisines, paginationMeta), validators.ErrorResponse{}
+}
+
+func (oRec *CuisineUseCase) ListCuisinesForMobile(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse) {
+	cuisines, paginationMeta, resErr := oRec.repo.List(ctx, true, dto)
+	if resErr != nil {
+		return nil, validators.GetErrorResponseFromErr(resErr)
+	}
+	return responses.SetListResponse(mobileListCuisineBuilder(cuisines), paginationMeta), validators.ErrorResponse{}
 }
 
 func (oRec *CuisineUseCase) Find(ctx *context.Context, id string) (*domain.Cuisine, validators.ErrorResponse) {
@@ -116,4 +139,12 @@ func (oRec *CuisineUseCase) CheckExists(ctx *context.Context, ids []string) vali
 		return validators.GetErrorResponseFromErr(errors.New(localization.E1002))
 	}
 	return validators.ErrorResponse{}
+}
+
+func (oRec *CuisineUseCase) CheckNameExists(ctx context.Context, name string) (bool, validators.ErrorResponse) {
+	isExists, err := oRec.repo.CheckNameExists(ctx, name)
+	if err != nil {
+		return isExists, validators.GetErrorResponseFromErr(err)
+	}
+	return isExists, validators.ErrorResponse{}
 }

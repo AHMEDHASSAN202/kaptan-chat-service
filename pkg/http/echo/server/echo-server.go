@@ -10,8 +10,8 @@ import (
 
 const (
 	MaxHeaderBytes = 1 << 20
-	ReadTimeout    = 15 * time.Second
-	WriteTimeout   = 15 * time.Second
+	ReadTimeout    = 60 * time.Second
+	WriteTimeout   = 60 * time.Second
 )
 
 type EchoConfig struct {

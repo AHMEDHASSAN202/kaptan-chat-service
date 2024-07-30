@@ -139,7 +139,7 @@ func (i brandRepo) FindWithCuisines(ctx context.Context, Id primitive.ObjectID) 
 	var domainData domain.Brand
 	var filters []bson.M
 	filters = append(filters, bson.M{"$match": bson.M{"_id": Id, "deleted_at": nil}})
-	filters = append(filters, bson.M{"$lookup": bson.M{"from": "cuisines", "localField": "cuisineids", "foreignField": "_id", "as": "cuisines"}})
+	filters = append(filters, bson.M{"$lookup": bson.M{"from": "cuisines", "localField": "cuisine_ids", "foreignField": "_id", "as": "cuisines"}})
 
 	data, err := i.brandCollection.Aggregate(ctx, filters)
 
@@ -158,4 +158,11 @@ func (i brandRepo) FindWithCuisines(ctx context.Context, Id primitive.ObjectID) 
 		}
 	}
 	return nil, errors.New("Not Found")
+}
+
+func (l brandRepo) DeleteCuisinesFromBrand(ctx context.Context, cuisineId primitive.ObjectID) (err error) {
+	//filter := bson.M{"deleted_at": nil}
+	update := bson.M{"$pull": bson.M{"cuisine_ids": cuisineId}}
+	_, err = l.brandCollection.UpdateMany(ctx, bson.M{}, update)
+	return
 }

@@ -22,6 +22,8 @@
     "home_branchesEmpty_title": "No stores found near you ,",
     "home_branchesEmpty_subtitle": "try selecting a different a different location",
     "home_lastOrders_more": "More...",
+    "homeSearch_emptyResult_title": "No results found ,",
+    "homeSearch_emptyResult_subtitle": "try searching a different key word",
     "auth_signin_title": "Sign in",
     "auth_signin_subtitle": "Please sign in to complete your order",
     "auth_signin_mobile_hint": "Mobile",
@@ -201,7 +203,7 @@
     "visa": "Visa Card",
     "master": "Master Card",
     "debit": "Debit Card",
-    "visa_image": "https://32m6xe.stackhero-network.com/samm-dev-assets/ali/1722204035visa.png",
+    "visa_image": "/samm-dev-assets/ali/1722204035visa.png",
     "master_image": "xyz",
     "debit_image": "xyz",
     "alert_deleteCar_title": "Delete Car",
@@ -242,5 +244,13 @@
     "ready_for_pickup": "Ready for pickup",
     "applePay": "Apple pay",
     "creditCard": "Credit card",
-    "internet_failed_message": "No internet connection"
+    "internet_failed_message": "No internet connection",
+    "cuisine_all": "All",
+    "server_response404_message": "The requested resource is not reachable, please try again later",
+    "server_response5XX_message": "Something went wrong, please try again later",
+    "server_responseNotHandled_message": "This response code is not handled",
+    "server_responseHandlingException_message": "An exception occured while handling response",
+    "server_parsingError_message": "Unable to parse the response, something wrong",
+    "request_failure_message": "Request has been failed",
+    "error_retryButton": "Retry"
 }

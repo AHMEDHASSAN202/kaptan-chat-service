@@ -23,7 +23,7 @@ func NewRedisClient(fullUrl *string) *RedisClient {
 	//options.TLSConfig = &tls.Config{
 	//	InsecureSkipVerify: true,
 	//}
-
+	options.DialTimeout = 3 * time.Second
 	rdb := redis.NewClient(options)
 
 	return &RedisClient{client: rdb}
