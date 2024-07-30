@@ -245,5 +245,11 @@
     "applePay": "ابل باي",
     "creditCard": "بطاقة إئتمان",
     "internet_failed_message": "لا يوجد اتصال بالإنترنت",
-    "cuisine_all": "الكل"
+    "cuisine_all": "الكل",
+    "server_response404_message": "المورد المطلوب غير قابل للوصول، يرجى المحاولة مرة أخرى لاحقًا",
+    "server_response5XX_message": "حدث خطأ. يرجى إعادة المحاولة في وقت لاحق",
+    "server_responseNotHandled_message": "لم تتم معالجة رمز الاستجابة هذا",
+    "server_responseHandlingException_message": "حدث خطأ أثناء التعامل مع الاستجابة",
+    "server_parsingError_message": "غير قادر على تحليل الاستجابة، هناك خطأ ما",
+    "error_retryButton": "إعادة المحاولة"
 }
