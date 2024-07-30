@@ -11,6 +11,7 @@ const (
     CanNotBuildOrderResponse = "CanNotBuildOrderResponse" // Internal server errors occurred. Please contact support.
     ChangeOrderStatusError = "ChangeOrderStatusError" // ChangeOrderStatusError
     Cuisine_id_is_exists_rules_validation = "Cuisine_id_is_exists_rules_validation" // Cuisine Id Not Exist
+    Cuisine_name_is_unique_rules_validation = "Cuisine_name_is_unique_rules_validation" // Feature not supported
     DateTimeFormat = "DateTimeFormat" // date time format rule validation
     E1000 = "E1000" // Database layer error
     E1001 = "E1001" // Invalid input

@@ -82,12 +82,20 @@ func (oRec *CuisineUseCase) ChangeStatus(ctx *context.Context, dto *cuisine.Chan
 	return validators.ErrorResponse{}
 }
 
-func (oRec *CuisineUseCase) List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse) {
+func (oRec *CuisineUseCase) ListCuisinesForDashboard(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse) {
 	cuisines, paginationMeta, resErr := oRec.repo.List(ctx, dto)
 	if resErr != nil {
 		return nil, validators.GetErrorResponseFromErr(resErr)
 	}
 	return responses.SetListResponse(cuisines, paginationMeta), validators.ErrorResponse{}
+}
+
+func (oRec *CuisineUseCase) ListCuisinesForMobile(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse) {
+	cuisines, paginationMeta, resErr := oRec.repo.List(ctx, dto)
+	if resErr != nil {
+		return nil, validators.GetErrorResponseFromErr(resErr)
+	}
+	return responses.SetListResponse(mobileListCuisineBuilder(cuisines), paginationMeta), validators.ErrorResponse{}
 }
 
 func (oRec *CuisineUseCase) Find(ctx *context.Context, id string) (*domain.Cuisine, validators.ErrorResponse) {
@@ -131,4 +139,12 @@ func (oRec *CuisineUseCase) CheckExists(ctx *context.Context, ids []string) vali
 		return validators.GetErrorResponseFromErr(errors.New(localization.E1002))
 	}
 	return validators.ErrorResponse{}
+}
+
+func (oRec *CuisineUseCase) CheckNameExists(ctx context.Context, name string) (bool, validators.ErrorResponse) {
+	isExists, err := oRec.repo.CheckNameExists(ctx, name)
+	if err != nil {
+		return isExists, validators.GetErrorResponseFromErr(err)
+	}
+	return isExists, validators.ErrorResponse{}
 }

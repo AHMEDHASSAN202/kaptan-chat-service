@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
+	"samm/internal/module/retails/custom_validators"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/cuisine"
 	"samm/pkg/logger"
@@ -16,26 +17,32 @@ import (
 )
 
 type CuisineHandler struct {
-	cuisineUsecase domain.CuisineUseCase
-	validator      *validator.Validate
-	logger         logger.ILogger
+	cuisineUsecase  domain.CuisineUseCase
+	customValidator custom_validators.RetailCustomValidator
+	validator       *validator.Validate
+	logger          logger.ILogger
 }
 
-func InitCuisineController(e *echo.Echo, cuisineUsecase domain.CuisineUseCase, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
+func InitCuisineController(e *echo.Echo, cuisineUsecase domain.CuisineUseCase, validator *validator.Validate, logger logger.ILogger, customValidator custom_validators.RetailCustomValidator, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &CuisineHandler{
-		cuisineUsecase: cuisineUsecase,
-		validator:      validator,
-		logger:         logger,
+		cuisineUsecase:  cuisineUsecase,
+		validator:       validator,
+		customValidator: customValidator,
+		logger:          logger,
 	}
 	portal := e.Group("api/v1/admin/cuisine")
 	portal.Use(adminMiddlewares.AuthMiddleware)
 	{
 		portal.POST("", handler.Create, commonMiddlewares.PermissionMiddleware("create-cuisines"))
 		portal.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-cuisines"))
-		portal.GET("", handler.List, commonMiddlewares.PermissionMiddleware("list-cuisines"))
+		portal.GET("", handler.ListForDashboard, commonMiddlewares.PermissionMiddleware("list-cuisines"))
 		portal.GET("/:id", handler.Find, commonMiddlewares.PermissionMiddleware("find-cuisines"))
 		portal.PUT("/:id/status", handler.ChangeStatus, commonMiddlewares.PermissionMiddleware("update-status-cuisines"))
 		portal.DELETE("/:id", handler.Delete, commonMiddlewares.PermissionMiddleware("delete-cuisines"))
+	}
+	mobile := e.Group("api/v1/mobile/cuisine")
+	{
+		mobile.GET("", handler.ListForMobile)
 	}
 }
 
@@ -56,7 +63,7 @@ func (a *CuisineHandler) Create(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator)
+	validationErr := input.Validate(c, a.validator, a.customValidator.ValidateCuisineNameUnique())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -95,7 +102,7 @@ func (a *CuisineHandler) Update(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 
-	validationErr := input.Validate(c, a.validator)
+	validationErr := input.Validate(c, a.validator, a.customValidator.ValidateCuisineNameUnique())
 	if validationErr.IsError {
 		a.logger.Error(validationErr)
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
@@ -109,7 +116,7 @@ func (a *CuisineHandler) Update(c echo.Context) error {
 	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
-func (a *CuisineHandler) List(c echo.Context) error {
+func (a *CuisineHandler) ListForDashboard(c echo.Context) error {
 	ctx := c.Request().Context()
 	if ctx == nil {
 		ctx = context.Background()
@@ -127,7 +134,32 @@ func (a *CuisineHandler) List(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
 	input.Pagination.SetDefault()
-	res, errResp := a.cuisineUsecase.List(&ctx, &input)
+	res, errResp := a.cuisineUsecase.ListCuisinesForDashboard(&ctx, &input)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, res)
+}
+
+func (a *CuisineHandler) ListForMobile(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	var input cuisine.ListCuisinesDto
+	binder := &echo.DefaultBinder{}
+	//bind header and query params
+	err := binder.BindHeaders(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	err = binder.BindQueryParams(c, &input)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	input.Pagination.SetDefault()
+	res, errResp := a.cuisineUsecase.ListCuisinesForMobile(&ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
