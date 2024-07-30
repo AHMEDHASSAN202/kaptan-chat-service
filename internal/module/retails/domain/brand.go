@@ -14,10 +14,10 @@ import (
 
 type Brand struct {
 	mgm.DefaultModel `bson:",inline"`
-	Name             Name                 `json:"name" validate:"required"`
+	Name             Name                 `json:"name" bson:"name"`
 	Logo             string               `json:"logo" bson:"logo"`
 	IsActive         bool                 `json:"is_active" bson:"is_active"`
-	CuisineIds       []primitive.ObjectID `json:"cuisine_ids" validate:"cuisine_ids_rule"`
+	CuisineIds       []primitive.ObjectID `json:"cuisine_ids" bson:"cuisine_ids"`
 	DeletedAt        *time.Time           `json:"deleted_at" bson:"deleted_at"`
 	Cuisines         *[]Cuisine           `json:"cuisines" bson:"cuisines"`
 	AdminDetails     []dto.AdminDetails   `json:"admin_details" bson:"admin_details,omitempty"`

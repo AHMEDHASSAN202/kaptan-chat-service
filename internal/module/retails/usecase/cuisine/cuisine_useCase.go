@@ -83,7 +83,7 @@ func (oRec *CuisineUseCase) ChangeStatus(ctx *context.Context, dto *cuisine.Chan
 }
 
 func (oRec *CuisineUseCase) ListCuisinesForDashboard(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse) {
-	cuisines, paginationMeta, resErr := oRec.repo.List(ctx, dto)
+	cuisines, paginationMeta, resErr := oRec.repo.List(ctx, false, dto)
 	if resErr != nil {
 		return nil, validators.GetErrorResponseFromErr(resErr)
 	}
@@ -91,7 +91,7 @@ func (oRec *CuisineUseCase) ListCuisinesForDashboard(ctx *context.Context, dto *
 }
 
 func (oRec *CuisineUseCase) ListCuisinesForMobile(ctx *context.Context, dto *cuisine.ListCuisinesDto) (*responses.ListResponse, validators.ErrorResponse) {
-	cuisines, paginationMeta, resErr := oRec.repo.List(ctx, dto)
+	cuisines, paginationMeta, resErr := oRec.repo.List(ctx, true, dto)
 	if resErr != nil {
 		return nil, validators.GetErrorResponseFromErr(resErr)
 	}
