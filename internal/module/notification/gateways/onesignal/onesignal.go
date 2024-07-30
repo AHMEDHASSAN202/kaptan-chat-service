@@ -51,10 +51,8 @@ func (o OnesignalService) SendNotification(ctx context.Context, dto *requests.Pu
 		"Authorization": "Basic " + apiToken,
 		"Content-Type":  "application/json",
 	}
-	o.logger.Info("One Signal Headers => ", headers)
-	o.logger.Info("One Signal Body => ", dto)
-	res, errRe := o.httpClient.NewRequest().SetHeaders(headers).SetBody(dto).SetResult(&notificationResponse).Post(o.BaseUrl + consts.SendNotificationsUrl)
-	o.logger.Info("One Signal Response => ", notificationResponse)
+	responseBody := map[string]interface{}{}
+	res, errRe := o.httpClient.NewRequest().SetDebug(true).SetHeaders(headers).SetBody(dto).SetResult(&responseBody).Post(o.BaseUrl + consts.SendNotificationsUrl)
 
 	if errRe != nil {
 		o.logger.Error(ErrorTag+"=> SendNotification", errRe)

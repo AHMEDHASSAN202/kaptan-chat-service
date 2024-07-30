@@ -266,5 +266,5 @@ func (l UserUseCase) GetUsersPlayerId(ctx *context.Context, userId []string) (pl
 	if errRe != nil {
 		return playerIds, validators.GetErrorResponseFromErr(errRe)
 	}
-	return
+	return playerIds, err
 }

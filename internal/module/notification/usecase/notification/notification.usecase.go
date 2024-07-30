@@ -103,11 +103,12 @@ func (l NotificationUseCase) SendPushNotification(ctx context.Context, dto *noti
 	// Get Player Ids Based On Type
 	playerIDs := make([]string, 0)
 	if dto.Type == consts.TYPE_PRIVATE && dto.ModelType == consts2.UserModelType {
-		playerIDs, errRe := l.extService.UserService.GetUsersPlayerIds(ctx, dto.Ids)
-		if errRe.IsError || len(playerIDs) == 0 {
-			l.logger.Error(tag, errRe, len(playerIDs))
+		_playerIDs, errRe := l.extService.UserService.GetUsersPlayerIds(ctx, dto.Ids)
+		if errRe.IsError || len(_playerIDs) == 0 {
+			l.logger.Error(tag+" => Error Get Player Ids", errRe, len(_playerIDs))
 			return validators.ErrorResponse{}
 		}
+		playerIDs = _playerIDs
 	}
 	// For Kitchen
 	if dto.Type == consts.TYPE_PRIVATE && dto.ModelType == consts2.KitchenModelType {
@@ -133,9 +134,9 @@ func (l NotificationUseCase) SendPushNotification(ctx context.Context, dto *noti
 	}
 	notificationResponse, errRe := l.oneSignalService.SendNotification(ctx, &pushNotificationRequest, dto.ModelType)
 	if errRe.IsError {
-		l.logger.Error(tag, errRe)
+		l.logger.Error(tag+" => Error Response When Send", errRe)
 		return errRe
 	}
-	l.logger.Info(tag, notificationResponse)
+	l.logger.Info(tag+" => Error Response When Send", notificationResponse)
 	return
 }

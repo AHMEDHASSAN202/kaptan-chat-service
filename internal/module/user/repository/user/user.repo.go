@@ -141,25 +141,21 @@ func (r *UserRepository) FindByToken(ctx context.Context, token string) (*domain
 func (l UserRepository) GetUsersPlayerId(ctx *context.Context, userId []string) (playerIds []string, err error) {
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
 		bson.D{{"deleted_at", nil}},
-		bson.D{{"_id", utils.ConvertStringIdsToObjectIds(userId)}},
+		bson.M{"_id": bson.M{"$in": utils.ConvertStringIdsToObjectIds(userId)}},
 	}}}
 
-	data, err := New(l.userCollection.Collection).Context(*ctx).Aggregate(matching)
+	var users []domain.User
+	err = l.userCollection.SimpleAggregate(&users, matching)
 	playerIds = make([]string, 0)
 
-	if data == nil || data.Data == nil {
+	if err != nil {
 		return playerIds, err
 	}
 
-	for _, raw := range data.Data {
-		model := domain.User{}
-		err = bson.Unmarshal(raw, &model)
-		if err != nil {
-			l.logger.Error("user Repo -> List -> ", err)
-			break
-		}
+	for _, model := range users {
 		playerIds = append(playerIds, model.PlayerIds...)
 	}
+
 	return playerIds, err
 
 }
