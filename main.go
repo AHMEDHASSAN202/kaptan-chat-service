@@ -2,6 +2,7 @@ package main
 
 import (
 	"samm/internal/module/admin"
+	"samm/internal/module/approval"
 	"samm/internal/module/common"
 	appConfig "samm/internal/module/config"
 	"samm/internal/module/example"
@@ -43,6 +44,7 @@ func main() {
 			),
 			jwt.Module,
 			gate.Module,
+			approval.Module,
 			example.Module,
 			menu.Module,
 			order.Module,

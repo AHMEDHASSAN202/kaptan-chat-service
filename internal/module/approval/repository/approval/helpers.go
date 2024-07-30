@@ -1,4 +1,4 @@
-package repository
+package approval
 
 import (
 	"go.mongodb.org/mongo-driver/bson"

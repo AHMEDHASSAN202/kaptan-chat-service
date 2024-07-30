@@ -3,9 +3,11 @@ package delivery
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"samm/internal/module/common/domain"
-	dto "samm/internal/module/common/dto"
+	"samm/internal/module/approval/domain"
+	dto "samm/internal/module/approval/dto"
 	"samm/pkg/logger"
+	"samm/pkg/middlewares/admin"
+	commmon "samm/pkg/middlewares/common"
 	"samm/pkg/validators"
 )
 
@@ -15,16 +17,16 @@ type ApprovalHandler struct {
 	logger          logger.ILogger
 }
 
-// InitUserController will initialize the article's HTTP controller
-func InitApprovalController(e *echo.Echo, us domain.ApprovalUseCase, validator *validator.Validate, logger logger.ILogger) {
+func InitApprovalController(e *echo.Echo, us domain.ApprovalUseCase, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &ApprovalHandler{
 		approvalUseCase: us,
 		validator:       validator,
 		logger:          logger,
 	}
 	approvalRoutes := e.Group("api/v1/admin/approval")
-	approvalRoutes.GET("/", handler.ListApprovals)
-	approvalRoutes.PUT("/:id", handler.ChangeApprovalStatus)
+	approvalRoutes.Use(adminMiddlewares.AuthMiddleware)
+	approvalRoutes.GET("", handler.ListApprovals, commonMiddlewares.PermissionMiddleware("list-approval"))
+	approvalRoutes.PUT("/:id", handler.ChangeApprovalStatus, commonMiddlewares.PermissionMiddleware("update-status-approval"))
 }
 
 func (a *ApprovalHandler) ListApprovals(c echo.Context) error {
@@ -38,6 +40,11 @@ func (a *ApprovalHandler) ListApprovals(c echo.Context) error {
 	err = c.Bind(&input)
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	validationErr := input.Validate(c, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 	data, errResp := a.approvalUseCase.List(ctx, &input)
 	if errResp.IsError {

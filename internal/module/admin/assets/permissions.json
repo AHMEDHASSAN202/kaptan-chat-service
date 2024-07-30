@@ -115,6 +115,14 @@
     ]
   },
   {
+    "type": "admin",
+    "subject": { "name": {"ar": "قائمة انتظار الموافقة", "en": "Approval Queue" } },
+    "actions": [
+      { "key": "list-approval", "name": {"ar": "عرض الكل", "en": "List"} },
+      { "key": "update-status-approval", "name": {"ar": "تعديل حالة", "en": "Update Status"} }
+    ]
+  },
+  {
     "type": "portal",
     "subject": { "name": {"ar": "المنتجات والاضافات", "en": "Menus & Modifiers" } },
     "actions": [

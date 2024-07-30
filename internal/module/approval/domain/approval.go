@@ -5,7 +5,7 @@ import (
 	mongopagination "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	dto2 "samm/internal/module/common/dto"
+	dto2 "samm/internal/module/approval/dto"
 	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"time"
@@ -22,14 +22,16 @@ type Fields struct {
 }
 
 type Approval struct {
-	mgm.DefaultModel `bson:",inline"`
-	CountryId        string             `json:"country_id" bson:"country_id"`
-	EntityId         primitive.ObjectID `json:"entity_id" bson:"entity_id"`
-	EntityType       string             `json:"entity_type" bson:"entity_type"`
-	Fields           Fields             `json:"fields" bson:"fields"`
-	Status           string             `json:"status" bson:"status"`
-	Dates            Dates              `json:"dates" bson:"dates"`
-	AdminDetails     dto.AdminDetails   `json:"admin_details" bson:"admin_details,omitempty"`
+	mgm.IDField  `bson:",inline"`
+	CountryId    string             `json:"country_id" bson:"country_id"`
+	EntityId     primitive.ObjectID `json:"entity_id" bson:"entity_id"`
+	EntityType   string             `json:"entity_type" bson:"entity_type"`
+	Fields       Fields             `json:"fields" bson:"fields"`
+	Status       string             `json:"status" bson:"status"`
+	Dates        Dates              `json:"dates" bson:"dates"`
+	AdminDetails dto.AdminDetails   `json:"admin_details" bson:"admin_details,omitempty"`
+	CreatedAt    time.Time          `json:"created_at" bson:"created_at,omitempty"`
+	UpdatedAt    time.Time          `json:"updated_at" bson:"updated_at"`
 }
 
 type ApprovalUseCase interface {
@@ -45,4 +47,5 @@ type ApprovalRepository interface {
 	List(ctx context.Context, dto *dto2.ListApprovalDto) ([]Approval, *mongopagination.PaginationData, error)
 	ChangeStatus(ctx context.Context, domainData *Approval) error
 	DeleteByEntity(ctx context.Context, entityId primitive.ObjectID, entityType string) error
+	ApprovePreviousChange(ctx context.Context, entityId primitive.ObjectID, entityType string, adminDetails dto.AdminDetails) error
 }

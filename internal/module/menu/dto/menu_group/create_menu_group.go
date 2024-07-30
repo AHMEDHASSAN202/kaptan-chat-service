@@ -36,6 +36,7 @@ type MenuItemDTO struct {
 	Image            string                            `json:"image"`
 	Status           string                            `json:"status" validate:"oneof=active inactive"`
 	IsNew            bool
+	dto.ApprovalData `bson:",inline"`
 }
 
 type CategoryDTO struct {

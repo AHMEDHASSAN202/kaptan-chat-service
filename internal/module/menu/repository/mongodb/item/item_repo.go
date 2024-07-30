@@ -8,9 +8,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	domain2 "samm/internal/module/common/domain"
-	"samm/internal/module/common/dto"
-	item2 "samm/internal/module/menu/builder/item"
+	domain2 "samm/internal/module/approval/domain"
+	"samm/internal/module/approval/dto"
+	"samm/internal/module/menu/approval_helpers"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
 	"samm/internal/module/menu/repository/structs/menu_group_item"
@@ -76,9 +76,11 @@ func (i *itemRepo) Create(ctx context.Context, doc []domain.Item) error {
 			return err
 		}
 
-		err = i.approvalRepo.CreateOrUpdate(sc, item2.CreateItemsApprovalBuilder(doc))
-		if err != nil {
-			return err
+		if doc[0].ApprovalStatus == utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL {
+			err = i.approvalRepo.CreateOrUpdate(sc, approval_helpers.CreateItemsApprovalBuilder(doc))
+			if err != nil {
+				return err
+			}
 		}
 
 		return session.CommitTransaction(sc)
@@ -91,13 +93,41 @@ func (i *itemRepo) Create(ctx context.Context, doc []domain.Item) error {
 }
 
 func (i *itemRepo) Update(ctx context.Context, id *primitive.ObjectID, doc *domain.Item, oldDoc *domain.Item) error {
+	// Start a transaction
 	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
+		// Check if approval is needed
+		if needToApprove, n, o := approval_helpers.NeedToApproveItem(doc, oldDoc); needToApprove {
+			// Create or update approval
+			err := i.approvalRepo.CreateOrUpdate(sc, []dto.CreateApprovalDto{approval_helpers.UpdateItemApprovalBuilder(doc, n, o)})
+			if err != nil {
+				return err
+			}
+			// Update item with approval status and updated time
+			_, err = i.itemCollection.Collection.UpdateOne(sc, bson.M{"_id": doc.ID}, bson.M{"$set": bson.M{"approval_status": utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL, "updated_at": time.Now().UTC()}})
+			if err != nil {
+				i.logger.Error("ItemRepository -> UpdateOne -> ", err)
+				return err
+			}
+			return session.CommitTransaction(sc)
+		}
+
+		// If item is updated by admin, approve previous change
+		if doc.ApprovalStatus == utils.APPROVAL_STATUS.APPROVED {
+			err := i.approvalRepo.ApprovePreviousChange(sc, doc.ID, "items", doc.AdminDetails[len(doc.AdminDetails)-1])
+			if err != nil {
+				return err
+			}
+		}
+
+		// Update item in the collection
 		doc.ID = *id
 		err := i.itemCollection.UpdateWithCtx(sc, doc)
 		if err != nil {
 			i.logger.Error("ItemRepository -> Update -> ", err)
 			return err
 		}
+
+		// Sync changes with menu items
 		menuGroupItem := menu_group_item.MenuGroupItemSyncItemModel{}
 		copier.Copy(&menuGroupItem, &doc)
 		menuGroupItem.UpdatedAt = time.Now()
@@ -108,13 +138,6 @@ func (i *itemRepo) Update(ctx context.Context, id *primitive.ObjectID, doc *doma
 			return err
 		}
 
-		if needToApprove, n, o := needToApproval(doc, oldDoc); needToApprove {
-			err = i.approvalRepo.CreateOrUpdate(sc, []dto.CreateApprovalDto{item2.CreateItemApprovalBuilder(doc, n, o)})
-			if err != nil {
-				return err
-			}
-		}
-
 		return session.CommitTransaction(sc)
 	})
 
@@ -122,6 +145,7 @@ func (i *itemRepo) Update(ctx context.Context, id *primitive.ObjectID, doc *doma
 		i.logger.Error("ItemRepository -> transaction error in update item -> ", err)
 		return err
 	}
+
 	return nil
 }
 
@@ -222,29 +246,4 @@ func (i *itemRepo) GetAllActiveItems(ctx context.Context, accountId string) (ite
 	filter := bson.M{"account_id": utils.ConvertStringIdToObjectId(accountId), "status": "active", "deleted_at": nil}
 	err = i.itemCollection.SimpleFind(&items, filter)
 	return items, err
-}
-
-func needToApproval(doc *domain.Item, oldDoc *domain.Item) (bool, map[string]interface{}, map[string]interface{}) {
-	if doc.ApprovalStatus != utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL {
-		return false, nil, nil
-	}
-	n := map[string]interface{}{}
-	o := map[string]interface{}{}
-	if doc.Name.Ar != oldDoc.Name.Ar || doc.Name.En != oldDoc.Name.En {
-		n["name"] = utils.StructToMap(doc.Name, "bson")
-		o["name"] = utils.StructToMap(oldDoc.Name, "bson")
-	}
-	if doc.Desc.Ar != oldDoc.Desc.Ar || doc.Desc.En != oldDoc.Desc.En {
-		n["desc"] = utils.StructToMap(doc.Desc, "bson")
-		o["desc"] = utils.StructToMap(oldDoc.Desc, "bson")
-	}
-	if doc.Price != oldDoc.Price {
-		n["price"] = doc.Price
-		o["price"] = oldDoc.Price
-	}
-	if doc.Image != oldDoc.Image {
-		n["image"] = doc.Image
-		o["image"] = oldDoc.Image
-	}
-	return len(n) >= 1, n, o
 }

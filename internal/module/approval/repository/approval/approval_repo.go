@@ -1,4 +1,4 @@
-package repository
+package approval
 
 import (
 	"context"
@@ -7,12 +7,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	builder "samm/internal/module/common/builder/approval"
-	"samm/internal/module/common/domain"
-	dto2 "samm/internal/module/common/dto"
+	builder "samm/internal/module/approval/builder/approval"
+	"samm/internal/module/approval/domain"
+	dto2 "samm/internal/module/approval/dto"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
+	"samm/pkg/utils/dto"
 	"strings"
+	"time"
 )
 
 type approvalRepo struct {
@@ -35,7 +37,7 @@ func (r *approvalRepo) CreateOrUpdate(ctx context.Context, dto []dto2.CreateAppr
 	for _, approvalDto := range dto {
 		domainData := builder.CreateApprovalBuilder(&approvalDto)
 		filter := bson.M{"entity_id": domainData.EntityId, "entity_type": domainData.EntityType, "status": utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL}
-		update := bson.M{"$set": domainData}
+		update := bson.M{"$set": domainData, "$setOnInsert": bson.M{"created_at": time.Now().UTC()}}
 		model := mongo.NewUpdateOneModel().SetFilter(filter).SetUpdate(update).SetUpsert(true)
 		models = append(models, model)
 	}
@@ -121,15 +123,31 @@ func (r *approvalRepo) ChangeStatus(ctx context.Context, domainData *domain.Appr
 				updateData[key] = value
 			}
 		}
-		_, err = r.dbs.Collection(domainData.EntityType).UpdateOne(sc, bson.M{"_id": domainData.EntityId}, bson.M{"$set": updateData})
+		_, err = mgm.CollectionByName(domainData.EntityType).UpdateOne(sc, bson.M{"_id": domainData.EntityId}, bson.M{"$set": updateData})
 		if err != nil {
-			r.logger.Error("approvalRepo -> SyncRole -> ", err)
+			r.logger.Error("approvalRepo -> UpdateOne -> ", err)
 			return err
+		}
+		if domainData.EntityType == "items" {
+			_, err = mgm.CollectionByName("menu_group_items").UpdateMany(sc, bson.M{"item_id": domainData.EntityId}, bson.M{"$set": updateData})
+			if err != nil {
+				r.logger.Error("approvalRepo -> UpdateMany -> ", err)
+				return err
+			}
 		}
 		return session.CommitTransaction(sc)
 	})
 	if err != nil {
 		r.logger.Error("approvalRepo -> Update -> ", err)
+	}
+	return err
+}
+
+func (r *approvalRepo) ApprovePreviousChange(ctx context.Context, entityId primitive.ObjectID, entityType string, adminDetails dto.AdminDetails) error {
+	_, err := r.approvalCollection.UpdateOne(ctx, bson.M{"entity_id": entityId, "entity_type": entityType, "status": utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL}, bson.M{"status": utils.APPROVAL_STATUS.APPROVED, "dates.approved_at": time.Now().UTC(), "admin_details": adminDetails})
+	if err != nil {
+		r.logger.Error("approvalRepo -> ApprovePreviousChange -> ", err)
+		return err
 	}
 	return err
 }

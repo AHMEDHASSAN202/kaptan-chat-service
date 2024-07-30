@@ -1,13 +1,14 @@
 package approval
 
 import (
-	"samm/internal/module/common/domain"
-	"samm/internal/module/common/dto"
+	"samm/internal/module/approval/domain"
+	"samm/internal/module/approval/dto"
 	"samm/pkg/utils"
+	"time"
 )
 
 func CreateApprovalBuilder(dto *dto.CreateApprovalDto) *domain.Approval {
-	return &domain.Approval{
+	approval := &domain.Approval{
 		EntityId:     dto.EntityId,
 		EntityType:   dto.EntityType,
 		CountryId:    dto.CountryId,
@@ -16,4 +17,6 @@ func CreateApprovalBuilder(dto *dto.CreateApprovalDto) *domain.Approval {
 		Dates:        domain.Dates{ApprovedAt: nil, RejectedAt: nil},
 		AdminDetails: dto.AdminDetails,
 	}
+	approval.UpdatedAt = time.Now().UTC()
+	return approval
 }

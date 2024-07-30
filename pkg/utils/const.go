@@ -2,6 +2,10 @@ package utils
 
 var Countries = []string{"SA", "EG"}
 
+const ADMIN_TYPE = "admin"
+const PORTAL_TYPE = "portal"
+const KITCHEN_TYPE = "kitchen"
+
 type APPROVAL_STATUS_STUCT struct {
 	WAIT_FOR_APPROVAL string
 	APPROVED          string

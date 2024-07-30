@@ -1,7 +1,7 @@
-package item
+package approval_helpers
 
 import (
-	"samm/internal/module/common/dto"
+	"samm/internal/module/approval/dto"
 	"samm/internal/module/menu/domain"
 	"samm/pkg/utils"
 )
@@ -16,6 +16,7 @@ func CreateItemsApprovalBuilder(items []domain.Item) []dto.CreateApprovalDto {
 			EntityType:   "items",
 			New: map[string]interface{}{
 				"name":  utils.StructToMap(item.Name, "bson"),
+				"desc":  utils.StructToMap(item.Desc, "bson"),
 				"price": item.Price,
 				"image": item.Image,
 			},
@@ -25,7 +26,7 @@ func CreateItemsApprovalBuilder(items []domain.Item) []dto.CreateApprovalDto {
 	return approvalData
 }
 
-func CreateItemApprovalBuilder(item *domain.Item, n map[string]interface{}, o map[string]interface{}) dto.CreateApprovalDto {
+func UpdateItemApprovalBuilder(item *domain.Item, n map[string]interface{}, o map[string]interface{}) dto.CreateApprovalDto {
 	approvalData := dto.CreateApprovalDto{
 		AdminDetails: item.AdminDetails[len(item.AdminDetails)-1],
 		CountryId:    "SA",

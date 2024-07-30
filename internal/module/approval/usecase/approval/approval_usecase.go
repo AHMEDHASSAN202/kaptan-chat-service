@@ -5,8 +5,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"samm/internal/module/admin/responses"
-	"samm/internal/module/common/domain"
-	dto "samm/internal/module/common/dto"
+	"samm/internal/module/approval/domain"
+	dto "samm/internal/module/approval/dto"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	utilsDto "samm/pkg/utils/dto"
@@ -57,6 +57,16 @@ func (oRec *ApprovalUseCase) ChangeStatus(ctx context.Context, input *dto.Change
 		return validators.GetErrorResponse(&ctx, localization.CanNotChangeApprovalStatus, nil, utils.GetAsPointer(http.StatusBadRequest))
 	}
 	approval.AdminDetails = utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(input.CauserId), Name: input.CauserName, Type: input.CauserType, Operation: "Change Approval Status", UpdatedAt: time.Now()}
+	approval.Status = input.Status
+	now := time.Now().UTC()
+	switch input.Status {
+	case utils.APPROVAL_STATUS.APPROVED:
+		approval.Dates.ApprovedAt = &now
+		approval.Dates.RejectedAt = nil
+	case utils.APPROVAL_STATUS.REJECTED:
+		approval.Dates.ApprovedAt = nil
+		approval.Dates.RejectedAt = &now
+	}
 	err = oRec.approvalRepo.ChangeStatus(ctx, approval)
 	if err != nil {
 		return validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
