@@ -49,6 +49,7 @@ type UserUseCase interface {
 	ToggleUserActivation(ctx *context.Context, userId string, adminHeader *dto.AdminHeaders) (err validators.ErrorResponse)
 	UserEmailExists(ctx *context.Context, email, userId string) bool
 	UpdateUserPlayerId(ctx *context.Context, payload *user.UpdateUserPlayerId) (user *responses.MobileUser, err validators.ErrorResponse)
+	GetUsersPlayerId(ctx *context.Context, userId []string) (playerIds []string, err validators.ErrorResponse)
 }
 
 type UserRepository interface {
@@ -61,4 +62,5 @@ type UserRepository interface {
 	FindByToken(ctx context.Context, token string) (domainData *User, err error)
 	List(ctx *context.Context, dto *user.ListUserDto) (usersRes *[]User, paginationMeta *PaginationData, err error)
 	UserEmailExists(ctx *context.Context, email, userId string) bool
+	GetUsersPlayerId(ctx *context.Context, userId []string) (playerIds []string, err error)
 }

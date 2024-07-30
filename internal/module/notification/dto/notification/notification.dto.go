@@ -14,7 +14,7 @@ type Name struct {
 
 type StoreNotificationDto struct {
 	Title        Name     `json:"title" validate:"required"`
-	Text         Name     `json:"Text" validate:"required"`
+	Text         Name     `json:"text" validate:"required"`
 	Image        string   `json:"image"`
 	Type         string   `json:"type" validate:"required,oneof=public private"`
 	UserIds      []string `json:"user_ids" validate:"required_if=Type private,max=100"`

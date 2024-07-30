@@ -261,3 +261,10 @@ func (l UserUseCase) UpdateUserPlayerId(ctx *context.Context, payload *user.Upda
 	}
 	return reposeBuilderAtUpdateProfile(userDomain), validators.ErrorResponse{}
 }
+func (l UserUseCase) GetUsersPlayerId(ctx *context.Context, userId []string) (playerIds []string, err validators.ErrorResponse) {
+	playerIds, errRe := l.repo.GetUsersPlayerId(ctx, userId)
+	if errRe != nil {
+		return playerIds, validators.GetErrorResponseFromErr(errRe)
+	}
+	return
+}
