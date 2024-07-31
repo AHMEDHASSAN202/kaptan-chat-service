@@ -40,12 +40,14 @@ type Item struct {
 	AdminDetails     []dto.AdminDetails   `json:"admin_details" bson:"admin_details"`
 	Status           string               `json:"status" bson:"status"`
 	DeletedAt        *time.Time           `json:"deleted_at" bson:"deleted_at"`
+	dto.ApprovalData `bson:",inline"`
 }
 
 type ItemUseCase interface {
 	Create(ctx context.Context, dto []item.CreateItemDto) validators.ErrorResponse
 	Update(ctx context.Context, dto item.UpdateItemDto) validators.ErrorResponse
 	GetById(ctx context.Context, id string) (responseItem.ItemResponse, validators.ErrorResponse)
+	GetByIdAndHandleApproval(ctx context.Context, id string) (responseItem.ItemResponse, validators.ErrorResponse)
 	List(ctx context.Context, dto *item.ListItemsDto) (*responses.ListResponse, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, id string, dto *item.ChangeItemStatusDto) validators.ErrorResponse
 	SoftDelete(ctx context.Context, id string, input item.DeleteItemDto) validators.ErrorResponse
@@ -57,7 +59,7 @@ type ItemRepository interface {
 	GetByIds(ctx context.Context, ids []primitive.ObjectID) ([]Item, error)
 	Find(ctx context.Context, id primitive.ObjectID) (responseItem.ItemResponse, error)
 	List(ctx context.Context, query *item.ListItemsDto) ([]Item, *mongopagination.PaginationData, error)
-	Update(ctx context.Context, id *primitive.ObjectID, doc *Item) error
+	Update(ctx context.Context, id *primitive.ObjectID, doc *Item, oldDoc *Item) error
 	SoftDelete(ctx context.Context, doc *Item) error
 	ChangeStatus(ctx context.Context, doc *Item) error
 	Create(ctx context.Context, doc []Item) error

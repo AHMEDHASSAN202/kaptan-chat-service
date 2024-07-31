@@ -9,6 +9,7 @@ const (
     Account_id_is_not_exists = "Account_id_is_not_exists" // Account is not exists
     App_type_is_unique_rules_validation = "App_type_is_unique_rules_validation" // Feature not supported
     CanNotBuildOrderResponse = "CanNotBuildOrderResponse" // Internal server errors occurred. Please contact support.
+    CanNotChangeApprovalStatus = "CanNotChangeApprovalStatus" // CanNotChangeApprovalStatus
     ChangeOrderStatusError = "ChangeOrderStatusError" // ChangeOrderStatusError
     Cuisine_id_is_exists_rules_validation = "Cuisine_id_is_exists_rules_validation" // Cuisine Id Not Exist
     Cuisine_name_is_unique_rules_validation = "Cuisine_name_is_unique_rules_validation" // Feature not supported

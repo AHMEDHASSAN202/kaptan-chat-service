@@ -48,13 +48,15 @@ func (l KitchenRepository) UpdateKitchen(kitchen *domain.Kitchen) (err error) {
 	err = l.kitchenCollection.Update(kitchen, &opts)
 	return
 }
-func (l KitchenRepository) FindKitchen(ctx context.Context, Id primitive.ObjectID) (kitchen *domain.Kitchen, err error) {
+func (l KitchenRepository) FindKitchen(ctx context.Context, Id primitive.ObjectID, withLookups bool) (kitchen *domain.Kitchen, err error) {
 	domainData := domain.Kitchen{}
 	var filters []interface{}
 
 	filters = append(filters, bson.M{"$match": bson.M{"deleted_at": nil, "_id": Id}})
-	filters = append(filters, bson.M{"$lookup": bson.M{"from": "locations", "localField": "location_ids", "foreignField": "_id", "as": "locations"}})
-	filters = append(filters, bson.M{"$lookup": bson.M{"from": "accounts", "localField": "account_ids", "foreignField": "_id", "as": "accounts"}})
+	if withLookups {
+		filters = append(filters, bson.M{"$lookup": bson.M{"from": "locations", "localField": "location_ids", "foreignField": "_id", "as": "locations"}})
+		filters = append(filters, bson.M{"$lookup": bson.M{"from": "accounts", "localField": "account_ids", "foreignField": "_id", "as": "accounts"}})
+	}
 
 	exists, err := l.kitchenCollection.SimpleAggregateFirstWithCtx(ctx, &domainData, filters...)
 	if !exists {
@@ -64,7 +66,7 @@ func (l KitchenRepository) FindKitchen(ctx context.Context, Id primitive.ObjectI
 }
 
 func (l KitchenRepository) DeleteKitchen(ctx context.Context, Id primitive.ObjectID, causer *dto.AdminDetails) (err error) {
-	kitchenData, err := l.FindKitchen(ctx, Id)
+	kitchenData, err := l.FindKitchen(ctx, Id, false)
 	if err != nil {
 		return err
 	}

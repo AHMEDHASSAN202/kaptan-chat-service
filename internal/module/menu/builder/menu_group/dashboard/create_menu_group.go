@@ -107,6 +107,8 @@ func MenuGroupItemsBuilder(dto *menu_group.CreateMenuGroupDTO) *[]domain.MenuGro
 					menuGroupItem.Calories = item.Calories
 					menuGroupItem.Price = item.Price
 					menuGroupItem.Sort = item.Sort
+					menuGroupItem.HasOriginal = item.HasOriginal
+					menuGroupItem.ApprovalStatus = item.ApprovalStatus
 					menuGroupItem.ModifierGroupIds = item.ModifierGroupIds
 					menuGroupItem.Tags = utils.If(item.Tags != nil, item.Tags, make([]string, 0)).([]string)
 					menuGroupItem.Status = utils.If(item.Status != "", strings.ToLower(item.Status), consts.MENU_GROUP_ITEM_DEFUALT_STATUS).(string)
