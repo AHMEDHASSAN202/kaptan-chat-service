@@ -38,7 +38,7 @@ func NewOnesignalService(httpClient *resty.Client, logger logger.ILogger) domain
 	}
 }
 func (o OnesignalService) GetValidCred(modelType string) (appId, apiToken string) {
-	if modelType == consts.KitchenModelType {
+	if modelType == consts.LocationModelType {
 		return o.KitchenAppId, o.APITokenKitchen
 	}
 	return o.UserAppId, o.APITokenUser

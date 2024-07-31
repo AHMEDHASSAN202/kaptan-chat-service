@@ -116,8 +116,8 @@ func (l NotificationUseCase) SendPushNotification(dto notification.NotificationD
 		playerIDs = _playerIDs
 	}
 	// For Kitchen
-	if dto.Type == consts.TYPE_PRIVATE && dto.ModelType == consts2.KitchenModelType {
-		_playerIDs, errRe := l.extService.KitchenService.GetKitchenPlayerIds(ctx, dto.Ids)
+	if dto.Type == consts.TYPE_PRIVATE && dto.ModelType == consts2.LocationModelType {
+		_playerIDs, errRe := l.extService.KitchenService.GetKitchenPlayerIds(ctx, dto.Ids, dto.AccountIds)
 		if errRe.IsError || len(_playerIDs) == 0 {
 			l.logger.Error(tag+" => Error Get Player Ids", errRe, len(_playerIDs))
 			return validators.ErrorResponse{}
@@ -148,5 +148,29 @@ func (l NotificationUseCase) SendPushNotification(dto notification.NotificationD
 		return errRe
 	}
 	l.logger.Info(tag+" => Error Response When Send", notificationResponse)
+	return
+}
+
+func (l NotificationUseCase) SendPushNotificationV2(dto notification.GeneralNotification) (err validators.ErrorResponse) {
+	//ctx := context.Background()
+
+	for _, toModel := range dto.To {
+
+		// Prepare Dto
+		var notificationData notification.NotificationDto
+		notificationData.Title.Ar = ""
+		notificationData.Title.En = ""
+		notificationData.Text.En = ""
+		notificationData.Text.Ar = ""
+		notificationData.Type = consts.TYPE_PRIVATE
+		notificationData.Ids = []string{toModel.Id}
+		notificationData.AccountIds = []string{toModel.AccountId}
+		notificationData.ModelType = toModel.Model
+		notificationData.CountryId = dto.Country
+
+		l.SendPushNotification(notificationData)
+
+	}
+
 	return
 }

@@ -115,10 +115,13 @@ func (l *KitchenRepository) List(ctx *context.Context, dto *kitchen.ListKitchenD
 
 	return
 }
-func (l KitchenRepository) GetKitchensPlayerId(ctx *context.Context, kitchenIds []string) (playerIds []string, err error) {
+func (l KitchenRepository) GetKitchensPlayerId(ctx *context.Context, locationIds []string, accountIds []string) (playerIds []string, err error) {
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
 		bson.D{{"deleted_at", nil}},
-		bson.M{"_id": bson.M{"$in": utils.ConvertStringIdsToObjectIds(kitchenIds)}},
+		bson.M{"$or": []bson.M{
+			{"location_ids": bson.M{"$in": utils.ConvertStringIdsToObjectIds(locationIds)}},
+			{"account_ids": bson.M{"$in": utils.ConvertStringIdsToObjectIds(accountIds)}},
+		}},
 	}}}
 
 	var users []domain.Kitchen
