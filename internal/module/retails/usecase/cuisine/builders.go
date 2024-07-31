@@ -5,6 +5,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/retails/domain"
 	"samm/internal/module/retails/dto/cuisine"
+	"samm/internal/module/retails/responses"
 	"samm/pkg/utils"
 	utilsDto "samm/pkg/utils/dto"
 	"time"
@@ -31,5 +32,10 @@ func getCuisinesIds(cuisines *[]domain.Cuisine) (ids []string) {
 	for _, val := range *cuisines {
 		ids = append(ids, utils.ConvertObjectIdToStringId(val.ID))
 	}
+	return
+}
+
+func mobileListCuisineBuilder(cuisinesDomain *[]domain.Cuisine) (cuisinesRes []responses.MobileListCuisine) {
+	copier.Copy(&cuisinesRes, cuisinesDomain)
 	return
 }

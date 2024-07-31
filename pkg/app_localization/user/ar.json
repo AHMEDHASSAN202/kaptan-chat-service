@@ -22,6 +22,8 @@
     "home_branchesEmpty_title": "لم يتم العثور على متاجر بالقرب منك،",
     "home_branchesEmpty_subtitle": "حاول اختيار موقع مختلف",
     "home_lastOrders_more": "المزيد...",
+    "homeSearch_emptyResult_title": "لم يتم العثور على نتائج ،",
+    "homeSearch_emptyResult_subtitle": "حاول البحث بكلمة مختلفة",
     "auth_signin_title": "تسجيل الدخول",
     "auth_signin_subtitle": "الرجاء تسجيل الدخول لإكمال طلبك",
     "auth_signin_mobile_hint": "الجوال",
@@ -201,7 +203,7 @@
     "visa": "بطاقة فيزا",
     "master": "ماستر كارد",
     "debit": "بطاقة ائتمان",
-    "visa_image": "https://32m6xe.stackhero-network.com/samm-dev-assets/ali/1722204035visa.png",
+    "visa_image": "/samm-dev-assets/ali/1722204035visa.png",
     "master_image": "xyz",
     "debit_image": "xyz",
     "alert_deleteCar_title": "حذف سيارة",
@@ -242,5 +244,13 @@
     "ready_for_pickup": "جاهز للإستلام",
     "applePay": "ابل باي",
     "creditCard": "بطاقة إئتمان",
-    "internet_failed_message": "لا يوجد اتصال بالإنترنت"
+    "internet_failed_message": "لا يوجد اتصال بالإنترنت",
+    "cuisine_all": "الكل",
+    "server_response404_message": "المورد المطلوب غير قابل للوصول، يرجى المحاولة مرة أخرى لاحقًا",
+    "server_response5XX_message": "حدث خطأ. يرجى إعادة المحاولة في وقت لاحق",
+    "server_responseNotHandled_message": "لم تتم معالجة رمز الاستجابة هذا",
+    "server_responseHandlingException_message": "حدث خطأ أثناء التعامل مع الاستجابة",
+    "server_parsingError_message": "غير قادر على تحليل الاستجابة، هناك خطأ ما",
+    "request_failure_message": "لقد فشل الطلب",
+    "error_retryButton": "إعادة المحاولة"
 }

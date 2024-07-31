@@ -136,7 +136,6 @@ func (i *menuGroupItemRepo) MobileGetMenuGroupItems(ctx context.Context, dto *me
 
 	matching := bson.M{
 		"$match": bson.M{"$and": []interface{}{
-			bson.D{{"menu_group.location_ids", utils.ConvertStringIdToObjectId(dto.LocationId)}},
 			bson.D{{"menu_group.status", "active"}},
 			bson.D{{"category.status", "active"}},
 			bson.D{{"status", "active"}},
@@ -144,6 +143,10 @@ func (i *menuGroupItemRepo) MobileGetMenuGroupItems(ctx context.Context, dto *me
 			AddAvailabilityQuery(dto.CountryId, "$menu_group.availabilities"),
 			AddAvailabilityQuery(dto.CountryId, "$availabilities"),
 		}},
+	}
+
+	if dto.LocationId != primitive.NilObjectID.Hex() {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.D{{"menu_group.location_ids", utils.ConvertStringIdToObjectId(dto.LocationId)}})
 	}
 
 	if dto.Query != "" {

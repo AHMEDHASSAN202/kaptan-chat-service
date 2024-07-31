@@ -78,12 +78,12 @@ func (i *cuisineRepo) GetByIds(ctx *context.Context, ids *[]primitive.ObjectID) 
 	return &cuisines, err
 }
 
-func (i *cuisineRepo) SoftDelete(ctx *context.Context, id primitive.ObjectID, causer *utilsDto.AdminDetails) error {
+func (i *cuisineRepo) SoftDelete(ctx context.Context, id primitive.ObjectID, causer *utilsDto.AdminDetails) error {
 	update := bson.M{"$set": bson.M{"deleted_at": time.Now()}}
 	if causer.Id != primitive.NilObjectID {
 		update["$push"] = bson.M{"admin_details": causer}
 	}
-	_, err := i.cuisineCollection.UpdateByID(*ctx, id, update)
+	_, err := i.cuisineCollection.UpdateByID(ctx, id, update)
 	if err != nil {
 		return err
 	}
@@ -98,10 +98,14 @@ func (i *cuisineRepo) ChangeStatus(ctx *context.Context, dto *cuisine.ChangeCuis
 	return nil
 }
 
-func (i *cuisineRepo) List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (cuisinesRes *[]domain.Cuisine, paginationMeta *PaginationData, err error) {
+func (i *cuisineRepo) List(ctx *context.Context, isMobile bool, dto *cuisine.ListCuisinesDto) (cuisinesRes *[]domain.Cuisine, paginationMeta *PaginationData, err error) {
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
 		bson.D{{"deleted_at", nil}},
 	}}}
+
+	if isMobile {
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"is_hidden": false})
+	}
 
 	if dto.Query != "" {
 		pattern := ".*" + dto.Query + ".*"
@@ -128,4 +132,11 @@ func (i *cuisineRepo) List(ctx *context.Context, dto *cuisine.ListCuisinesDto) (
 	cuisinesRes = &cuisines
 
 	return
+}
+
+func (i *cuisineRepo) CheckNameExists(ctx context.Context, name string) (bool, error) {
+	filter := bson.M{"$or": bson.A{bson.M{"name.ar": name}, bson.M{"name.en": name}}, "deleted_at": nil}
+	c, err := i.cuisineCollection.CountDocuments(ctx, filter)
+
+	return c > 0, err
 }

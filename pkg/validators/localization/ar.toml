@@ -70,6 +70,10 @@ other = "يجب ان يكون objectId"
 description = "Feature not supported"
 other = "تم اضافه اسم هذا المنتج من قبل"
 
+[Cuisine_name_is_unique_rules_validation]
+description = "Feature not supported"
+other = "تم اضافه اسم هذا المطبخ من قبل"
+
 [SKU_name_is_unique_rules_validation]
 description = "Feature not supported"
 other = "هذا الاسم موجود بالفعل، ويجب أن يكون اسم SKU فريدًا."
