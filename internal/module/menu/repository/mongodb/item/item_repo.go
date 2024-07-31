@@ -8,9 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	domain2 "samm/internal/module/approval/domain"
-	"samm/internal/module/approval/dto"
-	"samm/internal/module/menu/approval_helpers"
+	"samm/internal/module/menu/approval_helper"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
 	"samm/internal/module/menu/repository/structs/menu_group_item"
@@ -25,10 +23,10 @@ type itemRepo struct {
 	itemCollection    *mgm.Collection
 	logger            logger.ILogger
 	menuGroupItemRepo domain.MenuGroupItemRepository
-	approvalRepo      domain2.ApprovalRepository
+	approvalHelper    *approval_helper.ApprovalItemHelper
 }
 
-func NewItemRepository(dbs *mongo.Database, logger logger.ILogger, menuGroupItemRepo domain.MenuGroupItemRepository, approvalRepo domain2.ApprovalRepository) domain.ItemRepository {
+func NewItemRepository(dbs *mongo.Database, logger logger.ILogger, menuGroupItemRepo domain.MenuGroupItemRepository, approvalHelper *approval_helper.ApprovalItemHelper) domain.ItemRepository {
 	itemCollection := mgm.Coll(&domain.Item{})
 	//text search menu cuisine
 	mongodb.CreateIndex(itemCollection.Collection, false, bson.E{"name.ar", mongodb.IndexType.Text}, bson.E{"name.en", mongodb.IndexType.Text}, bson.E{"tags", mongodb.IndexType.Text},
@@ -39,7 +37,7 @@ func NewItemRepository(dbs *mongo.Database, logger logger.ILogger, menuGroupItem
 		itemCollection:    itemCollection,
 		logger:            logger,
 		menuGroupItemRepo: menuGroupItemRepo,
-		approvalRepo:      approvalRepo,
+		approvalHelper:    approvalHelper,
 	}
 }
 
@@ -76,11 +74,9 @@ func (i *itemRepo) Create(ctx context.Context, doc []domain.Item) error {
 			return err
 		}
 
-		if doc[0].ApprovalStatus == utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL {
-			err = i.approvalRepo.CreateOrUpdate(sc, approval_helpers.CreateItemsApprovalBuilder(doc))
-			if err != nil {
-				return err
-			}
+		err = i.approvalHelper.CreateApprovalAsArray(sc, doc)
+		if err != nil {
+			return err
 		}
 
 		return session.CommitTransaction(sc)
@@ -95,33 +91,18 @@ func (i *itemRepo) Create(ctx context.Context, doc []domain.Item) error {
 func (i *itemRepo) Update(ctx context.Context, id *primitive.ObjectID, doc *domain.Item, oldDoc *domain.Item) error {
 	// Start a transaction
 	err := mgm.Transaction(func(session mongo.Session, sc mongo.SessionContext) error {
-		// Check if approval is needed
-		if needToApprove, n, o := approval_helpers.NeedToApproveItem(doc, oldDoc); needToApprove {
-			// Create or update approval
-			err := i.approvalRepo.CreateOrUpdate(sc, []dto.CreateApprovalDto{approval_helpers.UpdateItemApprovalBuilder(doc, n, o)})
-			if err != nil {
-				return err
-			}
-			// Update item with approval status and updated time
-			_, err = i.itemCollection.Collection.UpdateOne(sc, bson.M{"_id": doc.ID}, bson.M{"$set": bson.M{"approval_status": utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL, "updated_at": time.Now().UTC()}})
-			if err != nil {
-				i.logger.Error("ItemRepository -> UpdateOne -> ", err)
-				return err
-			}
-			return session.CommitTransaction(sc)
+		continueToUpdate, err := i.approvalHelper.UpdateApproval(sc, doc, oldDoc)
+		if err != nil {
+			return err
 		}
 
-		// If item is updated by admin, approve previous change
-		if doc.ApprovalStatus == utils.APPROVAL_STATUS.APPROVED {
-			err := i.approvalRepo.ApprovePreviousChange(sc, doc.ID, "items", doc.AdminDetails[len(doc.AdminDetails)-1])
-			if err != nil {
-				return err
-			}
+		if !continueToUpdate {
+			return session.CommitTransaction(sc)
 		}
 
 		// Update item in the collection
 		doc.ID = *id
-		err := i.itemCollection.UpdateWithCtx(sc, doc)
+		err = i.itemCollection.UpdateWithCtx(sc, doc)
 		if err != nil {
 			i.logger.Error("ItemRepository -> Update -> ", err)
 			return err
@@ -161,7 +142,7 @@ func (i *itemRepo) SoftDelete(ctx context.Context, doc *domain.Item) error {
 			i.logger.Error("ItemRepository -> SyncMenuItemsChanges -> ", err)
 			return err
 		}
-		err = i.approvalRepo.DeleteByEntity(sc, doc.ID, "items")
+		err = i.approvalHelper.DeleteApproval(sc, doc)
 		if err != nil {
 			return err
 		}

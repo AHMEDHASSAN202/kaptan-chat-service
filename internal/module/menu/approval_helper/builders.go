@@ -1,4 +1,4 @@
-package approval_helpers
+package approval_helper
 
 import (
 	"samm/internal/module/approval/dto"
@@ -6,7 +6,7 @@ import (
 	"samm/pkg/utils"
 )
 
-func CreateItemsApprovalBuilder(items []domain.Item) []dto.CreateApprovalDto {
+func (a *ApprovalItemHelper) CreateItemsApprovalBuilder(items []domain.Item) []dto.CreateApprovalDto {
 	approvalData := []dto.CreateApprovalDto{}
 	for _, item := range items {
 		approvalData = append(approvalData, dto.CreateApprovalDto{
@@ -26,7 +26,7 @@ func CreateItemsApprovalBuilder(items []domain.Item) []dto.CreateApprovalDto {
 	return approvalData
 }
 
-func UpdateItemApprovalBuilder(item *domain.Item, n map[string]interface{}, o map[string]interface{}) dto.CreateApprovalDto {
+func (a *ApprovalItemHelper) UpdateItemApprovalBuilder(item *domain.Item, n map[string]interface{}, o map[string]interface{}) dto.CreateApprovalDto {
 	approvalData := dto.CreateApprovalDto{
 		AdminDetails: item.AdminDetails[len(item.AdminDetails)-1],
 		CountryId:    "SA",

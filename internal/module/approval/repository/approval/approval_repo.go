@@ -144,7 +144,7 @@ func (r *approvalRepo) ChangeStatus(ctx context.Context, domainData *domain.Appr
 }
 
 func (r *approvalRepo) ApprovePreviousChange(ctx context.Context, entityId primitive.ObjectID, entityType string, adminDetails dto.AdminDetails) error {
-	_, err := r.approvalCollection.UpdateOne(ctx, bson.M{"entity_id": entityId, "entity_type": entityType, "status": utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL}, bson.M{"status": utils.APPROVAL_STATUS.APPROVED, "dates.approved_at": time.Now().UTC(), "admin_details": adminDetails})
+	_, err := r.approvalCollection.UpdateOne(ctx, bson.M{"entity_id": entityId, "entity_type": entityType, "status": utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL}, bson.M{"$set": bson.M{"status": utils.APPROVAL_STATUS.APPROVED, "dates.approved_at": time.Now().UTC(), "admin_details": adminDetails}})
 	if err != nil {
 		r.logger.Error("approvalRepo -> ApprovePreviousChange -> ", err)
 		return err

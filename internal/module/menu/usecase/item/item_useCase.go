@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
+	"samm/internal/module/menu/approval_helper"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
 	"samm/internal/module/menu/responses"
@@ -22,18 +23,20 @@ import (
 )
 
 type ItemUseCase struct {
-	repo       domain.ItemRepository
-	logger     logger.ILogger
-	skuUsecase domain.SKUUseCase
-	gate       *gate.Gate
+	repo           domain.ItemRepository
+	logger         logger.ILogger
+	skuUsecase     domain.SKUUseCase
+	gate           *gate.Gate
+	approvalHelper *approval_helper.ApprovalItemHelper
 }
 
-func NewItemUseCase(repo domain.ItemRepository, logger logger.ILogger, skuUsecase domain.SKUUseCase, gate *gate.Gate) domain.ItemUseCase {
+func NewItemUseCase(repo domain.ItemRepository, logger logger.ILogger, skuUsecase domain.SKUUseCase, gate *gate.Gate, approvalHelper *approval_helper.ApprovalItemHelper) domain.ItemUseCase {
 	return &ItemUseCase{
-		repo:       repo,
-		logger:     logger,
-		skuUsecase: skuUsecase,
-		gate:       gate,
+		repo:           repo,
+		logger:         logger,
+		skuUsecase:     skuUsecase,
+		gate:           gate,
+		approvalHelper: approvalHelper,
 	}
 }
 
@@ -155,6 +158,15 @@ func (oRec *ItemUseCase) GetById(ctx context.Context, id string) (responseItem.I
 		return responseItem.ItemResponse{}, validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
 	}
 	return items, validators.ErrorResponse{}
+}
+
+func (oRec *ItemUseCase) GetByIdAndHandleApproval(ctx context.Context, id string) (responseItem.ItemResponse, validators.ErrorResponse) {
+	item, err := oRec.GetById(ctx, id)
+	if err.IsError {
+		return item, err
+	}
+	errApproval := oRec.approvalHelper.UpdateItemByApproval(ctx, &item)
+	return item, errApproval
 }
 
 func (oRec *ItemUseCase) CheckExists(ctx context.Context, accountId, name string, exceptProductIds ...string) (bool, validators.ErrorResponse) {

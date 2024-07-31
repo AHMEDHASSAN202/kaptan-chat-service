@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
+	"github.com/mitchellh/mapstructure"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 	"io"
@@ -596,4 +597,8 @@ func StructToMap(data interface{}, tagKey string) map[string]interface{} {
 		result[tag] = value
 	}
 	return result
+}
+
+func CopyMapToStruct(doc any, fields map[string]interface{}) error {
+	return mapstructure.Decode(fields, doc)
 }

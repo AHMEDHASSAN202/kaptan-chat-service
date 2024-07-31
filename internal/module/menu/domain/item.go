@@ -47,6 +47,7 @@ type ItemUseCase interface {
 	Create(ctx context.Context, dto []item.CreateItemDto) validators.ErrorResponse
 	Update(ctx context.Context, dto item.UpdateItemDto) validators.ErrorResponse
 	GetById(ctx context.Context, id string) (responseItem.ItemResponse, validators.ErrorResponse)
+	GetByIdAndHandleApproval(ctx context.Context, id string) (responseItem.ItemResponse, validators.ErrorResponse)
 	List(ctx context.Context, dto *item.ListItemsDto) (*responses.ListResponse, validators.ErrorResponse)
 	ChangeStatus(ctx context.Context, id string, dto *item.ChangeItemStatusDto) validators.ErrorResponse
 	SoftDelete(ctx context.Context, id string, input item.DeleteItemDto) validators.ErrorResponse
