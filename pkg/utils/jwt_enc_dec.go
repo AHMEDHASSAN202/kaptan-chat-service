@@ -9,7 +9,7 @@ func CreateJWT(claims interface{}, secret string) (string, error) {
 	jwtClaims := claims.(jwt.Claims)
 
 	// Create the token
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaims)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwtClaims)
 
 	// Sign the token with a secret key
 	secretKey := []byte(secret)

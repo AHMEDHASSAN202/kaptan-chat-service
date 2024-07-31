@@ -25,4 +25,5 @@ type IOrder interface {
 	ToCancel(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
 	ToCancelDashboard(ctx context.Context, payload *order.DashboardCancelOrderDto) (*domain.Order, validators.ErrorResponse)
 	ToPickedUpDashboard(ctx context.Context, payload *order.DashboardPickedUpOrderDto) (*domain.Order, validators.ErrorResponse)
+	PushEventToSubscribers(ctx context.Context, payload *domain.Order) validators.ErrorResponse
 }

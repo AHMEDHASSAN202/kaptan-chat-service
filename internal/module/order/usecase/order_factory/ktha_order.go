@@ -696,3 +696,5 @@ func (o *KthaOrder) ToPickedUpDashboard(ctx context.Context, payload *order.Dash
 
 	return orderDomain, validators.ErrorResponse{}
 }
+func (o *KthaOrder) PushEvent(ctx context.Context, payload *order.DashboardPickedUpOrderDto) validators.ErrorResponse {
+}

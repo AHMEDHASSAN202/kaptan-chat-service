@@ -3,6 +3,7 @@ package order
 import (
 	"context"
 	"errors"
+	"firebase.google.com/go/v4/db"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
@@ -28,14 +29,16 @@ type OrderUseCase struct {
 	extService   external.ExtService
 	logger       logger.ILogger
 	orderFactory *order_factory.OrderFactory
+	realTimeDb   *db.Client
 }
 
-func NewOrderUseCase(repo domain.OrderRepository, extService external.ExtService, logger logger.ILogger, orderFactory *order_factory.OrderFactory) domain.OrderUseCase {
+func NewOrderUseCase(repo domain.OrderRepository, extService external.ExtService, realTimeDb *db.Client, logger logger.ILogger, orderFactory *order_factory.OrderFactory) domain.OrderUseCase {
 	return &OrderUseCase{
 		repo:         repo,
 		extService:   extService,
 		logger:       logger,
 		orderFactory: orderFactory,
+		realTimeDb:   realTimeDb,
 	}
 }
 func (l OrderUseCase) ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDtoForDashboard) (*responses.ListResponse, validators.ErrorResponse) {
