@@ -9,4 +9,5 @@ type NotificationDto struct {
 	RedirectType string   `json:"redirect_type"`
 	LocationId   string   `json:"location_id"`
 	ModelType    string   `json:"model_type"`
+	CountryId    string   `json:"country_id"`
 }

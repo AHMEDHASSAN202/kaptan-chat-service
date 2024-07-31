@@ -15,6 +15,7 @@ import (
 	"samm/pkg/utils"
 	utilsDto "samm/pkg/utils/dto"
 	"samm/pkg/validators"
+	"strings"
 	"time"
 )
 
@@ -132,6 +133,10 @@ func (l NotificationUseCase) SendPushNotification(ctx context.Context, dto *noti
 		},
 		IncludePlayerIds: playerIDs,
 		Name:             dto.ModelType,
+	}
+	if dto.Type == consts.TYPE_PUBLIC {
+		pushNotificationRequest.Filters = []map[string]string{{"field": "country", "relation": "=", "value": strings.ToUpper(dto.CountryId)}}
+
 	}
 	notificationResponse, errRe := l.oneSignalService.SendNotification(ctx, &pushNotificationRequest, dto.ModelType)
 	if errRe.IsError {
