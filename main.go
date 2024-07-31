@@ -15,6 +15,7 @@ import (
 	"samm/pkg/aws"
 	"samm/pkg/config"
 	"samm/pkg/database"
+	"samm/pkg/event_bus"
 	"samm/pkg/gate"
 	"samm/pkg/http"
 	"samm/pkg/http/echo"
@@ -41,6 +42,7 @@ func main() {
 				validators.Init,
 				aws.Init,
 			),
+			event_bus.EventBusModule,
 			jwt.Module,
 			gate.Module,
 			example.Module,

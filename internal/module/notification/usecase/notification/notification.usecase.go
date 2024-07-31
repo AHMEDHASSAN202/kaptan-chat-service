@@ -2,6 +2,7 @@ package notification
 
 import (
 	"context"
+	"github.com/asaskevich/EventBus"
 	"github.com/jinzhu/copier"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/notification/consts"
@@ -24,17 +25,21 @@ type NotificationUseCase struct {
 	logger           logger.ILogger
 	extService       *external.ExtService
 	oneSignalService domain.OneSignalService
+	bus              EventBus.Bus
 }
 
 const tag = " NotificationUseCase "
 
-func NewNotificationUseCase(repo domain.NotificationRepository, logger logger.ILogger, extService *external.ExtService, oneSignalService domain.OneSignalService) domain.NotificationUseCase {
-	return &NotificationUseCase{
+func NewNotificationUseCase(repo domain.NotificationRepository, logger logger.ILogger, extService *external.ExtService, oneSignalService domain.OneSignalService, bus EventBus.Bus) domain.NotificationUseCase {
+	l := &NotificationUseCase{
 		repo:             repo,
 		logger:           logger,
 		extService:       extService,
 		oneSignalService: oneSignalService,
+		bus:              bus,
 	}
+	bus.SubscribeAsync(consts.SEND_NOTIFICATION, l.SendPushNotification, false)
+	return l
 }
 
 func (l NotificationUseCase) CreateNotification(ctx context.Context, payload *notification.StoreNotificationDto) (err validators.ErrorResponse) {
@@ -62,11 +67,9 @@ func (l NotificationUseCase) CreateNotification(ctx context.Context, payload *no
 	copier.Copy(&notificationData, payload)
 	notificationData.Ids = payload.UserIds
 	notificationData.ModelType = consts2.UserModelType
-
-	l.SendPushNotification(ctx, &notificationData)
+	l.bus.Publish(consts.SEND_NOTIFICATION, notificationData)
 	return
 }
-
 func (l NotificationUseCase) FindNotification(ctx context.Context, Id string) (notification domain.Notification, err validators.ErrorResponse) {
 	domainNotification, dbErr := l.repo.FindNotification(ctx, utils.ConvertStringIdToObjectId(Id))
 	if dbErr != nil {
@@ -100,7 +103,8 @@ func (l NotificationUseCase) ListMobile(ctx *context.Context, dto *notification.
 	return responses.SetListResponse(users, paginationMeta), validators.ErrorResponse{}
 }
 
-func (l NotificationUseCase) SendPushNotification(ctx context.Context, dto *notification.NotificationDto) (err validators.ErrorResponse) {
+func (l NotificationUseCase) SendPushNotification(dto notification.NotificationDto) (err validators.ErrorResponse) {
+	ctx := context.Background()
 	// Get Player Ids Based On Type
 	playerIDs := make([]string, 0)
 	if dto.Type == consts.TYPE_PRIVATE && dto.ModelType == consts2.UserModelType {

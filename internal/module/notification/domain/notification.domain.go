@@ -43,7 +43,7 @@ type NotificationUseCase interface {
 	DeleteNotification(ctx context.Context, Id string) (err validators.ErrorResponse)
 	List(ctx *context.Context, dto *notification.ListNotificationDto) (*responses.ListResponse, validators.ErrorResponse)
 	ListMobile(ctx *context.Context, dto *notification.ListNotificationMobileDto) (*responses.ListResponse, validators.ErrorResponse)
-	SendPushNotification(ctx context.Context, dto *notification.NotificationDto) (err validators.ErrorResponse)
+	SendPushNotification(dto notification.NotificationDto) (err validators.ErrorResponse)
 }
 
 type NotificationRepository interface {
