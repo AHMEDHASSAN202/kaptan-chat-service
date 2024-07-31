@@ -250,3 +250,8 @@ other = "Couldn't Change Order Status to new one"
 description = "PaymentError"
 other = "There was an issue processing your payment. Please try again or contact support for assistance."
 
+
+[CanNotChangeApprovalStatus]
+description = "CanNotChangeApprovalStatus"
+other = "Couldn't Change Approval Status to new one"
+

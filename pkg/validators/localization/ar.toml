@@ -246,3 +246,8 @@ other = "لا يمكن تغير حالة الطلب للحالة الجديدة"
 [PaymentError]
 description = "PaymentError"
 other = "حدثت مشكلة أثناء معالجة الدفع. يرجى المحاولة مرة أخرى أو الاتصال بالدعم للحصول على المساعدة."
+
+
+[CanNotChangeApprovalStatus]
+description = "CanNotChangeApprovalStatus"
+other = "لا يمكن تغير الحالة"
