@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	. "github.com/ahmetb/go-linq/v3"
+	"github.com/asaskevich/EventBus"
 	"math/rand"
 	"net/http"
 	"os"
@@ -287,4 +288,19 @@ func UserRejectionReasons(ctx context.Context, status string, id string) ([]doma
 	}
 
 	return userRejectionReason, validators.ErrorResponse{}
+}
+
+func NotifyUser(order *domain.Order, bus EventBus.Bus) {
+	//// Send notification
+	//var notificationData notification.NotificationDto
+	//notificationData.Title.Ar = ""
+	//notificationData.Title.En = ""
+	//notificationData.Text.En = ""
+	//notificationData.Text.Ar = ""
+	//notificationData.Type = consts3.TYPE_PRIVATE
+	//notificationData.Ids = []string{utils.ConvertObjectIdToStringId(order.User.ID)}
+	//notificationData.ModelType = consts2.UserModelType
+	//notificationData.CountryId = order.User.Country
+
+	//bus.Publish(consts3.SEND_NOTIFICATION, notificationData)
 }

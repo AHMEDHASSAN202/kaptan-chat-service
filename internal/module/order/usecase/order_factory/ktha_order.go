@@ -2,6 +2,7 @@ package order_factory
 
 import (
 	"context"
+	"github.com/asaskevich/EventBus"
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/copier"
 	"net/http"
@@ -41,6 +42,7 @@ type Deps struct {
 	orderRepo   domain.OrderRepository
 	redisClient *redis.RedisClient
 	gate        *gate.Gate
+	bus         EventBus.Bus
 }
 
 type KthaOrder struct {
@@ -158,6 +160,7 @@ func (o *KthaOrder) List(ctx context.Context, dto interface{}) ([]domain.Order, 
 }
 
 func (o *KthaOrder) SendNotifications() validators.ErrorResponse {
+
 	return validators.ErrorResponse{}
 }
 

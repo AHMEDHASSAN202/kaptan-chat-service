@@ -2,6 +2,7 @@ package order_factory
 
 import (
 	"errors"
+	"github.com/asaskevich/EventBus"
 	"github.com/go-playground/validator/v10"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/external"
@@ -14,11 +15,11 @@ type OrderFactory struct {
 	orderTypes map[string]func() IOrder
 }
 
-func NewOrderFactory(validator *validator.Validate, extService external.ExtService, logger logger.ILogger, orderRepo domain.OrderRepository, redisClient *redis.RedisClient, gate *gate.Gate) *OrderFactory {
+func NewOrderFactory(validator *validator.Validate, extService external.ExtService, logger logger.ILogger, orderRepo domain.OrderRepository, redisClient *redis.RedisClient, gate *gate.Gate, bus EventBus.Bus) *OrderFactory {
 	return &OrderFactory{
 		orderTypes: map[string]func() IOrder{
 			"ktha": func() IOrder {
-				return &KthaOrder{Deps: Deps{validator: validator, extService: extService, logger: logger, orderRepo: orderRepo, redisClient: redisClient, gate: gate}}
+				return &KthaOrder{Deps: Deps{validator: validator, extService: extService, logger: logger, orderRepo: orderRepo, redisClient: redisClient, gate: gate, bus: bus}}
 			},
 		},
 	}

@@ -30,10 +30,15 @@ func InitNotificationController(e *echo.Echo, us domain.NotificationUseCase, val
 	dashboard := e.Group("api/v1/admin/notification")
 	dashboard.Use(adminMiddlewares.AuthMiddleware)
 
-	dashboard.POST("", handler.CreateNotification, commonMiddlewares.PermissionMiddleware("create-notifications"))
-	dashboard.GET("", handler.ListNotification, commonMiddlewares.PermissionMiddleware("list-notifications"))
-	dashboard.GET("/:id", handler.FindNotification, commonMiddlewares.PermissionMiddleware("find-notifications"))
-	dashboard.DELETE("/:id", handler.DeleteNotification, commonMiddlewares.PermissionMiddleware("delete-notifications"))
+	//dashboard.POST("", handler.CreateNotification, commonMiddlewares.PermissionMiddleware("create-notifications"))
+	//dashboard.GET("", handler.ListNotification, commonMiddlewares.PermissionMiddleware("list-notifications"))
+	//dashboard.GET("/:id", handler.FindNotification, commonMiddlewares.PermissionMiddleware("find-notifications"))
+	//dashboard.DELETE("/:id", handler.DeleteNotification, commonMiddlewares.PermissionMiddleware("delete-notifications"))
+
+	dashboard.POST("", handler.CreateNotification)
+	dashboard.GET("", handler.ListNotification)
+	dashboard.GET("/:id", handler.FindNotification)
+	dashboard.DELETE("/:id", handler.DeleteNotification)
 
 	mobile := e.Group("api/v1/mobile/user/notification")
 	mobile.Use(echomiddleware.AppendCountryMiddleware)
