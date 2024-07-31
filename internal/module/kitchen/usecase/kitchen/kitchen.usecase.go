@@ -176,3 +176,10 @@ func (l KitchenUseCase) KitchenExists(ctx *context.Context, dto *kitchen.ListKit
 	}
 	return len(*users) > 0
 }
+func (l KitchenUseCase) GetKitchensPlayerId(ctx *context.Context, kitchenIds []string) (playerIds []string, err validators.ErrorResponse) {
+	playerIds, errRe := l.repo.GetKitchensPlayerId(ctx, kitchenIds)
+	if errRe != nil {
+		return playerIds, validators.GetErrorResponseFromErr(errRe)
+	}
+	return playerIds, err
+}

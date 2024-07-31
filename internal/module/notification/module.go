@@ -2,6 +2,7 @@ package notification
 
 import (
 	"go.uber.org/fx"
+	domain2 "samm/internal/module/kitchen/domain"
 	"samm/internal/module/notification/delivery"
 	"samm/internal/module/notification/external"
 	"samm/internal/module/notification/gateways/onesignal"
@@ -21,8 +22,9 @@ var Module = fx.Options(
 	),
 	fx.Invoke(
 		delivery.InitNotificationController,
-		func(a *external.ExtService, userUseCase domain.UserUseCase) {
+		func(a *external.ExtService, userUseCase domain.UserUseCase, kitchenUserCase domain2.KitchenUseCase) {
 			a.SetUserUseCase(userUseCase)
+			a.SetKitchenUseCase(kitchenUserCase)
 		},
 	),
 )

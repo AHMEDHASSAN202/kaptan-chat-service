@@ -115,3 +115,24 @@ func (l *KitchenRepository) List(ctx *context.Context, dto *kitchen.ListKitchenD
 
 	return
 }
+func (l KitchenRepository) GetKitchensPlayerId(ctx *context.Context, kitchenIds []string) (playerIds []string, err error) {
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.D{{"deleted_at", nil}},
+		bson.M{"_id": bson.M{"$in": utils.ConvertStringIdsToObjectIds(kitchenIds)}},
+	}}}
+
+	var users []domain.Kitchen
+	err = l.kitchenCollection.SimpleAggregate(&users, matching)
+	playerIds = make([]string, 0)
+
+	if err != nil {
+		return playerIds, err
+	}
+
+	for _, model := range users {
+		playerIds = append(playerIds, model.PlayerIds...)
+	}
+
+	return playerIds, err
+
+}

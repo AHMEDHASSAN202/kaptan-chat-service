@@ -112,11 +112,12 @@ func (l NotificationUseCase) SendPushNotification(ctx context.Context, dto *noti
 	}
 	// For Kitchen
 	if dto.Type == consts.TYPE_PRIVATE && dto.ModelType == consts2.KitchenModelType {
-		//playerIDs, errRe := l.extService.UserService.GetUsersPlayerIds(ctx, dto.Ids)
-		//if errRe.IsError || len(playerIDs) == 0 {
-		//	l.logger.Error(tag, errRe, len(playerIDs))
-		//	return validators.ErrorResponse{}
-		//}
+		_playerIDs, errRe := l.extService.KitchenService.GetKitchenPlayerIds(ctx, dto.Ids)
+		if errRe.IsError || len(_playerIDs) == 0 {
+			l.logger.Error(tag+" => Error Get Player Ids", errRe, len(_playerIDs))
+			return validators.ErrorResponse{}
+		}
+		playerIDs = _playerIDs
 	}
 
 	// Prepare dto to send with onesignal
