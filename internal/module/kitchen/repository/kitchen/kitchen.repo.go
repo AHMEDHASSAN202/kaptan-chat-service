@@ -123,7 +123,6 @@ func (l KitchenRepository) GetKitchensPlayerId(ctx *context.Context, locationIds
 			{"account_ids": bson.M{"$in": utils.ConvertStringIdsToObjectIds(accountIds)}},
 		}},
 	}}}
-
 	var users []domain.Kitchen
 	err = l.kitchenCollection.SimpleAggregate(&users, matching)
 	playerIds = make([]string, 0)

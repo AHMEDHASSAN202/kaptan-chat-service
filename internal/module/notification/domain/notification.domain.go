@@ -13,6 +13,17 @@ import (
 	"time"
 )
 
+type NotificationCode struct {
+	User struct {
+		Title       Name `json:"title"`
+		Description Name `json:"description"`
+	} `json:"user"`
+	Kitchen struct {
+		Title       Name `json:"title"`
+		Description Name `json:"description"`
+	} `json:"kitchen"`
+}
+
 type Notification struct {
 	mgm.DefaultModel `bson:",inline"`
 	Title            Name                 `json:"title" bson:"title"`
@@ -23,7 +34,7 @@ type Notification struct {
 	RedirectType     string               `json:"redirect_type" bson:"redirect_type"`
 	RedirectData     *RedirectData        `json:"redirect_data" bson:"redirect_data"`
 	CountryId        string               `json:"country_id" bson:"country_id"`
-	AdminDetails     dto.AdminDetails     `json:"admin_details" bson:"admin_details"`
+	AdminDetails     *dto.AdminDetails    `json:"admin_details" bson:"admin_details"`
 	DeletedAt        *time.Time           `json:"deleted_at" bson:"deleted_at"`
 	UsersCount       int                  `json:"users_count" bson:"users_count,omitempty"`
 }

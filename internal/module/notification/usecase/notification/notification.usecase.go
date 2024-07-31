@@ -38,7 +38,7 @@ func NewNotificationUseCase(repo domain.NotificationRepository, logger logger.IL
 		oneSignalService: oneSignalService,
 		bus:              bus,
 	}
-	bus.SubscribeAsync(consts.SEND_NOTIFICATION, l.SendPushNotification, false)
+	bus.SubscribeAsync(consts.SEND_NOTIFICATION, l.SendPushNotificationV2, false)
 	return l
 }
 
@@ -56,18 +56,22 @@ func (l NotificationUseCase) CreateNotification(ctx context.Context, payload *no
 		notificationDomain.RedirectData.LocationId = utils.ConvertStringIdToObjectId(payload.LocationId)
 	}
 	causerDetails := utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(payload.CauserId), Name: payload.CauserName, Type: payload.CauserType, Operation: "Create", UpdatedAt: time.Now()}
-	notificationDomain.AdminDetails = causerDetails
+	if !causerDetails.Id.IsZero() {
+		notificationDomain.AdminDetails = &causerDetails
+
+	}
 	dbErr := l.repo.CreateNotification(&notificationDomain)
 	if dbErr != nil {
 		return validators.GetErrorResponseFromErr(dbErr)
 	}
 
-	// Send notification
+	//Send notification
 	var notificationData notification.NotificationDto
 	copier.Copy(&notificationData, payload)
 	notificationData.Ids = payload.UserIds
 	notificationData.ModelType = consts2.UserModelType
-	l.bus.Publish(consts.SEND_NOTIFICATION, notificationData)
+	l.SendPushNotification(notificationData)
+
 	return
 }
 func (l NotificationUseCase) FindNotification(ctx context.Context, Id string) (notification domain.Notification, err validators.ErrorResponse) {
@@ -153,24 +157,37 @@ func (l NotificationUseCase) SendPushNotification(dto notification.NotificationD
 
 func (l NotificationUseCase) SendPushNotificationV2(dto notification.GeneralNotification) (err validators.ErrorResponse) {
 	//ctx := context.Background()
+	notificationCode, err := GetNotificationByCode(dto.NotificationCode, dto.NotificationData)
+	if err.IsError {
+		l.logger.Error(err)
+		return
+	}
 
 	for _, toModel := range dto.To {
-
 		// Prepare Dto
+		notificationMessage := notificationCode.User
+		if toModel.Model == consts2.LocationModelType {
+			notificationMessage = notificationCode.Kitchen
+		}
 		var notificationData notification.NotificationDto
-		notificationData.Title.Ar = ""
-		notificationData.Title.En = ""
-		notificationData.Text.En = ""
-		notificationData.Text.Ar = ""
+		notificationData.Title.Ar = notificationMessage.Title.Ar
+		notificationData.Title.En = notificationMessage.Title.En
+		notificationData.Text.En = notificationMessage.Description.Ar
+		notificationData.Text.Ar = notificationMessage.Description.En
 		notificationData.Type = consts.TYPE_PRIVATE
 		notificationData.Ids = []string{toModel.Id}
 		notificationData.AccountIds = []string{toModel.AccountId}
 		notificationData.ModelType = toModel.Model
 		notificationData.CountryId = dto.Country
 
-		l.SendPushNotification(notificationData)
-
+		if toModel.Model == consts2.UserModelType && toModel.LogNotification {
+			var storeNotificationDto notification.StoreNotificationDto
+			copier.Copy(&storeNotificationDto, notificationData)
+			storeNotificationDto.UserIds = notificationData.Ids
+			go l.CreateNotification(context.Background(), &storeNotificationDto)
+		} else {
+			l.SendPushNotification(notificationData)
+		}
 	}
-
 	return
 }

@@ -5,6 +5,7 @@ go 1.21
 require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/ahmetb/go-linq/v3 v3.2.0
+	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/aws/aws-sdk-go v1.55.1
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
@@ -32,7 +33,6 @@ require (
 )
 
 require (
-	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect

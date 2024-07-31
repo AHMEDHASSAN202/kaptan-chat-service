@@ -1,0 +1,200 @@
+{
+  "ORDER_PENDING": {
+    "user": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "اتممت طلبك بنجاح من :location_name بانتظار الموافقة علي الطلب",
+        "en" : "Your order from :location_name placed successfully and waiting for acceptance"
+      }
+    },
+    "kitchen": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "يوجد طلب جديد :order_serial من :location_name",
+        "en" : "New order :order_serial from :location_name"
+      }
+    }
+  },
+  "ORDER_ACCEPTED": {
+    "user": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تهانينا! تم الموافقة علي طلبك :order_serial من :location_name ",
+        "en" : "Congratulations your order :order_serial hase been accepted "
+      }
+    },
+    "kitchen": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تم الموافقة علي الطلب :order_serial",
+        "en" : "Order :order_serial hase been accepted "
+      }
+    }
+  },
+  "ORDER_ARRIVED": {
+    "user": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تم وصل العميل لاستلام الطلب :order_serial ",
+        "en" : "User for order :order_serial has been arrived"
+      }
+    },
+    "kitchen": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تم وصل العميل لاستلام الطلب :order_serial ",
+        "en" : "User for order :order_serial has been arrived"
+      }
+    }
+  },
+  "ORDER_READY_PICKUP": {
+    "user": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تم الانتهاء من طلبك  :order_serial ",
+        "en" : "Your Order :order_serial is ready for pickup"
+      }
+    },
+    "kitchen": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "طلبك  :order_serial جاهز للتسليم",
+        "en" : "Order :order_serial is ready for pickup"
+      }
+    }
+  },
+  "ORDER_PICKUP": {
+    "user": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تم تسليم طلبك  :order_serial  ",
+        "en" : "Your Order :order_serial is picked up"
+      }
+    },
+    "kitchen": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تم تسليم  الطلب  :order_serial ",
+        "en" : "Order :order_serial is picked up"
+      }
+    }
+  },
+  "ORDER_NOSHOW": {
+    "user": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "طلبك :order_serial  ف انتظارك ",
+        "en" : "Your Order :order_serial is ready for you"
+      }
+    },
+    "kitchen": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "لم يتم تسليم الطلب :order_serial",
+        "en" : "Order :order_serial is No Show"
+      }
+    }
+  },
+  "ORDER_CANCELLED": {
+    "user": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تم الغاء الطلب :order_serial ",
+        "en" : "Your Order :order_serial is Cancelled"
+      }
+    },
+    "kitchen": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تم الغاء الطلب :order_serial ",
+        "en" : "Your Order :order_serial is Cancelled"
+      }
+    }
+  },
+  "ORDER_REJECTED": {
+    "user": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تم رفض الطلب :order_serial ",
+        "en" : "Your Order :order_serial is Rejected"
+      }
+    },
+    "kitchen": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تم رفض الطلب :order_serial ",
+        "en" : "Your Order :order_serial is Rejected"
+      }
+    }
+  },
+  "ORDER_TIMEOUT": {
+    "user": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تم انتهاء وقت الطلب :order_serial ",
+        "en" : "Your Order :order_serial is TimeOut"
+      }
+    },
+    "kitchen": {
+      "title": {
+        "ar" : "كذا طلب",
+        "en" : "Kthaa Order"
+      },
+      "description": {
+        "ar" : "تم انتهاء وقت الطلب :order_serial ",
+        "en" : "Your Order :order_serial is TimeOut"
+      }
+    }
+  }
+}

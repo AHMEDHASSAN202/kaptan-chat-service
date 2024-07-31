@@ -13,14 +13,16 @@ type NotificationDto struct {
 	CountryId    string   `json:"country_id"`
 }
 
+type NotificationReceiver struct {
+	Id              string `json:"id"`
+	AccountId       string `json:"account_id"` // in case of location
+	Model           string `json:"model"`
+	LogNotification bool   `json:"log_notification"` // In case of user only
+
+}
 type GeneralNotification struct {
-	Country          string `json:"country"`
-	OrderSerial      string `json:"order_serial"`
-	NotificationCode string `json:"notification_code"`
-	To               []struct {
-		Id              string `json:"id"`
-		AccountId       string `json:"account_id"` // in case of location
-		Model           string `json:"model"`
-		LogNotification bool   `json:"log_notification"` // In case of user only
-	} `json:"to"`
+	Country          string                 `json:"country"`
+	NotificationData map[string]string      `json:"notification_data"`
+	NotificationCode string                 `json:"notification_code"`
+	To               []NotificationReceiver `json:"to"`
 }
