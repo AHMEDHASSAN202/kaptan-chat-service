@@ -21,6 +21,22 @@ type Fields struct {
 	Old map[string]interface{} `json:"old" bson:"old"`
 }
 
+type Name struct {
+	Ar string `json:"ar" bson:"ar"`
+	En string `json:"en" bson:"en"`
+}
+
+type Doc struct {
+	ID    primitive.ObjectID `json:"id" bson:"_id"`
+	Name  Name               `json:"name" bson:"name"`
+	Image string             `json:"image" bson:"image"`
+}
+
+type Account struct {
+	ID   primitive.ObjectID `json:"id" bson:"_id"`
+	Name Name               `json:"name" bson:"name"`
+}
+
 type Approval struct {
 	mgm.IDField  `bson:",inline"`
 	CountryId    string             `json:"country_id" bson:"country_id"`
@@ -30,6 +46,8 @@ type Approval struct {
 	Status       string             `json:"status" bson:"status"`
 	Dates        Dates              `json:"dates" bson:"dates"`
 	AdminDetails dto.AdminDetails   `json:"admin_details" bson:"admin_details,omitempty"`
+	Doc          Doc                `json:"doc" bson:"doc"`
+	Account      Account            `json:"account" bson:"account"`
 	CreatedAt    time.Time          `json:"created_at" bson:"created_at,omitempty"`
 	UpdatedAt    time.Time          `json:"updated_at" bson:"updated_at"`
 }

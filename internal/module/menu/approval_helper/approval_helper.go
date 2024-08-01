@@ -3,12 +3,14 @@ package approval_helper
 import (
 	"context"
 	"github.com/kamva/mgm/v3"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	domain2 "samm/internal/module/approval/domain"
 	"samm/internal/module/approval/dto"
 	"samm/internal/module/menu/domain"
+	"samm/internal/module/menu/external"
 	"samm/internal/module/menu/responses/item"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
@@ -22,13 +24,15 @@ type ApprovalItemHelper struct {
 	approvalRepo   domain2.ApprovalRepository
 	itemCollection *mgm.Collection
 	logger         logger.ILogger
+	extService     external.ExtService
 }
 
-func NewApprovalItemHelper(approvalRepo domain2.ApprovalRepository, logger logger.ILogger) *ApprovalItemHelper {
+func NewApprovalItemHelper(approvalRepo domain2.ApprovalRepository, logger logger.ILogger, extService external.ExtService) *ApprovalItemHelper {
 	return &ApprovalItemHelper{
 		approvalRepo:   approvalRepo,
 		itemCollection: mgm.Coll(&domain.Item{}),
 		logger:         logger,
+		extService:     extService,
 	}
 }
 
@@ -36,14 +40,26 @@ func (a *ApprovalItemHelper) CreateApprovalAsArray(sc mongo.SessionContext, docs
 	if docs[0].ApprovalStatus != utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL {
 		return nil
 	}
-	return a.approvalRepo.CreateOrUpdate(sc, a.CreateItemsApprovalBuilder(docs))
+	//get account
+	account, errAccount := a.extService.RetailsIService.GetAccountById(context.Background(), utils.ConvertObjectIdToStringId(docs[0].AccountId))
+	if errAccount.IsError {
+		a.logger.Error("UpdateApproval -> ErrAccount -> ", errAccount.ErrorMessageObject)
+		return errors.New(errAccount.ErrorMessageObject.Text)
+	}
+	return a.approvalRepo.CreateOrUpdate(sc, a.CreateItemsApprovalBuilder(docs, *account))
 }
 
 func (a *ApprovalItemHelper) UpdateApproval(sc mongo.SessionContext, doc *domain.Item, oldDoc *domain.Item) (bool, error) {
 	// Check if approval is needed
 	if needToApprove, n, o := a.NeedToApproveItem(doc, oldDoc); needToApprove {
+		//get account
+		account, errAccount := a.extService.RetailsIService.GetAccountById(context.Background(), utils.ConvertObjectIdToStringId(doc.AccountId))
+		if errAccount.IsError {
+			a.logger.Error("UpdateApproval -> ErrAccount -> ", errAccount.ErrorMessageObject)
+			return false, errors.New(errAccount.ErrorMessageObject.Text)
+		}
 		// Create or update approval
-		err := a.approvalRepo.CreateOrUpdate(sc, []dto.CreateApprovalDto{a.UpdateItemApprovalBuilder(doc, n, o)})
+		err := a.approvalRepo.CreateOrUpdate(sc, []dto.CreateApprovalDto{a.UpdateItemApprovalBuilder(doc, n, o, *account)})
 		if err != nil {
 			return false, err
 		}
