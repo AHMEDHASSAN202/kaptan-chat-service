@@ -6,6 +6,7 @@ import (
 
 type VerifyOtpResp struct {
 	Token              string `json:"token"`
+	FirebaseToken      string `json:"firebase_token"`
 	IsProfileCompleted bool   `json:"is_profile_completed"`
 }
 

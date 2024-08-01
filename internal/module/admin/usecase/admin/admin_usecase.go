@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"firebase.google.com/go/v4/auth"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	builder "samm/internal/module/admin/builder/admin"
@@ -31,13 +32,15 @@ type AdminUseCase struct {
 	KitchenJwtService jwt.JwtService
 	redisClient       *redis.RedisClient
 	gate              *gate.Gate
+	authClient        *auth.Client
 }
 
-func NewAdminUseCase(repo domain.AdminRepository, roleRepo domain.RoleRepository, logger logger.ILogger, jwtFactory jwt.JwtServiceFactory, redisClient *redis.RedisClient, g *gate.Gate) domain.AdminUseCase {
+func NewAdminUseCase(repo domain.AdminRepository, authClient *auth.Client, roleRepo domain.RoleRepository, logger logger.ILogger, jwtFactory jwt.JwtServiceFactory, redisClient *redis.RedisClient, g *gate.Gate) domain.AdminUseCase {
 	return &AdminUseCase{
 		repo:              repo,
 		roleRepo:          roleRepo,
 		logger:            logger,
+		authClient:        authClient,
 		AdminJwtService:   jwtFactory.AdminJwtService(),
 		PortalJwtService:  jwtFactory.PortalJwtService(),
 		KitchenJwtService: jwtFactory.KitchenJwtService(),

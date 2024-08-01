@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "orders": {
+      "raw":{
+        "$order_id":{
+          ".write": "false",
+          ".read": "auth != null && root.child('orders/raw/'+$order_id).val().contains(auth.uid)"
+        }
+      },
+      "kitchens":{
+        "$kitchen_id":{
+          ".read": "auth != null && auth.uid == $kitchen_id",
+          ".write": "false"
+        }
+      },
+      "users":{
+        "$user_id":{
+          ".read": "auth != null && auth.uid == $user_id",
+          ".write": "false"
+        }
+      }
+    }
+  }
+}

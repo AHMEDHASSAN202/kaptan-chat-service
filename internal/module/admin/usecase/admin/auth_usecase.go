@@ -61,27 +61,37 @@ func (oRec *AdminUseCase) PortalLogin(ctx context.Context, input *dto.PortalAuth
 
 	return admin2.AdminProfileBuilder(admin), token, validators.ErrorResponse{}
 }
-func (oRec *AdminUseCase) KitchenLogin(ctx context.Context, input *dto.KitchenAuthDTO) (interface{}, string, validators.ErrorResponse) {
+func (oRec *AdminUseCase) KitchenLogin(ctx context.Context, input *dto.KitchenAuthDTO) (admin.AuthKitchenResponse, validators.ErrorResponse) {
 	//find admin
-	admin, err := oRec.LoginHelper(ctx, input.Email, input.Password, consts.KITCHEN_TYPE)
+	adminDoc, err := oRec.LoginHelper(ctx, input.Email, input.Password, consts.KITCHEN_TYPE)
 	if err.IsError {
-		return admin, "", err
+		return admin.AuthKitchenResponse{}, err
 	}
 
 	//generate token
-	token, errToken := oRec.KitchenJwtService.GenerateToken(ctx, utils.ConvertObjectIdToStringId(admin.ID))
+	token, errToken := oRec.KitchenJwtService.GenerateToken(ctx, utils.ConvertObjectIdToStringId(adminDoc.ID))
 	if err.IsError {
-		return admin, "", validators.GetErrorResponseFromErr(errToken)
+		return admin.AuthKitchenResponse{}, validators.GetErrorResponseFromErr(errToken)
 	}
 
 	//update token
-	admin.Tokens = append(admin.Tokens, token)
-	_, errUpdate := oRec.repo.Update(ctx, admin)
+	adminDoc.Tokens = append(adminDoc.Tokens, token)
+	_, errUpdate := oRec.repo.Update(ctx, adminDoc)
 	if errUpdate != nil {
-		return admin, "", validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
+		return admin.AuthKitchenResponse{}, validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
 	}
 
-	return admin2.AdminProfileBuilder(admin), token, validators.ErrorResponse{}
+	//get firebase token
+	firebaseToken, err2 := oRec.authClient.CustomTokenWithClaims(ctx, adminDoc.Kitchen.Id.Hex(), nil)
+	if err2 != nil {
+		return admin.AuthKitchenResponse{}, validators.GetErrorResponseFromErr(err2)
+	}
+
+	return admin.AuthKitchenResponse{
+		Profile:       admin2.AdminProfileBuilder(adminDoc),
+		Token:         token,
+		FirebaseToken: firebaseToken,
+	}, validators.ErrorResponse{}
 }
 
 func (oRec *AdminUseCase) Profile(ctx context.Context, profileDTO dto.ProfileDTO) (*admin.AdminProfileResponse, validators.ErrorResponse) {

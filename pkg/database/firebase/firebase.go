@@ -3,13 +3,14 @@ package firebase
 import (
 	"context"
 	firebase "firebase.google.com/go/v4"
+	"firebase.google.com/go/v4/auth"
 	"firebase.google.com/go/v4/db"
 	"google.golang.org/api/option"
 	"samm/pkg/config"
 	"samm/pkg/logger"
 )
 
-func NewFirebaseClient(logger logger.ILogger, c *config.FirebaseConfig) *db.Client {
+func NewFirebaseClient(logger logger.ILogger, c *config.FirebaseConfig) (*db.Client, *auth.Client) {
 	ctx := context.Background()
 	conf := &firebase.Config{
 		DatabaseURL: c.DatabaseURL,
@@ -22,11 +23,16 @@ func NewFirebaseClient(logger logger.ILogger, c *config.FirebaseConfig) *db.Clie
 	if err != nil {
 		logger.Fatalf("error firebase initializing app: %v\n", err)
 	}
-
+	auth, err := app.Auth(ctx)
+	if err != nil {
+		logger.Fatalf("error firebase auth client: %v\n", err)
+		return nil, nil
+	}
 	client, err := app.Database(ctx)
 	if err != nil {
-		logger.Fatalf("error firebase connecting app: %v\n", err)
-		return nil
+		logger.Fatalf("error firebase database connecting app: %v\n", err)
+		return nil, nil
 	}
-	return client
+
+	return client, auth
 }
