@@ -15,11 +15,11 @@ type OrderFactory struct {
 	orderTypes map[string]func() IOrder
 }
 
-func NewOrderFactory(validator *validator.Validate, extService external.ExtService, logger logger.ILogger, orderRepo domain.OrderRepository, redisClient *redis.RedisClient, gate *gate.Gate, bus EventBus.Bus) *OrderFactory {
+func NewOrderFactory(validator *validator.Validate, eventBus EventBus.Bus, extService external.ExtService, logger logger.ILogger, orderRepo domain.OrderRepository, redisClient *redis.RedisClient, gate *gate.Gate) *OrderFactory {
 	return &OrderFactory{
 		orderTypes: map[string]func() IOrder{
 			"ktha": func() IOrder {
-				return &KthaOrder{Deps: Deps{validator: validator, extService: extService, logger: logger, orderRepo: orderRepo, redisClient: redisClient, gate: gate, bus: bus}}
+				return &KthaOrder{Deps: Deps{eventBus: eventBus, validator: validator, extService: extService, logger: logger, orderRepo: orderRepo, redisClient: redisClient, gate: gate}}
 			},
 		},
 	}

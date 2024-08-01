@@ -28,17 +28,18 @@ const (
 
 type (
 	Config struct {
-		Environment  string
-		Mongo        MongoConfig
-		RedisTlsUrl  string
-		AwsConfig    AwsConfig
-		HTTP         HTTPConfig
-		Echo         echoserver.EchoConfig
-		Limiter      LimiterConfig
-		CacheTTL     time.Duration `mapstructure:"ttl"`
-		ServiceUrl   string
-		LoggerConfig logger.LoggerConfig
-		JWTConfig    JWTConfig
+		Environment    string
+		Mongo          MongoConfig
+		RedisTlsUrl    string
+		AwsConfig      AwsConfig
+		HTTP           HTTPConfig
+		Echo           echoserver.EchoConfig
+		Limiter        LimiterConfig
+		CacheTTL       time.Duration `mapstructure:"ttl"`
+		ServiceUrl     string
+		LoggerConfig   logger.LoggerConfig
+		JWTConfig      JWTConfig
+		FirebaseConfig FirebaseConfig
 	}
 	EchoConfig struct {
 		Port                string   `mapstructure:"port" validate:"required"`
@@ -53,6 +54,11 @@ type (
 		MongoConnection string `json:"mongo_connection"`
 		MongoDbName     string `json:"mongo_db_name"`
 	}
+
+	FirebaseConfig struct {
+		DatabaseURL string `json:"database_url"`
+	}
+
 	HTTPConfig struct {
 		Host               string        `mapstructure:"host"`
 		Port               string        `mapstructure:"port"`
@@ -91,7 +97,7 @@ type (
 func Init() (*Config, *MongoConfig, *string,
 	*HTTPConfig,
 	*echoserver.EchoConfig,
-	*LimiterConfig, *AwsConfig, *JWTConfig,
+	*LimiterConfig, *AwsConfig, *JWTConfig, *FirebaseConfig,
 	logger.LoggerConfig, error) {
 	configsDir := "pkg/config/configs"
 	populateDefaults()
@@ -100,17 +106,17 @@ func Init() (*Config, *MongoConfig, *string,
 		logrus.Info("Error  from load env. this mean the application load on the cloud not from a file.")
 	}
 	if err := parseConfigFile(configsDir, os.Getenv("APP_ENV")); err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
 	}
 
 	var cfg Config
 	if err := unmarshal(&cfg); err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
+		return nil, nil, nil, nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
 	}
 
 	setFromEnv(&cfg)
 
-	return &cfg, &cfg.Mongo, &cfg.RedisTlsUrl, &cfg.HTTP, &cfg.Echo, &cfg.Limiter, &cfg.AwsConfig, &cfg.JWTConfig, cfg.LoggerConfig, nil
+	return &cfg, &cfg.Mongo, &cfg.RedisTlsUrl, &cfg.HTTP, &cfg.Echo, &cfg.Limiter, &cfg.AwsConfig, &cfg.JWTConfig, &cfg.FirebaseConfig, cfg.LoggerConfig, nil
 }
 
 func unmarshal(cfg *Config) error {
@@ -160,6 +166,8 @@ func setFromEnv(cfg *Config) {
 	cfg.JWTConfig.KitchenSigningKey = os.Getenv("JWT_SECRET_KITCHEN")
 	cfg.JWTConfig.UserSigningKey = os.Getenv("JWT_SECRET_USER")
 	cfg.JWTConfig.UserTempSigningKey = os.Getenv("JWT_SECRET_USER_TEMP")
+
+	cfg.FirebaseConfig.DatabaseURL = os.Getenv("REAlTIME_DATABASE_URL")
 
 	var port = defaultHTTPPort
 	if os.Getenv("PORT") != "" {

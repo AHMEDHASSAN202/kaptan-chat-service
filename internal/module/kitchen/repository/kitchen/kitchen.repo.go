@@ -14,6 +14,7 @@ import (
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/utils/dto"
+	"samm/pkg/validators"
 	"time"
 )
 
@@ -139,4 +140,16 @@ func (l KitchenRepository) GetKitchensPlayerId(ctx *context.Context, locationIds
 
 	return playerIds, err
 
+}
+
+func (l *KitchenRepository) GetKitchensForSpecificLocation(ctx context.Context, locId, AccountId primitive.ObjectID) (kitchensResult []domain.Kitchen, errResp validators.ErrorResponse) {
+	filter := bson.M{"$or": bson.A{bson.M{"account_ids": bson.M{"$in": bson.A{AccountId}}}, bson.M{"location_ids": bson.M{"$in": bson.A{locId}}}}}
+	kitchensResult = make([]domain.Kitchen, 0)
+
+	err := l.kitchenCollection.SimpleFindWithCtx(ctx, &kitchensResult, filter)
+	if err != nil {
+		l.logger.Error("GetKitchensForSpecificLocation=>Repo", err)
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	return kitchensResult, validators.ErrorResponse{}
 }

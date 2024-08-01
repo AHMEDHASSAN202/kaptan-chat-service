@@ -42,6 +42,7 @@ func main() {
 				httpclient.NewHttpClient,
 				validators.Init,
 				aws.Init,
+				event_bus.NewEventBus,
 			),
 			event_bus.EventBusModule,
 			jwt.Module,

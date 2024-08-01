@@ -50,6 +50,7 @@ type KitchenUseCase interface {
 	DeleteKitchen(ctx context.Context, payload *kitchen.DeleteKitchenDto) (err validators.ErrorResponse)
 	List(ctx *context.Context, dto *kitchen.ListKitchenDto) (*responses.ListResponse, validators.ErrorResponse)
 	KitchenExists(ctx *context.Context, dto *kitchen.ListKitchenDto) bool
+	GetKitchensForSpecificLocation(ctx context.Context, locId, AccountId string) (kitchenIDs []string, err validators.ErrorResponse)
 	UpdateKitchenPlayerId(ctx context.Context, payload *kitchen.UpdateKitchenPlayerIdDto) (err validators.ErrorResponse)
 	GetKitchensPlayerId(ctx *context.Context, locationIds []string, accountIds []string) (playerIds []string, err validators.ErrorResponse)
 }
@@ -60,5 +61,6 @@ type KitchenRepository interface {
 	FindKitchen(ctx context.Context, Id primitive.ObjectID, withLookups bool) (kitchen *Kitchen, err error)
 	DeleteKitchen(ctx context.Context, Id primitive.ObjectID, causer *dto.AdminDetails) (err error)
 	List(ctx *context.Context, dto *kitchen.ListKitchenDto) (usersRes *[]Kitchen, paginationMeta *PaginationData, err error)
+	GetKitchensForSpecificLocation(ctx context.Context, locId, AccountId primitive.ObjectID) (kitchenIDs []Kitchen, err validators.ErrorResponse)
 	GetKitchensPlayerId(ctx *context.Context, locationIds []string, accountIds []string) (playerIds []string, err error)
 }

@@ -519,6 +519,16 @@ func EqualizeSlices(slice1, slice2 []string) ([]string, []string) {
 
 	return result1, result2
 }
+func ObjectToStringified(obj interface{}) string {
+	// Marshal the object to JSON
+	jsonBytes, err := json.Marshal(obj)
+	if err != nil {
+		return ""
+	}
+
+	// Convert JSON bytes to string
+	return string(jsonBytes)
+}
 
 func SafeMapGet[T any](m map[string]T, key string, defaultValue T) T {
 	if m == nil {

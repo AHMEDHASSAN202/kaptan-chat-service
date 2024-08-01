@@ -3,6 +3,7 @@ package order
 import (
 	"context"
 	"errors"
+	"firebase.google.com/go/v4/db"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
@@ -26,14 +27,16 @@ type OrderUseCase struct {
 	extService   external.ExtService
 	logger       logger.ILogger
 	orderFactory *order_factory.OrderFactory
+	realTimeDb   *db.Client
 }
 
-func NewOrderUseCase(repo domain.OrderRepository, extService external.ExtService, logger logger.ILogger, orderFactory *order_factory.OrderFactory) domain.OrderUseCase {
+func NewOrderUseCase(repo domain.OrderRepository, extService external.ExtService, realTimeDb *db.Client, logger logger.ILogger, orderFactory *order_factory.OrderFactory) domain.OrderUseCase {
 	return &OrderUseCase{
 		repo:         repo,
 		extService:   extService,
 		logger:       logger,
 		orderFactory: orderFactory,
+		realTimeDb:   realTimeDb,
 	}
 }
 func (l OrderUseCase) ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDtoForDashboard) (*responses.ListResponse, validators.ErrorResponse) {
@@ -116,9 +119,6 @@ func (l OrderUseCase) StoreOrder(ctx context.Context, payload *order.CreateOrder
 		return nil, errCreate
 	}
 
-	//send notifications
-	go orderFactory.SendNotifications()
-
 	return orderResponse, validators.ErrorResponse{}
 }
 
@@ -198,7 +198,6 @@ func (l OrderUseCase) ReportMissedItem(ctx context.Context, payload *order.Repor
 	}
 
 	//todo: check if user own the order
-
 	missingItemMap := make(map[string]order.MissedItems)
 	missingAddonMap := make(map[string]map[string]order.MissedItems)
 	for _, item := range payload.MissingItems {
@@ -253,9 +252,6 @@ func (l OrderUseCase) UserCancelOrder(ctx context.Context, payload *order.Cancel
 		return nil, errAccept
 	}
 
-	//send notifications
-	go orderFactory.SendNotifications()
-
 	return orderResponse, validators.ErrorResponse{}
 
 }
@@ -273,9 +269,6 @@ func (l OrderUseCase) DashboardCancelOrder(ctx context.Context, payload *order.D
 		return nil, errAccept
 	}
 
-	//send notifications
-	go orderFactory.SendNotifications()
-
 	return orderResponse, validators.ErrorResponse{}
 
 }
@@ -292,9 +285,6 @@ func (l OrderUseCase) DashboardPickedOrder(ctx context.Context, payload *order.D
 	if errAccept.IsError {
 		return nil, errAccept
 	}
-
-	//send notifications
-	go orderFactory.SendNotifications()
 
 	return orderResponse, validators.ErrorResponse{}
 
@@ -314,9 +304,6 @@ func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.Arriv
 		return nil, errAccept
 	}
 
-	//send notifications
-	go orderFactory.SendNotifications()
-
 	return orderResponse, validators.ErrorResponse{}
 }
 
@@ -333,10 +320,6 @@ func (l OrderUseCase) SetOrderPaid(ctx context.Context, payload *order.OrderPaid
 	if errPaid.IsError {
 		return errPaid
 	}
-
-	//send notifications
-	go orderFactory.SendNotifications()
-
 	return validators.ErrorResponse{}
 
 }
@@ -354,9 +337,6 @@ func (l OrderUseCase) KitchenAcceptOrder(ctx context.Context, payload *kitchen.A
 		return nil, errAccept
 	}
 
-	//send notifications
-	go orderFactory.SendNotifications()
-
 	return orderResponse, validators.ErrorResponse{}
 }
 
@@ -372,9 +352,6 @@ func (l OrderUseCase) KitchenRejectedOrder(ctx context.Context, payload *kitchen
 	if errRejected.IsError {
 		return nil, errRejected
 	}
-
-	//send notifications
-	go orderFactory.SendNotifications()
 
 	return orderResponse, validators.ErrorResponse{}
 }
@@ -396,9 +373,6 @@ func (l OrderUseCase) KitchenReadyForPickupOrder(ctx context.Context, payload *k
 		return nil, errRejected
 	}
 
-	//send notifications
-	go orderFactory.SendNotifications()
-
 	return orderResponse, validators.ErrorResponse{}
 }
 
@@ -414,9 +388,6 @@ func (l OrderUseCase) KitchenPickedUpOrder(ctx context.Context, payload *kitchen
 	if errRejected.IsError {
 		return nil, errRejected
 	}
-
-	//send notifications
-	go orderFactory.SendNotifications()
 
 	return orderResponse, validators.ErrorResponse{}
 }
@@ -434,8 +405,27 @@ func (l OrderUseCase) KitchenNoShowOrder(ctx context.Context, payload *kitchen.N
 		return nil, errRejected
 	}
 
-	//send notifications
-	go orderFactory.SendNotifications()
-
 	return orderResponse, validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) UpdateRealTimeDb(ctx context.Context, order *domain.Order) validators.ErrorResponse {
+	err := l.realTimeDb.NewRef("orders/raw").Child(order.ID.Hex()).Set(ctx, utils.ObjectToStringified(order))
+	if err != nil {
+		l.logger.Error("raw: sync to firebase order => ", err)
+		return validators.GetErrorResponseFromErr(err)
+	}
+
+	err = l.realTimeDb.NewRef("orders/users").Child(order.User.ID.Hex()).Child(order.ID.Hex()).Set(ctx, order.Status)
+	if err != nil {
+		l.logger.Error("users: sync to firebase order => ", err)
+		return validators.GetErrorResponseFromErr(err)
+	}
+	for _, kitchenId := range order.MetaData.TargetKitchenIds {
+		err = l.realTimeDb.NewRef("orders/kitchens").Child(kitchenId.Hex()).Child(order.ID.Hex()).Set(ctx, order.Status)
+		if err != nil {
+			l.logger.Error("kitchens: sync to firebase order => ", err)
+			return validators.GetErrorResponseFromErr(err)
+		}
+	}
+	return validators.ErrorResponse{}
 }

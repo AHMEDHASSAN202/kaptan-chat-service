@@ -183,3 +183,15 @@ func (l KitchenUseCase) GetKitchensPlayerId(ctx *context.Context, kitchenIds []s
 	}
 	return playerIds, err
 }
+
+func (l KitchenUseCase) GetKitchensForSpecificLocation(ctx context.Context, locId, AccountId string) (kitchenIDs []string, err validators.ErrorResponse) {
+	kitchens, errResp := l.repo.GetKitchensForSpecificLocation(ctx, utils.ConvertStringIdToObjectId(locId), utils.ConvertStringIdToObjectId(AccountId))
+	if errResp.IsError {
+		return nil, errResp
+	}
+	kitchenIDs = make([]string, 0)
+	for _, kitchen := range kitchens {
+		kitchenIDs = append(kitchenIDs, kitchen.ID.Hex())
+	}
+	return kitchenIDs, validators.ErrorResponse{}
+}
