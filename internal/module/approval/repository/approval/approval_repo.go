@@ -25,6 +25,7 @@ type approvalRepo struct {
 
 func NewApprovalRepository(dbs *mongo.Database, log logger.ILogger) domain.ApprovalRepository {
 	approvalCollection := mgm.Coll(&domain.Approval{})
+	createApprovalIndexes(approvalCollection.Collection)
 	return &approvalRepo{
 		dbs:                dbs,
 		approvalCollection: approvalCollection,

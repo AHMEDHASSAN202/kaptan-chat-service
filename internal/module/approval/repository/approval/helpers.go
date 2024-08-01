@@ -22,4 +22,8 @@ func createApprovalIndexes(collection *mongo.Collection) {
 	mongodb.CreateIndex(collection, false,
 		bson.E{"created_at", mongodb.IndexType.Desc},
 	)
+
+	oneMonth := int32(30 * 24 * 60 * 60)
+	mongodb.CreateIndexWithTTL(collection, false, bson.E{"dates.approved_at", mongodb.IndexType.Desc}, oneMonth)
+	mongodb.CreateIndexWithTTL(collection, false, bson.E{"dates.rejected_at", mongodb.IndexType.Desc}, oneMonth)
 }

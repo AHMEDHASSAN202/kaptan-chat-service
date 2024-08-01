@@ -9,8 +9,8 @@ type ExtService struct {
 	RetailsIService retails.IService
 }
 
-func NewExternalService(locationUseCase domain.LocationUseCase) ExtService {
+func NewExternalService(locationUseCase domain.LocationUseCase, accountUseCase domain.AccountUseCase) ExtService {
 	return ExtService{
-		RetailsIService: retails.IService{LocationUseCase: locationUseCase},
+		RetailsIService: retails.IService{LocationUseCase: locationUseCase, AccountUseCase: accountUseCase},
 	}
 }

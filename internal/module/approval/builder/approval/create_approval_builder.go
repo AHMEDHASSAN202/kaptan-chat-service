@@ -16,6 +16,8 @@ func CreateApprovalBuilder(dto *dto.CreateApprovalDto) *domain.Approval {
 		Fields:       domain.Fields{New: dto.New, Old: dto.Old},
 		Dates:        domain.Dates{ApprovedAt: nil, RejectedAt: nil},
 		AdminDetails: dto.AdminDetails,
+		Doc:          domain.Doc{ID: dto.Doc.ID, Name: domain.Name{Ar: dto.Doc.Name.Ar, En: dto.Doc.Name.En}, Image: dto.Doc.Image},
+		Account:      domain.Account{ID: dto.Account.ID, Name: domain.Name{Ar: dto.Account.Name.Ar, En: dto.Account.Name.En}},
 	}
 	approval.UpdatedAt = time.Now().UTC()
 	return approval
