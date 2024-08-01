@@ -1,6 +1,7 @@
 package menu
 
 import (
+	"samm/internal/module/menu/approval_helper"
 	"samm/internal/module/menu/custom_validators"
 	"samm/internal/module/menu/delivery"
 	"samm/internal/module/menu/external"
@@ -33,6 +34,7 @@ var Module = fx.Options(
 		menu_group.NewMenuGroupUseCase,
 		custom_validators.InitNewCustomValidatorsItem,
 		custom_validators.InitNewCustomValidatorsSKU,
+		approval_helper.NewApprovalItemHelper,
 	),
 	fx.Invoke(
 		policies.NewIPolicy,

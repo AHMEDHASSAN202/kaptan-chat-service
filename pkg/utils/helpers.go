@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
+	"github.com/mitchellh/mapstructure"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 	"io"
@@ -580,4 +581,24 @@ func TryCatch(f func()) func() error {
 		f()
 		return err
 	}
+}
+
+func StructToMap(data interface{}, tagKey string) map[string]interface{} {
+	result := make(map[string]interface{})
+	v := reflect.ValueOf(data)
+	t := reflect.TypeOf(data)
+	for i := 0; i < v.NumField(); i++ {
+		field := t.Field(i)
+		value := v.Field(i).Interface()
+		tag := field.Tag.Get(tagKey)
+		if tag == "" {
+			tag = field.Name
+		}
+		result[tag] = value
+	}
+	return result
+}
+
+func CopyMapToStruct(doc any, fields map[string]interface{}) error {
+	return mapstructure.Decode(fields, doc)
 }

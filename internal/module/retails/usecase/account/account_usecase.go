@@ -114,6 +114,13 @@ func (l AccountUseCase) FindAccount(ctx context.Context, Id string) (account dom
 	}
 	return *domainAccount, validators.ErrorResponse{}
 }
+func (l AccountUseCase) OnlyFindAccount(ctx context.Context, Id string) (account domain.Account, err validators.ErrorResponse) {
+	domainAccount, errRe := l.repo.FindAccount(ctx, utils.ConvertStringIdToObjectId(Id))
+	if errRe != nil {
+		return *domainAccount, validators.GetErrorResponseFromErr(errRe)
+	}
+	return *domainAccount, validators.ErrorResponse{}
+}
 func (l AccountUseCase) CheckAccountEmail(ctx context.Context, email string, accountId string) bool {
 	return l.repo.CheckAccountEmail(ctx, email, accountId)
 }

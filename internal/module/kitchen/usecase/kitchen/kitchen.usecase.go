@@ -91,7 +91,7 @@ func (l KitchenUseCase) CreateKitchen(ctx context.Context, payload *kitchen.Stor
 }
 
 func (l KitchenUseCase) UpdateKitchen(ctx context.Context, id string, payload *kitchen.UpdateKitchenDto) (err validators.ErrorResponse) {
-	kitchenDomain, dbErr := l.repo.FindKitchen(ctx, utils.ConvertStringIdToObjectId(id))
+	kitchenDomain, dbErr := l.repo.FindKitchen(ctx, utils.ConvertStringIdToObjectId(id), false)
 	if dbErr != nil {
 		return validators.GetErrorResponseFromErr(dbErr)
 	}
@@ -116,7 +116,7 @@ func (l KitchenUseCase) UpdateKitchen(ctx context.Context, id string, payload *k
 	return
 }
 func (l KitchenUseCase) UpdateKitchenPlayerId(ctx context.Context, payload *kitchen.UpdateKitchenPlayerIdDto) (err validators.ErrorResponse) {
-	kitchenDomain, dbErr := l.repo.FindKitchen(ctx, utils.ConvertStringIdToObjectId(payload.CauserKitchenId))
+	kitchenDomain, dbErr := l.repo.FindKitchen(ctx, utils.ConvertStringIdToObjectId(payload.CauserKitchenId), false)
 	if dbErr != nil {
 		return validators.GetErrorResponseFromErr(dbErr)
 	}
@@ -132,7 +132,7 @@ func (l KitchenUseCase) UpdateKitchenPlayerId(ctx context.Context, payload *kitc
 	return
 }
 func (l KitchenUseCase) FindKitchen(ctx context.Context, Id string) (kitchen domain.Kitchen, err validators.ErrorResponse) {
-	domainKitchen, dbErr := l.repo.FindKitchen(ctx, utils.ConvertStringIdToObjectId(Id))
+	domainKitchen, dbErr := l.repo.FindKitchen(ctx, utils.ConvertStringIdToObjectId(Id), true)
 	if dbErr != nil {
 		return *domainKitchen, validators.GetErrorResponseFromErr(dbErr)
 	}

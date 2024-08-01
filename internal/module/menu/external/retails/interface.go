@@ -8,4 +8,5 @@ import (
 
 type Interface interface {
 	GetBranchesByIds(ctx context.Context, ids []string) ([]responses.BranchByIdResp, validators.ErrorResponse)
+	GetAccountById(ctx context.Context, id string) (*responses.AccountByIdResp, validators.ErrorResponse)
 }

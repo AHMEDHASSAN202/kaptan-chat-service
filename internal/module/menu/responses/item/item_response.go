@@ -3,6 +3,7 @@ package item
 import (
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"samm/pkg/utils/dto"
 	"time"
 )
 
@@ -45,4 +46,5 @@ type ItemResponse struct {
 	Status           string                   `json:"status" bson:"status"`
 	SKU              string                   `json:"sku"`
 	DeletedAt        *time.Time               `json:"deleted_at" bson:"deleted_at"`
+	dto.ApprovalData `bson:",inline"`
 }

@@ -57,7 +57,7 @@ type KitchenUseCase interface {
 type KitchenRepository interface {
 	CreateKitchen(kitchen *Kitchen) (err error)
 	UpdateKitchen(kitchen *Kitchen) (err error)
-	FindKitchen(ctx context.Context, Id primitive.ObjectID) (kitchen *Kitchen, err error)
+	FindKitchen(ctx context.Context, Id primitive.ObjectID, withLookups bool) (kitchen *Kitchen, err error)
 	DeleteKitchen(ctx context.Context, Id primitive.ObjectID, causer *dto.AdminDetails) (err error)
 	List(ctx *context.Context, dto *kitchen.ListKitchenDto) (usersRes *[]Kitchen, paginationMeta *PaginationData, err error)
 	GetKitchensPlayerId(ctx *context.Context, locationIds []string, accountIds []string) (playerIds []string, err error)

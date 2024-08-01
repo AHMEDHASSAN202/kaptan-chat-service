@@ -42,6 +42,7 @@ type MenuGroupItem struct {
 	AdminDetails     []dto.AdminDetails    `json:"admin_details" bson:"admin_details,omitempty"`
 	Status           string                `json:"status" bson:"status"`
 	Sort             int                   `json:"sort" bson:"sort"`
+	dto.ApprovalData `bson:",inline"`
 }
 
 type MenuGroupItemRepository interface {

@@ -30,6 +30,7 @@ type AccountUseCase interface {
 	StoreAccount(ctx context.Context, payload *account.StoreAccountDto) (err validators.ErrorResponse)
 	UpdateAccount(ctx context.Context, id string, payload *account.UpdateAccountDto) (err validators.ErrorResponse)
 	FindAccount(ctx context.Context, Id string) (account Account, err validators.ErrorResponse)
+	OnlyFindAccount(ctx context.Context, Id string) (account Account, err validators.ErrorResponse)
 	CheckAccountEmail(ctx context.Context, email string, accountId string) bool
 	DeleteAccount(ctx context.Context, Id string, adminDetails *dto.AdminHeaders) (err validators.ErrorResponse)
 	ListAccount(ctx context.Context, payload *account.ListAccountDto) (accounts []Account, paginationResult mongopagination.PaginationData, err validators.ErrorResponse)

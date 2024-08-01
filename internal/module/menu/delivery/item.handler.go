@@ -39,6 +39,7 @@ func InitItemController(e *echo.Echo, itemUsecase domain.ItemUseCase, itemCustom
 		portal.POST("/bulk", handler.CreateBulk, commonMiddlewares.PermissionMiddleware("create-menus", "portal-login-accounts"))
 		portal.GET("", handler.List, commonMiddlewares.PermissionMiddleware("list-menus", "portal-login-accounts"))
 		portal.GET("/:id", handler.FindOne, commonMiddlewares.PermissionMiddleware("find-menus", "portal-login-accounts"))
+		portal.GET("/:id/approval", handler.FindOneApproval, commonMiddlewares.PermissionMiddleware("find-menus", "portal-login-accounts"))
 		portal.PUT("/:id", handler.Update, commonMiddlewares.PermissionMiddleware("update-menus", "portal-login-accounts"))
 		portal.PUT("/:id/change_status", handler.ChangeStatus, commonMiddlewares.PermissionMiddleware("update-status-menus", "portal-login-accounts"))
 		portal.DELETE("/:id", handler.Delete, commonMiddlewares.PermissionMiddleware("delete-menus", "portal-login-accounts"))
@@ -191,6 +192,25 @@ func (a *ItemHandler) FindOne(c echo.Context) error {
 	}
 
 	item, errResp := a.itemUsecase.GetById(ctx, id)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, item)
+}
+
+func (a *ItemHandler) FindOneApproval(c echo.Context) error {
+	ctx := c.Request().Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	id := c.Param("id")
+	if id == "" {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponse(&ctx, localization.E1002, nil, nil))
+	}
+
+	item, errResp := a.itemUsecase.GetByIdAndHandleApproval(ctx, id)
 	if errResp.IsError {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
