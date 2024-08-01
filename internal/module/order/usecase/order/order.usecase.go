@@ -7,7 +7,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	user2 "samm/internal/module/order/builder/user"
-	"samm/internal/module/order/consts"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/dto/order/kitchen"
@@ -20,7 +19,6 @@ import (
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
-	"time"
 )
 
 type OrderUseCase struct {
@@ -323,45 +321,24 @@ func (l OrderUseCase) UserArrivedOrder(ctx context.Context, payload *order.Arriv
 }
 
 func (l OrderUseCase) SetOrderPaid(ctx context.Context, payload *order.OrderPaidDto) validators.ErrorResponse {
-	// Find Order
-	orderDomain, err := l.repo.FindOrder(&ctx, payload.OrderId)
+
+	//create new instance from ktha factory
+	orderFactory, err := l.orderFactory.Make("ktha")
 	if err != nil {
-		return validators.GetErrorResponseFromErr(err)
-	}
-	// Check Status
-	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorUser, orderDomain.Status, consts.OrderStatus.Pending)
-	if !utils.Contains(nextStatuses, consts.OrderStatus.Cancelled) {
-		return validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+		return validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
 	}
 
-	now := time.Now().UTC()
-	updateSet := map[string]interface{}{
-		"status":  consts.OrderStatus.Pending,
-		"paid_at": now,
-		"cancelled": domain.Payment{
-			Id:          utils.ConvertStringIdToObjectId(payload.TransactionId),
-			PaymentType: payload.PaymentType,
-			CardType:    payload.CardType,
-			CardNumber:  payload.CardNumber,
-		},
+	//accept order
+	errPaid := orderFactory.ToPaid(ctx, payload)
+	if errPaid.IsError {
+		return errPaid
 	}
 
-	statusLog := domain.StatusLog{
-		CauserId:   utils.ConvertObjectIdToStringId(orderDomain.User.ID),
-		CauserType: "user",
-		CreatedAt:  &now,
-	}
-	statusLog.Status.New = consts.OrderStatus.Pending
-	statusLog.Status.Old = orderDomain.Status
-
-	orderDomain, err = l.repo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
-
-	if err != nil {
-		return validators.GetErrorResponseFromErr(err)
-	}
-	// Send Notification
+	//send notifications
+	go orderFactory.SendNotifications()
 
 	return validators.ErrorResponse{}
+
 }
 
 func (l OrderUseCase) KitchenAcceptOrder(ctx context.Context, payload *kitchen.AcceptOrderDto) (interface{}, validators.ErrorResponse) {
