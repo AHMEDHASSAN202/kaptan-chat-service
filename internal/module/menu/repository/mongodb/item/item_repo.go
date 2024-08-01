@@ -190,6 +190,9 @@ func (i *itemRepo) List(ctx context.Context, query *item.ListItemsDto) (items []
 	if query.Type != "" {
 		filter["type"] = query.Type
 	}
+	if query.HasOriginal != nil && *query.HasOriginal == true {
+		filter["has_original"] = true
+	}
 	data, err := New(i.itemCollection.Collection).Context(ctx).Limit(query.Limit).Page(query.Page).Sort("_id", -1).Aggregate(bson.M{"$match": filter})
 
 	items = make([]domain.Item, 0)
