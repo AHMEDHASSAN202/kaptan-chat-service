@@ -2,6 +2,7 @@ package order_factory
 
 import (
 	"context"
+	"github.com/asaskevich/EventBus"
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/copier"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"samm/internal/module/order/external/retails/responses"
 	kitchen3 "samm/internal/module/order/responses/kitchen"
 	"samm/internal/module/order/responses/user"
+	"samm/internal/module/order/subscribers"
 	"samm/internal/module/order/usecase/helper"
 	"samm/pkg/database/redis"
 	"samm/pkg/gate"
@@ -41,6 +43,7 @@ type Deps struct {
 	orderRepo   domain.OrderRepository
 	redisClient *redis.RedisClient
 	gate        *gate.Gate
+	eventBus    EventBus.Bus
 }
 
 type KthaOrder struct {
@@ -72,6 +75,10 @@ func (o *KthaOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrde
 		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.Mobile_location_not_available_error, nil)
 	}
 
+	kitchenIds, errResponse := o.extService.KitchenIService.GetKitchensForSpecificLocation(ctx, input.LocationId, utils.ConvertObjectIdToStringId(locationDoc.AccountId))
+	if errResponse.IsError {
+		o.logger.Error(errResponse.ErrorMessageObject.Text)
+	}
 	//check is the location available for the order
 	hasLocErr := helper.CheckIsLocationReadyForNewOrder(&ctx, locationDoc)
 	if hasLocErr.IsError {
@@ -105,7 +112,7 @@ func (o *KthaOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrde
 	}
 
 	//order builder
-	orderModel, errOrderModel := user2.CreateOrderBuilder(ctx, input, locationDoc, menuDetails, collectionMethod, accountDoc)
+	orderModel, errOrderModel := user2.CreateOrderBuilder(ctx, input, locationDoc, menuDetails, collectionMethod, accountDoc, kitchenIds)
 	if errOrderModel.IsError {
 		o.logger.Error(errOrderModel.ErrorMessageObject.Text)
 		return nil, errOrderModel
@@ -146,6 +153,9 @@ func (o *KthaOrder) Create(ctx context.Context, dto interface{}) (*user.FindOrde
 	//set order object to factory
 	o.Order = orderModel
 
+	//push an event
+	go o.PushEventToSubscribers(ctx)
+
 	return orderResponse, validators.ErrorResponse{}
 }
 
@@ -155,10 +165,6 @@ func (o *KthaOrder) Find(ctx context.Context, dto interface{}) (*domain.Order, v
 
 func (o *KthaOrder) List(ctx context.Context, dto interface{}) ([]domain.Order, validators.ErrorResponse) {
 	return nil, validators.ErrorResponse{}
-}
-
-func (o *KthaOrder) SendNotifications() validators.ErrorResponse {
-	return validators.ErrorResponse{}
 }
 
 func (o *KthaOrder) ToPending(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse) {
@@ -224,6 +230,9 @@ func (o *KthaOrder) ToAcceptKitchen(ctx context.Context, dto interface{}) (*kitc
 
 	//set order object to factory
 	o.Order = orderDomain
+
+	//push an event
+	go o.PushEventToSubscribers(ctx)
 
 	//build response
 	orderResponse, errBuilder := kitchen2.FindOrderBuilder(&ctx, orderDomain)
@@ -312,6 +321,9 @@ func (o *KthaOrder) ToRejectedKitchen(ctx context.Context, dto interface{}) (*ki
 	//set order object to factory
 	o.Order = orderDomain
 
+	//push an event
+	go o.PushEventToSubscribers(ctx)
+
 	//build response
 	orderResponse, errBuilder := kitchen2.FindOrderBuilder(&ctx, orderDomain)
 	if errBuilder.IsError {
@@ -373,6 +385,9 @@ func (o *KthaOrder) ToReadyForPickupKitchen(ctx context.Context, dto interface{}
 
 	//set order object to factory
 	o.Order = orderDomain
+
+	//push an event
+	go o.PushEventToSubscribers(ctx)
 
 	//build response
 	orderResponse, errBuilder := kitchen2.FindOrderBuilder(&ctx, orderDomain)
@@ -436,6 +451,9 @@ func (o *KthaOrder) ToPickedUpKitchen(ctx context.Context, dto interface{}) (*ki
 	//set order object to factory
 	o.Order = orderDomain
 
+	//push an event
+	go o.PushEventToSubscribers(ctx)
+
 	//build response
 	orderResponse, errBuilder := kitchen2.FindOrderBuilder(&ctx, orderDomain)
 	if errBuilder.IsError {
@@ -498,6 +516,9 @@ func (o *KthaOrder) ToNoShowKitchen(ctx context.Context, dto interface{}) (*kitc
 	//set order object to factory
 	o.Order = orderDomain
 
+	//push an event
+	go o.PushEventToSubscribers(ctx)
+
 	//build response
 	orderResponse, errBuilder := kitchen2.FindOrderBuilder(&ctx, orderDomain)
 	if errBuilder.IsError {
@@ -539,9 +560,12 @@ func (o *KthaOrder) ToArrived(ctx context.Context, payload *order.ArrivedOrderDt
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
-	// Send Notification
 	//set order object to factory
 	o.Order = orderDomain
+
+	//push an event
+	go o.PushEventToSubscribers(ctx)
+
 	orderResponse, _ := user2.FindOrderBuilder(&ctx, orderDomain)
 
 	return orderResponse, validators.ErrorResponse{}
@@ -604,7 +628,9 @@ func (o *KthaOrder) ToCancel(ctx context.Context, payload *order.CancelOrderDto)
 	}
 	//set order object to factory
 	o.Order = orderDomain
-	// Send Notification
+	//push an event
+	go o.PushEventToSubscribers(ctx)
+
 	orderResponse, _ := user2.FindOrderBuilder(&ctx, orderDomain)
 
 	return orderResponse, validators.ErrorResponse{}
@@ -648,11 +674,16 @@ func (o *KthaOrder) ToCancelDashboard(ctx context.Context, payload *order.Dashbo
 	}
 
 	orderDomain, err = o.orderRepo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
-	//set order object to factory
-	o.Order = orderDomain
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
+
+	//set order object to factory
+	o.Order = orderDomain
+
+	//push an event
+	go o.PushEventToSubscribers(ctx)
+
 	return orderDomain, validators.ErrorResponse{}
 }
 func (o *KthaOrder) ToPickedUpDashboard(ctx context.Context, payload *order.DashboardPickedUpOrderDto) (*domain.Order, validators.ErrorResponse) {
@@ -694,7 +725,12 @@ func (o *KthaOrder) ToPickedUpDashboard(ctx context.Context, payload *order.Dash
 	//set order object to factory
 	o.Order = orderDomain
 
+	//push an event
+	go o.PushEventToSubscribers(ctx)
+
 	return orderDomain, validators.ErrorResponse{}
 }
-func (o *KthaOrder) PushEvent(ctx context.Context, payload *order.DashboardPickedUpOrderDto) validators.ErrorResponse {
+func (o *KthaOrder) PushEventToSubscribers(ctx context.Context) validators.ErrorResponse {
+	o.Deps.eventBus.Publish(subscribers.SubscriberTopics.OrderChange, o.Order)
+	return validators.ErrorResponse{}
 }

@@ -149,7 +149,8 @@ type Payment struct {
 }
 
 type MetaData struct {
-	HasMissingItems bool `json:"has_missing_items" bson:"has_missing_items"`
+	HasMissingItems  bool                 `json:"has_missing_items" bson:"has_missing_items"`
+	TargetKitchenIds []primitive.ObjectID `bson:"target_kitchen_ids" json:"target_kitchen_ids"`
 }
 
 type Order struct {
@@ -199,6 +200,8 @@ type OrderUseCase interface {
 	DashboardPickedOrder(ctx context.Context, payload *order.DashboardPickedUpOrderDto) (*Order, validators.ErrorResponse)
 
 	UserRejectionReasons(ctx context.Context, status string, id string) ([]UserRejectionReason, validators.ErrorResponse)
+
+	UpdateRealTimeDb(ctx context.Context, order *Order) validators.ErrorResponse
 
 	UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
 	UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)

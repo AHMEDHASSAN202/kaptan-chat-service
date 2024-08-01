@@ -46,7 +46,7 @@ func (jwtService *UserJwtService) GenerateToken(ctx context.Context, id string, 
 			ID:        primitive.NewObjectID().Hex(),
 		},
 	}
-	jwtToken := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	token, err = jwtToken.SignedString([]byte(secret))
 	if err != nil {
 		jwtService.logger.Error(ctx, err)

@@ -176,3 +176,15 @@ func (l KitchenUseCase) KitchenExists(ctx *context.Context, dto *kitchen.ListKit
 	}
 	return len(*users) > 0
 }
+
+func (l KitchenUseCase) GetKitchensForSpecificLocation(ctx context.Context, locId, AccountId string) (kitchenIDs []string, err validators.ErrorResponse) {
+	kitchens, errResp := l.repo.GetKitchensForSpecificLocation(ctx, utils.ConvertStringIdToObjectId(locId), utils.ConvertStringIdToObjectId(AccountId))
+	if errResp.IsError {
+		return nil, errResp
+	}
+	kitchenIDs = make([]string, 0)
+	for _, kitchen := range kitchens {
+		kitchenIDs = append(kitchenIDs, kitchen.ID.Hex())
+	}
+	return kitchenIDs, validators.ErrorResponse{}
+}

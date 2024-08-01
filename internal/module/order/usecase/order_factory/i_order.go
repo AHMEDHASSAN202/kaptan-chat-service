@@ -14,7 +14,6 @@ type IOrder interface {
 	Create(ctx context.Context, dto interface{}) (*user.FindOrderResponse, validators.ErrorResponse)
 	Find(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse)
 	List(ctx context.Context, dto interface{}) ([]domain.Order, validators.ErrorResponse)
-	SendNotifications() validators.ErrorResponse
 	ToPending(ctx context.Context, dto interface{}) (*domain.Order, validators.ErrorResponse)
 	ToAcceptKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse)
 	ToRejectedKitchen(ctx context.Context, dto interface{}) (*kitchen3.FindOrderResponse, validators.ErrorResponse)
@@ -25,5 +24,5 @@ type IOrder interface {
 	ToCancel(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
 	ToCancelDashboard(ctx context.Context, payload *order.DashboardCancelOrderDto) (*domain.Order, validators.ErrorResponse)
 	ToPickedUpDashboard(ctx context.Context, payload *order.DashboardPickedUpOrderDto) (*domain.Order, validators.ErrorResponse)
-	PushEventToSubscribers(ctx context.Context, payload *domain.Order) validators.ErrorResponse
+	PushEventToSubscribers(ctx context.Context) validators.ErrorResponse
 }

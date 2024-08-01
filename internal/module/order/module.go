@@ -6,6 +6,7 @@ import (
 	"samm/internal/module/order/external"
 	"samm/internal/module/order/policies"
 	order_repo "samm/internal/module/order/repository/order"
+	"samm/internal/module/order/subscribers"
 	order_usecase "samm/internal/module/order/usecase/order"
 	"samm/internal/module/order/usecase/order_factory"
 )
@@ -21,5 +22,6 @@ var Module = fx.Options(
 	),
 	fx.Invoke(
 		policies.NewIPolicy, delivery.InitOrderController,
+		subscribers.OrderChangeSubscriber,
 	),
 )
