@@ -127,12 +127,12 @@ func (a *AdminAuthHandler) KitchenLogin(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	profile, token, errResp := a.adminUseCase.KitchenLogin(ctx, &input)
+	resp, errResp := a.adminUseCase.KitchenLogin(ctx, &input)
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{"profile": profile, "token": token})
+	return validators.SuccessResponse(c, resp)
 }
 
 func (a *AdminAuthHandler) AdminProfile(c echo.Context) error {

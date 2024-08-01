@@ -26,6 +26,7 @@ import (
 const DefaultTimeFormat = "15:04:05"
 const DefaultHourTimeFormat = "15:04"
 const DefaultDateFormat = "2006-01-02"
+const DefaultDateTimeFormat = "2006-01-02 15:04:05"
 
 // RemoveDuplicates removes duplicate values from a slice.
 // T must be a comparable type.

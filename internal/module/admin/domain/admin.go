@@ -65,7 +65,7 @@ type AdminUseCase interface {
 	CheckRoleExists(ctx context.Context, roleId primitive.ObjectID) (bool, validators.ErrorResponse)
 	AdminLogin(ctx context.Context, dto *auth.AdminAuthDTO) (interface{}, string, validators.ErrorResponse)
 	PortalLogin(ctx context.Context, dto *auth.PortalAuthDTO) (interface{}, string, validators.ErrorResponse)
-	KitchenLogin(ctx context.Context, input *auth.KitchenAuthDTO) (interface{}, string, validators.ErrorResponse)
+	KitchenLogin(ctx context.Context, input *auth.KitchenAuthDTO) (admin2.AuthKitchenResponse, validators.ErrorResponse)
 	Profile(ctx context.Context, profileDTO auth.ProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 	KitchenProfile(ctx context.Context, profileDTO auth.KitchenProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 	UpdateAdminProfile(ctx context.Context, dto *auth.UpdateAdminProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)

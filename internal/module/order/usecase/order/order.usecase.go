@@ -20,6 +20,8 @@ import (
 	"samm/pkg/utils"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
+	"strings"
+	"time"
 )
 
 type OrderUseCase struct {
@@ -409,23 +411,36 @@ func (l OrderUseCase) KitchenNoShowOrder(ctx context.Context, payload *kitchen.N
 }
 
 func (l OrderUseCase) UpdateRealTimeDb(ctx context.Context, order *domain.Order) validators.ErrorResponse {
+	ttlArr := []string{}
 	err := l.realTimeDb.NewRef("orders/raw").Child(order.ID.Hex()).Set(ctx, utils.ObjectToStringified(order))
 	if err != nil {
 		l.logger.Error("raw: sync to firebase order => ", err)
 		return validators.GetErrorResponseFromErr(err)
 	}
+	ttlArr = append(ttlArr, "^orderId", order.ID.Hex())
 
 	err = l.realTimeDb.NewRef("orders/users").Child(order.User.ID.Hex()).Child(order.ID.Hex()).Set(ctx, order.Status)
 	if err != nil {
 		l.logger.Error("users: sync to firebase order => ", err)
 		return validators.GetErrorResponseFromErr(err)
 	}
+	ttlArr = append(ttlArr, "^userId", order.User.ID.Hex())
+
 	for _, kitchenId := range order.MetaData.TargetKitchenIds {
 		err = l.realTimeDb.NewRef("orders/kitchens").Child(kitchenId.Hex()).Child(order.ID.Hex()).Set(ctx, order.Status)
 		if err != nil {
 			l.logger.Error("kitchens: sync to firebase order => ", err)
 			return validators.GetErrorResponseFromErr(err)
 		}
+		ttlArr = append(ttlArr, "^kitchenId", kitchenId.Hex())
 	}
+
+	//setup ttl field with its expired at
+	err = l.realTimeDb.NewRef("orders/ttl").Child(strings.Join(ttlArr, " ")).Set(ctx, time.Now().UTC().Add(6*time.Hour).Format(utils.DefaultDateTimeFormat))
+	if err != nil {
+		l.logger.Error("users: sync to firebase order => ", err)
+		return validators.GetErrorResponseFromErr(err)
+	}
+
 	return validators.ErrorResponse{}
 }

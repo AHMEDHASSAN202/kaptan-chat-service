@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"firebase.google.com/go/v4/auth"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"os"
 	"samm/internal/module/user/domain"
@@ -20,15 +21,17 @@ type UserUseCase struct {
 	repo           domain.UserRepository
 	userJwtService jwt.JwtService
 	logger         logger.ILogger
+	authClient     *auth.Client
 }
 
 const tag = " UserUseCase "
 
-func NewUserUseCase(repo domain.UserRepository, jwtFactory jwt.JwtServiceFactory, logger logger.ILogger) domain.UserUseCase {
+func NewUserUseCase(repo domain.UserRepository, authClient *auth.Client, jwtFactory jwt.JwtServiceFactory, logger logger.ILogger) domain.UserUseCase {
 	return &UserUseCase{
 		repo:           repo,
 		userJwtService: jwtFactory.UserJwtService(),
 		logger:         logger,
+		authClient:     authClient,
 	}
 }
 
@@ -103,7 +106,7 @@ func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtp
 			return
 		}
 	}
-
+	//is user doesn't completed his profile
 	if userDomain.Name == "" {
 		userTempToken, tokenErr := l.userJwtService.GenerateToken(*ctx, utils.ConvertObjectIdToStringId(userDomain.ID), true)
 		if tokenErr != nil {
@@ -120,11 +123,17 @@ func (l UserUseCase) VerifyOtp(ctx *context.Context, payload *user.VerifyUserOtp
 			err = validators.GetErrorResponseFromErr(tokenErr)
 			return
 		}
+		firebaseToken, tokenErr := l.authClient.CustomTokenWithClaims(*ctx, userDomain.ID.Hex(), nil)
+		if tokenErr != nil {
+			return responses.VerifyOtpResp{}, validators.GetErrorResponseFromErr(tokenErr)
+		}
 		res = responses.VerifyOtpResp{
 			IsProfileCompleted: true,
 			Token:              userToken,
+			FirebaseToken:      firebaseToken,
 		}
 		userDomain.Tokens = append(userDomain.Tokens, userToken)
+
 	}
 	currentTime := time.Now()
 	userDomain.VerifiedAt = &currentTime
