@@ -2,7 +2,6 @@ package item
 
 import (
 	"context"
-	"fmt"
 	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/jinzhu/copier"
 	"github.com/kamva/mgm/v3"
@@ -191,7 +190,6 @@ func (i *itemRepo) List(ctx context.Context, query *item.ListItemsDto) (items []
 	if query.Type != "" {
 		filter["type"] = query.Type
 	}
-	fmt.Println("query.HasOriginal => ", query.HasOriginal)
 	if query.HasOriginal != nil && *query.HasOriginal == true {
 		filter["has_original"] = true
 	}
