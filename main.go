@@ -44,7 +44,6 @@ func main() {
 				aws.Init,
 				event_bus.NewEventBus,
 			),
-			event_bus.EventBusModule,
 			jwt.Module,
 			gate.Module,
 			approval.Module,
