@@ -613,6 +613,8 @@ func (o *KthaOrder) ToPaid(ctx context.Context, payload *order.OrderPaidDto) val
 	if err != nil {
 		return validators.GetErrorResponseFromErr(err)
 	}
+	o.Order = orderDomain
+
 	go o.PushEventToSubscribers(ctx)
 
 	return validators.ErrorResponse{}

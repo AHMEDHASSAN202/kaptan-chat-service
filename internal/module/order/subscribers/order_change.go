@@ -31,7 +31,6 @@ func (o OrderSubscriber) orderChange(order *domain.Order) {
 	o.orderUseCase.UpdateRealTimeDb(ctx, order)
 }
 func (o OrderSubscriber) pushNotificationOrder(ctx context.Context, order *domain.Order) {
-
 	notificationData := notification2.GeneralNotification{}
 	notificationData.Country = order.Location.Country.Id
 	notificationData.To = []notification2.NotificationReceiver{
