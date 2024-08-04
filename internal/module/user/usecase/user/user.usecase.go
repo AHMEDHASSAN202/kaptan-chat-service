@@ -196,6 +196,14 @@ func (l UserUseCase) FindUser(ctx *context.Context, Id string) (user domain.User
 	return *domainUser, validators.ErrorResponse{}
 }
 
+func (l UserUseCase) RefreshFirebaseToken(ctx *context.Context, Id string) (firebaseToken string, err validators.ErrorResponse) {
+	firebaseToken, tokenErr := l.authClient.CustomTokenWithClaims(*ctx, Id, nil)
+	if tokenErr != nil {
+		return "", validators.GetErrorResponseFromErr(tokenErr)
+	}
+	return firebaseToken, validators.ErrorResponse{}
+}
+
 func (l UserUseCase) DeleteUser(ctx *context.Context, Id string) (err validators.ErrorResponse) {
 	domainUser, dbErr := l.repo.FindUser(ctx, utils.ConvertStringIdToObjectId(Id))
 	if dbErr != nil {
