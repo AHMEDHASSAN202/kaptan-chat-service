@@ -37,7 +37,7 @@ type OrderPriceSummary struct {
 type Item struct {
 	ID               primitive.ObjectID         `json:"id"`
 	Name             responses.LocalizationText `json:"name"`
-	MobileId         string                     `json:"mobile_id"`
+	MobileId         string                     `json:"mobile_id,omitempty"`
 	Desc             responses.LocalizationText `json:"desc"`
 	Min              int                        `json:"min"`
 	Max              int                        `json:"max"`
