@@ -159,6 +159,11 @@ func (l UserUseCase) UserSignUp(ctx *context.Context, payload *user.UserSignUpDt
 		err = validators.GetErrorResponseFromErr(tokenErr)
 		return
 	}
+	firebaseToken, tokenErr := l.authClient.CustomTokenWithClaims(*ctx, userDomain.ID.Hex(), nil)
+	if tokenErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
+	}
 
 	updatedUserDomain := domainBuilderAtSignUp(payload, userToken, userDomain)
 
@@ -171,6 +176,7 @@ func (l UserUseCase) UserSignUp(ctx *context.Context, payload *user.UserSignUpDt
 	res = responses.VerifyOtpResp{
 		IsProfileCompleted: true,
 		Token:              userToken,
+		FirebaseToken:      firebaseToken,
 	}
 
 	return
