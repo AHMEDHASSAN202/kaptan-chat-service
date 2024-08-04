@@ -2,9 +2,11 @@ package policies
 
 import (
 	"context"
+	"github.com/sirupsen/logrus"
 	domain2 "samm/internal/module/admin/domain"
 	"samm/internal/module/order/consts"
 	"samm/internal/module/order/domain"
+	userDomain "samm/internal/module/user/domain"
 	"samm/pkg/utils"
 )
 
@@ -58,4 +60,10 @@ func (p OrderPolicy) KitchenToNoShow(order *domain.Order, ctx context.Context) b
 func (p OrderPolicy) KitchenToReadyForPickup(order *domain.Order, ctx context.Context) bool {
 	kitchenProfile := ctx.Value("causer-details").(*domain2.Admin)
 	return utils.Contains(kitchenProfile.Kitchen.AccountIds, order.Location.Account.Id) || utils.Contains(kitchenProfile.Kitchen.LocationIds, order.Location.ID)
+}
+
+func (p OrderPolicy) ReportMissingItem(order *domain.Order, ctx context.Context) bool {
+	userProfile := ctx.Value("causer-details").(*userDomain.User)
+	logrus.Error(userProfile, userProfile.ID.Hex(), order.User.ID.Hex())
+	return userProfile.ID.Hex() == order.User.ID.Hex()
 }

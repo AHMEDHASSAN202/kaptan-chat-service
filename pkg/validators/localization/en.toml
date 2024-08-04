@@ -255,3 +255,7 @@ other = "There was an issue processing your payment. Please try again or contact
 description = "CanNotChangeApprovalStatus"
 other = "Couldn't Change Approval Status to new one"
 
+
+[Reported_Item_Already_Added]
+description = "Reported_Item_Already_Added"
+other = "This reported item has been done before for the same order."

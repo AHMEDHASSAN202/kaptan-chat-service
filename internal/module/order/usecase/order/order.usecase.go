@@ -16,6 +16,7 @@ import (
 	"samm/internal/module/order/responses/user"
 	"samm/internal/module/order/usecase/helper"
 	"samm/internal/module/order/usecase/order_factory"
+	"samm/pkg/gate"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"samm/pkg/validators"
@@ -30,15 +31,17 @@ type OrderUseCase struct {
 	logger       logger.ILogger
 	orderFactory *order_factory.OrderFactory
 	realTimeDb   *db.Client
+	gate         *gate.Gate
 }
 
-func NewOrderUseCase(repo domain.OrderRepository, extService external.ExtService, realTimeDb *db.Client, logger logger.ILogger, orderFactory *order_factory.OrderFactory) domain.OrderUseCase {
+func NewOrderUseCase(repo domain.OrderRepository, extService external.ExtService, gate *gate.Gate, realTimeDb *db.Client, logger logger.ILogger, orderFactory *order_factory.OrderFactory) domain.OrderUseCase {
 	return &OrderUseCase{
 		repo:         repo,
 		extService:   extService,
 		logger:       logger,
 		orderFactory: orderFactory,
 		realTimeDb:   realTimeDb,
+		gate:         gate,
 	}
 }
 func (l OrderUseCase) ListOrderForDashboard(ctx context.Context, payload *order.ListOrderDtoForDashboard) (*responses.ListResponse, validators.ErrorResponse) {
@@ -199,7 +202,18 @@ func (l OrderUseCase) ReportMissedItem(ctx context.Context, payload *order.Repor
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
 
-	//todo: check if user own the order
+	//authorize this order
+	if !l.gate.Authorize(orderDoc, "ReportMissingItem", ctx) {
+		l.logger.Error("ReportMissingItem -> UnAuthorized update -> ", orderDoc.ID)
+		return nil, validators.GetErrorResponse(&ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
+
+	//check is reported before
+	if orderDoc.MetaData.HasMissingItems {
+		l.logger.Error("ReportMissingItem -> reported before-> ", orderDoc.ID)
+		return nil, validators.GetErrorResponse(&ctx, localization.Reported_Item_Already_Added, nil, utils.GetAsPointer(http.StatusBadRequest))
+	}
+
 	missingItemMap := make(map[string]order.MissedItems)
 	missingAddonMap := make(map[string]map[string]order.MissedItems)
 	for _, item := range payload.MissingItems {

@@ -251,3 +251,7 @@ other = "حدثت مشكلة أثناء معالجة الدفع. يرجى الم
 [CanNotChangeApprovalStatus]
 description = "CanNotChangeApprovalStatus"
 other = "لا يمكن تغير الحالة"
+
+[Reported_Item_Already_Added]
+description = "Reported_Item_Already_Added"
+other = "لقد تم الابلاغ عن منتج لم يسلم من قبل لنفس الاوردر"
