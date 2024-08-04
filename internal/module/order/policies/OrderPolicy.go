@@ -2,7 +2,6 @@ package policies
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
 	domain2 "samm/internal/module/admin/domain"
 	"samm/internal/module/order/consts"
 	"samm/internal/module/order/domain"
@@ -64,6 +63,5 @@ func (p OrderPolicy) KitchenToReadyForPickup(order *domain.Order, ctx context.Co
 
 func (p OrderPolicy) ReportMissingItem(order *domain.Order, ctx context.Context) bool {
 	userProfile := ctx.Value("causer-details").(*userDomain.User)
-	logrus.Error(userProfile, userProfile.ID.Hex(), order.User.ID.Hex())
 	return userProfile.ID.Hex() == order.User.ID.Hex()
 }
