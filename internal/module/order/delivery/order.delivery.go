@@ -58,6 +58,13 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 		kitchen.PUT("/:id/picked-up", handler.KitchenToPickedUp, kitchenMiddlewares.AuthMiddleware)
 		kitchen.PUT("/:id/no-show", handler.KitchenToNoShow, kitchenMiddlewares.AuthMiddleware)
 	}
+
+	cronJobs := e.Group("api/v1/cron-jobs/order")
+	{
+		cronJobs.POST("/time-out", handler.TimedOutOrdersByCronJob)
+		cronJobs.POST("/picked-up", handler.PickedUpOrdersByCronJob)
+		cronJobs.POST("/cancel", handler.CancelledOrdersByCronJob)
+	}
 }
 
 func (a *OrderHandler) CreateOrder(c echo.Context) error {

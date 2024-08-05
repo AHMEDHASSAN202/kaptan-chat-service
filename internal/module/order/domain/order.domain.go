@@ -4,6 +4,7 @@ import (
 	"context"
 	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/dto/order/kitchen"
@@ -206,6 +207,11 @@ type OrderUseCase interface {
 	UserCancelOrder(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
 	UserArrivedOrder(ctx context.Context, payload *order.ArrivedOrderDto) (*user.FindOrderResponse, validators.ErrorResponse)
 	SetOrderPaid(ctx context.Context, payload *order.OrderPaidDto) validators.ErrorResponse
+
+	// cron jobs
+	CronJobTimedOutOrders(ctx context.Context) validators.ErrorResponse
+	CronJobPickedOrders(ctx context.Context) validators.ErrorResponse
+	CronJobCancelOrders(ctx context.Context) validators.ErrorResponse
 }
 
 type OrderRepository interface {
@@ -220,4 +226,5 @@ type OrderRepository interface {
 	FindOrderByUser(ctx *context.Context, id string, userId string) (order *Order, err error)
 	UpdateOrderStatus(ctx *context.Context, orderDomain *Order, previousStatus []string, statusLog *StatusLog, updateSet interface{}) (order *Order, err error)
 	UpdateUserAllOrdersFavorite(ctx context.Context, userId string) (err error)
+	GetAllOrdersForCronJobs(ctx *context.Context, filters bson.M) (ordersRes *[]Order, paginationMeta *PaginationData, err error)
 }

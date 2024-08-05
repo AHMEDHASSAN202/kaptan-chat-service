@@ -5,9 +5,11 @@ import (
 	"errors"
 	"firebase.google.com/go/v4/db"
 	"github.com/kamva/mgm/v3"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
 	user2 "samm/internal/module/order/builder/user"
+	"samm/internal/module/order/consts"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/dto/order/kitchen"
@@ -19,9 +21,11 @@ import (
 	"samm/pkg/gate"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
+	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
 	"samm/pkg/validators/localization"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -280,7 +284,7 @@ func (l OrderUseCase) DashboardCancelOrder(ctx context.Context, payload *order.D
 	}
 
 	//accept order
-	orderResponse, errAccept := orderFactory.ToCancelDashboard(ctx, payload)
+	orderResponse, errAccept := orderFactory.ToCancelDashboard(ctx, consts.ActorAdmin, payload)
 	if errAccept.IsError {
 		return nil, errAccept
 	}
@@ -297,7 +301,7 @@ func (l OrderUseCase) DashboardPickedOrder(ctx context.Context, payload *order.D
 	}
 
 	//accept order
-	orderResponse, errAccept := orderFactory.ToPickedUpDashboard(ctx, payload)
+	orderResponse, errAccept := orderFactory.ToPickedUpDashboard(ctx, consts.ActorAdmin, payload)
 	if errAccept.IsError {
 		return nil, errAccept
 	}
@@ -454,6 +458,163 @@ func (l OrderUseCase) UpdateRealTimeDb(ctx context.Context, order *domain.Order)
 	if err != nil {
 		l.logger.Error("users: sync to firebase order => ", err)
 		return validators.GetErrorResponseFromErr(err)
+	}
+
+	return validators.ErrorResponse{}
+}
+
+// cron jobs
+
+func (l OrderUseCase) CronJobTimedOutOrders(ctx context.Context) validators.ErrorResponse {
+	// last 5 hours interval
+	t := time.Now().UTC().Add(-5 * time.Hour)
+	tRFC, err := time.Parse(time.RFC3339, t.Format(time.RFC3339))
+
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.M{"deleted_at": nil},
+		bson.M{"status": consts.OrderStatus.Pending},
+		bson.M{"created_at": bson.M{"$lte": tRFC}}},
+	}}
+
+	orders, _, dbErr := l.repo.GetAllOrdersForCronJobs(&ctx, matching)
+	if dbErr != nil {
+		return validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	if orders == nil {
+		return validators.ErrorResponse{}
+	}
+
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+	errChan := make(chan validators.ErrorResponse, len(*orders))
+	var wg sync.WaitGroup
+	for _, v := range *orders {
+		wg.Add(1)
+		go func(order domain.Order) validators.ErrorResponse {
+			defer wg.Done()
+			toTimedOutErr := orderFactory.ToTimedOut(ctx, order.ID.Hex())
+			if toTimedOutErr.IsError {
+				l.logger.Error("Error processing  TimedOut order:", toTimedOutErr)
+				errChan <- toTimedOutErr
+			}
+			return validators.ErrorResponse{}
+		}(v)
+	}
+	wg.Wait()
+	close(errChan)
+	if len(errChan) > 0 {
+		return <-errChan
+	}
+
+	return validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) CronJobPickedOrders(ctx context.Context) validators.ErrorResponse {
+	// last 5 hours interval
+	t := time.Now().UTC().Add(-5 * time.Hour)
+	tRFC, err := time.Parse(time.RFC3339, t.Format(time.RFC3339))
+
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.M{"deleted_at": nil},
+		bson.M{"status": consts.OrderStatus.Accepted},
+		bson.M{"created_at": bson.M{"$lte": tRFC}}},
+	}}
+
+	orders, _, dbErr := l.repo.GetAllOrdersForCronJobs(&ctx, matching)
+	if dbErr != nil {
+		return validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	if orders == nil {
+		return validators.ErrorResponse{}
+	}
+
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	errChan := make(chan validators.ErrorResponse, len(*orders))
+	var wg sync.WaitGroup
+	for _, v := range *orders {
+		wg.Add(1)
+		go func(orderData domain.Order) validators.ErrorResponse {
+			defer wg.Done()
+			payload := &order.DashboardPickedUpOrderDto{
+				OrderId: orderData.ID.Hex(),
+				AdminHeaders: dto.AdminHeaders{
+					CauserType: "cron",
+				},
+			}
+			_, pickedErr := orderFactory.ToPickedUpDashboard(ctx, consts.ActorCron, payload)
+			if pickedErr.IsError {
+				l.logger.Error("Error processing PickedUp order:", pickedErr)
+				errChan <- pickedErr
+			}
+			return validators.ErrorResponse{}
+		}(v)
+	}
+	wg.Wait()
+	close(errChan)
+	if len(errChan) > 0 {
+		return <-errChan
+	}
+
+	return validators.ErrorResponse{}
+}
+
+func (l OrderUseCase) CronJobCancelOrders(ctx context.Context) validators.ErrorResponse {
+	t := time.Now().UTC().Add(-5 * time.Hour)
+	tRFC, err := time.Parse(time.RFC3339, t.Format(time.RFC3339))
+
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.M{"deleted_at": nil},
+		bson.M{"status": consts.OrderStatus.Initiated},
+		bson.M{"created_at": bson.M{"$lte": tRFC}}},
+	}}
+
+	orders, _, dbErr := l.repo.GetAllOrdersForCronJobs(&ctx, matching)
+	if dbErr != nil {
+		return validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	if orders == nil {
+		return validators.ErrorResponse{}
+	}
+
+	orderFactory, err := l.orderFactory.Make("ktha")
+	if err != nil {
+		return validators.GetErrorResponse(&ctx, localization.E1004, nil, utils.GetAsPointer(http.StatusInternalServerError))
+	}
+
+	errChan := make(chan validators.ErrorResponse, len(*orders))
+	var wg sync.WaitGroup
+	for _, v := range *orders {
+		wg.Add(1)
+		go func(orderData domain.Order) validators.ErrorResponse {
+			defer wg.Done()
+			payload := &order.DashboardCancelOrderDto{
+				OrderId: orderData.ID.Hex(),
+				AdminHeaders: dto.AdminHeaders{
+					CauserType: "cron",
+				},
+			}
+			_, cancelErr := orderFactory.ToCancelDashboard(ctx, consts.ActorCron, payload)
+			if cancelErr.IsError {
+				l.logger.Error("Error processing Cancelled order:", cancelErr)
+				errChan <- cancelErr
+			}
+
+			return validators.ErrorResponse{}
+		}(v)
+	}
+	wg.Wait()
+	close(errChan)
+	if len(errChan) > 0 {
+		return <-errChan
 	}
 
 	return validators.ErrorResponse{}
