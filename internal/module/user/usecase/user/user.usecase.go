@@ -159,6 +159,11 @@ func (l UserUseCase) UserSignUp(ctx *context.Context, payload *user.UserSignUpDt
 		err = validators.GetErrorResponseFromErr(tokenErr)
 		return
 	}
+	firebaseToken, tokenErr := l.authClient.CustomTokenWithClaims(*ctx, userDomain.ID.Hex(), nil)
+	if tokenErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
+	}
 
 	updatedUserDomain := domainBuilderAtSignUp(payload, userToken, userDomain)
 
@@ -171,6 +176,7 @@ func (l UserUseCase) UserSignUp(ctx *context.Context, payload *user.UserSignUpDt
 	res = responses.VerifyOtpResp{
 		IsProfileCompleted: true,
 		Token:              userToken,
+		FirebaseToken:      firebaseToken,
 	}
 
 	return
@@ -194,6 +200,14 @@ func (l UserUseCase) FindUser(ctx *context.Context, Id string) (user domain.User
 		return *domainUser, validators.GetErrorResponseFromErr(errRe)
 	}
 	return *domainUser, validators.ErrorResponse{}
+}
+
+func (l UserUseCase) RefreshFirebaseToken(ctx *context.Context, Id string) (firebaseToken string, err validators.ErrorResponse) {
+	firebaseToken, tokenErr := l.authClient.CustomTokenWithClaims(*ctx, Id, nil)
+	if tokenErr != nil {
+		return "", validators.GetErrorResponseFromErr(tokenErr)
+	}
+	return firebaseToken, validators.ErrorResponse{}
 }
 
 func (l UserUseCase) DeleteUser(ctx *context.Context, Id string) (err validators.ErrorResponse) {

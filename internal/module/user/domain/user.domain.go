@@ -44,6 +44,7 @@ type UserUseCase interface {
 	UserSignUp(ctx *context.Context, payload *user.UserSignUpDto) (res responses.VerifyOtpResp, err validators.ErrorResponse)
 	UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (user *responses.MobileUser, err validators.ErrorResponse)
 	FindUser(ctx *context.Context, Id string) (user User, err validators.ErrorResponse)
+	RefreshFirebaseToken(ctx *context.Context, Id string) (firebaseToken string, err validators.ErrorResponse)
 	DeleteUser(ctx *context.Context, Id string) (err validators.ErrorResponse)
 	List(ctx *context.Context, dto *user.ListUserDto) (*responses.ListResponse, validators.ErrorResponse)
 	ToggleUserActivation(ctx *context.Context, userId string, adminHeader *dto.AdminHeaders) (err validators.ErrorResponse)

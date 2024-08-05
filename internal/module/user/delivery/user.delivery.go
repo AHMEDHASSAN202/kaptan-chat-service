@@ -42,10 +42,12 @@ func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validato
 	mobile.POST("/send-otp", handler.SendUserOtp)
 	mobile.POST("/verify-otp", handler.VerifyUserOtp)
 	mobile.POST("/sign-up", handler.SignUp, userMiddleware.AuthenticationMiddleware(true))
+
 	authGroup := mobile.Group("", userMiddleware.AuthenticationMiddleware(false), userMiddleware.AuthorizationMiddleware)
 	authGroup.PUT("/update-player-id", handler.UpdateUserPlayerId, userMiddleware.AuthenticationMiddleware(false))
 	authGroup.PUT("", handler.UpdateUserProfile, userMiddleware.RemoveUserFromRedis)
 	authGroup.GET("", handler.GetUserProfile)
+	authGroup.PUT("/firebase-token-refresh", handler.RefreshFirebaseToken)
 	authGroup.DELETE("", handler.DeleteUser, userMiddleware.RemoveUserFromRedis)
 
 }
@@ -180,6 +182,21 @@ func (a *UserHandler) GetUserProfile(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{"user": data})
+}
+
+func (a *UserHandler) RefreshFirebaseToken(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var payload dto.MobileHeaders
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+
+	data, errResp := a.userUsecase.RefreshFirebaseToken(&ctx, payload.CauserId)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"firebase_token": data})
 }
 
 func (a *UserHandler) DeleteUser(c echo.Context) error {
