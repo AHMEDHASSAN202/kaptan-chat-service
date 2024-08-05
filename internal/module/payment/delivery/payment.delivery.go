@@ -3,16 +3,12 @@ package delivery
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"net/http"
 	"samm/internal/module/payment/domain"
 	"samm/internal/module/payment/dto/payment"
 	"samm/pkg/database/redis"
 	"samm/pkg/logger"
 	usermiddleware "samm/pkg/middlewares/user"
-	"samm/pkg/utils"
 	"samm/pkg/validators"
-	"samm/pkg/validators/localization"
-	"time"
 )
 
 type PaymentHandler struct {
@@ -49,18 +45,18 @@ func (a *PaymentHandler) pay(c echo.Context) error {
 	b := &echo.DefaultBinder{}
 	b.BindHeaders(c, &payload)
 
-	userId := payload.CauserId
+	//userId := payload.CauserId
 
-	duration := time.Now().UTC().Add(10 * time.Second).Sub(time.Now().UTC())
-	lock, er := a.redis.Lock("USER_PAYMENT_"+userId, userId, duration)
-
-	if er != nil {
-		return validators.ErrorStatusBadRequest(c, validators.GetErrorResponseFromErr(er))
-	}
-	if !lock {
-		return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.PAYMENT_PROCESS_RUNNING, nil, utils.GetAsPointer(http.StatusBadRequest)))
-	}
-	defer a.redis.Unlock("USER_PAYMENT_" + userId)
+	//duration := time.Now().UTC().Add(10 * time.Second).Sub(time.Now().UTC())
+	//lock, er := a.redis.Lock("USER_PAYMENT_"+userId, userId, duration)
+	//
+	//if er != nil {
+	//	return validators.ErrorStatusBadRequest(c, validators.GetErrorResponseFromErr(er))
+	//}
+	//if !lock {
+	//	return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.PAYMENT_PROCESS_RUNNING, nil, utils.GetAsPointer(http.StatusBadRequest)))
+	//}
+	//defer a.redis.Unlock("USER_PAYMENT_" + userId)
 
 	transactionType := c.Param("transactionType")
 	payload.TransactionType = transactionType
