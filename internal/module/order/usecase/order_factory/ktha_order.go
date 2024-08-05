@@ -621,6 +621,45 @@ func (o *KthaOrder) ToPaid(ctx context.Context, payload *order.OrderPaidDto) val
 
 }
 
+func (o *KthaOrder) ToTimedOut(ctx context.Context, orderId string) validators.ErrorResponse {
+
+	// Find Order
+	orderDomain, err := o.orderRepo.FindOrder(&ctx, utils.ConvertStringIdToObjectId(orderId))
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	// Check Status
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorCron, orderDomain.Status, consts.OrderStatus.TimedOut)
+	if !utils.Contains(nextStatuses, consts.OrderStatus.TimedOut) {
+		return validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
+	}
+
+	now := time.Now().UTC()
+	updateSet := map[string]interface{}{
+		"status": consts.OrderStatus.TimedOut,
+	}
+
+	statusLog := domain.StatusLog{
+		//CauserId:   utils.ConvertObjectIdToStringId(orderDomain.User.ID),
+		CauserType: "cron",
+		CreatedAt:  &now,
+	}
+	statusLog.Status.New = consts.OrderStatus.TimedOut
+	statusLog.Status.Old = orderDomain.Status
+
+	orderDomain, err = o.orderRepo.UpdateOrderStatus(&ctx, orderDomain, previousStatuses, &statusLog, updateSet)
+
+	if err != nil {
+		return validators.GetErrorResponseFromErr(err)
+	}
+	o.Order = orderDomain
+
+	go o.PushEventToSubscribers(ctx)
+
+	return validators.ErrorResponse{}
+
+}
+
 func (o *KthaOrder) ToCancel(ctx context.Context, payload *order.CancelOrderDto) (*user.FindOrderResponse, validators.ErrorResponse) {
 
 	// Find Order
@@ -685,7 +724,7 @@ func (o *KthaOrder) ToCancel(ctx context.Context, payload *order.CancelOrderDto)
 
 	return orderResponse, validators.ErrorResponse{}
 }
-func (o *KthaOrder) ToCancelDashboard(ctx context.Context, payload *order.DashboardCancelOrderDto) (*domain.Order, validators.ErrorResponse) {
+func (o *KthaOrder) ToCancelDashboard(ctx context.Context, actor string, payload *order.DashboardCancelOrderDto) (*domain.Order, validators.ErrorResponse) {
 
 	// Find Order
 	orderDomain, err := o.orderRepo.FindOrder(&ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
@@ -693,7 +732,7 @@ func (o *KthaOrder) ToCancelDashboard(ctx context.Context, payload *order.Dashbo
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
 	// Check Status
-	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorAdmin, orderDomain.Status, consts.OrderStatus.Cancelled)
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(actor, orderDomain.Status, consts.OrderStatus.Cancelled)
 	if !utils.Contains(nextStatuses, consts.OrderStatus.Cancelled) {
 		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
 	}
@@ -736,7 +775,7 @@ func (o *KthaOrder) ToCancelDashboard(ctx context.Context, payload *order.Dashbo
 
 	return orderDomain, validators.ErrorResponse{}
 }
-func (o *KthaOrder) ToPickedUpDashboard(ctx context.Context, payload *order.DashboardPickedUpOrderDto) (*domain.Order, validators.ErrorResponse) {
+func (o *KthaOrder) ToPickedUpDashboard(ctx context.Context, actor string, payload *order.DashboardPickedUpOrderDto) (*domain.Order, validators.ErrorResponse) {
 
 	//find order
 	orderDomain, err := o.orderRepo.FindOrder(&ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
@@ -746,7 +785,7 @@ func (o *KthaOrder) ToPickedUpDashboard(ctx context.Context, payload *order.Dash
 	}
 
 	// Check Status
-	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(consts.ActorAdmin, orderDomain.Status, consts.OrderStatus.PickedUp)
+	nextStatuses, previousStatuses := helper.GetNextAndPreviousStatusByType(actor, orderDomain.Status, consts.OrderStatus.PickedUp)
 	if !utils.Contains(nextStatuses, consts.OrderStatus.PickedUp) {
 		return nil, validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
 	}

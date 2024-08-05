@@ -12,6 +12,7 @@ type UserRejectionReason struct {
 type OrderStatusJson struct {
 	AllowUserToChange    []string `json:"allow_user_to_change"`
 	AllowAdminToChange   []string `json:"allow_admin_to_change"`
+	AllowCronJobToChange []string `json:"allow_cronjob_to_change"`
 	AllowKitchenToChange []string `json:"allow_kitchen_to_change"`
 	PreviousStatus       []string `json:"previous_status"`
 }

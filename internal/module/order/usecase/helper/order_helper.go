@@ -45,6 +45,8 @@ func GetNextAndPreviousStatusByType(actor string, currentStatus string, nextStat
 	switch actor {
 	case consts.ActorAdmin:
 		return statusRule.AllowAdminToChange, nextStatusRule.PreviousStatus
+	case consts.ActorCron:
+		return statusRule.AllowCronJobToChange, nextStatusRule.PreviousStatus
 	case consts.ActorKitchen:
 		return statusRule.AllowKitchenToChange, nextStatusRule.PreviousStatus
 	case consts.ActorUser:

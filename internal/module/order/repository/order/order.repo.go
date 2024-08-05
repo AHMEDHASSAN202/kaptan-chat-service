@@ -20,7 +20,10 @@ type OrderRepository struct {
 	logger          logger.ILogger
 }
 
-const mongoOrderRepositoryTag = "OrderMongoRepository"
+const (
+	MongoOrderRepositoryTag = "OrderMongoRepository"
+	MaxLimitPerRound        = 500
+)
 
 func NewOrderMongoRepository(dbs *mongo.Database, logger logger.ILogger) domain.OrderRepository {
 	orderDbCollection := mgm.Coll(&domain.Order{})
@@ -255,5 +258,27 @@ func (l OrderRepository) UpdateUserAllOrdersFavorite(ctx context.Context, userId
 	_, err = l.orderCollection.UpdateMany(ctx, filter, bson.M{
 		"$set": bson.M{"is_favourite": false},
 	})
+	return
+}
+
+func (i *OrderRepository) GetAllOrdersForCronJobs(ctx *context.Context, filters bson.M) (ordersRes *[]domain.Order, paginationMeta *PaginationData, err error) {
+	data, err := New(i.orderCollection.Collection).Context(*ctx).Limit(MaxLimitPerRound).Page(0).Sort("created_at", -1).Aggregate(filters)
+
+	if data == nil || data.Data == nil {
+		return nil, nil, err
+	}
+	orders := make([]domain.Order, 0)
+	for _, raw := range data.Data {
+		model := domain.Order{}
+		err = bson.Unmarshal(raw, &model)
+		if err != nil {
+			i.logger.Error("Order Repo -> List -> ", err)
+			break
+		}
+		orders = append(orders, model)
+	}
+	paginationMeta = &data.Pagination
+	ordersRes = &orders
+
 	return
 }
