@@ -124,6 +124,11 @@ func (a *ApprovalItemHelper) UpdateItemByApproval(ctx context.Context, doc *item
 		return validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
 	}
 
+	//if entity not has approval
+	if approvalDoc == nil {
+		return validators.ErrorResponse{}
+	}
+
 	//apply changes to doc
 	err = utils.CopyMapToStruct(&doc, approvalDoc.Fields.New)
 	if err != nil {
