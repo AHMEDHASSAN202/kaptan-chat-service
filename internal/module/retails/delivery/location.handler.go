@@ -10,6 +10,7 @@ import (
 	"samm/pkg/logger"
 	"samm/pkg/middlewares/admin"
 	commmon "samm/pkg/middlewares/common"
+	"samm/pkg/middlewares/portal"
 	"samm/pkg/utils"
 	"samm/pkg/utils/dto"
 	"samm/pkg/validators"
@@ -23,7 +24,7 @@ type LocationHandler struct {
 }
 
 // InitUserController will initialize the article's HTTP controller
-func InitController(e *echo.Echo, us domain.LocationUseCase, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
+func InitController(e *echo.Echo, us domain.LocationUseCase, validator *validator.Validate, logger logger.ILogger, adminMiddlewares *admin.ProviderMiddlewares, portalMiddlewares *portal.ProviderMiddlewares, commonMiddlewares *commmon.ProviderMiddlewares) {
 	handler := &LocationHandler{
 		locationUsecase: us,
 		validator:       validator,
@@ -46,6 +47,10 @@ func InitController(e *echo.Echo, us domain.LocationUseCase, validator *validato
 	mobile.GET("", handler.ListMobileLocation)
 	mobile.GET("/search", handler.SearchMobileLocation)
 	mobile.GET("/:id", handler.FindMobileLocation)
+
+	portal := e.Group("api/v1/portal/location")
+	portal.Use(portalMiddlewares.AuthMiddleware)
+	portal.GET("", handler.ListPortalLocation)
 
 }
 func (a *LocationHandler) StoreLocation(c echo.Context) error {
@@ -276,4 +281,31 @@ func (a *LocationHandler) FindMobileLocation(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, map[string]interface{}{"location": data})
+}
+
+func (a *LocationHandler) ListPortalLocation(c echo.Context) error {
+	ctx := c.Request().Context()
+	var payload location.ListLocationPortalDto
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	if err := c.Bind(&payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	payload.Pagination.SetDefault()
+
+	result, paginationResult, errResp := a.locationUsecase.ListLocation(ctx, &location.ListLocationDto{
+		AccountId:  payload.CauserAccountId,
+		Query:      payload.Query,
+		BrandId:    payload.BrandId,
+		Pagination: payload.Pagination,
+	})
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"data": result, "meta": paginationResult})
 }
