@@ -467,7 +467,7 @@ func (l OrderUseCase) UpdateRealTimeDb(ctx context.Context, order *domain.Order)
 
 func (l OrderUseCase) CronJobTimedOutOrders(ctx context.Context) validators.ErrorResponse {
 	// last 5 hours interval
-	t := time.Now().UTC().Add(-5 * time.Hour)
+	t := time.Now().UTC().Add(-5 * time.Minute)
 	tRFC, err := time.Parse(time.RFC3339, t.Format(time.RFC3339))
 
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
