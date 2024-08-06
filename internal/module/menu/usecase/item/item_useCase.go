@@ -71,7 +71,7 @@ func (oRec *ItemUseCase) Update(ctx context.Context, dto item.UpdateItemDto) val
 	}
 
 	oldDoc := item[0]
-	convertDtoToCorrespondingDomain(dto, &item[0])
+	convertDtoToCorrespondingDomain(dto, &item[0], &oldDoc, oRec.approvalHelper)
 	doc := &item[0]
 	if !oRec.gate.Authorize(doc, gate.MethodNames.Update, ctx) {
 		oRec.logger.Error("AuthorizeMenuGroup -> UnAuthorized Update Admin -> ", doc.ID)
