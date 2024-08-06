@@ -49,6 +49,7 @@ func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validato
 	authGroup.GET("", handler.GetUserProfile)
 	authGroup.PUT("/firebase-token-refresh", handler.RefreshFirebaseToken)
 	authGroup.DELETE("", handler.DeleteUser, userMiddleware.RemoveUserFromRedis)
+	authGroup.POST("/sign-out", handler.SignOut, userMiddleware.RemoveUserFromRedis)
 
 }
 func (a *UserHandler) StoreUser(c echo.Context) error {
@@ -276,4 +277,30 @@ func (a *UserHandler) UpdateUserPlayerId(c echo.Context) error {
 		return validators.ErrorStatusBadRequest(c, errResp)
 	}
 	return validators.SuccessResponse(c, userDomain)
+}
+
+func (a *UserHandler) SignOut(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var payload user.UserSignOutDto
+	if err := c.Bind(&payload); err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+
+	validationErr := payload.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.userUsecase.SignOut(&ctx, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }

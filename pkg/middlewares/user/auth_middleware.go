@@ -67,7 +67,8 @@ func (m Middlewares) AuthorizationMiddleware(next echo.HandlerFunc) echo.Handler
 		ctx := c.Request().Context()
 		causerId := c.Request().Header.Get("causer-id")
 		causerType := c.Request().Header.Get("causer-type")
-		if causerId == "" || causerType == "" {
+		causerToken := c.Request().Header.Get("Authorization")
+		if causerId == "" || causerType == "" || causerToken == "" {
 			m.logger.Info("AuthMiddleware -> Empty Causer ")
 			return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 		}
@@ -77,7 +78,7 @@ func (m Middlewares) AuthorizationMiddleware(next echo.HandlerFunc) echo.Handler
 		err := m.redisClient.Get(userRedisKey, &user)
 		if user == nil || err != nil {
 			m.logger.Info("AuthMiddleware -> FindByToken MongoDB .... ")
-			user, err = m.userRepository.FindUser(&ctx, utils.ConvertStringIdToObjectId(causerId))
+			user, err = m.userRepository.FindUserByToken(&ctx, utils.ExtractToken(causerToken))
 			if err != nil {
 				m.logger.Info("AuthMiddleware -> FindByToken Error -> ", err)
 				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
