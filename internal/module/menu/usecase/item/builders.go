@@ -3,6 +3,7 @@ package item
 import (
 	"github.com/jinzhu/copier"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"samm/internal/module/menu/approval_helper"
 	"samm/internal/module/menu/domain"
 	"samm/internal/module/menu/dto/item"
 	"samm/pkg/utils"
@@ -38,7 +39,7 @@ func convertDtoArrToCorrespondingDomain(dto []item.CreateItemDto) []domain.Item 
 	return itemDocs
 }
 
-func convertDtoToCorrespondingDomain(dto item.UpdateItemDto, itemDoc *domain.Item) {
+func convertDtoToCorrespondingDomain(dto item.UpdateItemDto, itemDoc *domain.Item, oldItemDoc *domain.Item, approvalHelper *approval_helper.ApprovalItemHelper) {
 	copier.Copy(&itemDoc, &dto)
 	itemDoc.DeletedAt = nil
 	if dto.SKU != "" {
@@ -51,7 +52,8 @@ func convertDtoToCorrespondingDomain(dto item.UpdateItemDto, itemDoc *domain.Ite
 	}
 	itemDoc.AdminDetails = append(itemDoc.AdminDetails, utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(dto.CauserId), Type: dto.CauserType, Name: dto.CauserName, Operation: "Update", UpdatedAt: time.Now()})
 	itemDoc.ModifierGroupIds = utils.ConvertStringIdsToObjectIds(dto.ModifierGroupsIds)
-	itemDoc.ApprovalStatus = utils.If(itemDoc.Type == "product", utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL, utils.APPROVAL_STATUS.APPROVED).(string)
+	needToApproveItem, _, _ := approvalHelper.NeedToApproveItem(itemDoc, oldItemDoc)
+	itemDoc.ApprovalStatus = utils.If(itemDoc.Type == "product" && needToApproveItem, utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL, utils.APPROVAL_STATUS.APPROVED).(string)
 	if dto.CauserType == utils.ADMIN_TYPE {
 		itemDoc.ApprovalStatus = utils.APPROVAL_STATUS.APPROVED
 	}

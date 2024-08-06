@@ -4,6 +4,7 @@ import (
 	"context"
 	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -53,6 +54,9 @@ func (r *approvalRepo) FindByEntity(ctx context.Context, entityId primitive.Obje
 	domainData := domain.Approval{}
 	result := mgm.Coll(&domain.Approval{}).FindOne(ctx, bson.M{"entity_id": entityId, "entity_type": entityType, "status": utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL})
 	if err := result.Err(); err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, nil
+		}
 		r.logger.Error("approvalRepo -> FindByEntity -> ", err)
 		return &domainData, err
 	}
