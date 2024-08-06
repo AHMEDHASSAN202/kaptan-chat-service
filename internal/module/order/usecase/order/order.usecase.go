@@ -520,7 +520,7 @@ func (l OrderUseCase) CronJobPickedOrders(ctx context.Context) validators.ErrorR
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
 		bson.M{"deleted_at": nil},
 		bson.M{"status": consts.OrderStatus.Accepted},
-		bson.M{"created_at": bson.M{"$lte": tRFC}}},
+		bson.M{"accepted_at": bson.M{"$lte": tRFC}}},
 	}}
 
 	orders, _, dbErr := l.repo.GetAllOrdersForCronJobs(&ctx, matching)
