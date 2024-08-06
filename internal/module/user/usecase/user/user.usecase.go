@@ -4,10 +4,12 @@ import (
 	"context"
 	"firebase.google.com/go/v4/auth"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"net/http"
 	"os"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
 	"samm/internal/module/user/responses"
+	"samm/pkg/database/redis"
 	"samm/pkg/jwt"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
@@ -22,16 +24,18 @@ type UserUseCase struct {
 	userJwtService jwt.JwtService
 	logger         logger.ILogger
 	authClient     *auth.Client
+	redisClient    *redis.RedisClient
 }
 
 const tag = " UserUseCase "
 
-func NewUserUseCase(repo domain.UserRepository, authClient *auth.Client, jwtFactory jwt.JwtServiceFactory, logger logger.ILogger) domain.UserUseCase {
+func NewUserUseCase(repo domain.UserRepository, authClient *auth.Client, redisClient *redis.RedisClient, jwtFactory jwt.JwtServiceFactory, logger logger.ILogger) domain.UserUseCase {
 	return &UserUseCase{
 		repo:           repo,
 		userJwtService: jwtFactory.UserJwtService(),
 		logger:         logger,
 		authClient:     authClient,
+		redisClient:    redisClient,
 	}
 }
 
@@ -290,4 +294,12 @@ func (l UserUseCase) GetUsersPlayerId(ctx *context.Context, userId []string) (pl
 		return playerIds, validators.GetErrorResponseFromErr(errRe)
 	}
 	return playerIds, err
+}
+
+func (l UserUseCase) SignOut(ctx *context.Context, outDto *user.UserSignOutDto) validators.ErrorResponse {
+	err := l.repo.PullToken(ctx, utils.ConvertStringIdToObjectId(outDto.CauserId), utils.ExtractToken(outDto.Authorization))
+	if err != nil {
+		return validators.GetErrorResponse(ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
+	}
+	return validators.ErrorResponse{}
 }
