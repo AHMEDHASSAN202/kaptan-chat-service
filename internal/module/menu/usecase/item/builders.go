@@ -52,10 +52,14 @@ func convertDtoToCorrespondingDomain(dto item.UpdateItemDto, itemDoc *domain.Ite
 	}
 	itemDoc.AdminDetails = append(itemDoc.AdminDetails, utilsDto.AdminDetails{Id: utils.ConvertStringIdToObjectId(dto.CauserId), Type: dto.CauserType, Name: dto.CauserName, Operation: "Update", UpdatedAt: time.Now()})
 	itemDoc.ModifierGroupIds = utils.ConvertStringIdsToObjectIds(dto.ModifierGroupsIds)
-	itemDoc.ApprovalStatus = utils.If(itemDoc.Type == "product", utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL, utils.APPROVAL_STATUS.APPROVED).(string)
-	needToApproveItem, _, _ := approvalHelper.NeedToApproveItem(itemDoc, oldItemDoc)
-	itemDoc.ApprovalStatus = utils.If(needToApproveItem, utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL, utils.APPROVAL_STATUS.APPROVED).(string)
-	itemDoc.ApprovalStatus = utils.If(dto.CauserType == utils.ADMIN_TYPE, utils.APPROVAL_STATUS.APPROVED, itemDoc.ApprovalStatus).(string)
-
+	itemDoc.ApprovalStatus = oldItemDoc.ApprovalStatus
+	if itemDoc.Type == "product" {
+		if dto.CauserType == utils.ADMIN_TYPE {
+			itemDoc.ApprovalStatus = utils.APPROVAL_STATUS.APPROVED
+		} else {
+			needToApproveItem, _, _ := approvalHelper.AreAnyChanges(itemDoc, oldItemDoc)
+			itemDoc.ApprovalStatus = utils.If(needToApproveItem, utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL, oldItemDoc.ApprovalStatus).(string)
+		}
+	}
 	itemDoc.HasOriginal = utils.If(itemDoc.ApprovalStatus == utils.APPROVAL_STATUS.APPROVED, true, itemDoc.HasOriginal).(bool)
 }

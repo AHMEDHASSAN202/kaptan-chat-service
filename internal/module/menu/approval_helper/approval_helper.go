@@ -91,6 +91,10 @@ func (a *ApprovalItemHelper) NeedToApproveItem(doc *domain.Item, oldDoc *domain.
 	if doc.ApprovalStatus != utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL {
 		return false, nil, nil
 	}
+	return a.AreAnyChanges(doc, oldDoc)
+}
+
+func (a *ApprovalItemHelper) AreAnyChanges(doc *domain.Item, oldDoc *domain.Item) (bool, map[string]interface{}, map[string]interface{}) {
 	n := map[string]interface{}{}
 	o := map[string]interface{}{}
 	if strings.TrimSpace(doc.Name.Ar) != strings.TrimSpace(oldDoc.Name.Ar) || strings.TrimSpace(doc.Name.En) != strings.TrimSpace(oldDoc.Name.En) {
