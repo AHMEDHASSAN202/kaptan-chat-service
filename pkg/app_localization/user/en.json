@@ -265,5 +265,7 @@
     "error_retryButton": "Retry",
     "notifications_title": "Notifications",
     "notifications_clearAll": "Clear All",
-    "notifications_emptyTitle": "No notifications yet."
+    "notifications_emptyTitle": "No notifications yet.",
+    "notifications_today": "Today",
+    "notifications_yesterday": "Yesterday"
 }

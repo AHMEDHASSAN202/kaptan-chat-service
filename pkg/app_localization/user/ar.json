@@ -265,5 +265,7 @@
     "error_retryButton": "إعادة المحاولة",
     "notifications_title": "الإشعارات",
     "notifications_clearAll": "امسح الكل",
-    "notifications_emptyTitle": "لا يوجد إشعارات حتى الآن."
+    "notifications_emptyTitle": "لا يوجد إشعارات حتى الآن.",
+    "notifications_today": "اليوم",
+    "notifications_yesterday": "أمس"
 }
