@@ -64,6 +64,8 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 					menuGroupItem.Status = menuItem.Status
 					menuGroupItem.Image = item.Image
 					menuGroupItem.Sort = menuItem.Sort
+					menuGroupItem.HasOriginal = menuItem.HasOriginal
+					menuGroupItem.ApprovalStatus = menuItem.ApprovalStatus
 					menuGroupItem.Availabilities = []menu_group.AvailabilityDTO{}
 					if item.Availabilities != nil {
 						for _, availability := range item.Availabilities {
