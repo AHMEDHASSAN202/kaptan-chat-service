@@ -262,5 +262,8 @@
     "server_responseHandlingException_message": "An exception occured while handling response",
     "server_parsingError_message": "Unable to parse the response, something wrong",
     "request_failure_message": "Request has been failed",
-    "error_retryButton": "Retry"
+    "error_retryButton": "Retry",
+    "notifications_title": "Notifications",
+    "notifications_clearAll": "Clear All",
+    "notifications_emptyTitle": "No notifications yet."
 }

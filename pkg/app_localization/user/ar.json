@@ -262,5 +262,8 @@
     "server_responseHandlingException_message": "حدث خطأ أثناء التعامل مع الاستجابة",
     "server_parsingError_message": "غير قادر على تحليل الاستجابة، هناك خطأ ما",
     "request_failure_message": "لقد فشل الطلب",
-    "error_retryButton": "إعادة المحاولة"
+    "error_retryButton": "إعادة المحاولة",
+    "notifications_title": "الإشعارات",
+    "notifications_clearAll": "امسح الكل",
+    "notifications_emptyTitle": "لا يوجد إشعارات حتى الآن."
 }
