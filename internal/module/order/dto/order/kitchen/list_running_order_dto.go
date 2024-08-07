@@ -8,7 +8,8 @@ import (
 )
 
 type ListRunningOrderDto struct {
-	Status []string `json:"status" query:"status[]" validate:"required"`
+	Status             []string `json:"status" query:"status[]" validate:"required"`
+	NumberOfHoursLimit int      `json:"-" query:"-"`
 	dto.KitchenHeaders
 	dto.Pagination
 }

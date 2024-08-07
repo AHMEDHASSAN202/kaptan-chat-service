@@ -197,6 +197,7 @@ type OrderUseCase interface {
 	ListLastOrdersForMobile(ctx context.Context, payload *order.ListOrderDtoForMobile) (*responses.ListResponse, validators.ErrorResponse)
 	FindOrderForDashboard(ctx *context.Context, id string) (*Order, validators.ErrorResponse)
 	FindOrderForMobile(ctx *context.Context, payload *order.FindOrderMobileDto) (*user.FindOrderResponse, validators.ErrorResponse)
+	FindOrderForKitchen(ctx *context.Context, payload *kitchen.FindOrderMobileDto) (orderResponse *user.FindOrderResponse, err validators.ErrorResponse)
 	ToggleOrderFavourite(ctx *context.Context, payload order.ToggleOrderFavDto) (err validators.ErrorResponse)
 	DashboardCancelOrder(ctx context.Context, payload *order.DashboardCancelOrderDto) (*Order, validators.ErrorResponse)
 	DashboardPickedOrder(ctx context.Context, payload *order.DashboardPickedUpOrderDto) (*Order, validators.ErrorResponse)

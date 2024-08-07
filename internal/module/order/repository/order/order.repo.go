@@ -165,12 +165,17 @@ func (i *OrderRepository) ListInprogressOrdersForMobile(ctx *context.Context, dt
 	return
 }
 func (i *OrderRepository) ListRunningOrdersForKitchen(ctx *context.Context, dto *kitchen.ListRunningOrderDto) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error) {
-	eightHoursAgo := time.Now().UTC().Add(-8 * time.Hour)
+
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
-		bson.M{"created_at": bson.M{"$gte": eightHoursAgo}},
 		bson.M{"status": bson.M{"$in": dto.Status}},
 		bson.M{"meta_data.target_kitchen_ids": utils.ConvertStringIdToObjectId(dto.CauserKitchenId)},
 	}}}
+
+	//add time limit condition
+	if dto.NumberOfHoursLimit > 0 {
+		eightHoursAgo := time.Now().UTC().Add(time.Duration(-1*dto.NumberOfHoursLimit) * time.Hour)
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"created_at": bson.M{"$gte": eightHoursAgo}})
+	}
 
 	if dto.Pagination.Pagination {
 		return executeListWithPagination(ctx, i, dto, matching)

@@ -115,6 +115,29 @@ func (l *OrderUseCase) FindOrderForMobile(ctx *context.Context, payload *order.F
 	return
 }
 
+func (l *OrderUseCase) FindOrderForKitchen(ctx *context.Context, payload *kitchen.FindOrderMobileDto) (orderResponse *user.FindOrderResponse, err validators.ErrorResponse) {
+	order, dbErr := l.repo.FindOrder(ctx, utils.ConvertStringIdToObjectId(payload.OrderId))
+	if dbErr != nil {
+		err = validators.GetErrorResponseFromErr(dbErr)
+		return
+	}
+	if order == nil {
+		err = validators.GetErrorResponseFromErr(errors.New(localization.E1002))
+		return
+	}
+
+	//authorize this order
+	if !l.gate.Authorize(order, "KitchenFindOrder", *ctx) {
+		l.logger.Error("ReportMissingItem -> UnAuthorized update -> ", order.ID)
+		return nil, validators.GetErrorResponse(ctx, localization.E1006, nil, utils.GetAsPointer(http.StatusForbidden))
+	}
+
+	//builder order response
+	orderResponse, err = user2.FindOrderBuilder(ctx, order)
+
+	return
+}
+
 func (l OrderUseCase) StoreOrder(ctx context.Context, payload *order.CreateOrderDto) (interface{}, validators.ErrorResponse) {
 	//create new instance from ktha factory
 	orderFactory, err := l.orderFactory.Make("ktha")
