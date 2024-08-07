@@ -619,3 +619,11 @@ func (l OrderUseCase) CronJobCancelOrders(ctx context.Context) validators.ErrorR
 
 	return validators.ErrorResponse{}
 }
+
+func (l OrderUseCase) KitchenListRunningOrders(ctx context.Context, payload *kitchen.ListRunningOrderDto) (interface{}, validators.ErrorResponse) {
+	ordersRes, paginationMeta, dbErr := l.repo.ListRunningOrdersForKitchen(&ctx, payload)
+	if dbErr != nil {
+		return nil, validators.GetErrorResponseFromErr(dbErr)
+	}
+	return responses.SetListResponse(ordersRes, paginationMeta), validators.ErrorResponse{}
+}

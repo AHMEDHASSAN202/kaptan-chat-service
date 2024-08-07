@@ -57,6 +57,7 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 		kitchen.PUT("/:id/ready-for-pickup", handler.KitchenToReadyForPickup, kitchenMiddlewares.AuthMiddleware)
 		kitchen.PUT("/:id/picked-up", handler.KitchenToPickedUp, kitchenMiddlewares.AuthMiddleware)
 		kitchen.PUT("/:id/no-show", handler.KitchenToNoShow, kitchenMiddlewares.AuthMiddleware)
+		kitchen.GET("/list/running-with-limit", handler.ListOrdersForKitchen, kitchenMiddlewares.AuthMiddleware)
 	}
 
 	cronJobs := e.Group("api/v1/cron-jobs/order")

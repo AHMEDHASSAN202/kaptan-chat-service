@@ -143,3 +143,34 @@ func (a *OrderHandler) KitchenToNoShow(c echo.Context) error {
 
 	return validators.SuccessResponse(c, map[string]interface{}{"order": orderResponse})
 }
+
+func (a *OrderHandler) ListOrdersForKitchen(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var dto kitchen.ListRunningOrderDto
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &dto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := binder.BindQueryParams(c, &dto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := dto.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	orderResponse, errResp := a.orderUsecase.KitchenListRunningOrders(ctx, &dto)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"orders": orderResponse})
+}

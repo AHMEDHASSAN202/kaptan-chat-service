@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
+	"samm/internal/module/order/dto/order/kitchen"
 	"samm/internal/module/order/repository/structs"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
@@ -161,6 +162,47 @@ func (i *OrderRepository) ListInprogressOrdersForMobile(ctx *context.Context, dt
 	paginationMeta = &data.Pagination
 	ordersRes = &orders
 
+	return
+}
+func (i *OrderRepository) ListRunningOrdersForKitchen(ctx *context.Context, dto *kitchen.ListRunningOrderDto) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error) {
+	eightHoursAgo := time.Now().UTC().Add(-8 * time.Hour)
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.M{"created_at": bson.M{"$gte": eightHoursAgo}},
+		bson.M{"status": bson.M{"$in": dto.Status}},
+		bson.M{"meta_data.target_kitchen_ids": utils.ConvertStringIdToObjectId(dto.CauserKitchenId)},
+	}}}
+
+	if dto.Pagination.Pagination {
+		return executeListWithPagination(ctx, i, dto, matching)
+	} else {
+		orders := make([]structs.MobileListOrders, 0)
+		err = i.orderCollection.SimpleAggregate(&orders, matching)
+		ordersRes = &orders
+		return ordersRes, nil, err
+	}
+
+}
+
+func executeListWithPagination(ctx *context.Context, i *OrderRepository, dto *kitchen.ListRunningOrderDto, matching bson.M) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error) {
+
+	data, err := New(i.orderCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
+
+	if data == nil || data.Data == nil {
+		return nil, nil, err
+	}
+
+	orders := make([]structs.MobileListOrders, 0)
+	for _, raw := range data.Data {
+		model := structs.MobileListOrders{}
+		err = bson.Unmarshal(raw, &model)
+		if err != nil {
+			i.logger.Error("Order Repo -> Mobile List -> ", err)
+			break
+		}
+		orders = append(orders, model)
+	}
+	paginationMeta = &data.Pagination
+	ordersRes = &orders
 	return
 }
 
