@@ -63,8 +63,7 @@ func InitOrderController(e *echo.Echo, us domain.OrderUseCase, validator *valida
 	cronJobs := e.Group("api/v1/cron-jobs/order")
 	{
 		cronJobs.POST("/time-out", handler.TimedOutOrdersByCronJob)
-		cronJobs.POST("/picked-up", handler.PickedUpOrdersByCronJob)
-		cronJobs.POST("/cancel", handler.CancelledOrdersByCronJob)
+		cronJobs.POST("/complete-process", handler.CompleteOrdersProcessByCronJob)
 	}
 }
 

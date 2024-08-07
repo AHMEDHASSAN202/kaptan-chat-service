@@ -51,6 +51,7 @@ type UserUseCase interface {
 	UserEmailExists(ctx *context.Context, email, userId string) bool
 	UpdateUserPlayerId(ctx *context.Context, payload *user.UpdateUserPlayerId) (user *responses.MobileUser, err validators.ErrorResponse)
 	GetUsersPlayerId(ctx *context.Context, userId []string) (playerIds []string, err validators.ErrorResponse)
+	SignOut(ctx *context.Context, outDto *user.UserSignOutDto) validators.ErrorResponse
 }
 
 type UserRepository interface {
@@ -58,10 +59,12 @@ type UserRepository interface {
 	InsertDeletedUser(ctx *context.Context, user *DeletedUser) (err error)
 	UpdateUser(ctx *context.Context, user *User) (err error)
 	FindUser(ctx *context.Context, Id primitive.ObjectID) (user *User, err error)
+	FindUserByToken(ctx *context.Context, token string) (user *User, err error)
 	GetUserByPhoneNumber(ctx *context.Context, phoneNum, countryCode string) (user User, err error)
 	RemoveDeletedUser(user *DeletedUser) (err error)
 	FindByToken(ctx context.Context, token string) (domainData *User, err error)
 	List(ctx *context.Context, dto *user.ListUserDto) (usersRes *[]User, paginationMeta *PaginationData, err error)
 	UserEmailExists(ctx *context.Context, email, userId string) bool
 	GetUsersPlayerId(ctx *context.Context, userId []string) (playerIds []string, err error)
+	PullToken(ctx *context.Context, userId primitive.ObjectID, token string) (err error)
 }

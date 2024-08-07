@@ -613,3 +613,7 @@ func StructToMap(data interface{}, tagKey string) map[string]interface{} {
 func CopyMapToStruct(doc any, fields map[string]interface{}) error {
 	return mapstructure.Decode(fields, doc)
 }
+
+func ExtractToken(tokenWithBearer string) string {
+	return strings.TrimPrefix(tokenWithBearer, "Bearer ")
+}

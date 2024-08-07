@@ -2,6 +2,7 @@ package menu_group
 
 import (
 	"context"
+	"github.com/davecgh/go-spew/spew"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"samm/internal/module/menu/domain"
@@ -27,6 +28,7 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 	}
 
 	items, err := oRec.itemRepo.GetByIds(ctx, itemIds)
+	spew.Dump("items", items)
 	if err != nil || items == nil {
 		oRec.logger.Error(err)
 		return validators.GetErrorResponse(&ctx, "E1000", nil, nil)
@@ -64,6 +66,8 @@ func (oRec *MenuGroupUseCase) InjectItemsToDTO(ctx context.Context, dto *menu_gr
 					menuGroupItem.Status = menuItem.Status
 					menuGroupItem.Image = item.Image
 					menuGroupItem.Sort = menuItem.Sort
+					menuGroupItem.ApprovalData.HasOriginal = item.ApprovalData.HasOriginal
+					menuGroupItem.ApprovalData.ApprovalStatus = item.ApprovalData.ApprovalStatus
 					menuGroupItem.Availabilities = []menu_group.AvailabilityDTO{}
 					if item.Availabilities != nil {
 						for _, availability := range item.Availabilities {

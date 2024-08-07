@@ -37,7 +37,7 @@ func (o OrderSubscriber) pushNotificationOrder(ctx context.Context, order *domai
 		{
 			Id:              utils.ConvertObjectIdToStringId(order.User.ID),
 			Model:           consts.UserModelType,
-			LogNotification: true,
+			LogNotification: false,
 		},
 		{
 			Id:        utils.ConvertObjectIdToStringId(order.Location.ID),
