@@ -267,5 +267,7 @@
     "notifications_clearAll": "Clear All",
     "notifications_emptyTitle": "No notifications yet.",
     "notifications_today": "Today",
-    "notifications_yesterday": "Yesterday"
+    "notifications_yesterday": "Yesterday",
+    "forceUpdate_message": "New update is available, please update now to continue using app",
+    "forceUpdate_button": "Update now"
 }
