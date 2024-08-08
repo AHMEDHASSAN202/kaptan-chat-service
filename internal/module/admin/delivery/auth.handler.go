@@ -188,12 +188,12 @@ func (a *AdminAuthHandler) kitchenProfile(c echo.Context) error {
 	if err != nil {
 		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
 	}
-	profile, errResp := a.adminUseCase.KitchenProfile(ctx, dto.KitchenProfileDTO{AdminId: input.CauserId, CauserDetails: input.GetCauserDetailsAsMap()})
+	profile, firebaseToken, errResp := a.adminUseCase.KitchenProfile(ctx, dto.KitchenProfileDTO{AdminId: input.CauserId, CauserDetails: input.GetCauserDetailsAsMap()})
 	if errResp.IsError {
 		return validators.ErrorResp(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{"profile": profile})
+	return validators.SuccessResponse(c, map[string]interface{}{"profile": profile, "firebaseToken": firebaseToken})
 }
 
 func (a *AdminAuthHandler) UpdateAdminProfile(c echo.Context) error {

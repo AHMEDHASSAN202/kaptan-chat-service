@@ -119,16 +119,23 @@ func (oRec *AdminUseCase) Profile(ctx context.Context, profileDTO dto.ProfileDTO
 	}
 	return admin2.AdminProfileBuilder(admin), validators.ErrorResponse{}
 }
-func (oRec *AdminUseCase) KitchenProfile(ctx context.Context, profileDTO dto.KitchenProfileDTO) (*admin.AdminProfileResponse, validators.ErrorResponse) {
+func (oRec *AdminUseCase) KitchenProfile(ctx context.Context, profileDTO dto.KitchenProfileDTO) (*admin.AdminProfileResponse, string, validators.ErrorResponse) {
 	admin, errFindAdmin := oRec.repo.Find(ctx, utils.ConvertStringIdToObjectId(profileDTO.AdminId))
 	if errFindAdmin != nil {
 		oRec.logger.Error("AdminUseCase -> Auth -> AdminLogin -> ", errFindAdmin)
-		return nil, validators.GetErrorResponse(&ctx, localization.ErrLoginEmail, nil, utils.GetAsPointer(http.StatusBadRequest)) //change message
+		return nil, "", validators.GetErrorResponse(&ctx, localization.ErrLoginEmail, nil, utils.GetAsPointer(http.StatusBadRequest)) //change message
 	}
 	if admin == nil {
 		oRec.logger.Error("AdminUseCase -> Auth -> AdminLogin -> Admin Is NULL")
-		return nil, validators.GetErrorResponse(&ctx, localization.ErrLoginEmail, nil, utils.GetAsPointer(http.StatusBadRequest)) //change message
+		return nil, "", validators.GetErrorResponse(&ctx, localization.ErrLoginEmail, nil, utils.GetAsPointer(http.StatusBadRequest)) //change message
 	}
+
+	//get firebase token
+	firebaseToken, err2 := oRec.authClient.CustomTokenWithClaims(ctx, admin.Kitchen.Id.Hex(), nil)
+	if err2 != nil {
+		return nil, "", validators.GetErrorResponseFromErr(err2)
+	}
+
 	//if profileDTO.AccountId != "" {
 	//	accountId := utils.SafeMapGet(profileDTO.CauserDetails, "id", "").(string)
 	//	name, ok := utils.SafeMapGet(profileDTO.CauserDetails, "name", nil).(map[string]interface{})
@@ -142,7 +149,7 @@ func (oRec *AdminUseCase) KitchenProfile(ctx context.Context, profileDTO dto.Kit
 	//		}
 	//	}
 	//}
-	return admin2.AdminProfileBuilder(admin), validators.ErrorResponse{}
+	return admin2.AdminProfileBuilder(admin), firebaseToken, validators.ErrorResponse{}
 }
 
 func (oRec *AdminUseCase) UpdateAdminProfile(ctx context.Context, input *dto.UpdateAdminProfileDTO) (*admin.AdminProfileResponse, validators.ErrorResponse) {

@@ -49,6 +49,11 @@ func InitAppConfigController(e *echo.Echo, appConfigUsecase domain.AppConfigUseC
 		mobile.GET("/config", handler.FindMobileConfig)
 		mobile.GET("/app-localization", handler.GetAppLocalization)
 	}
+	kitchen := e.Group("api/v1/kitchen")
+	{
+		kitchen.GET("/config", handler.FindMobileConfig)
+		kitchen.GET("/app-localization", handler.GetAppLocalization)
+	}
 }
 
 func (a *AppConfigHandler) Create(c echo.Context) error {
