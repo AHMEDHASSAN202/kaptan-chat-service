@@ -286,7 +286,7 @@ func (o *KthaOrder) ToRejectedKitchen(ctx context.Context, dto interface{}) (*ki
 	rejectionReason := rejectionReasons[0]
 
 	//authorize order amount
-	_, paymentError := o.extService.PaymentIService.AuthorizePayment(ctx, utils.ConvertObjectIdToStringId(orderDomain.Payment.Id), true)
+	_, paymentError := o.extService.PaymentIService.AuthorizePayment(ctx, utils.ConvertObjectIdToStringId(orderDomain.Payment.Id), false)
 	if paymentError.IsError {
 		o.logger.Error("PAYMENT_ERROR => ", paymentError)
 		//return nil, validators.GetErrorResponseWithErrors(&ctx, localization.PaymentError, nil)

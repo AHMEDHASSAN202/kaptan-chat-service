@@ -141,3 +141,31 @@ func (p PaymentUseCase) Pay(ctx context.Context, dto *payment.PayDto) (paymentRe
 		return PayApplePay(p, ctx, dto)
 	}
 }
+func (p PaymentUseCase) UpdateSession(ctx context.Context, dto *payment.UpdateSession) (payResponse response.UpdateSessionResponse, err validators.ErrorResponse) {
+	// Find Transaction
+	paymentTransaction, errResp := p.repo.FindPaymentTransactionByRequestId(ctx, dto.SessionId)
+	if errResp != nil {
+		return payResponse, validators.GetErrorResponseFromErr(errResp)
+	}
+	executeResponse, executeRequest, innvoiceId, errRes := p.myfatoorahService.ExecutePaymentCard(ctx, paymentTransaction)
+	if errRes.IsError {
+		paymentTransaction.Status = consts.PaymentFailedStatus
+		paymentTransaction.Request = utils.ConvertStructToMap(executeRequest)
+		paymentTransaction.Response = utils.ConvertStructToMap(executeResponse)
+		paymentTransaction.RequestId = strconv.Itoa(innvoiceId)
+		errUpdate := p.repo.UpdateTransaction(ctx, paymentTransaction)
+		if errUpdate != nil {
+			p.logger.Error("Update Error => ", errUpdate)
+		}
+		return payResponse, errRes
+	}
+	paymentTransaction.Request = utils.ConvertStructToMap(executeRequest)
+	paymentTransaction.Response = utils.ConvertStructToMap(executeResponse)
+	paymentTransaction.RequestId = strconv.Itoa(innvoiceId)
+	errUpdate := p.repo.UpdateTransaction(ctx, paymentTransaction)
+	if errUpdate != nil {
+		p.logger.Error("Update Error => ", errUpdate)
+	}
+	payResponse.RedirectUrl = &executeResponse.Data.PaymentURL
+	return payResponse, err
+}

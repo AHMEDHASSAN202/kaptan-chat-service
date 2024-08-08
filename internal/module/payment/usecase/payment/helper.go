@@ -17,7 +17,7 @@ func CreateTransactionBuilder(dto *payment.PayDto, order responses.OrderResponse
 	paymentDomain.TransactionId = utils.ConvertStringIdToObjectId(dto.TransactionId)
 	paymentDomain.TransactionType = dto.TransactionType
 	paymentDomain.Amount = order.PriceSummary.TotalPriceAfterDiscount
-	paymentDomain.Currency = order.Location.Country.Id // Todo Depend On Find Order
+	paymentDomain.Currency = order.Location.Country.Currency // Todo Depend On Find Order
 	paymentDomain.PaymentType = dto.PaymentType
 
 	paymentDomain.Status = consts.PaymentPendingStatus
@@ -54,7 +54,7 @@ func PayCard(p PaymentUseCase, ctx context.Context, dto *payment.PayDto) (respon
 		}
 
 		// Check The Hold Status
-		hold := responsePay.Data.InvoiceTransactions[0].TransactionStatus == consts.MyFatoorahHoldInvoiceStatus
+		hold := len(responsePay.Data.InvoiceTransactions) > 0 && responsePay.Data.InvoiceTransactions[0].TransactionStatus == consts.MyFatoorahHoldInvoiceStatus
 		if !errRe.IsError && hold {
 
 			paymentTransaction.Status = consts.PaymentHoldStatus
@@ -85,7 +85,22 @@ func PayCard(p PaymentUseCase, ctx context.Context, dto *payment.PayDto) (respon
 	if errResp != nil {
 		return response, validators.GetErrorResponseFromErr(errResp)
 	}
-
+	if dto.PaymentToken == "" {
+		initSessionResponse, redirectUrl, errS := p.myfatoorahService.InitPaymentCard(ctx, dto, paymentTransaction)
+		if errS.IsError {
+			p.logger.Error("Init Session Error => ", errS)
+			return response, errS
+		}
+		paymentTransaction.Response = utils.ConvertStructToMap(initSessionResponse)
+		paymentTransaction.RequestId = initSessionResponse.Data.SessionId
+		errUpdate := p.repo.UpdateTransaction(ctx, paymentTransaction)
+		if errUpdate != nil {
+			p.logger.Error("Update Error => ", errUpdate)
+		}
+		response.Transaction = paymentTransaction
+		response.RedirectUrl = &redirectUrl
+		return
+	}
 	// Call Myfatoorah
 	payResponse, payRequest, invoiceId, err := p.myfatoorahService.PayCard(ctx, dto, paymentTransaction)
 
@@ -99,19 +114,6 @@ func PayCard(p PaymentUseCase, ctx context.Context, dto *payment.PayDto) (respon
 			p.logger.Error("Update Error => ", errUpdate)
 		}
 		return response, err
-	}
-	// Check if it using token
-	if dto.SaveCard && dto.PaymentToken != "" {
-		// Need To Store Card Details with token
-		var cardDomain domain.Card
-		cardDomain.MFToken = payResponse.Data.Token
-		cardDomain.Number = utils.MaskCard(dto.Card.Number)
-		cardDomain.Type = dto.Card.Type
-		cardDomain.UserId = utils.ConvertStringIdToObjectId(dto.UserId) // User ID
-		errRe := p.cardRepo.StoreCard(ctx, &cardDomain)
-		if errRe != nil {
-			p.logger.Error("Save Card Error => ", errRe)
-		}
 	}
 
 	paymentTransaction.Request = utils.ConvertStructToMap(payRequest)

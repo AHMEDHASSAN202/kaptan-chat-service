@@ -37,21 +37,48 @@ func NewMyFatoorahService(httpClient *resty.Client, logger logger.ILogger) domai
 	}
 }
 
-func (m MyFatoorahService) PayCard(ctx context.Context, dto *payment.PayDto, paymentTransaction *domain.Payment) (paymentResponse responses.DirectPaymentResponse, requestPayload requests.DirectPaymentRequest, invoiceId int, err validators.ErrorResponse) {
+func (m MyFatoorahService) InitPaymentCard(ctx context.Context, dto *payment.PayDto, paymentTransaction *domain.Payment) (paymentResponse responses.InitSessionResponse, redirectUrl string, err validators.ErrorResponse) {
 
-	// Call Execute payment
-	executeResponse, _, err := ExecutePaymentCard(m, ctx, dto, paymentTransaction)
+	// call init session with customer With Flag Save Token or not
+	paymentResponse, err = InitSession(ctx, dto, m, paymentTransaction)
 
 	if err.IsError {
 		return
 	}
-	if executeResponse.Data.IsDirectPayment {
-		// Call Direct Payment
-		directResponse, directRequest, err := DirectPaymentCard(m, ctx, executeResponse.Data.PaymentURL, dto, paymentTransaction)
-		return directResponse, directRequest, executeResponse.Data.InvoiceId, err
-	}
-	return paymentResponse, requestPayload, executeResponse.Data.InvoiceId, validators.GetErrorResponseFromErr(errors.New("No Direct Payment"))
+	redirectUrl = m.MainFrontUrl + "/" + consts.ADD_CARD_VIEW + "?sessionId=" + paymentResponse.Data.SessionId
+	return
+}
+func (m MyFatoorahService) PayCard(ctx context.Context, dto *payment.PayDto, paymentTransaction *domain.Payment) (paymentResponse responses.ExecutePaymentCardResponse, requestPayload requests.ExecutePaymentCardRequest, invoiceId int, err validators.ErrorResponse) {
 
+	//call init session with customer With Flag Save Token or not
+
+	initSessionResponse, err := InitSession(ctx, dto, m, paymentTransaction)
+	//
+	if err.IsError {
+		return
+	}
+	updateSessionResponse, err := UpdateSession(ctx, dto, initSessionResponse.Data.SessionId, consts.MFToken, m)
+
+	if err.IsError {
+		return
+	}
+	// Call Execute payment
+	executeResponse, requestPayload, err := ExecutePaymentCard(m, ctx, updateSessionResponse.Data.SessionId, paymentTransaction)
+	//
+	if err.IsError {
+		return
+	}
+	return executeResponse, requestPayload, executeResponse.Data.InvoiceId, err
+
+}
+func (m MyFatoorahService) ExecutePaymentCard(ctx context.Context, paymentTransaction *domain.Payment) (paymentResponse responses.ExecutePaymentCardResponse, requestPayload requests.ExecutePaymentCardRequest, invoiceId int, err validators.ErrorResponse) {
+
+	executeResponse, requestPayload, err := ExecutePaymentCard(m, ctx, paymentTransaction.RequestId, paymentTransaction)
+
+	if err.IsError {
+		return
+	}
+	return executeResponse, requestPayload, executeResponse.Data.InvoiceId, err
 }
 
 func (m MyFatoorahService) FindPayment(ctx context.Context, invoiceId string) (paymentResponse responses.GetPaymentStatusResponse, err validators.ErrorResponse) {
@@ -122,7 +149,7 @@ func (m MyFatoorahService) ApplePay(ctx context.Context, dto *payment.PayDto, pa
 		return
 	}
 	// Call Update Session
-	updateResponse, errRe := UpdateSession(ctx, dto, initResponse.Data.SessionId, m)
+	updateResponse, errRe := UpdateSession(ctx, dto, initResponse.Data.SessionId, consts.ApplePay, m)
 	if errRe.IsError {
 		m.logger.Info("Update Session Error ", errRe)
 		err = errRe

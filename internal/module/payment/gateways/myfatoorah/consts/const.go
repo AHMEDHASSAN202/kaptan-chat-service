@@ -9,8 +9,11 @@ var (
 
 	KeyTypeInvoiceId = "invoiceid"
 	ApplePay         = "applepay"
+	MFToken          = "mftoken"
 	SuccessUrl       = "/success-page"
 	ErrorUrl         = "/error-page"
 
 	CurrencySAR = "SAR"
+
+	ADD_CARD_VIEW = "myfatoorah"
 )

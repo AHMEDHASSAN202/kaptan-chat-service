@@ -49,3 +49,11 @@ func (p PaymentRepository) FindPaymentTransaction(ctx context.Context, id string
 
 	return &domainData, err
 }
+func (p PaymentRepository) FindPaymentTransactionByRequestId(ctx context.Context, requestId string) (payment *domain.Payment, err error) {
+	domainData := domain.Payment{}
+	var filter bson.M
+	filter = bson.M{"request_id": requestId}
+
+	err = p.paymentCollection.FirstWithCtx(ctx, filter, &domainData)
+	return &domainData, err
+}
