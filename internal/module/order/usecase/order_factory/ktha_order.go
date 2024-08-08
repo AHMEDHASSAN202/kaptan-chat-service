@@ -587,12 +587,19 @@ func (o *KthaOrder) ToPaid(ctx context.Context, payload *order.OrderPaidDto) val
 	if !utils.Contains(nextStatuses, consts.OrderStatus.Cancelled) {
 		return validators.GetErrorResponseWithErrors(&ctx, localization.ChangeOrderStatusError, nil)
 	}
-
+	locationResponse, errR := o.extService.RetailsIService.GetLocationDetails(ctx, utils.ConvertObjectIdToStringId(orderDomain.Location.ID))
+	if errR.IsError {
+		return errR
+	}
+	status := consts.OrderStatus.Pending
+	if locationResponse.AutoAccept {
+		status = consts.OrderStatus.Accepted
+	}
 	now := time.Now().UTC()
 	updateSet := map[string]interface{}{
-		"status":  consts.OrderStatus.Pending,
+		"status":  status,
 		"paid_at": now,
-		"cancelled": domain.Payment{
+		"payment": domain.Payment{
 			Id:          utils.ConvertStringIdToObjectId(payload.TransactionId),
 			PaymentType: payload.PaymentType,
 			CardType:    payload.CardType,
@@ -616,6 +623,14 @@ func (o *KthaOrder) ToPaid(ctx context.Context, payload *order.OrderPaidDto) val
 	o.Order = orderDomain
 
 	go o.PushEventToSubscribers(ctx)
+	if status == consts.OrderStatus.Accepted {
+		//authorize order amount
+		_, paymentError := o.extService.PaymentIService.AuthorizePayment(ctx, utils.ConvertObjectIdToStringId(orderDomain.Payment.Id), true)
+		if paymentError.IsError {
+			o.logger.Error("PAYMENT_ERROR => ", paymentError)
+			//return nil, validators.GetErrorResponseWithErrors(&ctx, localization.PaymentError, nil)
+		}
+	}
 
 	return validators.ErrorResponse{}
 
