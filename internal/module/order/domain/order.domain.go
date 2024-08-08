@@ -10,6 +10,7 @@ import (
 	"samm/internal/module/order/dto/order/kitchen"
 	"samm/internal/module/order/repository/structs"
 	"samm/internal/module/order/responses"
+	kitchenResp "samm/internal/module/order/responses/kitchen"
 	"samm/internal/module/order/responses/user"
 	"samm/pkg/validators"
 	"time"
@@ -223,7 +224,7 @@ type OrderRepository interface {
 	ListOrderForDashboard(ctx *context.Context, dto *order.ListOrderDtoForDashboard) (ordersRes *[]Order, paginationMeta *PaginationData, err error)
 	ListInprogressOrdersForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error)
 	ListCompletedOrdersForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error)
-	ListRunningOrdersForKitchen(ctx *context.Context, dto *kitchen.ListRunningOrderDto) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error)
+	ListRunningOrdersForKitchen(ctx *context.Context, dto *kitchen.ListRunningOrderDto) (ordersRes *[]kitchenResp.KitchenListOrdersResponse, paginationMeta *PaginationData, err error)
 	ListLastOrdersForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error)
 	UserHasOrders(ctx context.Context, userId primitive.ObjectID, orderStatus []string, gt int64) (bool, error)
 	FindOrderByUser(ctx *context.Context, id string, userId string) (order *Order, err error)

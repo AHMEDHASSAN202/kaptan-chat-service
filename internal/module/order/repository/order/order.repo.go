@@ -11,6 +11,7 @@ import (
 	"samm/internal/module/order/dto/order"
 	"samm/internal/module/order/dto/order/kitchen"
 	"samm/internal/module/order/repository/structs"
+	kitchenResp "samm/internal/module/order/responses/kitchen"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"time"
@@ -164,7 +165,7 @@ func (i *OrderRepository) ListInprogressOrdersForMobile(ctx *context.Context, dt
 
 	return
 }
-func (i *OrderRepository) ListRunningOrdersForKitchen(ctx *context.Context, dto *kitchen.ListRunningOrderDto) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error) {
+func (i *OrderRepository) ListRunningOrdersForKitchen(ctx *context.Context, dto *kitchen.ListRunningOrderDto) (ordersRes *[]kitchenResp.KitchenListOrdersResponse, paginationMeta *PaginationData, err error) {
 
 	matching := bson.M{"$match": bson.M{"$and": []interface{}{
 		bson.M{"status": bson.M{"$in": dto.Status}},
@@ -180,7 +181,7 @@ func (i *OrderRepository) ListRunningOrdersForKitchen(ctx *context.Context, dto 
 	if dto.Pagination.Pagination {
 		return executeListWithPagination(ctx, i, dto, matching)
 	} else {
-		orders := make([]structs.MobileListOrders, 0)
+		orders := make([]kitchenResp.KitchenListOrdersResponse, 0)
 		err = i.orderCollection.SimpleAggregate(&orders, matching)
 		ordersRes = &orders
 		return ordersRes, nil, err
@@ -188,7 +189,7 @@ func (i *OrderRepository) ListRunningOrdersForKitchen(ctx *context.Context, dto 
 
 }
 
-func executeListWithPagination(ctx *context.Context, i *OrderRepository, dto *kitchen.ListRunningOrderDto, matching bson.M) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error) {
+func executeListWithPagination(ctx *context.Context, i *OrderRepository, dto *kitchen.ListRunningOrderDto, matching bson.M) (ordersRes *[]kitchenResp.KitchenListOrdersResponse, paginationMeta *PaginationData, err error) {
 
 	data, err := New(i.orderCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
 
@@ -196,12 +197,12 @@ func executeListWithPagination(ctx *context.Context, i *OrderRepository, dto *ki
 		return nil, nil, err
 	}
 
-	orders := make([]structs.MobileListOrders, 0)
+	orders := make([]kitchenResp.KitchenListOrdersResponse, 0)
 	for _, raw := range data.Data {
-		model := structs.MobileListOrders{}
+		model := kitchenResp.KitchenListOrdersResponse{}
 		err = bson.Unmarshal(raw, &model)
 		if err != nil {
-			i.logger.Error("Order Repo -> Mobile List -> ", err)
+			i.logger.Error("Order Repo -> kitchen List -> ", err)
 			break
 		}
 		orders = append(orders, model)
