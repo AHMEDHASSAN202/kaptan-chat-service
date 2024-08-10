@@ -48,6 +48,7 @@ const (
 	LockError                                   = "LockError"                                   // LockError
 	MaxModifierGroupQty                         = "MaxModifierGroupQty"                         // MaxModifierGroupQty
 	MaxModifierQty                              = "MaxModifierQty"                              // MaxModifierQty
+	Max_User_Cards                              = "Max_User_Cards"                              // Max_User_Cards
 	MinModifierGroupQty                         = "MinModifierGroupQty"                         // MinModifierGroupQty
 	MinModifierQty                              = "MinModifierQty"                              // MinModifierQty
 	Mobile_item_unavailable                     = "Mobile_item_unavailable"                     // Mobile_item_unavailable

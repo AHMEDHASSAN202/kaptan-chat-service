@@ -14,3 +14,5 @@ const MyFatoorahPaidInvoiceStatus = "Paid"
 const MyFatoorahPendingInvoiceStatus = "Pending"
 const MyFatoorahHoldInvoiceStatus = "Authorize"
 const MyFatoorahInProgressInvoiceStatus = "InProgress"
+
+const MAX_USER_CARDS = 3

@@ -259,3 +259,7 @@ other = "Couldn't Change Approval Status to new one"
 [Reported_Item_Already_Added]
 description = "Reported_Item_Already_Added"
 other = "This reported item has been done before for the same order."
+
+[Max_User_Cards]
+description = "Max_User_Cards"
+other = "Max User Cards Reached"

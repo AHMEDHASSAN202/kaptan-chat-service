@@ -6,6 +6,7 @@ var (
 	ExecutePaymentUrl   = "/v2/ExecutePayment"
 	UpdatePaymentUrl    = "/v2/UpdatePaymentStatus"
 	GetPaymentStatusUrl = "/v2/GetPaymentStatus"
+	CancelTokenUrl      = "/v2/CancelToken"
 
 	KeyTypeInvoiceId = "invoiceid"
 	ApplePay         = "applepay"

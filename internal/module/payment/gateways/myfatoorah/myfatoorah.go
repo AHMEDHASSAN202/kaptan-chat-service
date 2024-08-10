@@ -166,3 +166,43 @@ func (m MyFatoorahService) ApplePay(ctx context.Context, dto *payment.PayDto, pa
 
 	return paymentResponse, paymentRequest, validators.ErrorResponse{}
 }
+func (m MyFatoorahService) GetUserCards(ctx context.Context, userId string) (initSessionResponse responses.InitSessionResponse, err validators.ErrorResponse) {
+	requestPayload := requests.InitSessionRequest{
+		CustomerIdentifier: userId,
+		SaveToken:          false,
+	}
+	headers := map[string]string{
+		"Authorization": "Bearer " + m.APIToken,
+		"Content-Type":  "application/json",
+	}
+
+	res, errRe := m.httpClient.NewRequest().SetHeaders(headers).SetBody(requestPayload).SetResult(&initSessionResponse).Post(m.BaseUrl + consts.InitSessionUrl)
+
+	if errRe != nil {
+		m.logger.Error(ErrorTag+"=> InitSession", errRe)
+		return initSessionResponse, validators.GetErrorResponseFromErr(errRe)
+	}
+	if !res.IsSuccess() {
+		m.logger.Error(ErrorTag+"=> InitSession", errors.New(initSessionResponse.Message))
+		return initSessionResponse, validators.GetErrorResponseFromErr(errors.New(initSessionResponse.Message))
+	}
+	return initSessionResponse, err
+}
+func (m MyFatoorahService) DeleteUserCardToken(ctx context.Context, userCardToken string) (err validators.ErrorResponse) {
+
+	headers := map[string]string{
+		"Authorization": "Bearer " + m.APIToken,
+		"Content-Type":  "application/json",
+	}
+
+	res, errRe := m.httpClient.NewRequest().SetHeaders(headers).Post(m.BaseUrl + consts.CancelTokenUrl + "?Token=" + userCardToken)
+
+	if errRe != nil {
+		m.logger.Error(ErrorTag+"=> DeleteUserCardToken", errRe)
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+	if !res.IsSuccess() {
+		return validators.GetErrorResponseFromErr(errRe)
+	}
+	return err
+}

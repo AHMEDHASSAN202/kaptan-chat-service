@@ -60,9 +60,7 @@ func InitSession(ctx context.Context, payload *payment.PayDto, m MyFatoorahServi
 	}
 
 	res, errRe := m.httpClient.NewRequest().SetHeaders(headers).SetBody(requestPayload).SetResult(&initSessionResponse).Post(m.BaseUrl + consts.InitSessionUrl)
-	fmt.Println("user id => ", payload.UserId)
-	fmt.Println("REquest => ", requestPayload)
-	fmt.Println("Response => ", initSessionResponse, res.StatusCode())
+
 	if errRe != nil {
 		m.logger.Error(ErrorTag+"=> InitSession", errRe)
 		return initSessionResponse, validators.GetErrorResponseFromErr(errRe)

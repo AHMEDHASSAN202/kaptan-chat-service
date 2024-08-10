@@ -167,5 +167,9 @@ func (p PaymentUseCase) UpdateSession(ctx context.Context, dto *payment.UpdateSe
 		p.logger.Error("Update Error => ", errUpdate)
 	}
 	payResponse.RedirectUrl = &executeResponse.Data.PaymentURL
+
+	// handle update user cards for user
+	HandleUpdateUserCards(p, ctx, paymentTransaction)
+
 	return payResponse, err
 }

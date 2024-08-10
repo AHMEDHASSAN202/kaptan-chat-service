@@ -255,3 +255,7 @@ other = "لا يمكن تغير الحالة"
 [Reported_Item_Already_Added]
 description = "Reported_Item_Already_Added"
 other = "لقد تم الابلاغ عن منتج لم يسلم من قبل لنفس الاوردر"
+
+[Max_User_Cards]
+description = "Max_User_Cards"
+other = "عفوا تم الوصول للحد الاقصي من البطاقات"
