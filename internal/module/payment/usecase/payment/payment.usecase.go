@@ -2,6 +2,7 @@ package payment
 
 import (
 	"context"
+	"fmt"
 	"samm/internal/module/payment/consts"
 	"samm/internal/module/payment/domain"
 	"samm/internal/module/payment/dto/payment"
@@ -31,6 +32,7 @@ func (p PaymentUseCase) GetPaymentStatus(ctx context.Context, dto *payment.GetPa
 	if paymentTransaction.Status == consts.PaymentPaidStatus || paymentTransaction.Status == consts.PaymentHoldStatus {
 		return paymentTransaction, validators.ErrorResponse{}
 	}
+	fmt.Println(paymentTransaction.Status)
 
 	// Call Mf To check the status
 	responsePay, errRe := p.myfatoorahService.FindPayment(ctx, paymentTransaction.RequestId)
@@ -83,7 +85,9 @@ func (p PaymentUseCase) GetPaymentStatus(ctx context.Context, dto *payment.GetPa
 
 	}
 	transactionError := localization.PaymentError
+
 	if len(responsePay.Data.InvoiceTransactions) > 0 {
+
 		transactionError = responsePay.Data.InvoiceTransactions[0].ErrorCode
 	}
 	return nil, validators.GetErrorResponseWithErrors(&ctx, transactionError, nil)

@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"samm/internal/module/payment/domain"
 	"samm/pkg/utils"
 )
@@ -45,7 +46,8 @@ func (p PaymentRepository) FindPaymentTransaction(ctx context.Context, id string
 	} else {
 		filter = bson.M{"transaction_id": utils.ConvertStringIdToObjectId(transactionId), "transaction_type": transactionType}
 	}
-	err = p.paymentCollection.FirstWithCtx(ctx, filter, &domainData)
+	findOptions := options.FindOne().SetSort(bson.D{{"created_at", -1}})
+	err = p.paymentCollection.FirstWithCtx(ctx, filter, &domainData, findOptions)
 
 	return &domainData, err
 }
