@@ -12,6 +12,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type Phone struct {
+	PhoneNumber    string `json:"phone_num" bson:"phone_num"`
+	WhatsappNumber string `json:"whatsapp_number" bson:"whatsapp_number"`
+}
+
 type AppConfig struct {
 	mgm.DefaultModel    `bson:",inline"`
 	ID                  primitive.ObjectID      `json:"id" bson:"_id,omitempty"`
@@ -24,6 +29,7 @@ type AppConfig struct {
 	AppGalleryLink      string                  `json:"app_gallery_link" bson:"app_gallery_link"`
 	LocalizationVersion int64                   `json:"localization_version" bson:"localization_version"`
 	StartupImage        string                  `json:"stratup_image" bson:"stratup_image"`
+	Phone               Phone                   `json:"phone" bson:"phone"`
 	AdminDetails        []utilsDto.AdminDetails `json:"admin_details" bson:"admin_details"`
 	DeletedAt           *time.Time              `json:"deleted_at" bson:"deleted_at"`
 }
