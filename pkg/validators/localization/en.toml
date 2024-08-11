@@ -263,3 +263,51 @@ other = "This reported item has been done before for the same order."
 [Max_User_Cards]
 description = "Max_User_Cards"
 other = "Max User Cards Reached"
+
+
+[MF001]
+description = "MF001"
+other = "wrong password, cardholder/card issuer are not enrolled with 3DS, or the issuer bank has technical issue"
+
+
+
+[MF002]
+description = "MF002"
+other = "The issuer bank has declined the transaction"
+
+[MF003]
+description = "MF003"
+other = "The transaction has been blocked from the gateway"
+
+[MF004]
+description = "MF004"
+other = "Insufficient funds"
+
+[MF005]
+description = "MF005"
+other = "Session timeout"
+
+[MF006]
+description = "MF006"
+other = "Transaction canceled"
+
+[MF007]
+description = "MF007"
+other = "The card is expired."
+
+[MF008]
+description = "MF008"
+other = "The card issuer doesn't respond."
+
+[MF009]
+description = "MF009"
+other = "Denied by Risk"
+
+[MF010]
+description = "MF010"
+other = "Wrong Security Code"
+
+
+[MF020]
+description = "MF020"
+other = "Unspecified Failure"

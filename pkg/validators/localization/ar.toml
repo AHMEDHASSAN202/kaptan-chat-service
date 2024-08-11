@@ -259,3 +259,54 @@ other = "لقد تم الابلاغ عن منتج لم يسلم من قبل لن
 [Max_User_Cards]
 description = "Max_User_Cards"
 other = "عفوا تم الوصول للحد الاقصي من البطاقات"
+
+
+[MF001]
+description = "MF001"
+other = "كلمة مرور خاطئة، أو أن حامل البطاقة/مصدر البطاقة غير مسجل في 3DS، أو أن البنك المصدر لديه مشكلة فنية"
+
+
+
+[MF002]
+description = "MF002"
+other = "لقد رفض البنك المصدر هذه العملية"
+
+[MF003]
+description = "MF003"
+other = "تم حظر المعاملة من البوابة"
+
+[MF004]
+description = "MF004"
+other = "الرصيد غير كافِ لاتمام العملية"
+
+[MF005]
+description = "MF005"
+other = "انتهت مهلة الجلسة"
+
+[MF006]
+description = "MF006"
+other = "تم إلغاء المعاملة"
+
+[MF007]
+description = "MF007"
+other = "تم انتهاء صلاحية الكارت"
+
+[MF008]
+description = "MF008"
+other = "مصدر البطاقة لا يستجيب."
+
+[MF009]
+description = "MF009"
+other = "مرفوض بسبب المخاطرة"
+
+[MF010]
+description = "MF010"
+other = "رمز الأمان خاطئ"
+
+
+[MF020]
+description = "MF020"
+other = "فشل غير محدد"
+
+
+

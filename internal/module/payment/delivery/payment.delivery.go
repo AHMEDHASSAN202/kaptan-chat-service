@@ -30,6 +30,7 @@ func InitPaymentController(e *echo.Echo, us domain.PaymentUseCase, validator *va
 	}
 	mobile := e.Group("api/v1/mobile")
 	mobile.POST("/:transactionType/pay", handler.pay, userMiddleware.AuthenticationMiddleware(false))
+	mobile.GET("/payment/:transactionType/:id/status", handler.GetPaymentStatus, userMiddleware.AuthenticationMiddleware(false))
 
 	mobile.PUT("/myfatoorah/update-session", handler.UpdateSession)
 
@@ -48,7 +49,7 @@ func (a *PaymentHandler) pay(c echo.Context) error {
 	b := &echo.DefaultBinder{}
 	b.BindHeaders(c, &payload)
 
-	//userId := payload.CauserId
+	userId := payload.CauserId
 
 	//duration := time.Now().UTC().Add(10 * time.Second).Sub(time.Now().UTC())
 	//lock, er := a.redis.Lock("USER_PAYMENT_"+userId, userId, duration)
@@ -73,6 +74,32 @@ func (a *PaymentHandler) pay(c echo.Context) error {
 
 	//
 	res, errResp := a.paymentUseCase.Pay(ctx, &payload)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, res)
+}
+func (a *PaymentHandler) GetPaymentStatus(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var payload payment.GetPaymentStatus
+	err := c.Bind(&payload)
+	if err != nil {
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	b := &echo.DefaultBinder{}
+	b.BindHeaders(c, &payload)
+
+	userId := payload.CauserId
+
+	TransactionId := c.Param("id")
+	transactionType := c.Param("transactionType")
+	payload.TransactionId = TransactionId
+	payload.TransactionType = transactionType
+	payload.UserId = userId
+	//
+	res, errResp := a.paymentUseCase.GetPaymentStatus(ctx, &payload)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)
