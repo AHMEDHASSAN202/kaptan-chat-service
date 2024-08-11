@@ -2,14 +2,20 @@ package user
 
 import (
 	"crypto/rand"
+	"encoding/json"
 	"fmt"
+	. "github.com/ahmetb/go-linq/v3"
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"math/big"
+	"os"
+	"path/filepath"
 	"samm/internal/module/user/domain"
 	"samm/internal/module/user/dto/user"
 	"samm/internal/module/user/responses"
+	"samm/pkg/logger"
 	"samm/pkg/utils"
+	"samm/pkg/validators"
 	"strconv"
 	"strings"
 	"time"
@@ -94,4 +100,32 @@ func reposeBuilderAtUpdateProfile(user *domain.User) *responses.MobileUser {
 	var userResp responses.MobileUser
 	copier.Copy(&userResp, user)
 	return &userResp
+}
+
+func userDeletionReasons(id string) ([]domain.UserDeletionReason, validators.ErrorResponse) {
+	userRejectionReason := make([]domain.UserDeletionReason, 0)
+	dir, err := os.Getwd()
+	if err != nil {
+		return userRejectionReason, validators.GetErrorResponseFromErr(err)
+	}
+
+	path := filepath.Join(dir, "internal", "module", "user", "assets", "user_delete_reasons.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		logger.Logger.Error("Read Json File -> Error -> ", err)
+		return userRejectionReason, validators.GetErrorResponseFromErr(err)
+	}
+
+	if errRe := json.Unmarshal(data, &userRejectionReason); errRe != nil {
+		logger.Logger.Error("ListPermissions -> Error -> ", errRe)
+		return userRejectionReason, validators.GetErrorResponseFromErr(errRe)
+	}
+
+	if id != "" {
+		From(userRejectionReason).Where(func(c interface{}) bool {
+			return c.(domain.UserDeletionReason).Id == id
+		}).ToSlice(&userRejectionReason)
+	}
+
+	return userRejectionReason, validators.ErrorResponse{}
 }
