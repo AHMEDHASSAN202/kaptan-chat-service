@@ -11,8 +11,8 @@ var (
 	KeyTypeInvoiceId = "invoiceid"
 	ApplePay         = "applepay"
 	MFToken          = "mftoken"
-	SuccessUrl       = "/success-page"
-	ErrorUrl         = "/error-page"
+	SuccessUrl       = "/payment-success"
+	ErrorUrl         = "/payment-error"
 
 	CurrencySAR = "SAR"
 
