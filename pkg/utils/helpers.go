@@ -11,6 +11,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt"
 	"github.com/mitchellh/mapstructure"
+	log "github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 	"io"
@@ -616,4 +617,16 @@ func CopyMapToStruct(doc any, fields map[string]interface{}) error {
 
 func ExtractToken(tokenWithBearer string) string {
 	return strings.TrimPrefix(tokenWithBearer, "Bearer ")
+}
+func StructToString(data interface{}) (string, error) {
+	// Marshal the struct into JSON format
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		log.Fatalf("Error marshaling struct: %v", err)
+		return "", err
+	}
+
+	// Convert the JSON bytes to a string
+	return string(jsonBytes), nil
+
 }

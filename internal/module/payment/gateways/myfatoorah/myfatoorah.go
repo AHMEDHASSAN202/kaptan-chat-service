@@ -11,6 +11,7 @@ import (
 	"samm/internal/module/payment/gateways/myfatoorah/requests"
 	"samm/internal/module/payment/gateways/myfatoorah/responses"
 	"samm/pkg/logger"
+	"samm/pkg/utils"
 	"samm/pkg/validators"
 )
 
@@ -148,6 +149,19 @@ func (m MyFatoorahService) ApplePay(ctx context.Context, dto *payment.PayDto, pa
 		err = errRe
 		return
 	}
+
+	// Prepare Apple Pay Data
+	var applePayToken requests.ApplePayData
+
+	// Fill Applepay Struct
+
+	appleToken, errP := utils.StructToString(applePayToken)
+	if errP != nil {
+		err = validators.GetErrorResponseFromErr(errP)
+		return
+	}
+	dto.PaymentToken = appleToken
+
 	// Call Update Session
 	updateResponse, errRe := UpdateSession(ctx, dto, initResponse.Data.SessionId, consts.ApplePay, m)
 	if errRe.IsError {
