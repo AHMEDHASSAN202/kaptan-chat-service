@@ -172,8 +172,8 @@ func (l NotificationUseCase) SendPushNotificationV2(dto notification.GeneralNoti
 		var notificationData notification.NotificationDto
 		notificationData.Title.Ar = notificationMessage.Title.Ar
 		notificationData.Title.En = notificationMessage.Title.En
-		notificationData.Text.En = notificationMessage.Description.Ar
-		notificationData.Text.Ar = notificationMessage.Description.En
+		notificationData.Text.En = notificationMessage.Description.En
+		notificationData.Text.Ar = notificationMessage.Description.Ar
 		notificationData.Type = consts.TYPE_PRIVATE
 		notificationData.Ids = []string{toModel.Id}
 		notificationData.AccountIds = []string{toModel.AccountId}

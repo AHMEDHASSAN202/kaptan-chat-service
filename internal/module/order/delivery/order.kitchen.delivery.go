@@ -143,3 +143,94 @@ func (a *OrderHandler) KitchenToNoShow(c echo.Context) error {
 
 	return validators.SuccessResponse(c, map[string]interface{}{"order": orderResponse})
 }
+
+func (a *OrderHandler) ListOrdersForKitchenWithLimit(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var dto kitchen.ListRunningOrderDto
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &dto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := binder.BindQueryParams(c, &dto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := dto.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	dto.NumberOfHoursLimit = 8
+	orderResponse, errResp := a.orderUsecase.KitchenListRunningOrders(ctx, &dto)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"orders": orderResponse})
+}
+func (a *OrderHandler) ListOrdersForKitchenWithoutLimit(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	var dto kitchen.ListRunningOrderDto
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &dto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := binder.BindQueryParams(c, &dto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := dto.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	dto.NumberOfHoursLimit = 0
+	orderResponse, errResp := a.orderUsecase.KitchenListRunningOrders(ctx, &dto)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"orders": orderResponse})
+}
+
+func (a *OrderHandler) FindOrderForKitchen(c echo.Context) error {
+	ctx := c.Request().Context()
+	var payload kitchen.FindOrderMobileDto
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := binder.BindPathParams(c, &payload); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+	validationErr := payload.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	order, errResp := a.orderUsecase.FindOrderForKitchen(&ctx, &payload)
+	if errResp.IsError {
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, order)
+}

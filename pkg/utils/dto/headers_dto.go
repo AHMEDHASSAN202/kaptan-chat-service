@@ -3,6 +3,7 @@ package dto
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 )
 
 type MobileHeaders struct {
@@ -67,4 +68,8 @@ type KitchenHeaders struct {
 	CauserDetails     string   `header:"causer-details"`
 	CauserAccountIds  string   `header:"causer-account-ids"`
 	CauserLocationIds string   `header:"causer-location-ids"`
+}
+
+func GetCauserAccountOrLocationsIds(causerIds string) []string {
+	return strings.Split(causerIds, ",")
 }

@@ -91,6 +91,10 @@ func (a *ApprovalItemHelper) NeedToApproveItem(doc *domain.Item, oldDoc *domain.
 	if doc.ApprovalStatus != utils.APPROVAL_STATUS.WAIT_FOR_APPROVAL {
 		return false, nil, nil
 	}
+	return a.AreAnyChanges(doc, oldDoc)
+}
+
+func (a *ApprovalItemHelper) AreAnyChanges(doc *domain.Item, oldDoc *domain.Item) (bool, map[string]interface{}, map[string]interface{}) {
 	n := map[string]interface{}{}
 	o := map[string]interface{}{}
 	if strings.TrimSpace(doc.Name.Ar) != strings.TrimSpace(oldDoc.Name.Ar) || strings.TrimSpace(doc.Name.En) != strings.TrimSpace(oldDoc.Name.En) {
@@ -122,6 +126,11 @@ func (a *ApprovalItemHelper) UpdateItemByApproval(ctx context.Context, doc *item
 	if err != nil {
 		a.logger.Error("ApprovalItemHelper -> UpdateItemByApproval -> ", err)
 		return validators.GetErrorResponse(&ctx, localization.E1000, nil, utils.GetAsPointer(http.StatusBadRequest))
+	}
+
+	//if entity not has approval
+	if approvalDoc == nil {
+		return validators.ErrorResponse{}
 	}
 
 	//apply changes to doc

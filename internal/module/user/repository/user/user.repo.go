@@ -57,6 +57,14 @@ func (l UserRepository) FindUser(ctx *context.Context, Id primitive.ObjectID) (u
 	return &domainData, err
 }
 
+func (l UserRepository) FindUserByToken(ctx *context.Context, token string) (user *domain.User, err error) {
+	domainData := domain.User{}
+	filter := bson.M{"deleted_at": nil, "tokens": token}
+	err = l.userCollection.FirstWithCtx(*ctx, filter, &domainData)
+
+	return &domainData, err
+}
+
 func (l UserRepository) GetUserByPhoneNumber(ctx *context.Context, phoneNum, countryCode string) (user domain.User, err error) {
 	domainData := domain.User{}
 	filter := bson.M{"phone_number": phoneNum, "country_code": countryCode}
@@ -158,4 +166,12 @@ func (l UserRepository) GetUsersPlayerId(ctx *context.Context, userId []string) 
 
 	return playerIds, err
 
+}
+
+func (l UserRepository) PullToken(ctx *context.Context, userId primitive.ObjectID, token string) (err error) {
+	_, err = mgm.Coll(&domain.User{}).UpdateByID(*ctx, userId, bson.M{"$pull": bson.M{"tokens": token}})
+	if err != nil {
+		l.logger.Error("UserRepository -> PullToken -> ", err.Error())
+	}
+	return
 }

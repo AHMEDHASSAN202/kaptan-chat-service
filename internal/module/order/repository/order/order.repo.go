@@ -9,7 +9,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"samm/internal/module/order/domain"
 	"samm/internal/module/order/dto/order"
+	"samm/internal/module/order/dto/order/kitchen"
 	"samm/internal/module/order/repository/structs"
+	kitchenResp "samm/internal/module/order/responses/kitchen"
 	"samm/pkg/logger"
 	"samm/pkg/utils"
 	"time"
@@ -20,7 +22,10 @@ type OrderRepository struct {
 	logger          logger.ILogger
 }
 
-const mongoOrderRepositoryTag = "OrderMongoRepository"
+const (
+	MongoOrderRepositoryTag = "OrderMongoRepository"
+	MaxLimitPerRound        = 500
+)
 
 func NewOrderMongoRepository(dbs *mongo.Database, logger logger.ILogger) domain.OrderRepository {
 	orderDbCollection := mgm.Coll(&domain.Order{})
@@ -160,6 +165,52 @@ func (i *OrderRepository) ListInprogressOrdersForMobile(ctx *context.Context, dt
 
 	return
 }
+func (i *OrderRepository) ListRunningOrdersForKitchen(ctx *context.Context, dto *kitchen.ListRunningOrderDto) (ordersRes *[]kitchenResp.KitchenListOrdersResponse, paginationMeta *PaginationData, err error) {
+
+	matching := bson.M{"$match": bson.M{"$and": []interface{}{
+		bson.M{"status": bson.M{"$in": dto.Status}},
+		bson.M{"meta_data.target_kitchen_ids": utils.ConvertStringIdToObjectId(dto.CauserKitchenId)},
+	}}}
+
+	//add time limit condition
+	if dto.NumberOfHoursLimit > 0 {
+		eightHoursAgo := time.Now().UTC().Add(time.Duration(-1*dto.NumberOfHoursLimit) * time.Hour)
+		matching["$match"].(bson.M)["$and"] = append(matching["$match"].(bson.M)["$and"].([]interface{}), bson.M{"created_at": bson.M{"$gte": eightHoursAgo}})
+	}
+
+	if dto.Pagination.Pagination {
+		return executeListWithPagination(ctx, i, dto, matching)
+	} else {
+		orders := make([]kitchenResp.KitchenListOrdersResponse, 0)
+		err = i.orderCollection.SimpleAggregate(&orders, matching)
+		ordersRes = &orders
+		return ordersRes, nil, err
+	}
+
+}
+
+func executeListWithPagination(ctx *context.Context, i *OrderRepository, dto *kitchen.ListRunningOrderDto, matching bson.M) (ordersRes *[]kitchenResp.KitchenListOrdersResponse, paginationMeta *PaginationData, err error) {
+
+	data, err := New(i.orderCollection.Collection).Context(*ctx).Limit(dto.Limit).Page(dto.Page).Sort("created_at", -1).Aggregate(matching)
+
+	if data == nil || data.Data == nil {
+		return nil, nil, err
+	}
+
+	orders := make([]kitchenResp.KitchenListOrdersResponse, 0)
+	for _, raw := range data.Data {
+		model := kitchenResp.KitchenListOrdersResponse{}
+		err = bson.Unmarshal(raw, &model)
+		if err != nil {
+			i.logger.Error("Order Repo -> kitchen List -> ", err)
+			break
+		}
+		orders = append(orders, model)
+	}
+	paginationMeta = &data.Pagination
+	ordersRes = &orders
+	return
+}
 
 func (i *OrderRepository) ListCompletedOrdersForMobile(ctx *context.Context, dto *order.ListOrderDtoForMobile) (ordersRes *[]structs.MobileListOrders, paginationMeta *PaginationData, err error) {
 	threeMonthsAgo := time.Now().UTC().AddDate(0, -3, 0)
@@ -255,5 +306,27 @@ func (l OrderRepository) UpdateUserAllOrdersFavorite(ctx context.Context, userId
 	_, err = l.orderCollection.UpdateMany(ctx, filter, bson.M{
 		"$set": bson.M{"is_favourite": false},
 	})
+	return
+}
+
+func (i *OrderRepository) GetAllOrdersForCronJobs(ctx *context.Context, filters bson.M) (ordersRes *[]domain.Order, paginationMeta *PaginationData, err error) {
+	data, err := New(i.orderCollection.Collection).Context(*ctx).Limit(MaxLimitPerRound).Page(0).Sort("created_at", -1).Aggregate(filters)
+
+	if data == nil || data.Data == nil {
+		return nil, nil, err
+	}
+	orders := make([]domain.Order, 0)
+	for _, raw := range data.Data {
+		model := domain.Order{}
+		err = bson.Unmarshal(raw, &model)
+		if err != nil {
+			i.logger.Error("Order Repo -> List -> ", err)
+			break
+		}
+		orders = append(orders, model)
+	}
+	paginationMeta = &data.Pagination
+	ordersRes = &orders
+
 	return
 }

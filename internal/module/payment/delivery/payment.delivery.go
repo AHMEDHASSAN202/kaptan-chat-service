@@ -48,7 +48,7 @@ func (a *PaymentHandler) pay(c echo.Context) error {
 	b := &echo.DefaultBinder{}
 	b.BindHeaders(c, &payload)
 
-	userId := payload.CauserId
+	//userId := payload.CauserId
 
 	//duration := time.Now().UTC().Add(10 * time.Second).Sub(time.Now().UTC())
 	//lock, er := a.redis.Lock("USER_PAYMENT_"+userId, userId, duration)
