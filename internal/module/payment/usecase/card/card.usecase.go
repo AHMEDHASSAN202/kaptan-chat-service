@@ -12,8 +12,9 @@ import (
 )
 
 type CardUseCase struct {
-	repo   domain.CardRepository
-	logger logger.ILogger
+	repo              domain.CardRepository
+	myfatoorahService domain.MyFatoorahService
+	logger            logger.ILogger
 }
 
 func (c CardUseCase) StoreCard(ctx context.Context, payload *card.CreateCardDto) (err validators.ErrorResponse) {
@@ -47,8 +48,10 @@ func (c CardUseCase) DeleteCard(ctx context.Context, Id string, userId string) (
 		return validators.GetErrorResponseFromErr(errRe)
 	}
 	// Delete Card From MF domainCard
-	c.logger.Info(domainCard)
-
+	err = c.myfatoorahService.DeleteUserCardToken(ctx, domainCard.MFToken)
+	if err.IsError {
+		return err
+	}
 	delErr := c.repo.DeleteCard(ctx, utils.ConvertStringIdToObjectId(Id), utils.ConvertStringIdToObjectId(userId))
 	if delErr != nil {
 		return validators.GetErrorResponseFromErr(delErr)
@@ -64,9 +67,10 @@ func (c CardUseCase) ListCard(ctx context.Context, payload *card.ListCardDto) (c
 	return results, paginationResult, validators.ErrorResponse{}
 }
 
-func NewCardUseCase(repo domain.CardRepository, logger logger.ILogger) domain.CardUseCase {
+func NewCardUseCase(repo domain.CardRepository, logger logger.ILogger, myfatoorahService domain.MyFatoorahService) domain.CardUseCase {
 	return &CardUseCase{
-		repo:   repo,
-		logger: logger,
+		repo:              repo,
+		logger:            logger,
+		myfatoorahService: myfatoorahService,
 	}
 }

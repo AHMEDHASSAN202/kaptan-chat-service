@@ -79,6 +79,7 @@ type LocationDetails struct {
 	BrandDetails    BrandDetails       `json:"brand_details" bson:"brand_details"`
 	PreparationTime int                `json:"preparation_time" bson:"preparation_time"`
 	Distance        float64            `json:"distance" bson:"distance"`
+	AutoAccept      bool               `json:"auto_accept" bson:"auto_accept"`
 	Country         Country            `json:"country" bson:"country"`
 	Status          Status             `json:"status" bson:"-"`
 	AccountId       primitive.ObjectID `json:"account_id" bson:"account_id"`

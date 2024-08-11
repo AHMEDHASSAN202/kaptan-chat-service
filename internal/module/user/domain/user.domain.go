@@ -28,9 +28,18 @@ type User struct {
 	IsActive         bool               `json:"is_active" bson:"is_active"`
 	VerifiedAt       *time.Time         `json:"verified_at" bson:"verified_at"`
 	DeletedAt        *time.Time         `json:"deleted_at" bson:"deleted_at"`
+	DeleteReason     UserDeletionReason `json:"delete_reason" bson:"delete_reason"`
 	Tokens           []string           `json:"-" bson:"tokens"`
 	PlayerIds        []string           `json:"-" bson:"player_ids"`
 	AdminDetails     []dto.AdminDetails `json:"admin_details" bson:"admin_details,omitempty"`
+}
+
+type UserDeletionReason struct {
+	Id   string `json:"id"`
+	Name struct {
+		Ar string `json:"ar"`
+		En string `json:"en"`
+	} `json:"name"`
 }
 
 type DeletedUser struct {
@@ -45,7 +54,8 @@ type UserUseCase interface {
 	UpdateUserProfile(ctx *context.Context, payload *user.UpdateUserProfileDto) (user *responses.MobileUser, err validators.ErrorResponse)
 	FindUser(ctx *context.Context, Id string) (user User, err validators.ErrorResponse)
 	RefreshFirebaseToken(ctx *context.Context, Id string) (firebaseToken string, err validators.ErrorResponse)
-	DeleteUser(ctx *context.Context, Id string) (err validators.ErrorResponse)
+	UserDeletionReasons(ctx *context.Context) ([]UserDeletionReason, validators.ErrorResponse)
+	DeleteUser(ctx *context.Context, payload *user.DeleteUserDto) (err validators.ErrorResponse)
 	List(ctx *context.Context, dto *user.ListUserDto) (*responses.ListResponse, validators.ErrorResponse)
 	ToggleUserActivation(ctx *context.Context, userId string, adminHeader *dto.AdminHeaders) (err validators.ErrorResponse)
 	UserEmailExists(ctx *context.Context, email, userId string) bool

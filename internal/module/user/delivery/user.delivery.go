@@ -48,6 +48,7 @@ func InitUserController(e *echo.Echo, us domain.UserUseCase, validator *validato
 	authGroup.PUT("", handler.UpdateUserProfile, userMiddleware.RemoveUserFromRedis)
 	authGroup.GET("", handler.GetUserProfile)
 	authGroup.PUT("/firebase-token-refresh", handler.RefreshFirebaseToken)
+	authGroup.GET("/delete-reasons", handler.DeleteReasons)
 	authGroup.DELETE("", handler.DeleteUser, userMiddleware.RemoveUserFromRedis)
 	authGroup.POST("/sign-out", handler.SignOut, userMiddleware.RemoveUserFromRedis)
 
@@ -200,14 +201,41 @@ func (a *UserHandler) RefreshFirebaseToken(c echo.Context) error {
 	return validators.SuccessResponse(c, map[string]interface{}{"firebase_token": data})
 }
 
+func (a *UserHandler) DeleteReasons(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	deletionReasons, errResp := a.userUsecase.UserDeletionReasons(&ctx)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorStatusBadRequest(c, errResp)
+	}
+	return validators.SuccessResponse(c, map[string]interface{}{"user_deletion_reasons": deletionReasons})
+
+}
+
 func (a *UserHandler) DeleteUser(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	var payload dto.MobileHeaders
-	b := &echo.DefaultBinder{}
-	b.BindHeaders(c, &payload)
+	var dto user.DeleteUserDto
 
-	errResp := a.userUsecase.DeleteUser(&ctx, payload.CauserId)
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &dto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := c.Bind(&dto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := dto.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	errResp := a.userUsecase.DeleteUser(&ctx, &dto)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorStatusBadRequest(c, errResp)

@@ -6,11 +6,15 @@ var (
 	ExecutePaymentUrl   = "/v2/ExecutePayment"
 	UpdatePaymentUrl    = "/v2/UpdatePaymentStatus"
 	GetPaymentStatusUrl = "/v2/GetPaymentStatus"
+	CancelTokenUrl      = "/v2/CancelToken"
 
 	KeyTypeInvoiceId = "invoiceid"
 	ApplePay         = "applepay"
-	SuccessUrl       = "/success-page"
-	ErrorUrl         = "/error-page"
+	MFToken          = "mftoken"
+	SuccessUrl       = "/payment-success"
+	ErrorUrl         = "/payment-error"
 
 	CurrencySAR = "SAR"
+
+	ADD_CARD_VIEW = "myfatoorah"
 )

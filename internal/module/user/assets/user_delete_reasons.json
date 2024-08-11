@@ -1,0 +1,44 @@
+[
+  {
+    "id": "1",
+    "name": {
+      "ar": "عدم الاستخدام",
+      "en": "Lack of Use"
+    }
+  },
+  {
+    "id": "2",
+    "name": {
+      "ar": "كثرة الإشعارات",
+      "en": "Too Many Notifications"
+    }
+  },
+  {
+    "id": "3",
+    "name": {
+      "ar": "التبديل إلى تطبيق آخر",
+      "en": "Switching to a Different App"
+    }
+  },
+  {
+    "id": "4",
+    "name": {
+      "ar": "عدم الرضا عن الميزات",
+      "en": "Dissatisfaction with Features"
+    }
+  },
+  {
+    "id": "5",
+    "name": {
+      "ar": "مشكلات خدمة العملاء",
+      "en": "Customer Service Issues"
+    }
+  },
+  {
+    "id": "6",
+    "name": {
+      "ar": "أفضل عدم التصريح",
+      "en": "Prefer Not to Say"
+    }
+  }
+]

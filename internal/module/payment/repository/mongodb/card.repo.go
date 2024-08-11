@@ -18,6 +18,25 @@ type CardRepository struct {
 	cardCollection *mgm.Collection
 }
 
+func (c CardRepository) UpdateUserCards(ctx context.Context, cards []domain.Card) (err error) {
+	listCardPayload := card.ListCardDto{
+		UserId: utils.ConvertObjectIdToStringId(cards[0].UserId),
+	}
+	listCardPayload.SetDefault()
+	userCards, _, err := c.ListCard(ctx, &listCardPayload)
+
+	cardTokens := make([]string, 0)
+	for _, cardItem := range userCards {
+		cardTokens = append(cardTokens, cardItem.MFToken)
+	}
+	for _, cardItem := range cards {
+		if !utils.Contains(cardTokens, cardItem.MFToken) {
+			err = c.StoreCard(ctx, &cardItem)
+		}
+	}
+	return
+}
+
 func (c CardRepository) StoreCard(ctx context.Context, card *domain.Card) (err error) {
 	err = mgm.Coll(card).CreateWithCtx(ctx, card)
 	if err != nil {
@@ -39,6 +58,7 @@ func (l CardRepository) UpdateCard(ctx context.Context, card *domain.Card) (err 
 	_, err = mgm.Coll(card).UpdateByID(ctx, card.ID, update)
 	return
 }
+
 func (c CardRepository) DeleteCard(ctx context.Context, Id primitive.ObjectID, userId primitive.ObjectID) (err error) {
 	userData, err := c.FindCard(ctx, Id, userId)
 	if err != nil {

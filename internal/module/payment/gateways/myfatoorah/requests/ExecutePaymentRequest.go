@@ -1,7 +1,7 @@
 package requests
 
 type ExecutePaymentCardRequest struct {
-	PaymentMethodId    int     `json:"PaymentMethodId"`
+	SessionId          string  `json:"SessionId"`
 	DisplayCurrencyIso string  `json:"DisplayCurrencyIso"`
 	InvoiceValue       float64 `json:"invoiceValue"`
 	ProcessingDetails  struct {

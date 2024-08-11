@@ -26,6 +26,8 @@ type Payment struct {
 
 type PaymentUseCase interface {
 	Pay(ctx context.Context, dto *payment.PayDto) (payResponse response.PayResponse, err validators.ErrorResponse)
+	GetPaymentStatus(ctx context.Context, dto *payment.GetPaymentStatus) (payResponse *Payment, err validators.ErrorResponse)
+	UpdateSession(ctx context.Context, dto *payment.UpdateSession) (payResponse response.UpdateSessionResponse, err validators.ErrorResponse)
 	MyFatoorahWebhook(ctx context.Context, dto *payment.MyFatoorahWebhookPayload) (payResponse interface{}, err validators.ErrorResponse)
 	AuthorizePayment(ctx context.Context, payload *payment.AuthorizePayload) (payResponse response.PayResponse, err validators.ErrorResponse)
 }
@@ -34,4 +36,5 @@ type PaymentRepository interface {
 	CreateTransaction(ctx context.Context, document *Payment) (response *Payment, err error)
 	UpdateTransaction(ctx context.Context, document *Payment) (err error)
 	FindPaymentTransaction(ctx context.Context, id string, transactionId string, transactionType string) (payment *Payment, err error)
+	FindPaymentTransactionByRequestId(ctx context.Context, requestId string) (payment *Payment, err error)
 }

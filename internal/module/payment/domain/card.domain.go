@@ -27,6 +27,7 @@ type CardUseCase interface {
 
 type CardRepository interface {
 	StoreCard(ctx context.Context, user *Card) (err error)
+	UpdateUserCards(ctx context.Context, cards []Card) (err error)
 	UpdateCard(ctx context.Context, card *Card) (err error)
 	FindCard(ctx context.Context, Id primitive.ObjectID, userID primitive.ObjectID) (card *Card, err error)
 	DeleteCard(ctx context.Context, Id primitive.ObjectID, userId primitive.ObjectID) (err error)
