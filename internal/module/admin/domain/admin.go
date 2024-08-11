@@ -67,7 +67,7 @@ type AdminUseCase interface {
 	PortalLogin(ctx context.Context, dto *auth.PortalAuthDTO) (interface{}, string, validators.ErrorResponse)
 	KitchenLogin(ctx context.Context, input *auth.KitchenAuthDTO) (admin2.AuthKitchenResponse, validators.ErrorResponse)
 	Profile(ctx context.Context, profileDTO auth.ProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
-	KitchenProfile(ctx context.Context, profileDTO auth.KitchenProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
+	KitchenProfile(ctx context.Context, profileDTO auth.KitchenProfileDTO) (*admin2.AdminProfileResponse, string, validators.ErrorResponse)
 	UpdateAdminProfile(ctx context.Context, dto *auth.UpdateAdminProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 	UpdatePortalProfile(ctx context.Context, dto *auth.UpdatePortalProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)
 	UpdateKitchenProfile(ctx context.Context, input *auth.UpdateKitchenProfileDTO) (*admin2.AdminProfileResponse, validators.ErrorResponse)

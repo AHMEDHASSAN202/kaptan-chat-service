@@ -34,6 +34,7 @@ type LocationMobile struct {
 	PreparationTime            int                `json:"preparation_time" bson:"preparation_time"`
 	Distance                   float64            `json:"distance" bson:"distance"`
 	Country                    Country            `json:"country" bson:"country"`
+	AutoAccept                 bool               `json:"auto_accept" bson:"auto_accept"`
 	Status                     Status             `json:"status" bson:"-"`
 	AccountId                  primitive.ObjectID `json:"account_id" bson:"account_id"`
 	AllowedCollectionMethodIds []string           `json:"-" bson:"allowed_collection_method_ids"`
