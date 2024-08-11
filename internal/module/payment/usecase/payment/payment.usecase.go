@@ -86,7 +86,7 @@ func (p PaymentUseCase) GetPaymentStatus(ctx context.Context, dto *payment.GetPa
 	}
 	transactionError := localization.PaymentError
 
-	if len(responsePay.Data.InvoiceTransactions) > 0 {
+	if len(responsePay.Data.InvoiceTransactions) > 0 && responsePay.Data.InvoiceTransactions[0].ErrorCode != "" {
 
 		transactionError = responsePay.Data.InvoiceTransactions[0].ErrorCode
 	}
