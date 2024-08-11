@@ -7,7 +7,7 @@ import (
 )
 
 type FindOrderMobileDto struct {
-	KitchenId string `header:"causer-id" validate:"required"`
+	KitchenId string `header:"causer-kitchen-id" validate:"required"`
 	OrderId   string `param:"id"`
 }
 

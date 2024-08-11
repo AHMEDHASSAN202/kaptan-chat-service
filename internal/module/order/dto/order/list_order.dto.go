@@ -34,7 +34,7 @@ func (input *ListOrderDtoForMobile) Validate(ctx context.Context, validate *vali
 }
 
 type FindOrderMobileDto struct {
-	UserId  string `header:"causer-kitchen-id" validate:"required"`
+	UserId  string `header:"causer-id" validate:"required"`
 	OrderId string `json:"order_id"`
 }
 
