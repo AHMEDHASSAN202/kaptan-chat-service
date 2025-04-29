@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"samm/pkg/logger"
+	"kaptan/pkg/logger"
 	"time"
 )
 

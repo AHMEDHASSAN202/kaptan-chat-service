@@ -5,17 +5,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	pkgConfig "samm/pkg/config"
+	pkgConfig "kaptan/pkg/config"
 )
 
-func Init(awsConfig *pkgConfig.AwsConfig) *s3.S3 {
-	accessKeyID := awsConfig.AccessKey
+func Init(awsConfig *pkgConfig.Config) *s3.S3 {
+	accessKeyID := awsConfig.AwsConfig.AccessKey
 
-	secretAccessKey := awsConfig.SecretKey
+	secretAccessKey := awsConfig.AwsConfig.SecretKey
 	s3Config := &aws.Config{
 		Credentials:      credentials.NewStaticCredentials(accessKeyID, secretAccessKey, ""),
-		Endpoint:         aws.String(awsConfig.EndPoint),
-		Region:           aws.String(awsConfig.Region),
+		Endpoint:         aws.String(awsConfig.AwsConfig.EndPoint),
+		Region:           aws.String(awsConfig.AwsConfig.Region),
 		DisableSSL:       aws.Bool(false),
 		S3ForcePathStyle: aws.Bool(true),
 	}

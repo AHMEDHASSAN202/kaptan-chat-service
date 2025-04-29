@@ -1,8 +1,8 @@
 package jwt
 
 import (
-	"samm/pkg/config"
-	"samm/pkg/logger"
+	"kaptan/pkg/config"
+	"kaptan/pkg/logger"
 )
 
 type JwtServiceFactory interface {

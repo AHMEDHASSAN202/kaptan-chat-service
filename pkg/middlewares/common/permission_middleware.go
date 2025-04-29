@@ -3,10 +3,10 @@ package commmon
 import (
 	"encoding/json"
 	"github.com/labstack/echo/v4"
+	"kaptan/pkg/localization"
+	"kaptan/pkg/utils"
+	"kaptan/pkg/validators"
 	"net/http"
-	"samm/pkg/utils"
-	"samm/pkg/validators"
-	"samm/pkg/validators/localization"
 )
 
 func (m ProviderMiddlewares) PermissionMiddleware(permissions ...string) func(next echo.HandlerFunc) echo.HandlerFunc {

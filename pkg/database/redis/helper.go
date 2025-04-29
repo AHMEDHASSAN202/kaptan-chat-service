@@ -2,11 +2,11 @@ package redis
 
 import (
 	"context"
+	"kaptan/pkg/localization"
+	"kaptan/pkg/logger"
+	"kaptan/pkg/utils"
+	"kaptan/pkg/validators"
 	"net/http"
-	"samm/pkg/logger"
-	"samm/pkg/utils"
-	"samm/pkg/validators"
-	"samm/pkg/validators/localization"
 	"time"
 )
 

@@ -64,9 +64,9 @@ func (l *appLogger) getLevel() log.Level {
 }
 
 // InitLogger Init logger
-func InitLogger(cfg LoggerConfig) ILogger {
+func InitLogger() ILogger {
 
-	l := &appLogger{level: cfg.LogLevel}
+	l := &appLogger{}
 
 	l.logger = log.StandardLogger()
 
@@ -74,7 +74,7 @@ func InitLogger(cfg LoggerConfig) ILogger {
 
 	env := os.Getenv("APP_ENV")
 
-	if env == "main" {
+	if env == "release" {
 		log.SetFormatter(&log.JSONFormatter{})
 	} else {
 		// The TextFormatter is default, you don't actually have to do this.

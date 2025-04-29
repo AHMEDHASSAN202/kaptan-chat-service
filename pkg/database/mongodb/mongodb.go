@@ -7,8 +7,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"kaptan/pkg/config"
 	"os"
-	"samm/pkg/config"
 	"time"
 )
 
@@ -69,7 +69,7 @@ func CreateIndex(collectionConnection *mongo.Collection, unique bool, fields ...
 		keys = append(keys, field)
 	}
 	mod := mongo.IndexModel{
-		Keys:    keys, // index in ascending order or -1 for descending order
+		Keys:    keys, // index in ascending chat or -1 for descending chat
 		Options: options.Index().SetUnique(unique),
 	}
 	// 2. Create the context for this operation
@@ -94,7 +94,7 @@ func CreateIndex(collectionConnection *mongo.Collection, unique bool, fields ...
 
 func CreateIndexWithTTL(collectionConnection *mongo.Collection, unique bool, field bson.E, expireAfterSeconds int32) bool {
 	mod := mongo.IndexModel{
-		Keys:    bson.D{field}, // index in ascending order or -1 for descending order
+		Keys:    bson.D{field}, // index in ascending chat or -1 for descending chat
 		Options: options.Index().SetUnique(unique).SetExpireAfterSeconds(expireAfterSeconds),
 	}
 	// 2. Create the context for this operation

@@ -6,11 +6,11 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/errors"
 	"go.uber.org/fx"
+	"kaptan/pkg/config"
+	echomiddleware "kaptan/pkg/http/echo/middleware"
+	echoserver "kaptan/pkg/http/echo/server"
+	"kaptan/pkg/logger"
 	"net/http"
-	"samm/pkg/config"
-	echomiddleware "samm/pkg/http/echo/middleware"
-	echoserver "samm/pkg/http/echo/server"
-	"samm/pkg/logger"
 )
 
 func RunServers(lc fx.Lifecycle, log logger.ILogger, e *echo.Echo, ctx context.Context, cfg *config.Config) error {

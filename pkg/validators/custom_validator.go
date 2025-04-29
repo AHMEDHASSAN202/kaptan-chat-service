@@ -3,10 +3,10 @@ package validators
 import (
 	"context"
 	"github.com/go-playground/validator/v10"
+	"kaptan/pkg/localization"
+	"kaptan/pkg/utils"
 	"reflect"
 	"regexp"
-	"samm/pkg/utils"
-	"samm/pkg/validators/localization"
 	"time"
 )
 

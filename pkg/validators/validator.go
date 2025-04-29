@@ -11,10 +11,10 @@ import (
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
+	"kaptan/pkg/localization"
+	"kaptan/pkg/utils"
 	"net/http"
 	"reflect"
-	"samm/pkg/utils"
-	"samm/pkg/validators/localization"
 	"strings"
 )
 

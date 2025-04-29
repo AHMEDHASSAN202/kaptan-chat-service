@@ -2,15 +2,11 @@ package database
 
 import (
 	"go.uber.org/fx"
-	"samm/pkg/database/firebase"
-	"samm/pkg/database/mongodb"
-	"samm/pkg/database/redis"
+	"kaptan/pkg/database/mysql"
 )
 
 var Module = fx.Options(
 	fx.Provide(
-		mongodb.NewClient,
-		redis.NewRedisClient,
-		firebase.NewFirebaseClient,
+		mysql.NewClient,
 	),
 )

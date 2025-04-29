@@ -4,20 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/labstack/echo/v4"
+	"kaptan/pkg/localization"
+	"kaptan/pkg/utils"
+	"kaptan/pkg/validators"
 	"net/http"
-	"samm/internal/module/user/domain"
-	"samm/pkg/jwt"
-	"samm/pkg/utils"
-	"samm/pkg/validators"
-	"samm/pkg/validators/localization"
-	"time"
 )
 
-// write in cannical key
-const CauserId = "Causer-Id"
-const CauserType = "Causer-Type"
-
-func (m Middlewares) AuthenticationMiddleware(isTempToken bool) echo.MiddlewareFunc {
+func (m Middlewares) AuthenticationMiddleware(causerType string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			ctx := c.Request().Context()
@@ -32,36 +25,25 @@ func (m Middlewares) AuthenticationMiddleware(isTempToken bool) echo.MiddlewareF
 				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 			}
 
-			isBearerToken, parts := utils.IsBearerToken(userToken)
-			if !isBearerToken {
-				m.logger.Info("AuthMiddleware -> No Bearer Token Found")
+			isSanctumToken, tokenParts := utils.IsSanctumToken(userToken)
+			if !isSanctumToken {
+				m.logger.Info("AuthMiddleware -> Token Parsing Failed -> Token Is Not Sanctum")
 				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 			}
 
-			token := utils.GetValueByKey(parts, 1)
-			if token == nil {
-				m.logger.Info("AuthMiddleware -> No Bearer Token Found")
-				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
-			}
+			causerId := tokenParts[0]
+			c.Request().Header.Add("causer-id", causerId)
+			c.Request().Header.Add("causer-type", causerType)
 
-			claims, err := m.jwtFactory.UserJwtService().ValidateToken(ctx, *token, isTempToken)
-			if err != nil {
-				m.logger.Info("AuthMiddleware -> ValidateToken Error -> ", err)
-				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
-			}
-
-			claim, ok := claims.(*jwt.UserJwtClaim)
-			if !ok {
-				m.logger.Info("AuthMiddleware -> Claims Parse Error")
-				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
-			}
-			c.Request().Header.Add("causer-id", claim.CauserId)
-			c.Request().Header.Add("causer-type", claim.CauserType)
+			ctx = context.WithValue(ctx, "causer-id", causerId)
+			ctx = context.WithValue(ctx, "causer-type", causerType)
+			c.SetRequest(c.Request().WithContext(ctx))
 
 			return next(c)
 		}
 	}
 }
+
 func (m Middlewares) AuthorizationMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		ctx := c.Request().Context()
@@ -73,21 +55,10 @@ func (m Middlewares) AuthorizationMiddleware(next echo.HandlerFunc) echo.Handler
 			return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 		}
 
-		var user *domain.User
-		userRedisKey := causerType + ":" + causerId
-		err := m.redisClient.Get(userRedisKey, &user)
-		if user == nil || err != nil {
-			m.logger.Info("AuthMiddleware -> FindByToken MongoDB .... ")
-			user, err = m.userRepository.FindUserByToken(&ctx, utils.ExtractToken(causerToken))
-			if err != nil {
-				m.logger.Info("AuthMiddleware -> FindByToken Error -> ", err)
-				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
-			}
-			redisExpUserData := time.Now().AddDate(1, 0, 0).Sub(time.Now())
-			setErr := m.redisClient.Set(userRedisKey, user, redisExpUserData)
-			if setErr != nil {
-				m.logger.Info(" REDIS -> AuthMiddleware -> Setter  Error -> ", setErr)
-			}
+		user, err := m.driverRepository.FindByToken(&ctx, utils.ExtractToken(causerToken))
+		if err != nil {
+			m.logger.Info("AuthMiddleware -> FindByToken Error -> ", err)
+			return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 		}
 
 		if !user.IsActive {
@@ -108,26 +79,6 @@ func (m Middlewares) AuthorizationMiddleware(next echo.HandlerFunc) echo.Handler
 		ctx = context.WithValue(ctx, "causer-details", user)
 		c.SetRequest(c.Request().WithContext(ctx))
 
-		return next(c)
-	}
-}
-
-func (m Middlewares) RemoveUserFromRedis(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		// Get userId from the path parameter or form token
-		userId := c.Param("id")
-		if userId == "" {
-			userId = c.Request().Header.Get("causer-id")
-		}
-		userRedisKey := "user:" + userId
-		if userId != "" {
-			delErr := m.redisClient.Delete(userRedisKey)
-			if delErr != nil {
-				m.logger.Info(" REDIS -> AuthMiddleware -> Delete Error > ", delErr)
-				return next(c)
-			}
-			m.logger.Info(" RemoveUserFromRedis -> UserDeleted > ", userRedisKey)
-		}
 		return next(c)
 	}
 }

@@ -4,14 +4,13 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	echoserver "kaptan/pkg/http/echo/server"
 	"os"
-	echoserver "samm/pkg/http/echo/server"
-	"samm/pkg/logger"
 	"time"
 )
 
 const (
-	defaultHTTPPort               = ":8000"
+	defaultHTTPPort               = ":8005"
 	defaultHTTPRWTimeout          = 60 * time.Second
 	defaultHTTPMaxHeaderMegabytes = 1
 	defaultAccessTokenTTL         = 15 * time.Minute
@@ -20,27 +19,24 @@ const (
 	defaultLimiterBurst           = 20000
 	defaultLimiterTTL             = 1 * time.Minute
 	defaultVerificationCodeLength = 8
-
-	EnvLocal = "local"
-	EnvMain  = "main"
-	EnvDev   = "dev"
 )
 
 type (
 	Config struct {
 		Environment    string
 		Mongo          MongoConfig
-		RedisTlsUrl    string
+		RedisConfig    RedisConfig
 		AwsConfig      AwsConfig
 		HTTP           HTTPConfig
 		Echo           echoserver.EchoConfig
 		Limiter        LimiterConfig
 		CacheTTL       time.Duration `mapstructure:"ttl"`
 		ServiceUrl     string
-		LoggerConfig   logger.LoggerConfig
 		JWTConfig      JWTConfig
 		FirebaseConfig FirebaseConfig
+		Mysql          MysqlConfig
 	}
+
 	EchoConfig struct {
 		Port                string   `mapstructure:"port" validate:"required"`
 		Development         bool     `mapstructure:"development"`
@@ -50,9 +46,18 @@ type (
 		Timeout             int      `mapstructure:"timeout"`
 		Host                string   `mapstructure:"host"`
 	}
+
 	MongoConfig struct {
 		MongoConnection string `json:"mongo_connection"`
 		MongoDbName     string `json:"mongo_db_name"`
+	}
+
+	MysqlConfig struct {
+		HOST     string
+		PORT     string
+		USERNAME string
+		PASSWORD string
+		DATABASE string
 	}
 
 	FirebaseConfig struct {
@@ -72,6 +77,7 @@ type (
 		Burst int
 		TTL   time.Duration
 	}
+
 	AwsConfig struct {
 		AccessKey  string
 		SecretKey  string
@@ -79,6 +85,7 @@ type (
 		EndPoint   string
 		BucketName string
 	}
+
 	JWTConfig struct {
 		AdminSigningKey    string
 		AdminExpires       time.Duration `mapstructure:"admin_expires"`
@@ -90,37 +97,35 @@ type (
 		UserTempSigningKey string
 		UserTempExpires    time.Duration `mapstructure:"user_temp_expires"`
 	}
+
+	RedisConfig struct {
+		RedisHost           string
+		RedisPort           string
+		RedisDbUserUsername string
+		RedisDbUserPassword string
+		RedisDbKey          string
+	}
 )
 
 // Init populates Config struct with values from config file
 // located at filepath and environment variables.
-func Init() (*Config, *MongoConfig, *string,
-	*HTTPConfig,
-	*echoserver.EchoConfig,
-	*LimiterConfig, *AwsConfig, *JWTConfig, *FirebaseConfig,
-	logger.LoggerConfig, error) {
-	configsDir := "pkg/config/configs"
+func Init() (*Config, error) {
 	populateDefaults()
 	err := godotenv.Load()
 	if err != nil {
 		logrus.Info("Error  from load env. this mean the application load on the cloud not from a file.")
 	}
-	if err := parseConfigFile(configsDir, os.Getenv("APP_ENV")); err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
-	}
 
 	var cfg Config
 	if err := unmarshal(&cfg); err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
+		return nil, err
 	}
-
 	setFromEnv(&cfg)
 
-	return &cfg, &cfg.Mongo, &cfg.RedisTlsUrl, &cfg.HTTP, &cfg.Echo, &cfg.Limiter, &cfg.AwsConfig, &cfg.JWTConfig, &cfg.FirebaseConfig, cfg.LoggerConfig, nil
+	return &cfg, nil
 }
 
 func unmarshal(cfg *Config) error {
-
 	if err := viper.UnmarshalKey("mongo", &cfg.Mongo); err != nil {
 		return err
 	}
@@ -140,11 +145,14 @@ func unmarshal(cfg *Config) error {
 }
 
 func setFromEnv(cfg *Config) {
-	// TODO use envconfig https://github.com/kelseyhightower/envconfig
 	cfg.Mongo.MongoConnection = os.Getenv("MONGO_CONNECTION")
 	cfg.Mongo.MongoDbName = os.Getenv("MONGO_DB_NAME")
 
-	cfg.RedisTlsUrl = os.Getenv("REDIS_TLS_URL")
+	cfg.RedisConfig.RedisHost = os.Getenv("REDIS_HOST")
+	cfg.RedisConfig.RedisPort = os.Getenv("REDIS_PORT")
+	cfg.RedisConfig.RedisDbUserUsername = os.Getenv("REDIS_USERNAME")
+	cfg.RedisConfig.RedisDbUserPassword = os.Getenv("REDIS_PASSWORD")
+	cfg.RedisConfig.RedisDbKey = os.Getenv("REDIS_DB_KEY")
 
 	cfg.ServiceUrl = os.Getenv("SERVICE_URL")
 
@@ -169,28 +177,18 @@ func setFromEnv(cfg *Config) {
 
 	cfg.FirebaseConfig.DatabaseURL = os.Getenv("REAlTIME_DATABASE_URL")
 
+	cfg.Mysql.HOST = os.Getenv("DB_HOST")
+	cfg.Mysql.PORT = os.Getenv("DB_PORT")
+	cfg.Mysql.USERNAME = os.Getenv("DB_USERNAME")
+	cfg.Mysql.PASSWORD = os.Getenv("DB_PASSWORD")
+	cfg.Mysql.DATABASE = os.Getenv("DB_DATABASE")
+
 	var port = defaultHTTPPort
 	if os.Getenv("PORT") != "" {
 		port = ":" + os.Getenv("PORT")
 	}
+
 	cfg.Echo.Port = port
-}
-
-func parseConfigFile(folder, env string) error {
-	viper.AddConfigPath(folder)
-	viper.SetConfigName(env)
-
-	if err := viper.ReadInConfig(); err != nil {
-		return err
-	}
-
-	if env == EnvLocal {
-		return nil
-	}
-
-	viper.SetConfigName(env)
-
-	return viper.MergeInConfig()
 }
 
 func populateDefaults() {

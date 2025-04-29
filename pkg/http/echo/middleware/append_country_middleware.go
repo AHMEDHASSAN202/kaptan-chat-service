@@ -3,7 +3,7 @@ package echomiddleware
 import (
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"samm/pkg/utils"
+	"kaptan/pkg/utils"
 	"strconv"
 )
 

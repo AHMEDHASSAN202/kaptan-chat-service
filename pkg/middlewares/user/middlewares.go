@@ -1,24 +1,18 @@
 package user
 
 import (
-	"samm/internal/module/user/domain"
-	"samm/pkg/database/redis"
-	"samm/pkg/jwt"
-	"samm/pkg/logger"
+	"kaptan/internal/module/user/domain"
+	"kaptan/pkg/logger"
 )
 
 type Middlewares struct {
-	userRepository domain.UserRepository
-	redisClient    *redis.RedisClient
-	logger         logger.ILogger
-	jwtFactory     jwt.JwtServiceFactory
+	driverRepository domain.DriverRepository
+	logger           logger.ILogger
 }
 
-func NewUserMiddlewares(userRepository domain.UserRepository, logger logger.ILogger, jwtFactory jwt.JwtServiceFactory, redisClient *redis.RedisClient) *Middlewares {
+func NewUserMiddlewares(driverRepository domain.DriverRepository, logger logger.ILogger) *Middlewares {
 	return &Middlewares{
-		userRepository: userRepository,
-		redisClient:    redisClient,
-		logger:         logger,
-		jwtFactory:     jwtFactory,
+		driverRepository: driverRepository,
+		logger:           logger,
 	}
 }

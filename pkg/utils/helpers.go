@@ -15,11 +15,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 	"io"
+	"kaptan/pkg/logger"
 	"math"
 	"os"
 	"reflect"
 	"runtime/debug"
-	"samm/pkg/logger"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -618,6 +619,7 @@ func CopyMapToStruct(doc any, fields map[string]interface{}) error {
 func ExtractToken(tokenWithBearer string) string {
 	return strings.TrimPrefix(tokenWithBearer, "Bearer ")
 }
+
 func StructToString(data interface{}) (string, error) {
 	// Marshal the struct into JSON format
 	jsonBytes, err := json.Marshal(data)
@@ -629,4 +631,30 @@ func StructToString(data interface{}) (string, error) {
 	// Convert the JSON bytes to a string
 	return string(jsonBytes), nil
 
+}
+
+func JsonEncode(data interface{}) string {
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	return string(jsonData)
+}
+
+func IsSanctumToken(tokenString string) (isSanctumToken bool, sanctumTokenParts []string) {
+	sanctumTokenParts = strings.Split(tokenString, "|")
+	if len(sanctumTokenParts) == 2 {
+		isSanctumToken = true
+	}
+	return
+}
+
+func StringToUint(value string) *uint64 {
+	number, err := strconv.ParseUint(value, 10, 32)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	return &number
 }

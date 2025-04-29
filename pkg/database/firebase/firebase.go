@@ -7,9 +7,9 @@ import (
 	"firebase.google.com/go/v4/db"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/api/option"
-	"samm/pkg/config"
-	"samm/pkg/logger"
-	"samm/pkg/utils"
+	"kaptan/pkg/config"
+	"kaptan/pkg/logger"
+	"kaptan/pkg/utils"
 	"strings"
 	"time"
 )
@@ -44,7 +44,7 @@ func NewFirebaseClient(logger logger.ILogger, c *config.FirebaseConfig) (*db.Cli
 }
 
 func removeExpiredNodesFromDB(ctx context.Context, client *db.Client) {
-	ref := client.NewRef("orders/ttl")
+	ref := client.NewRef("chats/ttl")
 
 	var items map[string]interface{}
 	if err := ref.Get(ctx, &items); err != nil {
@@ -54,12 +54,12 @@ func removeExpiredNodesFromDB(ctx context.Context, client *db.Client) {
 	for key, value := range items {
 		doc := parseStringToMap(key)
 		if t, err := time.Parse(utils.DefaultDateTimeFormat, value.(string)); err == nil && t.Before(time.Now()) {
-			deleteExpiredOrders(key, doc, client, ctx)
+			deleteExpiredChats(key, doc, client, ctx)
 		}
 	}
 }
 
-func deleteExpiredOrders(key string, doc map[string]interface{}, client *db.Client, ctx context.Context) {
+func deleteExpiredChats(key string, doc map[string]interface{}, client *db.Client, ctx context.Context) {
 	err := client.NewRef("orders/raw").Child(doc["orderId"].(string)).Delete(ctx)
 	if err != nil {
 		logrus.Error("raw: sync to firebase order => ", err)

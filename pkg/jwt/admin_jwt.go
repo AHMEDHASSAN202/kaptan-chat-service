@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/golang-jwt/jwt/v4"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"samm/pkg/logger"
-	"samm/pkg/validators"
-	"samm/pkg/validators/localization"
+	"kaptan/pkg/localization"
+	"kaptan/pkg/logger"
+	"kaptan/pkg/validators"
 	"time"
 )
 

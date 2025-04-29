@@ -52,10 +52,10 @@ func createDeliveryFile(newModulePath, newModuleName, rootModuleName string) err
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"samm/internal/module/kitchen/domain"
-	"samm/internal/module/kitchen/dto/kitchen"
-	"samm/pkg/logger"
-	"samm/pkg/validators"
+	"kaptan/internal/module/kitchen/domain"
+	"kaptan/internal/module/kitchen/dto/kitchen"
+	"kaptan/pkg/logger"
+	"kaptan/pkg/validators"
 )
 
 type KitchenHandler struct {
@@ -163,7 +163,7 @@ func (a *KitchenHandler) ListKitchen(c echo.Context) error {
 
 	`
 
-	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
+	content = strings.Replace(content, "kaptan/", rootModuleName+"/", -1)
 	content = strings.Replace(content, "internal/module/retails", newModulePath, -1)
 	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
 	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
@@ -189,9 +189,9 @@ import (
 	. "github.com/gobeam/mongo-go-pagination"
 	"github.com/kamva/mgm/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"samm/internal/module/kitchen/dto/kitchen"
-	"samm/internal/module/kitchen/responses"
-	"samm/pkg/validators"
+	"kaptan/internal/module/kitchen/dto/kitchen"
+	"kaptan/internal/module/kitchen/responses"
+	"kaptan/pkg/validators"
 	"time"
 )
 
@@ -225,7 +225,7 @@ type KitchenRepository interface {
 }
 
 `
-	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
+	content = strings.Replace(content, "kaptan/", rootModuleName+"/", -1)
 	content = strings.Replace(content, "internal/module/retails", newModulePath, -1)
 	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
 	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
@@ -248,12 +248,12 @@ func createUseCaseFile(newModulePath, newModuleName, rootModuleName string) erro
 
 import (
 	"context"
-	"samm/internal/module/kitchen/domain"
-	"samm/internal/module/kitchen/dto/kitchen"
-	"samm/internal/module/kitchen/responses"
-	"samm/pkg/logger"
-	"samm/pkg/utils"
-	"samm/pkg/validators"
+	"kaptan/internal/module/kitchen/domain"
+	"kaptan/internal/module/kitchen/dto/kitchen"
+	"kaptan/internal/module/kitchen/responses"
+	"kaptan/pkg/logger"
+	"kaptan/pkg/utils"
+	"kaptan/pkg/validators"
 	"time"
 )
 
@@ -341,7 +341,7 @@ func (l KitchenUseCase) List(ctx *context.Context, dto *kitchen.ListKitchenDto) 
 }
 
 `
-	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
+	content = strings.Replace(content, "kaptan/", rootModuleName+"/", -1)
 	content = strings.Replace(content, "internal/module/retails", newModulePath, -1)
 	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
 	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
@@ -364,7 +364,7 @@ func createResponseFile(newModulePath, newModuleName, rootModuleName string) err
 
 import (
 	mongopagination "github.com/gobeam/mongo-go-pagination"
-	"samm/pkg/utils"
+	"kaptan/pkg/utils"
 )
 
 type ListResponse struct {
@@ -387,7 +387,7 @@ func SetListResponse(docs interface{}, meta *mongopagination.PaginationData) *Li
 }
 
 `
-	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
+	content = strings.Replace(content, "kaptan/", rootModuleName+"/", -1)
 	content = strings.Replace(content, "internal/module/retails", newModulePath, -1)
 	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
 	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
@@ -416,9 +416,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"samm/internal/module/kitchen/domain"
-	"samm/internal/module/kitchen/dto/kitchen"
-	"samm/pkg/logger"
+	"kaptan/internal/module/kitchen/domain"
+	"kaptan/internal/module/kitchen/dto/kitchen"
+	"kaptan/pkg/logger"
 	"time"
 )
 
@@ -506,7 +506,7 @@ func (l *KitchenRepository) List(ctx *context.Context, dto *kitchen.ListKitchenD
 
 
 `
-	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
+	content = strings.Replace(content, "kaptan/", rootModuleName+"/", -1)
 	content = strings.Replace(content, "internal/module/retails", newModulePath, -1)
 	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
 	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
@@ -530,8 +530,8 @@ func createDtoFile(newModulePath, newModuleName, rootModuleName string) error {
 import (
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
-	"samm/pkg/validators"
-	"samm/pkg/utils/dto"
+	"kaptan/pkg/validators"
+	"kaptan/pkg/utils/dto"
 )
 
 type Name struct {
@@ -564,7 +564,7 @@ func (payload *UpdateKitchenDto) Validate(c echo.Context, validate *validator.Va
 	return validators.ValidateStruct(c.Request().Context(), validate, payload)
 }
 `
-	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
+	content = strings.Replace(content, "kaptan/", rootModuleName+"/", -1)
 	content = strings.Replace(content, "internal/module/retails", newModulePath, -1)
 	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
 	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)
@@ -701,9 +701,9 @@ func createModuleFile(newModuleName, newModulePath, rootModuleName string) error
 
 import (
 	"go.uber.org/fx"
-	"samm/internal/module/kitchen/delivery"
-	kitchen_repo "samm/internal/module/kitchen/repository/kitchen"
-	kitchen_usecase "samm/internal/module/kitchen/usecase/kitchen"
+	"kaptan/internal/module/kitchen/delivery"
+	kitchen_repo "kaptan/internal/module/kitchen/repository/kitchen"
+	kitchen_usecase "kaptan/internal/module/kitchen/usecase/kitchen"
 )
 
 // Module for controller database repository
@@ -720,7 +720,7 @@ var Module = fx.Options(
 
 
 `
-	content = strings.Replace(content, "samm/", rootModuleName+"/", -1)
+	content = strings.Replace(content, "kaptan/", rootModuleName+"/", -1)
 	content = strings.Replace(content, "internal/module/kitchen", newModulePath, -1)
 	content = strings.Replace(content, "Kitchen", moduleCamelCase, -1)
 	content = strings.Replace(content, "kitchen", moduleLowerCamelCase, -1)

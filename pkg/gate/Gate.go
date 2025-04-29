@@ -1,8 +1,8 @@
 package gate
 
 import (
+	"kaptan/pkg/utils"
 	"reflect"
-	"samm/pkg/utils"
 )
 
 type methodNames struct {
