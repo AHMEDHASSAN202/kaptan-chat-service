@@ -20,7 +20,7 @@ func NewFirebaseClient(logger logger.ILogger, c *config.FirebaseConfig) (*db.Cli
 		DatabaseURL: c.DatabaseURL,
 	}
 	// Fetch the service account key JSON file contents
-	opt := option.WithCredentialsFile("pkg/database/firebase/katha-dev-firebase-adminsdk-n9vyu-2e9e6ef932.json")
+	opt := option.WithCredentialsFile("")
 
 	// Initialize the app with a service account, granting admin privileges
 	app, err := firebase.NewApp(ctx, conf, opt)
