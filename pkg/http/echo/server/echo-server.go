@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/labstack/echo/v4"
-	"samm/pkg/logger"
+	"kaptan/pkg/logger"
 	"time"
 )
 
 const (
 	MaxHeaderBytes = 1 << 20
-	ReadTimeout    = 15 * time.Second
-	WriteTimeout   = 15 * time.Second
+	ReadTimeout    = 60 * time.Second
+	WriteTimeout   = 60 * time.Second
 )
 
 type EchoConfig struct {
@@ -26,6 +26,7 @@ type EchoConfig struct {
 
 func NewEchoServer() *echo.Echo {
 	e := echo.New()
+	//e.Debug = true
 	return e
 }
 

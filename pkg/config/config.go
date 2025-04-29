@@ -4,14 +4,13 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+	echoserver "kaptan/pkg/http/echo/server"
 	"os"
-	echoserver "samm/pkg/http/echo/server"
-	"samm/pkg/logger"
 	"time"
 )
 
 const (
-	defaultHTTPPort               = ":8000"
+	defaultHTTPPort               = ":8005"
 	defaultHTTPRWTimeout          = 60 * time.Second
 	defaultHTTPMaxHeaderMegabytes = 1
 	defaultAccessTokenTTL         = 15 * time.Minute
@@ -20,23 +19,24 @@ const (
 	defaultLimiterBurst           = 20000
 	defaultLimiterTTL             = 1 * time.Minute
 	defaultVerificationCodeLength = 8
-
-	EnvLocal = "local"
-	EnvMain  = "main"
-	EnvDev   = "dev"
 )
 
 type (
 	Config struct {
-		Environment  string
-		Mongo        MongoConfig
-		HTTP         HTTPConfig
-		Echo         echoserver.EchoConfig
-		Limiter      LimiterConfig
-		CacheTTL     time.Duration `mapstructure:"ttl"`
-		ServiceUrl   string
-		LoggerConfig logger.LoggerConfig
+		Environment    string
+		Mongo          MongoConfig
+		RedisConfig    RedisConfig
+		AwsConfig      AwsConfig
+		HTTP           HTTPConfig
+		Echo           echoserver.EchoConfig
+		Limiter        LimiterConfig
+		CacheTTL       time.Duration `mapstructure:"ttl"`
+		ServiceUrl     string
+		JWTConfig      JWTConfig
+		FirebaseConfig FirebaseConfig
+		Mysql          MysqlConfig
 	}
+
 	EchoConfig struct {
 		Port                string   `mapstructure:"port" validate:"required"`
 		Development         bool     `mapstructure:"development"`
@@ -46,10 +46,24 @@ type (
 		Timeout             int      `mapstructure:"timeout"`
 		Host                string   `mapstructure:"host"`
 	}
+
 	MongoConfig struct {
 		MongoConnection string `json:"mongo_connection"`
 		MongoDbName     string `json:"mongo_db_name"`
 	}
+
+	MysqlConfig struct {
+		HOST     string
+		PORT     string
+		USERNAME string
+		PASSWORD string
+		DATABASE string
+	}
+
+	FirebaseConfig struct {
+		DatabaseURL string `json:"database_url"`
+	}
+
 	HTTPConfig struct {
 		Host               string        `mapstructure:"host"`
 		Port               string        `mapstructure:"port"`
@@ -63,37 +77,55 @@ type (
 		Burst int
 		TTL   time.Duration
 	}
+
+	AwsConfig struct {
+		AccessKey  string
+		SecretKey  string
+		Region     string
+		EndPoint   string
+		BucketName string
+	}
+
+	JWTConfig struct {
+		AdminSigningKey    string
+		AdminExpires       time.Duration `mapstructure:"admin_expires"`
+		PortalSigningKey   string
+		KitchenSigningKey  string
+		PortalExpires      time.Duration `mapstructure:"portal_expires"`
+		UserSigningKey     string
+		UserExpires        time.Duration `mapstructure:"user_expires"`
+		UserTempSigningKey string
+		UserTempExpires    time.Duration `mapstructure:"user_temp_expires"`
+	}
+
+	RedisConfig struct {
+		RedisHost           string
+		RedisPort           string
+		RedisDbUserUsername string
+		RedisDbUserPassword string
+		RedisDbKey          string
+	}
 )
 
 // Init populates Config struct with values from config file
 // located at filepath and environment variables.
-func Init() (*Config, *MongoConfig,
-	*HTTPConfig,
-	*echoserver.EchoConfig,
-	*LimiterConfig,
-	logger.LoggerConfig, error) {
-	configsDir := "pkg/config/configs"
+func Init() (*Config, error) {
 	populateDefaults()
 	err := godotenv.Load()
 	if err != nil {
 		logrus.Info("Error  from load env. this mean the application load on the cloud not from a file.")
 	}
-	if err := parseConfigFile(configsDir, os.Getenv("APP_ENV")); err != nil {
-		return nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
-	}
 
 	var cfg Config
 	if err := unmarshal(&cfg); err != nil {
-		return nil, nil, nil, nil, nil, logger.LoggerConfig{}, err
+		return nil, err
 	}
-
 	setFromEnv(&cfg)
 
-	return &cfg, &cfg.Mongo, &cfg.HTTP, &cfg.Echo, &cfg.Limiter, cfg.LoggerConfig, nil
+	return &cfg, nil
 }
 
 func unmarshal(cfg *Config) error {
-
 	if err := viper.UnmarshalKey("mongo", &cfg.Mongo); err != nil {
 		return err
 	}
@@ -105,13 +137,22 @@ func unmarshal(cfg *Config) error {
 	if err := viper.UnmarshalKey("limiter", &cfg.Limiter); err != nil {
 		return err
 	}
+
+	if err := viper.UnmarshalKey("jwt", &cfg.JWTConfig); err != nil {
+		return err
+	}
 	return nil
 }
 
 func setFromEnv(cfg *Config) {
-	// TODO use envconfig https://github.com/kelseyhightower/envconfig
 	cfg.Mongo.MongoConnection = os.Getenv("MONGO_CONNECTION")
 	cfg.Mongo.MongoDbName = os.Getenv("MONGO_DB_NAME")
+
+	cfg.RedisConfig.RedisHost = os.Getenv("REDIS_HOST")
+	cfg.RedisConfig.RedisPort = os.Getenv("REDIS_PORT")
+	cfg.RedisConfig.RedisDbUserUsername = os.Getenv("REDIS_USERNAME")
+	cfg.RedisConfig.RedisDbUserPassword = os.Getenv("REDIS_PASSWORD")
+	cfg.RedisConfig.RedisDbKey = os.Getenv("REDIS_DB_KEY")
 
 	cfg.ServiceUrl = os.Getenv("SERVICE_URL")
 
@@ -119,24 +160,35 @@ func setFromEnv(cfg *Config) {
 
 	cfg.Environment = os.Getenv("APP_ENV")
 
-	cfg.Echo.Port = defaultHTTPPort
-}
+	cfg.AwsConfig.AccessKey = os.Getenv("AWS_ACCESS_KEY")
+	cfg.AwsConfig.SecretKey = os.Getenv("AWS_SECRET_ID")
+	cfg.AwsConfig.Region = os.Getenv("AWS_REGION")
+	cfg.AwsConfig.BucketName = os.Getenv("AWS_BUCKET_NAME")
+	cfg.AwsConfig.EndPoint = os.Getenv("AWS_END_POINT")
 
-func parseConfigFile(folder, env string) error {
-	viper.AddConfigPath(folder)
-	viper.SetConfigName(env)
+	cfg.JWTConfig.AdminSigningKey = os.Getenv("JWT_SECRET_ADMIN")
+	cfg.JWTConfig.PortalSigningKey = os.Getenv("JWT_SECRET_PORTAL")
+	cfg.JWTConfig.PortalExpires = time.Hour * 24  //24 hours
+	cfg.JWTConfig.UserExpires = time.Hour * 24    //24 hours
+	cfg.JWTConfig.UserTempExpires = time.Hour * 1 //1 hours
+	cfg.JWTConfig.KitchenSigningKey = os.Getenv("JWT_SECRET_KITCHEN")
+	cfg.JWTConfig.UserSigningKey = os.Getenv("JWT_SECRET_USER")
+	cfg.JWTConfig.UserTempSigningKey = os.Getenv("JWT_SECRET_USER_TEMP")
 
-	if err := viper.ReadInConfig(); err != nil {
-		return err
+	cfg.FirebaseConfig.DatabaseURL = os.Getenv("REAlTIME_DATABASE_URL")
+
+	cfg.Mysql.HOST = os.Getenv("DB_HOST")
+	cfg.Mysql.PORT = os.Getenv("DB_PORT")
+	cfg.Mysql.USERNAME = os.Getenv("DB_USERNAME")
+	cfg.Mysql.PASSWORD = os.Getenv("DB_PASSWORD")
+	cfg.Mysql.DATABASE = os.Getenv("DB_DATABASE")
+
+	var port = defaultHTTPPort
+	if os.Getenv("PORT") != "" {
+		port = ":" + os.Getenv("PORT")
 	}
 
-	if env == EnvLocal {
-		return nil
-	}
-
-	viper.SetConfigName(env)
-
-	return viper.MergeInConfig()
+	cfg.Echo.Port = port
 }
 
 func populateDefaults() {

@@ -3,13 +3,14 @@ package echo
 import (
 	"context"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/pkg/errors"
 	"go.uber.org/fx"
+	"kaptan/pkg/config"
+	echomiddleware "kaptan/pkg/http/echo/middleware"
+	echoserver "kaptan/pkg/http/echo/server"
+	"kaptan/pkg/logger"
 	"net/http"
-	"samm/pkg/config"
-	echomiddleware "samm/pkg/http/echo/middleware"
-	echoserver "samm/pkg/http/echo/server"
-	"samm/pkg/logger"
 )
 
 func RunServers(lc fx.Lifecycle, log logger.ILogger, e *echo.Echo, ctx context.Context, cfg *config.Config) error {
@@ -22,6 +23,14 @@ func RunServers(lc fx.Lifecycle, log logger.ILogger, e *echo.Echo, ctx context.C
 				}
 			}()
 			e.Use(echomiddleware.AppendLangMiddleware)
+			e.Use(echomiddleware.ServerHeader)
+
+			e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+				AllowOrigins:  []string{"*"},
+				AllowMethods:  []string{http.MethodGet, http.MethodHead, http.MethodPut, http.MethodPatch, http.MethodOptions, http.MethodPost, http.MethodDelete},
+				AllowHeaders:  []string{"*"},
+				ExposeHeaders: []string{echomiddleware.HEADER_NAME},
+			}))
 			e.GET("/", func(c echo.Context) error {
 				return c.String(http.StatusOK, "working fine")
 			})

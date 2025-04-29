@@ -2,11 +2,11 @@ package database
 
 import (
 	"go.uber.org/fx"
-	"samm/pkg/database/mongodb"
+	"kaptan/pkg/database/mysql"
 )
 
 var Module = fx.Options(
 	fx.Provide(
-		mongodb.NewClient,
+		mysql.NewClient,
 	),
 )

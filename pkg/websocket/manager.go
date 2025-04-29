@@ -1,0 +1,248 @@
+package websocket
+
+import (
+	"encoding/json"
+	"fmt"
+	"github.com/gorilla/websocket"
+	"github.com/labstack/echo/v4"
+	"kaptan/pkg/utils"
+	"net/http"
+	"sync"
+)
+
+// Configure the upgrader
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true // Allow all connections (customize for production)
+	},
+}
+
+// Client represents a single websocket connection
+type Client struct {
+	conn       *websocket.Conn
+	channels   map[string]bool
+	send       chan []byte
+	channelMgr *ChannelManager
+}
+
+// ChannelManager manages all channels and clients
+type ChannelManager struct {
+	clients    map[*Client]bool
+	channels   map[string]map[*Client]bool
+	register   chan *Client
+	unregister chan *Client
+	Broadcast  chan Message
+	mutex      sync.RWMutex
+	shutdown   chan struct{} // Add shutdown channel
+}
+
+// Message represents a message to be sent to a specific channel
+type Message struct {
+	ChannelID string `json:"channel_id"`
+	Content   string `json:"content"`
+	Action    string `json:"action"`
+}
+
+type ClientAction struct {
+	Action    string `json:"action"`
+	ChannelID string `json:"channel_id"`
+	Content   string `json:"content,omitempty"`
+	UserId    string `json:"user_id,omitempty"`
+}
+
+// Create a new channel manager
+func NewChannelManager() *ChannelManager {
+	return &ChannelManager{
+		clients:    make(map[*Client]bool),
+		channels:   make(map[string]map[*Client]bool),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		Broadcast:  make(chan Message),
+		mutex:      sync.RWMutex{},
+		shutdown:   make(chan struct{}),
+	}
+}
+
+// Run the channel manager
+func (manager *ChannelManager) Run() {
+	for {
+		select {
+		case client := <-manager.register:
+			manager.mutex.Lock()
+			manager.clients[client] = true
+			manager.mutex.Unlock()
+			fmt.Println("New client connected")
+
+		case client := <-manager.unregister:
+			manager.mutex.Lock()
+			if _, ok := manager.clients[client]; ok {
+				delete(manager.clients, client)
+				close(client.send)
+
+				// Remove client from all channels
+				for channelID := range client.channels {
+					if _, ok := manager.channels[channelID]; ok {
+						delete(manager.channels[channelID], client)
+					}
+				}
+			}
+			manager.mutex.Unlock()
+			fmt.Println("Client disconnected")
+
+		case message := <-manager.Broadcast:
+			manager.mutex.RLock()
+			if clients, ok := manager.channels[message.ChannelID]; ok {
+				for client := range clients {
+					select {
+					case client.send <- []byte(utils.JsonEncode(message)):
+					default:
+						close(client.send)
+						delete(manager.clients, client)
+						delete(manager.channels[message.ChannelID], client)
+					}
+				}
+			}
+			manager.mutex.RUnlock()
+
+		case <-manager.shutdown:
+			// Close all client connections
+			manager.mutex.Lock()
+			for client := range manager.clients {
+				close(client.send)
+				client.conn.Close()
+			}
+			manager.clients = make(map[*Client]bool)
+			manager.channels = make(map[string]map[*Client]bool)
+			manager.mutex.Unlock()
+
+			return // Exit the goroutine
+		}
+	}
+}
+
+// JoinChannel adds a client to a specific channel
+func (manager *ChannelManager) JoinChannel(client *Client, channelID string) {
+	manager.mutex.Lock()
+	defer manager.mutex.Unlock()
+
+	// Initialize the channel if it doesn't exist
+	if _, ok := manager.channels[channelID]; !ok {
+		manager.channels[channelID] = make(map[*Client]bool)
+	}
+
+	// Add client to channel
+	manager.channels[channelID][client] = true
+	client.channels[channelID] = true
+
+	fmt.Printf("Client joined channel: %s", channelID)
+}
+
+// LeaveChannel removes a client from a specific channel
+func (manager *ChannelManager) LeaveChannel(client *Client, channelID string) {
+	manager.mutex.Lock()
+	defer manager.mutex.Unlock()
+
+	if _, ok := manager.channels[channelID]; ok {
+		delete(manager.channels[channelID], client)
+		delete(client.channels, channelID)
+		fmt.Printf("Client left channel: %s", channelID)
+	}
+}
+
+func (manager *ChannelManager) Shutdown() {
+	close(manager.shutdown)
+}
+
+// HandleClient handles WebSocket connections for a client
+func (client *Client) HandleClient() {
+	defer func() {
+		client.channelMgr.unregister <- client
+		client.conn.Close()
+	}()
+
+	// Handle incoming messages
+	go func() {
+		for {
+			_, message, err := client.conn.ReadMessage()
+			if err != nil {
+				fmt.Printf("Error reading message: %v", err)
+				break
+			}
+
+			fmt.Println("Received message:", string(message))
+
+			// Parse the incoming message as JSON
+			var action ClientAction
+			if err := json.Unmarshal(message, &action); err != nil {
+				fmt.Printf("Error parsing message: %v", err)
+				continue
+			}
+
+			// Handle different actions
+			switch action.Action {
+			case "subscribe":
+				// Join the specified channel
+				fmt.Printf("Client subscribing to channel: %s\n", action.ChannelID)
+				client.channelMgr.JoinChannel(client, action.ChannelID)
+
+				// Optionally send confirmation back to client
+				confirmMsg, _ := json.Marshal(map[string]string{
+					"status":     "subscribed",
+					"channel_id": action.ChannelID,
+				})
+				client.conn.WriteMessage(websocket.TextMessage, confirmMsg)
+
+			case "unsubscribe":
+				// Leave the specified channel
+				fmt.Printf("Client unsubscribing from channel: %s\n", action.ChannelID)
+				client.channelMgr.LeaveChannel(client, action.ChannelID)
+
+			case "message":
+				// Send message to the specified channel
+				client.channelMgr.Broadcast <- Message{
+					ChannelID: action.ChannelID,
+					Content:   action.Content,
+				}
+
+			default:
+				fmt.Printf("Unknown action: %s\n", action.Action)
+			}
+		}
+	}()
+
+	// Send messages to this client
+	for message := range client.send {
+		err := client.conn.WriteMessage(websocket.TextMessage, message)
+		if err != nil {
+			fmt.Printf("Error writing message: %v", err)
+			break
+		}
+	}
+}
+
+// WebSocket handler function
+func handleWebSocket(c echo.Context, manager *ChannelManager) error {
+	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
+	if err != nil {
+		return err
+	}
+
+	client := &Client{
+		conn:       ws,
+		channels:   make(map[string]bool),
+		send:       make(chan []byte, 256),
+		channelMgr: manager,
+	}
+
+	manager.register <- client
+
+	// Join default channel (you can customize this)
+	manager.JoinChannel(client, "general")
+
+	// Handle client messages
+	go client.HandleClient()
+
+	return nil
+}

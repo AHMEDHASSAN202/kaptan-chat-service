@@ -1,3 +1,313 @@
-[E3233]
-description = "The number of messages a person has"
-one = "{{.Name}} has {{.Count}} message."
+[E1000]
+description = "Database layer error"
+other = "An error occurred in the database layer. Please try again later."
+
+[E1001]
+description = "Invalid input"
+other = "The inputs provided are invalid. Please check and try again."
+
+[E1002]
+description = "Resource not found"
+other = "The requested resources were not found."
+
+[E1003]
+description = "Operation not permitted"
+other = "You do not have permission to perform these operations."
+
+[E1004]
+description = "Internal server error"
+other = "Internal server errors occurred. Please contact support."
+
+[E1005]
+description = "Service unavailable"
+other = "The services are currently unavailable. Please try again later."
+
+[E1006]
+description = "Unauthorized access"
+other = "Unauthorized access attempts detected. Please log in and try again."
+
+[E1401]
+description = "Unauthorized access"
+other = "You are not authorized to access this resource. Please log in with the correct credentials and try again."
+
+[E1403]
+description = "Unauthenticated access"
+other = "You do not have permission to access this resource. If you believe this is an error, please contact our support team for assistance."
+
+[E1007]
+description = "Session expired"
+other = "Your sessions have expired. Please log in again."
+
+[E1008]
+description = "Validation error"
+other = "There were validation errors: {{.Errors}}"
+
+[E1009]
+description = "Timeout"
+other = "The requests timed out. Please try again later."
+
+[E1010]
+description = "Conflict"
+other = "Conflicts occurred: {{.Detail}}"
+
+[E1011]
+description = "Quota exceeded"
+other = "You have exceeded your quotas: {{.Quota}}"
+
+[E1012]
+description = "Feature not supported"
+other = "These features are not supported: {{.Feature}}"
+
+[E1013]
+description = "Invalid OTP"
+other = "The OTP provided is invalid. Please check and try again."
+
+[E1014]
+description = "OTP has expired"
+other = "The OTP has expired. Please request a new OTP."
+
+[E1015]
+description = "Exceeded maximum OTP trials"
+other = "You have exceeded the maximum number of OTP trials for today. Please try again tomorrow."
+
+[Modifier_groups_ids_rules_validation]
+description = "Feature not supported"
+other = "These features are not supported: {{.Feature}}"
+
+[Item_name_is_unique_rules_validation]
+description = "Feature not supported"
+other = "item name is added before"
+
+[Cuisine_name_is_unique_rules_validation]
+description = "Feature not supported"
+other = "cuisine name is added before"
+
+[SKU_name_is_unique_rules_validation]
+description = "Feature not supported"
+other = "This name is already exists, SKU name must be unique."
+
+[App_type_is_unique_rules_validation]
+description = "Feature not supported"
+other = "There is already config exists for this app type."
+
+[Account_Email_is_unique_rules_validation]
+description = "Email is Unique"
+other = "Email is Exists"
+
+[Account_id_is_not_exists]
+description = "Account is not exists"
+other = "Account is not exists"
+
+[Cuisine_id_is_exists_rules_validation]
+description = "Cuisine Id Not Exist"
+other = "Cuisine Not Exist"
+
+[Timeformat]
+description = "time format rule validation"
+other = "time format is not valid"
+
+[DateTimeFormat]
+description = "date time format rule validation"
+other = "date time format is not valid"
+
+[Invalid_mongo_ids_validation_rule]
+description = "Invalid mongo ids validation rule"
+other = "invalid id it should be objectId"
+
+[Modifier_items_cant_contains_modifier_group]
+description = "Modifier items cant contains modifier group"
+other = "Modifier items cant contains modifier group"
+
+[E1002Item]
+description = "Menu item not found"
+other = "The menu item was not found or is currently unavailable. Please check back later."
+
+[Mobile_item_unavailable]
+description = "Mobile_item_unavailable"
+other = "This item is unavailable"
+
+[Email_is_unique_rules_validation]
+description = "Email is Unique"
+other = "Email is Exists"
+
+[Password_required_if_id_is_zero]
+description = "password is a required field"
+other = "password is a required field"
+
+[JwtSigningError]
+description = "Error generating signed string representation of JWT: there was a problem with the signing process"
+other = "There was a problem with the signing process"
+
+[JwtTokenExpiredError]
+description = "Error: the JSON Web Token has expired and cannot be verified"
+other = "The JSON Web Token has expired and cannot be verified"
+
+[JwtTokenParsingError]
+description = "Error: the JSON Web Token could not be parsed"
+other = "The JSON Web Token could not be parsed"
+
+[JwtTokenInvalidError]
+description = "The JSON Web Token is invalid and could not be verified"
+other = "The JSON Web Token is invalid and could not be verified"
+
+[ErrLoginPassword]
+description = "Incorrect password"
+other = "The password you entered is incorrect. Please check your password and try again."
+
+[ErrLoginEmail]
+description = "Incorrect email"
+other = "The email address you entered does not match any account. Please check the email address and try again."
+
+[ErrLoginBlocked]
+description = "Your Account Is disabled from admin"
+other = "Your Account Is disabled from admin"
+
+[ErrLoginInActive]
+description = "Your account is currently inactive. Please contact our support team for assistance in reactivating your account."
+other = "Your account is currently inactive. Please contact our support team for assistance in reactivating your account."
+
+[PhoneNumber_rule_validation]
+description = "PhoneNumber is Wrong"
+other = "PhoneNumber is Wrong"
+
+[Mobile_location_not_available_error]
+description = "mobile_location_not_available_error"
+other = "The branch is not ready to receive chats now, try later please"
+
+[Mobile_location_not_open_error]
+description = "Mobile_location_not_open_error"
+other = "The branch is closed now, try later please"
+
+[RoleExistsValidation]
+description = "Role is not exists"
+other = "Role is not exists"
+
+[RoleHasAdminsValidation]
+description = "The role you are trying to delete is currently assigned to one or more admins. Please reassign these admins to a different role before attempting to delete this role."
+other = "The role you are trying to delete is currently assigned to one or more admins. Please reassign these admins to a different role before attempting to delete this role."
+
+[PreventDeleteRolesIdsValidation]
+description = "You are not allowed to delete main roles"
+other = "You are not allowed to delete main roles."
+
+[AccountRequiredValidation]
+description = "AccountRequiredValidation"
+other = "Account is required"
+
+[PAYMENT_PROCESS_RUNNING]
+description = "Payment is running"
+other = "Please Wait Payment is running"
+
+[CanNotBuildChatResponse]
+description = "Internal server errors occurred. Please contact support."
+other = "Internal server errors occurred. Please contact support."
+
+[Location_Used_in_kitchen]
+description = "Location_Used_in_kitchen"
+other = "Can't delete location used before"
+
+[Account_Used_in_kitchen]
+description = "Account_Used_in_kitchen"
+other = "Can't delete Account used before"
+
+[Validate_Account_Location_validation]
+description = "Validate_Account_Location_validation"
+other = "One Of Account or location is required "
+
+[MaxModifierGroupQty]
+description = "MaxModifierGroupQty"
+other = "The {{.modifier_group_name}} modifier group qty greater than available"
+
+[MinModifierGroupQty]
+description = "MinModifierGroupQty"
+other = "The {{.modifier_group_name}} modifier group qty less than available"
+
+[MinModifierQty]
+description = "MinModifierQty"
+other = "The {{.modifier_name}} modifier qty less than available"
+
+[MaxModifierQty]
+description = "MaxModifierQty"
+other = "The {{.modifier_name}} modifier qty greater than available"
+
+[ChatCollectionMethodError]
+description = "ChatCollectionMethodError"
+other = "The specified collection method was not found. Please check the method name and try again or use an alternative method."
+
+[UserHasRunningChats]
+description = "UserHasRunningChats"
+other = "You have running chats and can't create a new chat."
+
+[LockError]
+description = "LockError"
+other = "Too Many Requests - Try again later."
+
+[ChangeChatStatusError]
+description = "ChangeChatStatusError"
+other = "Couldn't Change Chat Status to new one"
+
+[PaymentError]
+description = "PaymentError"
+other = "There was an issue processing your payment. Please try again or contact support for assistance."
+
+
+[CanNotChangeApprovalStatus]
+description = "CanNotChangeApprovalStatus"
+other = "Couldn't Change Approval Status to new one"
+
+
+[Reported_Item_Already_Added]
+description = "Reported_Item_Already_Added"
+other = "This reported item has been done before for the same order."
+
+[Max_User_Cards]
+description = "Max_User_Cards"
+other = "Max User Cards Reached"
+
+
+[MF001]
+description = "MF001"
+other = "wrong password, cardholder/card issuer are not enrolled with 3DS, or the issuer bank has technical issue"
+
+
+
+[MF002]
+description = "MF002"
+other = "The issuer bank has declined the transaction"
+
+[MF003]
+description = "MF003"
+other = "The transaction has been blocked from the gateway"
+
+[MF004]
+description = "MF004"
+other = "Insufficient funds"
+
+[MF005]
+description = "MF005"
+other = "Session timeout"
+
+[MF006]
+description = "MF006"
+other = "Transaction canceled"
+
+[MF007]
+description = "MF007"
+other = "The card is expired."
+
+[MF008]
+description = "MF008"
+other = "The card issuer doesn't respond."
+
+[MF009]
+description = "MF009"
+other = "Denied by Risk"
+
+[MF010]
+description = "MF010"
+other = "Wrong Security Code"
+
+
+[MF020]
+description = "MF020"
+other = "Unspecified Failure"

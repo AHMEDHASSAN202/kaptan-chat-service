@@ -1,7 +1,10 @@
 package logger
 
 import (
+	"fmt"
 	log "github.com/sirupsen/logrus"
+	"net/http"
+	"net/http/httputil"
 	"os"
 )
 
@@ -21,6 +24,7 @@ type ILogger interface {
 	Fatal(args ...interface{})
 	Fatalf(format string, args ...interface{})
 	Trace(args ...interface{})
+	DumpRequest(args *http.Request)
 	Tracef(format string, args ...interface{})
 }
 
@@ -60,9 +64,9 @@ func (l *appLogger) getLevel() log.Level {
 }
 
 // InitLogger Init logger
-func InitLogger(cfg LoggerConfig) ILogger {
+func InitLogger() ILogger {
 
-	l := &appLogger{level: cfg.LogLevel}
+	l := &appLogger{}
 
 	l.logger = log.StandardLogger()
 
@@ -70,7 +74,7 @@ func InitLogger(cfg LoggerConfig) ILogger {
 
 	env := os.Getenv("APP_ENV")
 
-	if env == "main" {
+	if env == "release" {
 		log.SetFormatter(&log.JSONFormatter{})
 	} else {
 		// The TextFormatter is default, you don't actually have to do this.
@@ -99,7 +103,10 @@ func (l *appLogger) Info(args ...interface{}) {
 }
 
 func (l *appLogger) Infof(format string, args ...interface{}) {
-	l.logger.Infof(format, args...)
+	if format == "" {
+		format = "%+v"
+	}
+	l.logger.Infof(format, args)
 }
 
 func (l *appLogger) Trace(args ...interface{}) {
@@ -140,4 +147,15 @@ func (l *appLogger) Fatal(args ...interface{}) {
 
 func (l *appLogger) Fatalf(format string, args ...interface{}) {
 	l.logger.Fatalf(format, args...)
+}
+
+func (l *appLogger) DumpRequest(args *http.Request) {
+	// Save a copy of this request for debugging.
+	fmt.Println("************************************DumpRequest************************************")
+	requestDump, err := httputil.DumpRequest(args, true)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(requestDump))
+	fmt.Println("*************************************************************************************************")
 }

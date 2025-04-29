@@ -2,6 +2,7 @@ package validators
 
 import (
 	"context"
+	"fmt"
 	"github.com/go-playground/locales/ar"
 	"github.com/go-playground/locales/en"
 	ut "github.com/go-playground/universal-translator"
@@ -10,7 +11,11 @@ import (
 	en_translations "github.com/go-playground/validator/v10/translations/en"
 	"github.com/labstack/echo/v4"
 	"github.com/pkg/errors"
+	"kaptan/pkg/localization"
+	"kaptan/pkg/utils"
 	"net/http"
+	"reflect"
+	"strings"
 )
 
 type Message struct {
@@ -22,39 +27,111 @@ type ErrorResponse struct {
 	ValidationErrors   map[string][]string `json:"validation_errors"`
 	IsError            bool                `json:"-"`
 	ErrorMessageObject *Message            `json:"message"`
+	StatusCode         int                 `json:"-"`
+}
+type Response struct {
+	Data    interface{} `json:"data"`
+	Message string      `json:"message"`
+	Status  bool        `json:"status"`
 }
 
 var (
 	transEn ut.Translator
 	transAr ut.Translator
+	langEn  = "en"
+	langAr  = "ar"
 )
 
 func Init() *validator.Validate {
 	validate := validator.New()
+	validate.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		return GetFiledTagName(fld)
+	})
+
 	en := en.New()
 	ar := ar.New()
 	uni := ut.New(en, ar)
 	// this is usually know or extracted from http 'Accept-Language' header
-	transEn, _ = uni.GetTranslator("en")
-	transAr, _ = uni.GetTranslator("ar")
+	transEn, _ = uni.GetTranslator(langEn)
+	transAr, _ = uni.GetTranslator(langAr)
 	en_translations.RegisterDefaultTranslations(validate, transEn)
 	ar_translations.RegisterDefaultTranslations(validate, transAr)
+
+	//NewRegisterCustomValidator(validate)
 
 	return validate
 }
 
-func ValidateStruct(c context.Context, validate *validator.Validate, obj interface{}) ErrorResponse {
+func GetFiledTagName(fld reflect.StructField) string {
+	name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+	form_name := strings.SplitN(fld.Tag.Get("form"), ",", 2)[0]
+	header_name := strings.SplitN(fld.Tag.Get("header"), ",", 2)[0]
+	// skip if tag key says it should be ignored
+	if name == "-" {
+		return ""
+	}
+	if name == "" && form_name != "" {
+		if form_name == "-" {
+			return ""
+		}
+		return form_name
+	}
+	if name == "" && form_name == "" && header_name != "" {
+		if header_name == "-" {
+			return ""
+		}
+		return header_name
+	}
+	return name
+}
+func GetTrans(c context.Context) ut.Translator {
+	lang := c.Value("lang")
+	switch lang {
+	case langEn:
+		return transEn
+	case langAr:
+		return transAr
+	default:
+		return transEn
+	}
+}
+
+type CustomErrorTags struct {
+	ValidationTag          string
+	RegisterValidationFunc func(fl validator.FieldLevel) bool
+}
+
+func GetFiledName(e validator.FieldError) string {
+	filedName := ""
+	for i, s := range strings.Split(e.Namespace(), ".") {
+		if i == 0 {
+			continue
+		}
+		filedName = filedName + s
+		if i != len(strings.Split(e.Namespace(), "."))-1 {
+			filedName = filedName + "."
+		}
+	}
+	return strings.ToLower(filedName)
+}
+
+func ValidateStruct(c context.Context, validate *validator.Validate, obj interface{}, customErrorTags ...CustomErrorTags) ErrorResponse {
+	registerCustomValidation(c, validate, customErrorTags...)
+	NewRegisterCustomValidator(c, validate)
+
 	err := validate.Struct(obj)
 	lang := c.Value("lang")
 	if err != nil {
 		errs := err.(validator.ValidationErrors)
 		errMap := make(map[string][]string)
 		for _, e := range errs {
+
+			filedName := GetFiledName(e)
 			// can translate each error one at a time.
-			if lang == "en" {
-				errMap[e.Field()] = []string{e.Translate(transEn)}
+			if lang == langEn {
+				errMap[filedName] = []string{e.Translate(transEn)}
 			} else {
-				errMap[e.Field()] = []string{e.Translate(transAr)}
+				errMap[filedName] = []string{e.Translate(transAr)}
 			}
 
 		}
@@ -64,6 +141,50 @@ func ValidateStruct(c context.Context, validate *validator.Validate, obj interfa
 		}
 	}
 	return ErrorResponse{}
+}
+
+func ValidateStructAndReturnOneError(c context.Context, validate *validator.Validate, obj interface{}, customErrorTags ...CustomErrorTags) ErrorResponse {
+	registerCustomValidation(c, validate, customErrorTags...)
+	NewRegisterCustomValidator(c, validate)
+
+	err := validate.Struct(obj)
+	lang := c.Value("lang")
+	if err != nil {
+		fmt.Println("err: ", err)
+		errs := err.(validator.ValidationErrors)
+		errMap := make(map[string][]string)
+		for _, e := range errs {
+
+			filedName := GetFiledName(e)
+			// can translate each error one at a time.
+			if lang == langEn {
+				errMap[filedName] = []string{e.Translate(transEn)}
+			} else {
+				errMap[filedName] = []string{e.Translate(transAr)}
+			}
+
+		}
+		return ErrorResponse{
+			ValidationErrors: errMap,
+			IsError:          true,
+			ErrorMessageObject: &Message{
+				Text: errs[0].Translate(utils.If(lang == langEn, transEn, transAr).(ut.Translator)),
+				Code: errs[0].Tag(),
+			},
+		}
+	}
+	return ErrorResponse{}
+}
+
+func registerCustomValidation(c context.Context, validate *validator.Validate, customErrorTags ...CustomErrorTags) {
+	for _, tag := range customErrorTags {
+		validate.RegisterTranslation(tag.ValidationTag, GetTrans(c), func(ut ut.Translator) error {
+			return nil
+		}, func(ut ut.Translator, fe validator.FieldError) string {
+			return localization.GetTranslation(&c, fe.Tag(), nil, ut.Locale())
+		})
+		validate.RegisterValidation(tag.ValidationTag, tag.RegisterValidationFunc)
+	}
 }
 
 func GetErrorResponseFromErr(e error) ErrorResponse {
@@ -77,9 +198,52 @@ func GetErrorResponseFromErr(e error) ErrorResponse {
 	}
 }
 
-func Success(c echo.Context, data any) error {
-	c.JSON(http.StatusOK, data)
+func GetErrorResponse(ctx *context.Context, code string, data map[string]interface{}, statusCode *int) ErrorResponse {
+	ptr := utils.If(statusCode == nil, utils.GetAsPointer(0), statusCode).(*int)
+	message := localization.GetTranslation(ctx, code, data, "")
+	return ErrorResponse{
+		ValidationErrors: nil,
+		IsError:          true,
+		ErrorMessageObject: &Message{
+			Text: message,
+			Code: code,
+		},
+		StatusCode: *ptr,
+	}
+}
+
+func GetErrorResponseWithErrors(ctx *context.Context, code string, data map[string]interface{}) ErrorResponse {
+	ptr := http.StatusUnprocessableEntity
+	message := localization.GetTranslation(ctx, code, data, "")
+	return ErrorResponse{
+		ValidationErrors: map[string][]string{
+			code: []string{message},
+		},
+		IsError: true,
+		ErrorMessageObject: &Message{
+			Text: message,
+			Code: code,
+		},
+		StatusCode: ptr,
+	}
+}
+
+func SuccessResponse(c echo.Context, data any) error {
+	if data == nil {
+		data = make(map[string]interface{})
+	}
+
+	res := Response{Status: true, Message: "Success", Data: data}
+	c.JSON(http.StatusOK, res)
 	return nil
+}
+
+func ErrorResp(c echo.Context, validationErr ErrorResponse) error {
+	if validationErr.StatusCode == 0 {
+		validationErr.StatusCode = http.StatusBadRequest
+	}
+	c.JSON(validationErr.StatusCode, validationErr)
+	return errors.New("ErrorStatusUnprocessableEntity")
 }
 
 func ErrorStatusUnprocessableEntity(c echo.Context, validationErr ErrorResponse) error {
@@ -212,3 +376,8 @@ func ErrorStatusInternalServerError(c echo.Context, validationErr ErrorResponse)
 //		return
 //	}
 //}
+
+func GetError(ctx *context.Context, code string, data map[string]interface{}) error {
+	message := localization.GetTranslation(ctx, code, data, "")
+	return errors.New(message)
+}
