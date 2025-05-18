@@ -13,21 +13,12 @@ func MessageResponseBuilder(message *domain.Message) *app.MessageResponse {
 		SenderId:    message.SenderId,
 		Message:     message.Message,
 		MessageType: message.MessageType,
+		User:        message.User,
+		TransferId:  message.TransferId,
+		BrandId:     message.BrandId,
 		CreatedAt:   message.CreatedAt,
 		UpdatedAt:   &message.UpdatedAt,
 		DeletedAt:   message.DeletedAt,
-	}
-
-	if message.TransferId.Valid {
-		messageResponse.TransferId = &message.TransferId.Int64
-	}
-
-	if message.OwnerTransferId.Valid {
-		messageResponse.OwnerTransferId = &message.OwnerTransferId.Int64
-	}
-
-	if message.BrandId.Valid {
-		messageResponse.BrandId = &message.BrandId.Int64
 	}
 
 	if message.CreatedAt == message.UpdatedAt {

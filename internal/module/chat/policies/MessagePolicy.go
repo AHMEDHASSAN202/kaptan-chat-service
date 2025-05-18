@@ -10,7 +10,7 @@ type MessagePolicy struct {
 }
 
 func (p MessagePolicy) Check(message *domain.Message, ctx context.Context) bool {
-	if ctx.Value("causer-id") == fmt.Sprintf("%s", message.SenderId) && ctx.Value("causer-type") == message.SenderType {
+	if ctx.Value("causer-id") == fmt.Sprintf("%v", message.SenderId) && ctx.Value("causer-type") == message.SenderType {
 		return true
 	}
 	return false

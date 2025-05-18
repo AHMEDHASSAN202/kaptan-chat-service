@@ -658,3 +658,7 @@ func StringToUint(value string) *uint64 {
 	}
 	return &number
 }
+
+func GetClientUserId(causerType, causerId string) string {
+	return fmt.Sprintf("%s-%s", causerType, causerId)
+}

@@ -3,13 +3,16 @@ package websocket
 import (
 	"github.com/labstack/echo/v4"
 	"kaptan/pkg/logger"
+	usermiddleware "kaptan/pkg/middlewares/user"
 )
 
-func NewConnectionManger(e *echo.Echo, log logger.ILogger) *ChannelManager {
+func NewConnectionManger(e *echo.Echo, log logger.ILogger, userMiddleware *usermiddleware.Middlewares) *ChannelManager {
 	manager := NewChannelManager()
 	go manager.Run()
 
-	e.GET("/ws", func(c echo.Context) error {
+	driverChat := e.Group("driver/ws")
+	driverChat.Use(userMiddleware.AuthenticationMiddleware("driver"))
+	driverChat.GET("", func(c echo.Context) error {
 		return handleWebSocket(c, manager)
 	})
 

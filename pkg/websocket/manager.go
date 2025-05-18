@@ -25,6 +25,7 @@ type Client struct {
 	channels   map[string]bool
 	send       chan []byte
 	channelMgr *ChannelManager
+	userId     string
 }
 
 // ChannelManager manages all channels and clients
@@ -36,13 +37,15 @@ type ChannelManager struct {
 	Broadcast  chan Message
 	mutex      sync.RWMutex
 	shutdown   chan struct{} // Add shutdown channel
+	clientsMap map[string]*Client
 }
 
 // Message represents a message to be sent to a specific channel
 type Message struct {
-	ChannelID string `json:"channel_id"`
-	Content   string `json:"content"`
-	Action    string `json:"action"`
+	ChannelID    string `json:"channel_id"`
+	Content      string `json:"content"`
+	Action       string `json:"action"`
+	ExceptClient *Client
 }
 
 type ClientAction struct {
@@ -62,6 +65,7 @@ func NewChannelManager() *ChannelManager {
 		Broadcast:  make(chan Message),
 		mutex:      sync.RWMutex{},
 		shutdown:   make(chan struct{}),
+		clientsMap: make(map[string]*Client),
 	}
 }
 
@@ -72,6 +76,7 @@ func (manager *ChannelManager) Run() {
 		case client := <-manager.register:
 			manager.mutex.Lock()
 			manager.clients[client] = true
+			manager.clientsMap[client.userId] = client
 			manager.mutex.Unlock()
 			fmt.Println("New client connected")
 
@@ -79,6 +84,7 @@ func (manager *ChannelManager) Run() {
 			manager.mutex.Lock()
 			if _, ok := manager.clients[client]; ok {
 				delete(manager.clients, client)
+				delete(manager.clientsMap, client.userId)
 				close(client.send)
 
 				// Remove client from all channels
@@ -95,6 +101,10 @@ func (manager *ChannelManager) Run() {
 			manager.mutex.RLock()
 			if clients, ok := manager.channels[message.ChannelID]; ok {
 				for client := range clients {
+					// Skip the sender
+					if message.ExceptClient != nil && client == message.ExceptClient {
+						continue
+					}
 					select {
 					case client.send <- []byte(utils.JsonEncode(message)):
 					default:
@@ -124,6 +134,9 @@ func (manager *ChannelManager) Run() {
 
 // JoinChannel adds a client to a specific channel
 func (manager *ChannelManager) JoinChannel(client *Client, channelID string) {
+	if client == nil {
+		return
+	}
 	manager.mutex.Lock()
 	defer manager.mutex.Unlock()
 
@@ -149,6 +162,11 @@ func (manager *ChannelManager) LeaveChannel(client *Client, channelID string) {
 		delete(client.channels, channelID)
 		fmt.Printf("Client left channel: %s", channelID)
 	}
+}
+
+// GetClient Get Client By UserId
+func (manager *ChannelManager) GetClient(userId string) *Client {
+	return manager.clientsMap[userId]
 }
 
 func (manager *ChannelManager) Shutdown() {
@@ -229,11 +247,15 @@ func handleWebSocket(c echo.Context, manager *ChannelManager) error {
 		return err
 	}
 
+	userId := utils.GetClientUserId(c.Request().Header.Get("causer-type"), c.Request().Header.Get("causer-id"))
+	fmt.Println("Start Connection For User: ", userId)
+
 	client := &Client{
 		conn:       ws,
 		channels:   make(map[string]bool),
 		send:       make(chan []byte, 256),
 		channelMgr: manager,
+		userId:     userId,
 	}
 
 	manager.register <- client
