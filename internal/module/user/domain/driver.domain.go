@@ -5,10 +5,11 @@ import (
 )
 
 type Driver struct {
-	ID      uint   `gorm:"primarykey"`
-	Name    string `gorm:"column:name"`
-	Phone   string `gorm:"column:phone"`
-	Address string `gorm:"column:name"`
+	ID        uint   `gorm:"primarykey"`
+	Name      string `gorm:"column:name"`
+	Phone     string `gorm:"column:phone"`
+	Address   string `gorm:"column:name"`
+	CreatedAt string `gorm:"column:created_at"`
 }
 
 type DriverRepository interface {

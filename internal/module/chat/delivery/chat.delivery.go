@@ -31,7 +31,9 @@ func InitChatController(e *echo.Echo, us domain.ChatUseCase, validator *validato
 	{
 		mobile.POST("", handler.AddPrivateChat)
 		mobile.GET("", handler.GetChats)
-		mobile.PUT("/:id/enable", handler.GetChats)
+		mobile.GET("/:channel", handler.GetChat)
+		mobile.GET("/:channel/messages", handler.GetChatMessage)
+		mobile.PUT("/:channel/accept", handler.AcceptChat)
 	}
 
 	{
@@ -72,6 +74,99 @@ func (a *ChatHandler) GetChats(c echo.Context) error {
 	return validators.SuccessResponse(c, map[string]interface{}{"chats": chats})
 }
 
+func (a *ChatHandler) GetChat(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	chatsDto := dto.GetChat{}
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &chatsDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := c.Bind(&chatsDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := chatsDto.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	chat, errResp := a.chatUsecase.GetChat(ctx, &chatsDto)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"chat": chat})
+}
+
+func (a *ChatHandler) AcceptChat(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	chatsDto := dto.AcceptPrivateChat{}
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &chatsDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := c.Bind(&chatsDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := chatsDto.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	chat, errResp := a.chatUsecase.AcceptPrivateChat(ctx, &chatsDto)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"chat": chat})
+}
+
+func (a *ChatHandler) GetChatMessage(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	messagesDto := dto.GetChatMessage{}
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &messagesDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := c.Bind(&messagesDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := messagesDto.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	messages, errResp := a.chatUsecase.GetChatMessages(ctx, &messagesDto)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"messages": messages})
+}
+
 func (a *ChatHandler) AddPrivateChat(c echo.Context) error {
 	ctx := c.Request().Context()
 
@@ -95,37 +190,6 @@ func (a *ChatHandler) AddPrivateChat(c echo.Context) error {
 	}
 
 	chat, errResp := a.chatUsecase.AddPrivateChat(ctx, &privateChannelDto)
-	if errResp.IsError {
-		a.logger.Error(errResp)
-		return validators.ErrorResp(c, errResp)
-	}
-
-	return validators.SuccessResponse(c, map[string]interface{}{"chat": chat})
-}
-
-func (a *ChatHandler) EnablePrivateChat(c echo.Context) error {
-	ctx := c.Request().Context()
-
-	enablePrivateChatDto := dto.EnablePrivateChat{}
-
-	binder := &echo.DefaultBinder{}
-	if err := binder.BindHeaders(c, &enablePrivateChatDto); err != nil {
-		a.logger.Error(err)
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
-	}
-
-	if err := c.Bind(&enablePrivateChatDto); err != nil {
-		a.logger.Error(err)
-		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
-	}
-
-	validationErr := enablePrivateChatDto.Validate(ctx, a.validator)
-	if validationErr.IsError {
-		a.logger.Error(validationErr)
-		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
-	}
-
-	chat, errResp := a.chatUsecase.EnablePrivateChat(ctx, &enablePrivateChatDto)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorResp(c, errResp)

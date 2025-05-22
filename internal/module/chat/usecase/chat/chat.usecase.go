@@ -38,6 +38,12 @@ func (u ChatUseCase) GetChats(ctx context.Context, dto *dto.GetChats) (app.ListC
 	return chatsResponse, validators.ErrorResponse{}
 }
 
+func (u ChatUseCase) GetChatMessages(ctx context.Context, dto *dto.GetChatMessage) (*app.MessagesResponse, validators.ErrorResponse) {
+	messages, pagination := u.repo.GetChatMessages(ctx, dto)
+	messagesResponse := builder.MessagesResponseBuilder(messages, pagination)
+	return messagesResponse, validators.ErrorResponse{}
+}
+
 func (u ChatUseCase) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat) (*app.ChatResponse, validators.ErrorResponse) {
 	chat, message, err := u.repo.AddPrivateChat(ctx, dto)
 	if err != nil {
@@ -67,8 +73,8 @@ func (u ChatUseCase) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat
 	return chatResponse, validators.ErrorResponse{}
 }
 
-func (u ChatUseCase) EnablePrivateChat(ctx context.Context, dto *dto.EnablePrivateChat) (*app.ChatResponse, validators.ErrorResponse) {
-	chat, err := u.repo.EnablePrivateChat(ctx, dto)
+func (u ChatUseCase) AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPrivateChat) (*app.ChatResponse, validators.ErrorResponse) {
+	chat, err := u.repo.AcceptPrivateChat(ctx, dto)
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
@@ -80,10 +86,18 @@ func (u ChatUseCase) EnablePrivateChat(ctx context.Context, dto *dto.EnablePriva
 	u.websocketManager.Broadcast <- websocket.Message{
 		ChannelID: chatResponse.Channel,
 		Content:   string(contentJson),
-		Action:    consts.ENABLE_CHAT_ACTION,
+		Action:    consts.CHANCE_CHAT_STATUS_ACTION,
 	}
 
 	return chatResponse, validators.ErrorResponse{}
+}
+
+func (u ChatUseCase) GetChat(ctx context.Context, dto *dto.GetChat) (*app.ChatResponse, validators.ErrorResponse) {
+	chat, err := u.repo.GetChat(ctx, dto)
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	return builder.ChatResponseBuilder(chat), validators.ErrorResponse{}
 }
 
 func (u ChatUseCase) SendMessage(ctx context.Context, dto *dto.SendMessage) (*app.MessageResponse, validators.ErrorResponse) {

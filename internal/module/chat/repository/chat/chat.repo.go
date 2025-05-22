@@ -6,9 +6,11 @@ import (
 	"github.com/pkg/errors"
 	"github.com/spf13/cast"
 	"gorm.io/gorm"
+	"kaptan/internal/module/chat/consts"
 	"kaptan/internal/module/chat/domain"
 	"kaptan/internal/module/chat/dto"
 	domain2 "kaptan/internal/module/user/domain"
+	"kaptan/pkg/database/mysql"
 	"kaptan/pkg/gate"
 	"kaptan/pkg/localization"
 	"kaptan/pkg/logger"
@@ -36,8 +38,16 @@ func NewChatRepository(logger logger.ILogger, db *gorm.DB, gate *gate.Gate, driv
 
 func (r ChatRepository) PrivateChats(ctx context.Context, dto *dto.GetChats) []*domain.Chat {
 	var chats []*domain.Chat
-	r.db.Where("user_type = ?", dto.CauserType).Where("user_id = ?", dto.CauserId).Find(&chats)
+	r.db.Where("user_type = ?", dto.CauserType).Where("user_id = ?", dto.CauserId).Order("updated_at desc").Find(&chats)
 	return chats
+}
+
+func (r ChatRepository) GetChatMessages(ctx context.Context, dto *dto.GetChatMessage) ([]*domain.Message, *mysql.Pagination) {
+	pagination := mysql.Pagination{}
+	var messages []*domain.Message
+	query := r.db.Model(domain.Message{}).Where("channel = ?", dto.Channel)
+	query.Scopes(mysql.Paginate(&pagination, query, dto.Pagination)).Find(&messages)
+	return messages, &pagination
 }
 
 func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat) (*domain.Chat, *domain.Message, error) {
@@ -46,7 +56,7 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 	r.db.First(&message)
 
 	rand.Seed(time.Now().UnixNano())
-	randomNumber := rand.Intn(999-111+1) + 111
+	randomNumber := rand.Intn(999999999999-111111111111+1) + 111111111111
 	channel := fmt.Sprintf("private-%v-%v-%d", dto.MessageId, dto.CauserId, randomNumber)
 
 	currentChat := domain.Chat{}
@@ -78,7 +88,7 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 			"message":      message.Message,
 			"message_type": message.MessageType,
 		},
-		Disabled: true,
+		Status: consts.PENDING_CHAT_STATUS,
 	}
 
 	ownerUserChat := &domain.Chat{
@@ -89,11 +99,14 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 		UnreadMessagesCount: 1,
 		IsOwner:             true,
 		User: map[string]interface{}{
-			"id":      user.ID,
-			"name":    user.Name,
-			"phone":   user.Phone,
-			"address": user.Address,
-			"image":   "",
+			"id":         user.ID,
+			"name":       user.Name,
+			"phone":      user.Phone,
+			"address":    user.Address,
+			"image":      "",
+			"created_at": user.CreatedAt,
+			"rating":     0,
+			"sold_trip":  0,
 		},
 		LastMessage: map[string]interface{}{
 			"id":           message.ID,
@@ -103,7 +116,7 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 			"message":      message.Message,
 			"message_type": message.MessageType,
 		},
-		Disabled: true,
+		Status: consts.PENDING_CHAT_STATUS,
 	}
 
 	result := r.db.Create([]*domain.Chat{
@@ -113,21 +126,34 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 	return chat, &message, result.Error
 }
 
-func (r ChatRepository) EnablePrivateChat(ctx context.Context, dto *dto.EnablePrivateChat) (*domain.Chat, error) {
-	chat := domain.Chat{}
+func (r ChatRepository) AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPrivateChat) (*domain.Chat, error) {
+	var chat *domain.Chat
 	r.db.Model(&domain.Chat{}).Where("channel = ?", dto.Channel).Where("is_owner = ?", true).First(&chat)
-	if chat.ID == 0 || chat.UserId != cast.ToInt(dto.CauserId) {
+	if chat == nil || chat.ID == 0 || chat.UserId != cast.ToInt(dto.CauserId) {
 		return nil, errors.New("Can't Enable Chat")
 	}
 
-	err := r.db.Model(&domain.Chat{}).Where("channel = ?", dto.Channel).Update("disabled", false)
+	err := r.db.Model(&domain.Chat{}).Where("channel = ?", dto.Channel).Update("status", consts.ACCEPT_CHAT_STATUS)
 	if err.Error != nil {
 		return nil, err.Error
 	}
 
-	chat.Disabled = false
+	chat.Status = consts.ACCEPT_CHAT_STATUS
 
-	return &chat, nil
+	return chat, nil
+}
+
+func (r ChatRepository) GetChat(ctx context.Context, dto *dto.GetChat) (*domain.Chat, error) {
+	var chat *domain.Chat
+	r.db.Model(&domain.Chat{}).Where("channel = ?", dto.Channel).Where("user_id != ?", cast.ToInt(dto.CauserId)).First(&chat)
+	if chat == nil || chat.ID == 0 {
+		return nil, errors.New("Can't Enable Chat")
+	}
+	if dto.GetMarkAsRead() && chat.UnreadMessagesCount != 0 {
+		chat.UnreadMessagesCount = 0
+		r.db.Save(&chat)
+	}
+	return chat, nil
 }
 
 func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) (*domain.Message, error) {
@@ -150,16 +176,19 @@ func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) 
 	}
 
 	message.User = map[string]interface{}{
-		"id":      user.ID,
-		"name":    user.Name,
-		"phone":   user.Phone,
-		"address": user.Address,
-		"image":   "",
+		"id":         user.ID,
+		"name":       user.Name,
+		"phone":      user.Phone,
+		"address":    user.Address,
+		"image":      "",
+		"created_at": user.CreatedAt,
+		"rating":     0,
+		"sold_trip":  0,
 	}
 	result := r.db.Create(&message)
 
 	go func() {
-		if err := r.db.Model(&domain.Chat{}).Where("channel = ?", message.Channel).Where("user_id != ?", message.SenderId).Where("user_type != ?", message.SenderType).
+		if err := r.db.Model(&domain.Chat{}).Where("channel = ?", message.Channel).Where("user_id != ?", message.SenderId).
 			UpdateColumn("unread_messages_count", gorm.Expr("unread_messages_count + ?", 1)).Error; err != nil {
 			r.logger.Error(err)
 		}
