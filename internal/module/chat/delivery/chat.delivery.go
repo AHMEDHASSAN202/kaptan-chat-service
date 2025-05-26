@@ -40,6 +40,7 @@ func InitChatController(e *echo.Echo, us domain.ChatUseCase, validator *validato
 		mobile.POST("/message", handler.SendMessage)
 		mobile.PUT("/message/:id", handler.UpdateMessage)
 		mobile.DELETE("/message/:id", handler.DeleteMessage)
+		mobile.PUT("/message/:id/reject", handler.RejectOffer)
 	}
 }
 
@@ -283,6 +284,37 @@ func (a *ChatHandler) DeleteMessage(c echo.Context) error {
 	}
 
 	message, errResp := a.chatUsecase.DeleteMessage(ctx, &messageDto)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"message": message})
+}
+
+func (a *ChatHandler) RejectOffer(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	messageDto := dto.RejectOffer{}
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &messageDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := c.Bind(&messageDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := messageDto.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	message, errResp := a.chatUsecase.RejectOffer(ctx, &messageDto)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorResp(c, errResp)

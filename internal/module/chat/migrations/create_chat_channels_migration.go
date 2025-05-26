@@ -6,5 +6,5 @@ import (
 )
 
 func NewChatChannelsMigration(db *gorm.DB) {
-	db.AutoMigrate(domain.Chat{})
+	db.AutoMigrate(&domain.Chat{})
 }

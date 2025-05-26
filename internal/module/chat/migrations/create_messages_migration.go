@@ -6,5 +6,5 @@ import (
 )
 
 func NewMessagesMigration(db *gorm.DB) {
-	db.AutoMigrate(domain.Message{})
+	db.AutoMigrate(&domain.Message{})
 }

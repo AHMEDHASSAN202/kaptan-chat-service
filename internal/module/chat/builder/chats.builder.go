@@ -8,7 +8,7 @@ import (
 func ChatsResponseBuilder(chats []*domain.Chat) app.ListChatResponse {
 	response := app.ListChatResponse{}
 	for _, chat := range chats {
-		response = append(response, ChatResponseBuilder(chat))
+		response = append(response, ChatResponseBuilder(chat, nil))
 	}
 	return response
 }

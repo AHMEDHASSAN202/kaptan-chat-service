@@ -8,6 +8,7 @@ import (
 )
 
 type GetChats struct {
+	MessageId *uint `json:"message_id" form:"message_id" query:"message_id"`
 	dto.MobileHeaders
 }
 

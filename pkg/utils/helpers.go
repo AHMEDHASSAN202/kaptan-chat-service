@@ -600,6 +600,18 @@ func StructToMap(data interface{}, tagKey string) map[string]interface{} {
 	result := make(map[string]interface{})
 	v := reflect.ValueOf(data)
 	t := reflect.TypeOf(data)
+
+	// Handle pointers by dereferencing them
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+		t = t.Elem()
+	}
+
+	// Ensure we have a struct
+	if v.Kind() != reflect.Struct {
+		return result
+	}
+
 	for i := 0; i < v.NumField(); i++ {
 		field := t.Field(i)
 		value := v.Field(i).Interface()

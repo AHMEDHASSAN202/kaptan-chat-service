@@ -2,6 +2,7 @@ package user
 
 import (
 	"go.uber.org/fx"
+	"kaptan/internal/module/user/migrations"
 	"kaptan/internal/module/user/repository/driver"
 )
 
@@ -11,4 +12,5 @@ var Module = fx.Options(
 		// App Config
 		driver.NewDriverRepository,
 	),
+	migrations.Module,
 )

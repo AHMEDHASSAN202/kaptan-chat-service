@@ -14,3 +14,9 @@ const (
 	PENDING_CHAT_STATUS = "pending"
 	ACCEPT_CHAT_STATUS  = "accepted"
 )
+
+const (
+	PENDING_TRANSFER_OFFER_STATUS = "pending"
+	REJECT_TRANSFER_OFFER_STATUS  = "rejected"
+	ACCEPT_TRANSFER_OFFER_STATUS  = "accepted"
+)

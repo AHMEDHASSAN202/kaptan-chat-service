@@ -9,6 +9,7 @@ import (
 	"kaptan/internal/module/chat/domain"
 	"kaptan/internal/module/chat/dto"
 	"kaptan/internal/module/chat/responses/app"
+	domain2 "kaptan/internal/module/user/domain"
 	"kaptan/pkg/gate"
 	"kaptan/pkg/logger"
 	"kaptan/pkg/utils"
@@ -21,13 +22,15 @@ type ChatUseCase struct {
 	logger           logger.ILogger
 	gate             *gate.Gate
 	websocketManager *websocket.ChannelManager
+	driverRepo       domain2.DriverRepository
 }
 
-func NewChatUseCase(repo domain.ChatRepository, gate *gate.Gate, websocketManager *websocket.ChannelManager, logger logger.ILogger) domain.ChatUseCase {
+func NewChatUseCase(repo domain.ChatRepository, driverRepo domain2.DriverRepository, gate *gate.Gate, websocketManager *websocket.ChannelManager, logger logger.ILogger) domain.ChatUseCase {
 	return &ChatUseCase{
 		repo:             repo,
 		logger:           logger,
 		gate:             gate,
+		driverRepo:       driverRepo,
 		websocketManager: websocketManager,
 	}
 }
@@ -50,7 +53,12 @@ func (u ChatUseCase) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
 
-	chatResponse := builder.ChatResponseBuilder(chat)
+	driver, err := u.driverRepo.Find(&ctx, uint(chat.UserId))
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+
+	chatResponse := builder.ChatResponseBuilder(chat, driver)
 
 	contentJson, _ := json.Marshal(chatResponse)
 	myClient := u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId))
@@ -79,7 +87,7 @@ func (u ChatUseCase) AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPriva
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
 
-	chatResponse := builder.ChatResponseBuilder(chat)
+	chatResponse := builder.ChatResponseBuilder(chat, nil)
 
 	contentJson, _ := json.Marshal(chatResponse)
 
@@ -92,12 +100,25 @@ func (u ChatUseCase) AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPriva
 	return chatResponse, validators.ErrorResponse{}
 }
 
+func (u ChatUseCase) RejectOffer(ctx context.Context, dto *dto.RejectOffer) (*app.MessageResponse, validators.ErrorResponse) {
+	message, err := u.repo.RejectOffer(ctx, dto)
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	messageResponse := builder.MessageResponseBuilder(message)
+	return messageResponse, validators.ErrorResponse{}
+}
+
 func (u ChatUseCase) GetChat(ctx context.Context, dto *dto.GetChat) (*app.ChatResponse, validators.ErrorResponse) {
 	chat, err := u.repo.GetChat(ctx, dto)
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
-	return builder.ChatResponseBuilder(chat), validators.ErrorResponse{}
+	driver, err := u.driverRepo.Find(&ctx, uint(chat.UserId))
+	if err != nil {
+		return nil, validators.GetErrorResponseFromErr(err)
+	}
+	return builder.ChatResponseBuilder(chat, driver), validators.ErrorResponse{}
 }
 
 func (u ChatUseCase) SendMessage(ctx context.Context, dto *dto.SendMessage) (*app.MessageResponse, validators.ErrorResponse) {

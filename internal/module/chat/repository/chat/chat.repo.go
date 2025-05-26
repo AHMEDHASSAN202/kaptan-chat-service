@@ -17,6 +17,7 @@ import (
 	"kaptan/pkg/utils"
 	"kaptan/pkg/validators"
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -38,14 +39,24 @@ func NewChatRepository(logger logger.ILogger, db *gorm.DB, gate *gate.Gate, driv
 
 func (r ChatRepository) PrivateChats(ctx context.Context, dto *dto.GetChats) []*domain.Chat {
 	var chats []*domain.Chat
-	r.db.Where("user_type = ?", dto.CauserType).Where("user_id = ?", dto.CauserId).Order("updated_at desc").Find(&chats)
+	q := r.db.Where("user_type = ?", dto.CauserType).Where("user_id = ?", dto.CauserId)
+	if dto.MessageId != nil {
+		q.Where("opened_by = ?", dto.MessageId)
+	}
+	q.Order("updated_at desc").Find(&chats)
 	return chats
 }
 
 func (r ChatRepository) GetChatMessages(ctx context.Context, dto *dto.GetChatMessage) ([]*domain.Message, *mysql.Pagination) {
 	pagination := mysql.Pagination{}
 	var messages []*domain.Message
-	query := r.db.Model(domain.Message{}).Where("channel = ?", dto.Channel)
+	query := r.db.Model(domain.Message{})
+	if strings.ToLower(dto.Channel) != "all" {
+		query = query.Where("channel = ?", dto.Channel)
+	}
+	if strings.ToLower(dto.MyMessage) == "true" {
+		query = query.Where("sender_id = ?", dto.CauserId).Where("is_private = ?", 0)
+	}
 	query.Scopes(mysql.Paginate(&pagination, query, dto.Pagination)).Find(&messages)
 	return messages, &pagination
 }
@@ -54,6 +65,13 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 	message := domain.Message{}
 	message.ID = dto.MessageId
 	r.db.First(&message)
+
+	go func() {
+		if err := r.db.Model(&domain.Message{}).Where("id = ?", message.ID).
+			UpdateColumn("count_channels", gorm.Expr("count_channels + ?", 1)).Error; err != nil {
+			r.logger.Error(err)
+		}
+	}()
 
 	rand.Seed(time.Now().UnixNano())
 	randomNumber := rand.Intn(999999999999-111111111111+1) + 111111111111
@@ -69,9 +87,7 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 	if err != nil {
 		return nil, nil, err
 	}
-	if user == nil {
-		return nil, nil, errors.New("Something Went Wrong")
-	}
+
 	chat := &domain.Chat{
 		Channel:             channel,
 		UserType:            dto.CauserType,
@@ -79,7 +95,6 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 		TransferId:          message.TransferId,
 		UnreadMessagesCount: 1,
 		IsOwner:             false,
-		User:                message.User,
 		LastMessage: map[string]interface{}{
 			"id":           message.ID,
 			"created_at":   message.CreatedAt,
@@ -88,7 +103,9 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 			"message":      message.Message,
 			"message_type": message.MessageType,
 		},
-		Status: consts.PENDING_CHAT_STATUS,
+		Status:   consts.PENDING_CHAT_STATUS,
+		User:     message.User,
+		OpenedBy: dto.MessageId,
 	}
 
 	ownerUserChat := &domain.Chat{
@@ -98,16 +115,6 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 		TransferId:          message.TransferId,
 		UnreadMessagesCount: 1,
 		IsOwner:             true,
-		User: map[string]interface{}{
-			"id":         user.ID,
-			"name":       user.Name,
-			"phone":      user.Phone,
-			"address":    user.Address,
-			"image":      "",
-			"created_at": user.CreatedAt,
-			"rating":     0,
-			"sold_trip":  0,
-		},
 		LastMessage: map[string]interface{}{
 			"id":           message.ID,
 			"created_at":   message.CreatedAt,
@@ -116,7 +123,9 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 			"message":      message.Message,
 			"message_type": message.MessageType,
 		},
-		Status: consts.PENDING_CHAT_STATUS,
+		Status:   consts.ACCEPT_CHAT_STATUS,
+		User:     utils.StructToMap(user.ToResponse(), "json"),
+		OpenedBy: dto.MessageId,
 	}
 
 	result := r.db.Create([]*domain.Chat{
@@ -143,6 +152,15 @@ func (r ChatRepository) AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPr
 	return chat, nil
 }
 
+func (r ChatRepository) RejectOffer(ctx context.Context, dto *dto.RejectOffer) (*domain.Message, error) {
+	message := &domain.Message{}
+	message.ID = dto.MessageId
+	r.db.First(&message)
+	message.TransferOfferStatus = utils.GetAsPointer(consts.REJECT_TRANSFER_OFFER_STATUS)
+	r.db.Save(&message)
+	return message, nil
+}
+
 func (r ChatRepository) GetChat(ctx context.Context, dto *dto.GetChat) (*domain.Chat, error) {
 	var chat *domain.Chat
 	r.db.Model(&domain.Chat{}).Where("channel = ?", dto.Channel).Where("user_id != ?", cast.ToInt(dto.CauserId)).First(&chat)
@@ -157,34 +175,27 @@ func (r ChatRepository) GetChat(ctx context.Context, dto *dto.GetChat) (*domain.
 }
 
 func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) (*domain.Message, error) {
-	message := &domain.Message{
-		Channel:     dto.Channel,
-		Message:     dto.Message,
-		MessageType: dto.MessageType,
-		BrandId:     dto.BrandId,
-		TransferId:  dto.TransferId,
-		SenderId:    int64(*utils.StringToUint(dto.CauserId)),
-		SenderType:  dto.CauserType,
-	}
-
 	user, err := r.driverRepository.Find(&ctx, uint(*utils.StringToUint(dto.CauserId)))
 	if err != nil {
 		return nil, err
 	}
-	if user == nil {
-		return nil, errors.New("Something Went Wrong")
+
+	message := &domain.Message{
+		Channel:                 dto.Channel,
+		Message:                 dto.Message,
+		MessageType:             dto.MessageType,
+		BrandId:                 dto.BrandId,
+		TransferId:              dto.TransferId,
+		SenderId:                int64(*utils.StringToUint(dto.CauserId)),
+		SenderType:              dto.CauserType,
+		IsPrivate:               strings.HasPrefix(dto.Channel, "private-"),
+		User:                    utils.StructToMap(user.ToResponse(), "json"),
+		TransferOffersRequested: dto.TransferOffersRequested,
+	}
+	if dto.TransferOffersRequested {
+		message.TransferOfferStatus = utils.GetAsPointer[string](consts.PENDING_TRANSFER_OFFER_STATUS)
 	}
 
-	message.User = map[string]interface{}{
-		"id":         user.ID,
-		"name":       user.Name,
-		"phone":      user.Phone,
-		"address":    user.Address,
-		"image":      "",
-		"created_at": user.CreatedAt,
-		"rating":     0,
-		"sold_trip":  0,
-	}
 	result := r.db.Create(&message)
 
 	go func() {
@@ -195,7 +206,7 @@ func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) 
 	}()
 
 	go func() {
-		updateResult := r.db.Model(&domain.Chat{}).Where("channel = ?", message.Channel).Updates(&domain.Chat{LastMessage: map[string]interface{}{
+		updateResult := r.db.Model(&domain.Chat{}).Where("channel = ?", message.Channel).Updates(&domain.Chat{Status: consts.ACCEPT_CHAT_STATUS, LastMessage: map[string]interface{}{
 			"id":           message.ID,
 			"created_at":   message.CreatedAt,
 			"brand_id":     message.BrandId,
@@ -205,6 +216,13 @@ func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) 
 		}})
 		if updateResult.Error != nil {
 			r.logger.Error("Update Last Message Error => ", updateResult.Error.Error())
+		}
+	}()
+
+	go func() {
+		errIncrement := r.driverRepository.IncrementSoldTripsByValue(&ctx, uint(message.SenderId), 1)
+		if errIncrement != nil {
+			r.logger.Error(errIncrement)
 		}
 	}()
 

@@ -3,6 +3,7 @@ package main
 import (
 	"go.uber.org/fx"
 	"kaptan/internal/module/chat"
+	"kaptan/internal/module/transfer"
 	"kaptan/internal/module/user"
 	"kaptan/pkg/aws"
 	"kaptan/pkg/config"
@@ -38,6 +39,7 @@ func main() {
 			middlewares.Module,
 			gate.Module,
 			user.Module,
+			transfer.Module,
 			chat.Module,
 			fx.Invoke(echo.RunServers, localization.InitLocalization),
 		),
