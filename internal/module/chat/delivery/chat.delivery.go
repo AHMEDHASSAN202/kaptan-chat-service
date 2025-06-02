@@ -97,13 +97,13 @@ func (a *ChatHandler) GetChat(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	chat, errResp := a.chatUsecase.GetChat(ctx, &chatsDto)
+	chat, transfer, errResp := a.chatUsecase.GetChat(ctx, &chatsDto)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorResp(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{"chat": chat})
+	return validators.SuccessResponse(c, map[string]interface{}{"chat": chat, "transfer": transfer})
 }
 
 func (a *ChatHandler) AcceptChat(c echo.Context) error {

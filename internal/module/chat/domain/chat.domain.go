@@ -26,7 +26,8 @@ type Chat struct {
 
 type ChatUseCase interface {
 	GetChats(ctx context.Context, dto *dto.GetChats) (app.ListChatResponse, validators.ErrorResponse)
-	GetChat(ctx context.Context, dto *dto.GetChat) (*app.ChatResponse, validators.ErrorResponse)
+	GetChat(ctx context.Context, dto *dto.GetChat) (*app.ChatResponse, interface{}, validators.ErrorResponse)
+	GetAcceptedChatByTransferId(ctx context.Context, transferId uint, userId string) (*app.ChatResponse, validators.ErrorResponse)
 	GetChatMessages(ctx context.Context, dto *dto.GetChatMessage) (*app.MessagesResponse, validators.ErrorResponse)
 	AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat) (*app.ChatResponse, validators.ErrorResponse)
 	AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPrivateChat) (*app.ChatResponse, validators.ErrorResponse)
@@ -39,6 +40,7 @@ type ChatUseCase interface {
 type ChatRepository interface {
 	PrivateChats(ctx context.Context, dto *dto.GetChats) []*Chat
 	GetChat(ctx context.Context, dto *dto.GetChat) (*Chat, error)
+	GetAcceptedChatByTransferId(ctx context.Context, transferId uint, userId string) (*Chat, error)
 	GetChatMessages(ctx context.Context, dto *dto.GetChatMessage) ([]*Message, *mysql.Pagination)
 	AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat) (*Chat, *Message, error)
 	AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPrivateChat) (*Chat, error)

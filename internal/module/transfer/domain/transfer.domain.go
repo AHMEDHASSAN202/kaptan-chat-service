@@ -3,7 +3,11 @@ package domain
 import (
 	"context"
 	"gorm.io/gorm"
+	"kaptan/internal/module/transfer/dto"
+	"kaptan/internal/module/transfer/responses/app"
+	"kaptan/internal/module/transfer/types"
 	"kaptan/pkg/database/mysql/custom_types"
+	"kaptan/pkg/validators"
 	"time"
 )
 
@@ -38,20 +42,20 @@ type Transfer struct {
 	BrandObject *custom_types.JSONMap `gorm:"type:json;comment:Stores brand details as JSON" json:"brand_object,omitempty"`
 
 	// Status fields
-	Status       TransferStatus     `gorm:"type:enum('pending','accepted','rejected');default:'pending'" json:"status"`
-	HostStatus   TransferHostStatus `gorm:"type:enum('pending','accepted');default:'pending'" json:"host_status"`
-	HideForHost  bool               `gorm:"default:false" json:"hide_for_host"`
-	GetMoneyFrom MoneySource        `gorm:"type:enum('client','guest');default:'client'" json:"get_money_from"`
-	CashReceived float64            `gorm:"type:decimal(10,2);default:0" json:"cash_received"`
-	TransType    TransferType       `gorm:"type:enum('normal','fast_carrier');default:'normal'" json:"trans_type"`
+	Status       types.TransferStatus `gorm:"type:enum('pending','accepted','rejected');default:'pending'" json:"status"`
+	HostStatus   types.HostStatus     `gorm:"type:enum('pending','accepted');default:'pending'" json:"host_status"`
+	HideForHost  bool                 `gorm:"default:false" json:"hide_for_host"`
+	GetMoneyFrom MoneySource          `gorm:"type:enum('client','guest');default:'client'" json:"get_money_from"`
+	CashReceived float64              `gorm:"type:decimal(10,2);default:0" json:"cash_received"`
+	TransType    types.TransferType   `gorm:"type:enum('normal','fast_carrier');default:'normal'" json:"trans_type"`
 
 	// Car relationship
 	CarID     *uint                 `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"car_id,omitempty"`
 	CarObject *custom_types.JSONMap `gorm:"type:json;comment:Stores car details as JSON" json:"car_object,omitempty"`
 
 	// Airport and type fields
-	IsAirport bool              `gorm:"default:false" json:"is_airport"`
-	Type      TransferDirection `gorm:"type:enum('arrival','departure');default:'arrival'" json:"type"`
+	IsAirport bool               `gorm:"default:false" json:"is_airport"`
+	Type      types.TransferType `gorm:"type:enum('arrival','departure');default:'arrival'" json:"type"`
 
 	// Timestamps for transfer
 	StartAt *time.Time `json:"start_at,omitempty"`
@@ -84,15 +88,16 @@ type Transfer struct {
 	// Notes
 	Notes      *string `gorm:"type:text" json:"notes,omitempty"`
 	GuestNotes *string `gorm:"type:text" json:"guest_notes,omitempty"`
+
+	SellerID *uint `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"seller_id,omitempty"`
 }
 
-// Enums for the Transfer model
-type TransferStatus string
-
 const (
-	TransferStatusPending  TransferStatus = "pending"
-	TransferStatusAccepted TransferStatus = "accepted"
-	TransferStatusRejected TransferStatus = "rejected"
+	TransferStatusPending  types.TransferStatus = "pending"
+	TransferStatusAccepted types.TransferStatus = "accepted"
+	TransferStatusRejected types.TransferStatus = "rejected"
+	TransferStatusStart    types.TransferStatus = "start"
+	TransferStatusEnd      types.TransferStatus = "end"
 )
 
 type TransferHostStatus string
@@ -132,4 +137,12 @@ const (
 
 type TransferRepository interface {
 	Find(ctx *context.Context, id uint) (domainData *Transfer, err error)
+	AssignSellerToTransfer(ctx *context.Context, driverID uint, transferID uint) (*Transfer, error)
+	MarkTransferAsStart(ctx *context.Context, transferDto *dto.StartTransfer) (*Transfer, error)
+	MarkTransferAsEnd(ctx *context.Context, transferDto *dto.EndTransfer) (*Transfer, error)
+}
+
+type UseCase interface {
+	StartTransfer(ctx *context.Context, dto *dto.StartTransfer) (*app.TransferResponse, validators.ErrorResponse)
+	EndTransfer(ctx *context.Context, dto *dto.EndTransfer) (*app.TransferResponse, validators.ErrorResponse)
 }

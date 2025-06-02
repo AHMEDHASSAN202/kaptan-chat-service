@@ -9,12 +9,15 @@ import (
 	"kaptan/internal/module/chat/domain"
 	"kaptan/internal/module/chat/dto"
 	"kaptan/internal/module/chat/responses/app"
+	builder2 "kaptan/internal/module/transfer/builder"
+	domain3 "kaptan/internal/module/transfer/domain"
 	domain2 "kaptan/internal/module/user/domain"
 	"kaptan/pkg/gate"
 	"kaptan/pkg/logger"
 	"kaptan/pkg/utils"
 	"kaptan/pkg/validators"
 	"kaptan/pkg/websocket"
+	"sync"
 )
 
 type ChatUseCase struct {
@@ -23,15 +26,17 @@ type ChatUseCase struct {
 	gate             *gate.Gate
 	websocketManager *websocket.ChannelManager
 	driverRepo       domain2.DriverRepository
+	transferRepo     domain3.TransferRepository
 }
 
-func NewChatUseCase(repo domain.ChatRepository, driverRepo domain2.DriverRepository, gate *gate.Gate, websocketManager *websocket.ChannelManager, logger logger.ILogger) domain.ChatUseCase {
+func NewChatUseCase(repo domain.ChatRepository, driverRepo domain2.DriverRepository, transferRepo domain3.TransferRepository, gate *gate.Gate, websocketManager *websocket.ChannelManager, logger logger.ILogger) domain.ChatUseCase {
 	return &ChatUseCase{
 		repo:             repo,
 		logger:           logger,
 		gate:             gate,
 		driverRepo:       driverRepo,
 		websocketManager: websocketManager,
+		transferRepo:     transferRepo,
 	}
 }
 
@@ -109,16 +114,64 @@ func (u ChatUseCase) RejectOffer(ctx context.Context, dto *dto.RejectOffer) (*ap
 	return messageResponse, validators.ErrorResponse{}
 }
 
-func (u ChatUseCase) GetChat(ctx context.Context, dto *dto.GetChat) (*app.ChatResponse, validators.ErrorResponse) {
+func (u ChatUseCase) GetChat(ctx context.Context, dto *dto.GetChat) (*app.ChatResponse, interface{}, validators.ErrorResponse) {
 	chat, err := u.repo.GetChat(ctx, dto)
 	if err != nil {
-		return nil, validators.GetErrorResponseFromErr(err)
+		return nil, nil, validators.GetErrorResponseFromErr(err)
 	}
-	driver, err := u.driverRepo.Find(&ctx, uint(chat.UserId))
+
+	var (
+		driver   *domain2.Driver
+		transfer *domain3.Transfer
+	)
+
+	var wg sync.WaitGroup
+	errChan := make(chan error, 2)
+
+	// Get driver
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		var dErr error
+		driver, dErr = u.driverRepo.Find(&ctx, uint(chat.UserId))
+		if dErr != nil {
+			errChan <- dErr
+		}
+	}()
+
+	// Get transfer if needed
+	if chat.TransferId != nil {
+		wg.Add(1)
+		go func(transferID uint) {
+			defer wg.Done()
+			var tErr error
+			transfer, tErr = u.transferRepo.Find(&ctx, transferID)
+			if tErr != nil {
+				//errChan <- tErr
+				u.logger.Info("Transfer Error => ", tErr)
+			}
+		}(uint(*chat.TransferId))
+	}
+
+	// Wait for both goroutines to finish
+	wg.Wait()
+	close(errChan)
+
+	// Check for errors
+	for e := range errChan {
+		return nil, nil, validators.GetErrorResponseFromErr(e)
+	}
+
+	return builder.ChatResponseBuilder(chat, driver), builder2.TransferResponseBuilder(transfer), validators.ErrorResponse{}
+}
+
+func (u ChatUseCase) GetAcceptedChatByTransferId(ctx context.Context, transferId uint, userId string) (*app.ChatResponse, validators.ErrorResponse) {
+	chat, err := u.repo.GetAcceptedChatByTransferId(ctx, transferId, userId)
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
-	return builder.ChatResponseBuilder(chat, driver), validators.ErrorResponse{}
+
+	return builder.ChatResponseBuilder(chat, nil), validators.ErrorResponse{}
 }
 
 func (u ChatUseCase) SendMessage(ctx context.Context, dto *dto.SendMessage) (*app.MessageResponse, validators.ErrorResponse) {

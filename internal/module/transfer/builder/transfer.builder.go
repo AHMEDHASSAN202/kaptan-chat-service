@@ -1,39 +1,45 @@
 package builder
 
 import (
+	"fmt"
 	"kaptan/internal/module/transfer/domain"
+	"kaptan/internal/module/transfer/helper"
 	"kaptan/internal/module/transfer/responses/app"
 )
 
-func TransferResponseBuilder(chat *domain.Transfer) *app.TransferResponse {
+func TransferResponseBuilder(transfer *domain.Transfer) *app.TransferResponse {
+	if transfer == nil {
+		return nil
+	}
+
+	clientId, clientType := helper.GenerateClientId(fmt.Sprintf("%d", transfer.ClientID), transfer.ClientType)
+
 	return &app.TransferResponse{
-		ID:           chat.ID,
-		CreatedAt:    chat.CreatedAt,
-		UpdatedAt:    chat.UpdatedAt,
-		ClientID:     chat.ClientID,
-		ClientType:   chat.ClientType,
-		FromAddress:  chat.FromAddress,
-		ToAddress:    chat.ToAddress,
-		Status:       chat.Status,
-		HostStatus:   chat.HostStatus,
-		Type:         chat.Type,
-		TransType:    chat.TransType,
-		Number:       chat.Number,
-		NumberSeats:  chat.NumberSeats,
-		Date:         chat.Date,
-		StartAt:      chat.StartAt,
-		EndAt:        chat.EndAt,
-		Phone:        chat.Phone,
-		Nationality:  chat.Nationality,
-		Email:        chat.Email,
-		IsAirport:    chat.IsAirport,
-		HasChildSeat: chat.HasChildSeat,
-		BagsCount:    chat.BagsCount,
-		Price:        chat.Price,
-		Distance:     chat.Distance,
-		BrandID:      chat.BrandID,
-		CarID:        chat.CarID,
-		Notes:        chat.Notes,
-		GuestNotes:   chat.GuestNotes,
+		ID:           transfer.ID,
+		CreatedAt:    transfer.CreatedAt,
+		ClientID:     clientId,
+		ClientType:   clientType,
+		FromAddress:  transfer.FromAddress,
+		ToAddress:    transfer.ToAddress,
+		Status:       transfer.Status,
+		HostStatus:   transfer.HostStatus,
+		Type:         transfer.Type,
+		TransType:    transfer.TransType,
+		Number:       transfer.Number,
+		NumberSeats:  transfer.NumberSeats,
+		Date:         transfer.Date,
+		StartAt:      transfer.StartAt,
+		EndAt:        transfer.EndAt,
+		Phone:        transfer.Phone,
+		Nationality:  transfer.Nationality,
+		Email:        transfer.Email,
+		IsAirport:    transfer.IsAirport,
+		HasChildSeat: transfer.HasChildSeat,
+		BagsCount:    transfer.BagsCount,
+		Price:        transfer.Price,
+		Distance:     transfer.Distance,
+		Notes:        transfer.Notes,
+		GuestNotes:   transfer.GuestNotes,
+		CarObject:    transfer.CarObject,
 	}
 }

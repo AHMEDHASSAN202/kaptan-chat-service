@@ -1,7 +1,8 @@
 package app
 
 import (
-	"kaptan/internal/module/transfer/domain"
+	"kaptan/internal/module/transfer/types"
+	"kaptan/pkg/database/mysql/custom_types"
 	"time"
 )
 
@@ -10,7 +11,7 @@ type TransferResponse struct {
 	CreatedAt time.Time `json:"created_at"`
 
 	// Client information
-	ClientID   uint   `json:"client_id"`
+	ClientID   string `json:"client_id"`
 	ClientType string `json:"client_type"`
 
 	// Location information
@@ -18,10 +19,10 @@ type TransferResponse struct {
 	ToAddress   string `json:"to_address"`
 
 	// Status information
-	Status     domain.TransferStatus     `json:"status"`
-	HostStatus domain.TransferHostStatus `json:"host_status"`
-	Type       domain.TransferDirection  `json:"type"`
-	TransType  domain.TransferType       `json:"trans_type"`
+	Status     types.TransferStatus `json:"status"`
+	HostStatus types.HostStatus     `json:"host_status"`
+	Type       types.TransferType   `json:"type"`
+	TransType  types.TransferType   `json:"trans_type"`
 
 	// Transfer details
 	Number      string     `json:"number"`
@@ -41,6 +42,8 @@ type TransferResponse struct {
 	BagsCount    int     `json:"bags_count"`
 	Price        float64 `json:"price"`
 	Distance     float64 `json:"distance"`
+
+	CarObject *custom_types.JSONMap `json:"car"`
 
 	// Notes
 	Notes      *string `json:"notes,omitempty"`

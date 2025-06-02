@@ -9,6 +9,7 @@ import (
 	"kaptan/internal/module/chat/consts"
 	"kaptan/internal/module/chat/domain"
 	"kaptan/internal/module/chat/dto"
+	domain3 "kaptan/internal/module/transfer/domain"
 	domain2 "kaptan/internal/module/user/domain"
 	"kaptan/pkg/database/mysql"
 	"kaptan/pkg/gate"
@@ -22,18 +23,20 @@ import (
 )
 
 type ChatRepository struct {
-	db               *gorm.DB
-	logger           logger.ILogger
-	gate             *gate.Gate
-	driverRepository domain2.DriverRepository
+	db                 *gorm.DB
+	logger             logger.ILogger
+	gate               *gate.Gate
+	driverRepository   domain2.DriverRepository
+	transferRepository domain3.TransferRepository
 }
 
-func NewChatRepository(logger logger.ILogger, db *gorm.DB, gate *gate.Gate, driverRepository domain2.DriverRepository) domain.ChatRepository {
+func NewChatRepository(logger logger.ILogger, db *gorm.DB, gate *gate.Gate, driverRepository domain2.DriverRepository, transferRepository domain3.TransferRepository) domain.ChatRepository {
 	return &ChatRepository{
-		db:               db,
-		logger:           logger,
-		gate:             gate,
-		driverRepository: driverRepository,
+		db:                 db,
+		logger:             logger,
+		gate:               gate,
+		driverRepository:   driverRepository,
+		transferRepository: transferRepository,
 	}
 }
 
@@ -149,6 +152,16 @@ func (r ChatRepository) AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPr
 
 	chat.Status = consts.ACCEPT_CHAT_STATUS
 
+	go func() {
+		if chat.TransferId != nil {
+			driverId, ok := chat.User["id"]
+			if ok {
+				_, err := r.transferRepository.AssignSellerToTransfer(&ctx, cast.ToUint(driverId), uint(*chat.TransferId))
+				r.logger.Error(err)
+			}
+		}
+	}()
+
 	return chat, nil
 }
 
@@ -170,6 +183,15 @@ func (r ChatRepository) GetChat(ctx context.Context, dto *dto.GetChat) (*domain.
 	if dto.GetMarkAsRead() && chat.UnreadMessagesCount != 0 {
 		chat.UnreadMessagesCount = 0
 		r.db.Save(&chat)
+	}
+	return chat, nil
+}
+
+func (r ChatRepository) GetAcceptedChatByTransferId(ctx context.Context, transferId uint, userId string) (*domain.Chat, error) {
+	var chat *domain.Chat
+	r.db.Model(&domain.Chat{}).Where("transfer_id = ?", transferId).Where("status = ?", consts.ACCEPT_CHAT_STATUS).Where("user_id = ?", userId).First(&chat)
+	if chat == nil || chat.ID == 0 {
+		return nil, errors.New("Can't Enable Chat")
 	}
 	return chat, nil
 }
