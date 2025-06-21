@@ -1,0 +1,50 @@
+name: Deploy Go App to Server
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Debug Environment Variables
+        run: |
+          echo "SSH_USER: ${{ secrets.SSH_USER }}"
+          echo "SSH_HOST: ${{ secrets.SSH_HOST }}"
+
+      - name: Mark repository as safe
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          DEPLOY_PATH: /var/www/kaptan-chat-service
+        run: |
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "git config --global --add safe.directory '$DEPLOY_PATH'"
+
+      - name: Deploy Go Application to Server
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          DEPLOY_PATH: /var/www/kaptan-chat-service
+          APP_NAME: kaptan-chat-service
+        run: |
+          ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "\
+            cd $DEPLOY_PATH && \
+            sudo git fetch origin master && \
+            sudo git reset --hard origin/master && \
+            sudo go mod download && \
+            sudo go mod tidy && \
+            sudo go build -o $APP_NAME . && \
+            sudo supervisorctl stop kaptan-chat || true && \
+            sudo supervisorctl start kaptan-chat && \
+            sudo supervisorctl status kaptan-chat
+          "

@@ -11,14 +11,6 @@ import (
 )
 
 func NewClient(config *config.Config) (*gorm.DB, error) {
-	// Add debug logging
-	fmt.Printf("DEBUG - DB Config:\n")
-	fmt.Printf("USERNAME: %s\n", config.Mysql.USERNAME)
-	fmt.Printf("HOST: %s\n", config.Mysql.HOST)
-	fmt.Printf("PORT: %s\n", config.Mysql.PORT)
-	fmt.Printf("DATABASE: %s\n", config.Mysql.DATABASE)
-	fmt.Printf("PASSWORD: %s\n", config.Mysql.PASSWORD) // Don't log actual password
-
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", config.Mysql.USERNAME, config.Mysql.PASSWORD, config.Mysql.HOST, config.Mysql.PORT, config.Mysql.DATABASE)
 	var enableLogs logger.LogLevel
 	if os.Getenv("LOG_DB_QUERIES") == "TRUE" {
