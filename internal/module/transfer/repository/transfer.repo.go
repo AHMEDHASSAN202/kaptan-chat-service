@@ -38,7 +38,8 @@ func (r *Repository) AssignSellerToTransfer(ctx *context.Context, driverID uint,
 	}
 
 	// Step 2: Assign driverID as sellerID
-	transfer.SellerID = &driverID // assuming SellerID is a *uint in the domain
+	transfer.SellerID = transfer.DriverID // assuming SellerID is a *uint in the domain
+	transfer.DriverID = &driverID         // assuming SellerID is a *uint in the domain
 
 	// Step 3: Save the updated transfer
 	if err := r.db.Save(&transfer).Error; err != nil {
