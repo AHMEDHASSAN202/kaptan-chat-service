@@ -4,7 +4,6 @@ import (
 	"context"
 	"gorm.io/gorm"
 	"kaptan/internal/module/transfer/dto"
-	"kaptan/internal/module/transfer/responses/app"
 	"kaptan/internal/module/transfer/types"
 	"kaptan/pkg/database/mysql/custom_types"
 	"kaptan/pkg/validators"
@@ -143,6 +142,6 @@ type TransferRepository interface {
 }
 
 type UseCase interface {
-	StartTransfer(ctx *context.Context, dto *dto.StartTransfer) (*app.TransferResponse, validators.ErrorResponse)
-	EndTransfer(ctx *context.Context, dto *dto.EndTransfer) (*app.TransferResponse, validators.ErrorResponse)
+	StartTransfer(ctx *context.Context, dto *dto.StartTransfer) validators.ErrorResponse
+	EndTransfer(ctx *context.Context, dto *dto.EndTransfer) validators.ErrorResponse
 }

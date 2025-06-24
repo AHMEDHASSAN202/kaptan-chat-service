@@ -55,13 +55,13 @@ func (a *TransferHandler) StartTransfer(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	transfer, errResp := a.transferUseCase.StartTransfer(&ctx, &startDto)
+	errResp := a.transferUseCase.StartTransfer(&ctx, &startDto)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorResp(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{"transfer": transfer})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }
 
 func (a *TransferHandler) EndTransfer(c echo.Context) error {
@@ -86,11 +86,11 @@ func (a *TransferHandler) EndTransfer(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	transfer, errResp := a.transferUseCase.EndTransfer(&ctx, &endDto)
+	errResp := a.transferUseCase.EndTransfer(&ctx, &endDto)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorResp(c, errResp)
 	}
 
-	return validators.SuccessResponse(c, map[string]interface{}{"transfer": transfer})
+	return validators.SuccessResponse(c, map[string]interface{}{})
 }

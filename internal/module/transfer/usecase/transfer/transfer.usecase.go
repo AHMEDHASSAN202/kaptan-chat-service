@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	domain4 "kaptan/internal/module/chat/domain"
-	"kaptan/internal/module/transfer/builder"
 	domain3 "kaptan/internal/module/transfer/domain"
 	"kaptan/internal/module/transfer/dto"
-	"kaptan/internal/module/transfer/responses/app"
 	domain2 "kaptan/internal/module/user/domain"
 	"kaptan/pkg/gate"
 	"kaptan/pkg/logger"
@@ -35,18 +33,18 @@ func NewTransferUseCase(chatUseCase domain4.ChatUseCase, driverRepo domain2.Driv
 	}
 }
 
-func (u UseCase) StartTransfer(ctx *context.Context, dto *dto.StartTransfer) (*app.TransferResponse, validators.ErrorResponse) {
+func (u UseCase) StartTransfer(ctx *context.Context, dto *dto.StartTransfer) validators.ErrorResponse {
 	chat, err := u.chatUseCase.GetAcceptedChatByTransferId(*ctx, dto.TransferId, dto.CauserId)
 	if err.IsError {
-		return nil, err
+		return err
 	}
 
-	transfer, errTransfer := u.transferRepo.MarkTransferAsStart(ctx, dto)
-	if errTransfer != nil {
-		return nil, validators.GetErrorResponseFromErr(errTransfer)
-	}
-
-	transferResponse := builder.TransferResponseBuilder(transfer)
+	//transfer, errTransfer := u.transferRepo.MarkTransferAsStart(ctx, dto)
+	//if errTransfer != nil {
+	//	return validators.GetErrorResponseFromErr(errTransfer)
+	//}
+	//
+	//transferResponse := builder.TransferResponseBuilder(transfer)
 
 	go func() {
 		//push message here
@@ -61,21 +59,21 @@ func (u UseCase) StartTransfer(ctx *context.Context, dto *dto.StartTransfer) (*a
 	//	Action:    consts.CHANCE_CHAT_STATUS_ACTION,
 	//}
 
-	return transferResponse, validators.ErrorResponse{}
+	return validators.ErrorResponse{}
 }
 
-func (u UseCase) EndTransfer(ctx *context.Context, dto *dto.EndTransfer) (*app.TransferResponse, validators.ErrorResponse) {
+func (u UseCase) EndTransfer(ctx *context.Context, dto *dto.EndTransfer) validators.ErrorResponse {
 	chat, err := u.chatUseCase.GetAcceptedChatByTransferId(*ctx, dto.TransferId, dto.CauserId)
 	if err.IsError {
-		return nil, err
+		return err
 	}
 
-	transfer, errTransfer := u.transferRepo.MarkTransferAsEnd(ctx, dto)
-	if errTransfer != nil {
-		return nil, validators.GetErrorResponseFromErr(errTransfer)
-	}
-
-	transferResponse := builder.TransferResponseBuilder(transfer)
+	//transfer, errTransfer := u.transferRepo.MarkTransferAsEnd(ctx, dto)
+	//if errTransfer != nil {
+	//	return validators.GetErrorResponseFromErr(errTransfer)
+	//}
+	//
+	//transferResponse := builder.TransferResponseBuilder(transfer)
 
 	go func() {
 		//push message here
@@ -90,5 +88,5 @@ func (u UseCase) EndTransfer(ctx *context.Context, dto *dto.EndTransfer) (*app.T
 	//	Action:    consts.CHANCE_CHAT_STATUS_ACTION,
 	//}
 
-	return transferResponse, validators.ErrorResponse{}
+	return validators.ErrorResponse{}
 }
