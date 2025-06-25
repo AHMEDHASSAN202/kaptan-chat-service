@@ -2,11 +2,13 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"kaptan/pkg/localization"
 	"kaptan/pkg/utils"
 	"kaptan/pkg/validators"
 	"net/http"
+	"strings"
 )
 
 func (m Middlewares) AuthenticationMiddleware(causerType string) echo.MiddlewareFunc {
@@ -24,13 +26,27 @@ func (m Middlewares) AuthenticationMiddleware(causerType string) echo.Middleware
 				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 			}
 
+			userToken = strings.Replace(userToken, "Bearer ", "", 1)
+			userToken = strings.Replace(userToken, "bearer ", "", 1)
 			isSanctumToken, tokenParts := utils.IsSanctumToken(userToken)
 			if !isSanctumToken {
 				m.logger.Info("AuthMiddleware -> Token Parsing Failed -> Token Is Not Sanctum")
 				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
 			}
 
-			causerId := tokenParts[0]
+			accessTokenId := tokenParts[0]
+			if accessTokenId == "" {
+				m.logger.Info("AuthMiddleware -> Token Parsing Failed -> AccessTokenId Not Found")
+				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
+			}
+
+			driver, err := m.driverRepository.FindByAccessTokenId(&ctx, uint(*utils.StringToUint(accessTokenId)))
+			if err != nil {
+				m.logger.Info("AuthMiddleware -> Token Parsing Failed -> Driver Not Found", "error", err)
+				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
+			}
+
+			causerId := fmt.Sprintf("%d", driver.ID)
 			c.Request().Header.Add("causer-id", causerId)
 			c.Request().Header.Add("causer-type", causerType)
 

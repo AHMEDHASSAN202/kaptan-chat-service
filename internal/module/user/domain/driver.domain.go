@@ -94,5 +94,6 @@ func (d *Driver) ToResponse() *DriverResponse {
 
 type DriverRepository interface {
 	Find(ctx *context.Context, id uint) (domainData *Driver, err error)
+	FindByAccessTokenId(ctx *context.Context, id uint) (*Driver, error)
 	IncrementSoldTripsByValue(ctx *context.Context, id uint, value int) error
 }
