@@ -4,7 +4,7 @@ type Pagination struct {
 	Page   int    `json:"page" query:"page"`
 	Limit  int    `json:"limit" query:"limit"`
 	Sort   string `json:"sort,omitempty;query:sort"`
-	SortBy string `json:"sort_by,omitempty;query:sort"`
+	SortBy string `json:"sort_by,omitempty;query:sort_by"`
 }
 
 func (p *Pagination) SetDefault() {
