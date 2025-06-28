@@ -19,6 +19,7 @@ type Message struct {
 	CountChannels           int                  `gorm:"column:count_channels;default:0"`
 	TransferOffersRequested bool                 `gorm:"column:transfer_offers_requested;default:0"`
 	TransferOfferStatus     *string              `gorm:"column:transfer_offer_status;default:null"`
+	Chat                    *Chat                `gorm:"foreignKey:OpenedBy;references:ID"`
 }
 
 type MessageUseCase interface {

@@ -671,6 +671,15 @@ func StringToUint(value string) *uint64 {
 	return &number
 }
 
+func StringToInt(value string) *int {
+	number, err := strconv.Atoi(value)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	return &number
+}
+
 func GetClientUserId(causerType, causerId string) string {
 	return fmt.Sprintf("%s-%s", causerType, causerId)
 }

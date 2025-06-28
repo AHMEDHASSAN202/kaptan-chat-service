@@ -54,8 +54,13 @@ func (r ChatRepository) GetChatMessages(ctx context.Context, dto *dto.GetChatMes
 	pagination := mysql.Pagination{}
 	var messages []*domain.Message
 	query := r.db.Model(domain.Message{})
+	if !strings.HasPrefix(dto.Channel, "private-") {
+		query.Preload("Chat", "user_id = ?", *utils.StringToInt(dto.CauserId))
+	}
 	if strings.ToLower(dto.Channel) != "all" {
 		query = query.Where("channel = ?", dto.Channel)
+	} else {
+		query = query.Where("is_private = ?", 0)
 	}
 	if strings.ToLower(dto.MyMessage) == "true" {
 		query = query.Where("sender_id = ?", dto.CauserId).Where("is_private = ?", 0)
@@ -130,6 +135,25 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 		User:     utils.StructToMap(user.ToResponse(), "json"),
 		OpenedBy: dto.MessageId,
 	}
+
+	copyMessage := &domain.Message{
+		Channel:     channel,
+		Message:     message.Message,
+		MessageType: message.MessageType,
+		BrandId:     message.BrandId,
+		TransferId:  message.TransferId,
+		SenderId:    int64(*utils.StringToUint(dto.CauserId)),
+		SenderType:  dto.CauserType,
+		IsPrivate:   true,
+		User:        utils.StructToMap(user.ToResponse(), "json"),
+	}
+
+	go func() {
+		result := r.db.Create(&copyMessage)
+		if result.Error != nil {
+			r.logger.Error("Error creating private message: ", result.Error)
+		}
+	}()
 
 	result := r.db.Create([]*domain.Chat{
 		chat, ownerUserChat,
@@ -242,9 +266,11 @@ func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) 
 	}()
 
 	go func() {
-		errIncrement := r.driverRepository.IncrementSoldTripsByValue(&ctx, uint(message.SenderId), 1)
-		if errIncrement != nil {
-			r.logger.Error(errIncrement)
+		if !message.IsPrivate {
+			errIncrement := r.driverRepository.IncrementSoldTripsByValue(&ctx, uint(message.SenderId), 1)
+			if errIncrement != nil {
+				r.logger.Error(errIncrement)
+			}
 		}
 	}()
 

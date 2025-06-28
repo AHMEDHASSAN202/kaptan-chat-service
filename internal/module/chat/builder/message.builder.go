@@ -28,5 +28,9 @@ func MessageResponseBuilder(message *domain.Message) *app.MessageResponse {
 		messageResponse.UpdatedAt = nil
 	}
 
+	if message.Chat != nil {
+		messageResponse.Chat = ChatResponseBuilder(message.Chat, nil)
+	}
+
 	return messageResponse
 }

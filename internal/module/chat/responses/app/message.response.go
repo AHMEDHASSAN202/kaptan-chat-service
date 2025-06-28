@@ -21,4 +21,5 @@ type MessageResponse struct {
 	CountChannels           int            `json:"count_channels"`
 	TransferOffersRequested bool           `json:"transfer_offers_requested"`
 	TransferOfferStatus     *string        `json:"transfer_offer_status"`
+	Chat                    *ChatResponse  `json:"chat"`
 }
