@@ -21,6 +21,9 @@ func (m Middlewares) AuthenticationMiddleware(causerType string) echo.Middleware
 			}
 
 			userToken := c.Request().Header.Get("Authorization")
+			if userToken == "" {
+				userToken = c.Request().URL.Query().Get("access_token")
+			}
 			if len(userToken) == 0 {
 				m.logger.Info("AuthMiddleware -> UserToken Not found")
 				return validators.ErrorResp(c, validators.GetErrorResponse(&ctx, localization.E1401, nil, utils.GetAsPointer(http.StatusUnauthorized)))
