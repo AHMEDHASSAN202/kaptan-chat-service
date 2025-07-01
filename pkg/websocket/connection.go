@@ -16,5 +16,8 @@ func NewConnectionManger(e *echo.Echo, log logger.ILogger, userMiddleware *userm
 		return handleWebSocket(c, manager)
 	})
 
+	// Important: listen on port 39678
+	e.Logger.Fatal(e.Start(":39678"))
+
 	return manager
 }
