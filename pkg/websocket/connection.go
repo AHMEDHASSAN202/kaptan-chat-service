@@ -17,7 +17,7 @@ func NewConnectionManger(e *echo.Echo, log logger.ILogger, userMiddleware *userm
 	})
 
 	// Important: listen on port 39678
-	e.Logger.Fatal(e.Start(":39678"))
+	//e.Logger.Fatal(e.Start(":39678"))
 
 	return manager
 }
