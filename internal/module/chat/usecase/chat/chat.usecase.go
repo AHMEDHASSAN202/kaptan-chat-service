@@ -65,23 +65,21 @@ func (u ChatUseCase) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat
 
 	chatResponse := builder.ChatResponseBuilder(chat, driver)
 
-	contentJson, _ := json.Marshal(chatResponse)
-	myClient := u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId))
-	anotherClient := u.websocketManager.GetClient(utils.GetClientUserId(message.SenderType, fmt.Sprintf("%v", message.SenderId)))
-
-	u.logger.Info("myClient", myClient)
-	u.logger.Info("anotherClient", anotherClient)
-
-	u.websocketManager.JoinChannel(myClient, chatResponse.Channel)
-	u.websocketManager.JoinChannel(anotherClient, chatResponse.Channel)
-
-	u.websocketManager.Broadcast <- websocket.Message{
-		ChannelID: chatResponse.Channel,
-		Content:   string(contentJson),
-		Action:    consts.START_CHAT_ACTION,
-	}
-
-	u.addUnreadMessage(myClient, chatResponse.Channel)
+	go func() {
+		contentJson, _ := json.Marshal(chatResponse)
+		myClient := u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId))
+		anotherClient := u.websocketManager.GetClient(utils.GetClientUserId(message.SenderType, fmt.Sprintf("%v", message.SenderId)))
+		u.logger.Info("myClient", myClient)
+		u.logger.Info("anotherClient", anotherClient)
+		u.websocketManager.JoinChannel(myClient, chatResponse.Channel)
+		u.websocketManager.JoinChannel(anotherClient, chatResponse.Channel)
+		u.websocketManager.Broadcast <- websocket.Message{
+			ChannelID: chatResponse.Channel,
+			Content:   string(contentJson),
+			Action:    consts.START_CHAT_ACTION,
+		}
+		u.addUnreadMessage(myClient, chatResponse.Channel)
+	}()
 
 	return chatResponse, validators.ErrorResponse{}
 }
@@ -94,13 +92,15 @@ func (u ChatUseCase) AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPriva
 
 	chatResponse := builder.ChatResponseBuilder(chat, nil)
 
-	contentJson, _ := json.Marshal(chatResponse)
-
-	u.websocketManager.Broadcast <- websocket.Message{
-		ChannelID: chatResponse.Channel,
-		Content:   string(contentJson),
-		Action:    consts.CHANCE_CHAT_STATUS_ACTION,
-	}
+	go func() {
+		contentJson, _ := json.Marshal(chatResponse)
+		u.websocketManager.Broadcast <- websocket.Message{
+			ChannelID: chatResponse.Channel,
+			Content:   string(contentJson),
+			Action:    consts.ACCEPT_CHAT_ACTION,
+		}
+		u.addUnreadMessage(u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId)), chatResponse.Channel)
+	}()
 
 	return chatResponse, validators.ErrorResponse{}
 }
@@ -111,6 +111,18 @@ func (u ChatUseCase) RejectOffer(ctx context.Context, dto *dto.RejectOffer) (*ap
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
 	messageResponse := builder.MessageResponseBuilder(message)
+
+	go func() {
+		contentJson, _ := json.Marshal(messageResponse)
+		u.websocketManager.Broadcast <- websocket.Message{
+			ChannelID: messageResponse.Channel,
+			Content:   string(contentJson),
+			Action:    consts.REJECT_OFFER_ACTION,
+		}
+		myClient := u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId))
+		u.addUnreadMessage(myClient, messageResponse.Channel)
+	}()
+
 	return messageResponse, validators.ErrorResponse{}
 }
 
@@ -182,15 +194,16 @@ func (u ChatUseCase) SendMessage(ctx context.Context, dto *dto.SendMessage) (*ap
 
 	messageResponse := builder.MessageResponseBuilder(message)
 
-	contentJson, _ := json.Marshal(messageResponse)
-	u.websocketManager.Broadcast <- websocket.Message{
-		ChannelID: messageResponse.Channel,
-		Content:   string(contentJson),
-		Action:    consts.ADD_MESSAGE_ACTION,
-	}
-
-	myClient := u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId))
-	u.addUnreadMessage(myClient, messageResponse.Channel)
+	go func() {
+		contentJson, _ := json.Marshal(messageResponse)
+		u.websocketManager.Broadcast <- websocket.Message{
+			ChannelID: messageResponse.Channel,
+			Content:   string(contentJson),
+			Action:    consts.ADD_MESSAGE_ACTION,
+		}
+		myClient := u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId))
+		u.addUnreadMessage(myClient, messageResponse.Channel)
+	}()
 
 	return messageResponse, validators.ErrorResponse{}
 }
@@ -203,12 +216,15 @@ func (u ChatUseCase) UpdateMessage(ctx context.Context, dto *dto.UpdateMessage) 
 
 	messageResponse := builder.MessageResponseBuilder(message)
 
-	contentJson, _ := json.Marshal(messageResponse)
-	u.websocketManager.Broadcast <- websocket.Message{
-		ChannelID: messageResponse.Channel,
-		Content:   string(contentJson),
-		Action:    consts.UPDATE_MESSAGE_ACTION,
-	}
+	go func() {
+		contentJson, _ := json.Marshal(messageResponse)
+		u.websocketManager.Broadcast <- websocket.Message{
+			ChannelID: messageResponse.Channel,
+			Content:   string(contentJson),
+			Action:    consts.UPDATE_MESSAGE_ACTION,
+		}
+		u.addUnreadMessage(u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId)), messageResponse.Channel)
+	}()
 
 	return messageResponse, validators.ErrorResponse{}
 }
@@ -221,12 +237,15 @@ func (u ChatUseCase) DeleteMessage(ctx context.Context, dto *dto.DeleteMessage) 
 
 	messageResponse := builder.MessageResponseBuilder(message)
 
-	contentJson, _ := json.Marshal(messageResponse)
-	u.websocketManager.Broadcast <- websocket.Message{
-		ChannelID: messageResponse.Channel,
-		Content:   string(contentJson),
-		Action:    consts.DELETE_MESSAGE_ACTION,
-	}
+	go func() {
+		contentJson, _ := json.Marshal(messageResponse)
+		u.websocketManager.Broadcast <- websocket.Message{
+			ChannelID: messageResponse.Channel,
+			Content:   string(contentJson),
+			Action:    consts.DELETE_MESSAGE_ACTION,
+		}
+		u.addUnreadMessage(u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId)), messageResponse.Channel)
+	}()
 
 	return messageResponse, validators.ErrorResponse{}
 }
