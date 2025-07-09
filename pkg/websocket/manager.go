@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"kaptan/internal/module/chat/consts"
+	"kaptan/internal/module/chat/domain"
+	"kaptan/internal/module/chat/dto"
 	"kaptan/pkg/utils"
 	"net/http"
 	"sync"
@@ -173,6 +176,27 @@ func (manager *ChannelManager) Shutdown() {
 	close(manager.shutdown)
 }
 
+// SendToClient sends a message directly to a specific client by user ID
+func (manager *ChannelManager) SendToClient(userId string, message interface{}) bool {
+	manager.mutex.RLock()
+	client, exists := manager.clientsMap[userId]
+	manager.mutex.RUnlock()
+
+	if !exists || client == nil {
+		return false // Client not found or offline
+	}
+
+	messageBytes := []byte(utils.JsonEncode(message))
+
+	select {
+	case client.send <- messageBytes:
+		return true // Message sent successfully
+	default:
+		// Client's send channel is full or closed
+		return false
+	}
+}
+
 // HandleClient handles WebSocket connections for a client
 func (client *Client) HandleClient() {
 	defer func() {
@@ -241,14 +265,13 @@ func (client *Client) HandleClient() {
 }
 
 // WebSocket handler function
-func handleWebSocket(c echo.Context, manager *ChannelManager) error {
+func handleWebSocket(c echo.Context, manager *ChannelManager, chatUseCase domain.ChatRepository) error {
 	ws, err := upgrader.Upgrade(c.Response(), c.Request(), nil)
 	if err != nil {
 		return err
 	}
 
 	userId := utils.GetClientUserId(c.Request().Header.Get("causer-type"), c.Request().Header.Get("causer-id"))
-	fmt.Println("Start Connection For User: ", userId)
 
 	client := &Client{
 		conn:       ws,
@@ -261,7 +284,14 @@ func handleWebSocket(c echo.Context, manager *ChannelManager) error {
 	manager.register <- client
 
 	// Join default channel (you can customize this)
-	manager.JoinChannel(client, "general")
+	chatDto := dto.GetChats{}
+	chatDto.CauserId = c.Request().Header.Get("causer-id")
+	chatDto.CauserType = c.Request().Header.Get("causer-type")
+	chats := chatUseCase.GetActiveChats(c.Request().Context(), &chatDto)
+	for _, chat := range chats {
+		manager.JoinChannel(client, chat.Channel)
+	}
+	manager.JoinChannel(client, consts.GENERAL_CHAT)
 
 	// Handle client messages
 	go client.HandleClient()

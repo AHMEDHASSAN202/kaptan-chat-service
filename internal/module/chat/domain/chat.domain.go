@@ -30,7 +30,7 @@ type ChatUseCase interface {
 	GetAcceptedChatByTransferId(ctx context.Context, transferId uint, userId string) (*app.ChatResponse, validators.ErrorResponse)
 	GetChatMessages(ctx context.Context, dto *dto.GetChatMessage) (*app.MessagesResponse, validators.ErrorResponse)
 	AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat) (*app.ChatResponse, validators.ErrorResponse)
-	AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPrivateChat) (*app.ChatResponse, validators.ErrorResponse)
+	SaleTransferChat(ctx context.Context, dto *dto.SaleTransferChat) (*app.ChatResponse, validators.ErrorResponse)
 	SendMessage(ctx context.Context, message *dto.SendMessage) (*app.MessageResponse, validators.ErrorResponse)
 	UpdateMessage(ctx context.Context, dto *dto.UpdateMessage) (*app.MessageResponse, validators.ErrorResponse)
 	DeleteMessage(ctx context.Context, dto *dto.DeleteMessage) (*app.MessageResponse, validators.ErrorResponse)
@@ -39,11 +39,12 @@ type ChatUseCase interface {
 
 type ChatRepository interface {
 	PrivateChats(ctx context.Context, dto *dto.GetChats) []*Chat
+	GetActiveChats(ctx context.Context, dto *dto.GetChats) []*Chat
 	GetChat(ctx context.Context, dto *dto.GetChat) (*Chat, error)
 	GetAcceptedChatByTransferId(ctx context.Context, transferId uint, userId string) (*Chat, error)
 	GetChatMessages(ctx context.Context, dto *dto.GetChatMessage) ([]*Message, *mysql.Pagination)
 	AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat) (*Chat, *Message, error)
-	AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPrivateChat) (*Chat, error)
+	SaleTransferChat(ctx context.Context, dto *dto.SaleTransferChat) (*Chat, error)
 	StoreMessage(ctx context.Context, message *dto.SendMessage) (*Message, error)
 	UpdateMessage(ctx context.Context, dto *dto.UpdateMessage) (*Message, error)
 	DeleteMessage(ctx context.Context, dto *dto.DeleteMessage) (*Message, error)

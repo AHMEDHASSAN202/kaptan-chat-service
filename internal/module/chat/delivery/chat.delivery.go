@@ -33,7 +33,7 @@ func InitChatController(e *echo.Echo, us domain.ChatUseCase, validator *validato
 		mobile.GET("", handler.GetChats)
 		mobile.GET("/:channel", handler.GetChat)
 		mobile.GET("/:channel/messages", handler.GetChatMessage)
-		mobile.PUT("/:channel/accept", handler.AcceptChat)
+		mobile.PUT("/:channel/sale-transfer", handler.SaleTransferChat)
 	}
 
 	{
@@ -106,10 +106,10 @@ func (a *ChatHandler) GetChat(c echo.Context) error {
 	return validators.SuccessResponse(c, map[string]interface{}{"chat": chat, "transfer": transfer})
 }
 
-func (a *ChatHandler) AcceptChat(c echo.Context) error {
+func (a *ChatHandler) SaleTransferChat(c echo.Context) error {
 	ctx := c.Request().Context()
 
-	chatsDto := dto.AcceptPrivateChat{}
+	chatsDto := dto.SaleTransferChat{}
 
 	binder := &echo.DefaultBinder{}
 	if err := binder.BindHeaders(c, &chatsDto); err != nil {
@@ -128,7 +128,7 @@ func (a *ChatHandler) AcceptChat(c echo.Context) error {
 		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
 	}
 
-	chat, errResp := a.chatUsecase.AcceptPrivateChat(ctx, &chatsDto)
+	chat, errResp := a.chatUsecase.SaleTransferChat(ctx, &chatsDto)
 	if errResp.IsError {
 		a.logger.Error(errResp)
 		return validators.ErrorResp(c, errResp)

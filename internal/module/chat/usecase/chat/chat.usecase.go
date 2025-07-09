@@ -84,8 +84,8 @@ func (u ChatUseCase) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat
 	return chatResponse, validators.ErrorResponse{}
 }
 
-func (u ChatUseCase) AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPrivateChat) (*app.ChatResponse, validators.ErrorResponse) {
-	chat, err := u.repo.AcceptPrivateChat(ctx, dto)
+func (u ChatUseCase) SaleTransferChat(ctx context.Context, dto *dto.SaleTransferChat) (*app.ChatResponse, validators.ErrorResponse) {
+	chat, err := u.repo.SaleTransferChat(ctx, dto)
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
@@ -97,7 +97,7 @@ func (u ChatUseCase) AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPriva
 		u.websocketManager.Broadcast <- websocket.Message{
 			ChannelID: chatResponse.Channel,
 			Content:   string(contentJson),
-			Action:    consts.ACCEPT_CHAT_ACTION,
+			Action:    consts.SALE_CHAT_ACTION,
 		}
 		u.addUnreadMessage(u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId)), chatResponse.Channel)
 	}()
@@ -203,6 +203,16 @@ func (u ChatUseCase) SendMessage(ctx context.Context, dto *dto.SendMessage) (*ap
 		}
 		myClient := u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId))
 		u.addUnreadMessage(myClient, messageResponse.Channel)
+	}()
+
+	go func() {
+		contentJson, _ := json.Marshal(messageResponse)
+		u.websocketManager.Broadcast <- websocket.Message{
+			ChannelID: consts.GENERAL_CHAT,
+			Content:   string(contentJson),
+			Action:    consts.ADD_MESSAGE_ACTION,
+		}
+		u.addUnreadMessage(nil, consts.GENERAL_CHAT)
 	}()
 
 	return messageResponse, validators.ErrorResponse{}

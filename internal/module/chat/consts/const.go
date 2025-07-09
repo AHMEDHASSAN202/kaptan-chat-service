@@ -7,13 +7,17 @@ const (
 	UNREAD_MESSAGE_ACTION = "unread-messages-action"
 	START_CHAT_ACTION     = "start-chat-event"
 	ACCEPT_CHAT_ACTION    = "accept-chat-event"
+	SALE_CHAT_ACTION      = "sale-transfer-chat-event"
 	REJECT_OFFER_ACTION   = "reject-offer-event"
 	GENERAL_CHAT          = "general"
 )
 
 const (
-	PENDING_CHAT_STATUS = "pending"
-	ACCEPT_CHAT_STATUS  = "accepted"
+	PENDING_CHAT_STATUS   = "pending"
+	ACCEPT_CHAT_STATUS    = "accepted"
+	SALE_CHAT_STATUS      = "sale"
+	COMPLETED_CHAT_STATUS = "completed"
+	CANCEL_CHAT_STATUS    = "canceled"
 )
 
 const (

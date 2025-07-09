@@ -50,6 +50,13 @@ func (r ChatRepository) PrivateChats(ctx context.Context, dto *dto.GetChats) []*
 	return chats
 }
 
+func (r ChatRepository) GetActiveChats(ctx context.Context, dto *dto.GetChats) []*domain.Chat {
+	var chats []*domain.Chat
+	statuses := []string{consts.PENDING_CHAT_STATUS, consts.ACCEPT_CHAT_ACTION, consts.SALE_CHAT_STATUS}
+	r.db.Where("user_type = ? AND user_id = ? AND status IN ?", dto.CauserType, dto.CauserId, statuses).Find(&chats)
+	return chats
+}
+
 func (r ChatRepository) GetChatMessages(ctx context.Context, dto *dto.GetChatMessage) ([]*domain.Message, *mysql.Pagination) {
 	pagination := mysql.Pagination{}
 	var messages []*domain.Message
@@ -162,19 +169,19 @@ func (r ChatRepository) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateC
 	return chat, &message, result.Error
 }
 
-func (r ChatRepository) AcceptPrivateChat(ctx context.Context, dto *dto.AcceptPrivateChat) (*domain.Chat, error) {
+func (r ChatRepository) SaleTransferChat(ctx context.Context, dto *dto.SaleTransferChat) (*domain.Chat, error) {
 	var chat *domain.Chat
 	r.db.Model(&domain.Chat{}).Where("channel = ?", dto.Channel).Where("is_owner = ?", true).First(&chat)
 	if chat == nil || chat.ID == 0 || chat.UserId != cast.ToInt(dto.CauserId) {
 		return nil, errors.New("Can't Enable Chat")
 	}
 
-	err := r.db.Model(&domain.Chat{}).Where("channel = ?", dto.Channel).Update("status", consts.ACCEPT_CHAT_STATUS)
+	err := r.db.Model(&domain.Chat{}).Where("channel = ?", dto.Channel).Update("status", consts.SALE_CHAT_STATUS)
 	if err.Error != nil {
 		return nil, err.Error
 	}
 
-	chat.Status = consts.ACCEPT_CHAT_STATUS
+	chat.Status = consts.SALE_CHAT_STATUS
 
 	go func() {
 		if chat.TransferId != nil {
