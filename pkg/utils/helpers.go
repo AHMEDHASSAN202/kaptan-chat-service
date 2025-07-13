@@ -683,3 +683,16 @@ func StringToInt(value string) *int {
 func GetClientUserId(causerType, causerId string) string {
 	return fmt.Sprintf("%s-%s", causerType, causerId)
 }
+
+func IsTrue(val interface{}) bool {
+	switch v := val.(type) {
+	case string:
+		return v == "1" || v == "true" || v == "True" || v == "TRUE" || v == "yes" || v == "Yes" || v == "YES" || v == "on" || v == "On" || v == "ON"
+	case int:
+		return v == 1
+	case bool:
+		return v
+	default:
+		return false
+	}
+}

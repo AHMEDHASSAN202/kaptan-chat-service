@@ -5,6 +5,7 @@ import (
 	"kaptan/internal/module/transfer/domain"
 	"kaptan/internal/module/transfer/helper"
 	"kaptan/internal/module/transfer/responses/app"
+	"kaptan/pkg/utils"
 )
 
 func TransferResponseBuilder(transfer *domain.Transfer) *app.TransferResponse {
@@ -14,7 +15,7 @@ func TransferResponseBuilder(transfer *domain.Transfer) *app.TransferResponse {
 
 	clientId, clientType := helper.GenerateClientId(fmt.Sprintf("%d", transfer.ClientID), transfer.ClientType)
 
-	return &app.TransferResponse{
+	transferResponse := &app.TransferResponse{
 		ID:           transfer.ID,
 		CreatedAt:    transfer.CreatedAt,
 		ClientID:     clientId,
@@ -42,4 +43,14 @@ func TransferResponseBuilder(transfer *domain.Transfer) *app.TransferResponse {
 		GuestNotes:   transfer.GuestNotes,
 		CarObject:    transfer.CarObject,
 	}
+
+	_ = utils.TryCatch(func() {
+		car := *transfer.CarObject
+		if car != nil {
+			car["has_children_seat"] = utils.IsTrue(car["has_children_seat"])
+			transferResponse.CarObject = &car
+		}
+	})()
+
+	return transferResponse
 }
