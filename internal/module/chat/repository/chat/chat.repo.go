@@ -228,7 +228,7 @@ func (r ChatRepository) GetAcceptedChatByTransferId(ctx context.Context, transfe
 }
 
 func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) (*domain.Message, error) {
-	user, err := r.driverRepository.Find(&ctx, uint(*utils.StringToUint(dto.CauserId)))
+	user, err := r.driverRepository.FindWithMedia(&ctx, uint(*utils.StringToUint(dto.CauserId)))
 	if err != nil {
 		return nil, err
 	}

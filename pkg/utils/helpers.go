@@ -696,3 +696,8 @@ func IsTrue(val interface{}) bool {
 		return false
 	}
 }
+
+func Assets(path string) string {
+	baseURL := os.Getenv("ASSETS_URL")
+	return fmt.Sprintf("%s/%s", strings.TrimRight(baseURL, "/"), strings.TrimLeft(path, "/"))
+}

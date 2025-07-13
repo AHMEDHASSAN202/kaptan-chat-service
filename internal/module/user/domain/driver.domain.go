@@ -2,8 +2,8 @@ package domain
 
 import (
 	"context"
-	"gorm.io/gorm"
-	"kaptan/pkg/database/mysql/custom_types"
+	"fmt"
+	"kaptan/pkg/utils"
 	"time"
 )
 
@@ -18,30 +18,25 @@ type Driver struct {
 	SoldTrips int       `gorm:"column:sold_trips;index:idx_drivers_sold_trips" json:"sold_trips"`
 
 	// Media relationship
-	Media []Media `gorm:"polymorphic:Model;polymorphicValue:driver" json:"media,omitempty"`
+	Media []Media `gorm:"foreignKey:ModelID;references:ID" json:"media,omitempty"`
 }
 
 // Media represents the media table (similar to Spatie Media Library)
 type Media struct {
-	ID                   uint                 `gorm:"primarykey" json:"id"`
-	ModelType            string               `gorm:"column:model_type;not null" json:"model_type"`
-	ModelID              uint                 `gorm:"column:model_id;not null" json:"model_id"`
-	UUID                 string               `gorm:"column:uuid;uniqueIndex" json:"uuid"`
-	CollectionName       string               `gorm:"column:collection_name;not null" json:"collection_name"`
-	Name                 string               `gorm:"column:name;not null" json:"name"`
-	FileName             string               `gorm:"column:file_name;not null" json:"file_name"`
-	MimeType             string               `gorm:"column:mime_type" json:"mime_type"`
-	Disk                 string               `gorm:"column:disk;not null" json:"disk"`
-	ConversionsDisk      string               `gorm:"column:conversions_disk" json:"conversions_disk"`
-	Size                 uint64               `gorm:"column:size;not null" json:"size"`
-	Properties           custom_types.JSONMap `gorm:"type:json" json:"properties"`
-	CustomProperties     custom_types.JSONMap `gorm:"type:json" json:"custom_properties"`
-	GeneratedConversions custom_types.JSONMap `gorm:"type:json" json:"generated_conversions"`
-	ResponsiveImages     custom_types.JSONMap `gorm:"type:json" json:"responsive_images"`
-	OrderColumn          int                  `gorm:"column:order_column" json:"order_column"`
-	CreatedAt            time.Time            `json:"created_at"`
-	UpdatedAt            time.Time            `json:"updated_at"`
-	DeletedAt            gorm.DeletedAt       `gorm:"index" json:"deleted_at,omitempty"`
+	ID              uint      `gorm:"primarykey" json:"id"`
+	ModelType       string    `gorm:"column:model_type;not null" json:"model_type"`
+	ModelID         uint      `gorm:"column:model_id;not null" json:"model_id"`
+	UUID            string    `gorm:"column:uuid;uniqueIndex" json:"uuid"`
+	CollectionName  string    `gorm:"column:collection_name;not null" json:"collection_name"`
+	Name            string    `gorm:"column:name;not null" json:"name"`
+	FileName        string    `gorm:"column:file_name;not null" json:"file_name"`
+	MimeType        string    `gorm:"column:mime_type" json:"mime_type"`
+	Disk            string    `gorm:"column:disk;not null" json:"disk"`
+	ConversionsDisk string    `gorm:"column:conversions_disk" json:"conversions_disk"`
+	Size            uint64    `gorm:"column:size;not null" json:"size"`
+	OrderColumn     int       `gorm:"column:order_column" json:"order_column"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 // TableName specifies the table name for Media
@@ -51,7 +46,7 @@ func (Media) TableName() string {
 
 // GetFullUrl returns the full URL of the media file
 func (m *Media) GetFullUrl() string {
-	return "/storage/" + m.CollectionName + "/" + m.FileName
+	return utils.Assets("/storage/" + fmt.Sprintf("%d", m.ID) + "/" + m.FileName)
 }
 
 type DriverResponse struct {
@@ -94,6 +89,7 @@ func (d *Driver) ToResponse() *DriverResponse {
 
 type DriverRepository interface {
 	Find(ctx *context.Context, id uint) (domainData *Driver, err error)
+	FindWithMedia(ctx *context.Context, id uint) (domainData *Driver, err error)
 	FindByAccessTokenId(ctx *context.Context, id uint) (*Driver, error)
 	IncrementSoldTripsByValue(ctx *context.Context, id uint, value int) error
 }

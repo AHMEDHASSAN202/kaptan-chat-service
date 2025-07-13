@@ -193,7 +193,7 @@ func (u ChatUseCase) SendMessage(ctx context.Context, dto *dto.SendMessage) (*ap
 	}
 
 	messageResponse := builder.MessageResponseBuilder(message)
-
+	return messageResponse, validators.ErrorResponse{}
 	go func() {
 		contentJson, _ := json.Marshal(messageResponse)
 		u.websocketManager.Broadcast <- websocket.Message{
@@ -205,15 +205,17 @@ func (u ChatUseCase) SendMessage(ctx context.Context, dto *dto.SendMessage) (*ap
 		u.addUnreadMessage(myClient, messageResponse.Channel)
 	}()
 
-	go func() {
-		contentJson, _ := json.Marshal(messageResponse)
-		u.websocketManager.Broadcast <- websocket.Message{
-			ChannelID: consts.GENERAL_CHAT,
-			Content:   string(contentJson),
-			Action:    consts.ADD_MESSAGE_ACTION,
-		}
-		u.addUnreadMessage(nil, consts.GENERAL_CHAT)
-	}()
+	if dto.BrandId != nil {
+		go func() {
+			contentJson, _ := json.Marshal(messageResponse)
+			u.websocketManager.Broadcast <- websocket.Message{
+				ChannelID: consts.GENERAL_CHAT,
+				Content:   string(contentJson),
+				Action:    consts.ADD_MESSAGE_ACTION,
+			}
+			u.addUnreadMessage(nil, consts.GENERAL_CHAT)
+		}()
+	}
 
 	return messageResponse, validators.ErrorResponse{}
 }
