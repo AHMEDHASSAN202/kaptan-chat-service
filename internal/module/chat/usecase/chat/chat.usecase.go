@@ -193,7 +193,7 @@ func (u ChatUseCase) SendMessage(ctx context.Context, dto *dto.SendMessage) (*ap
 	}
 
 	messageResponse := builder.MessageResponseBuilder(message)
-	return messageResponse, validators.ErrorResponse{}
+
 	go func() {
 		contentJson, _ := json.Marshal(messageResponse)
 		u.websocketManager.Broadcast <- websocket.Message{
