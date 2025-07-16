@@ -207,7 +207,7 @@ func (r ChatRepository) RejectOffer(ctx context.Context, dto *dto.RejectOffer) (
 
 func (r ChatRepository) GetChat(ctx context.Context, dto *dto.GetChat) (*domain.Chat, error) {
 	var chat *domain.Chat
-	r.db.Model(&domain.Chat{}).Where("channel = ?", dto.Channel).Where("user_id != ?", cast.ToInt(dto.CauserId)).First(&chat)
+	r.db.Model(&domain.Chat{}).Where("channel = ?", dto.Channel).Where("user_id = ?", cast.ToInt(dto.CauserId)).First(&chat)
 	if chat == nil || chat.ID == 0 {
 		return nil, errors.New("Can't Enable Chat")
 	}

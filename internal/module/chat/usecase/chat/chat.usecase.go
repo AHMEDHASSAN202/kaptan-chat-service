@@ -141,15 +141,15 @@ func (u ChatUseCase) GetChat(ctx context.Context, dto *dto.GetChat) (*app.ChatRe
 	errChan := make(chan error, 2)
 
 	// Get driver
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		var dErr error
-		driver, dErr = u.driverRepo.Find(&ctx, uint(chat.UserId))
-		if dErr != nil {
-			errChan <- dErr
-		}
-	}()
+	//wg.Add(1)
+	//go func() {
+	//	defer wg.Done()
+	//	var dErr error
+	//	driver, dErr = u.driverRepo.Find(&ctx, uint(chat.UserId))
+	//	if dErr != nil {
+	//		errChan <- dErr
+	//	}
+	//}()
 
 	// Get transfer if needed
 	if chat.TransferId != nil {
