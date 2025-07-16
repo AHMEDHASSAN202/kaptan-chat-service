@@ -52,7 +52,7 @@ func (r ChatRepository) PrivateChats(ctx context.Context, dto *dto.GetChats) []*
 
 func (r ChatRepository) GetActiveChats(ctx context.Context, dto *dto.GetChats) []*domain.Chat {
 	var chats []*domain.Chat
-	statuses := []string{consts.PENDING_CHAT_STATUS, consts.ACCEPT_CHAT_ACTION, consts.SALE_CHAT_STATUS}
+	statuses := []string{consts.PENDING_CHAT_STATUS, consts.ACCEPT_CHAT_STATUS, consts.SALE_CHAT_STATUS}
 	r.db.Where("user_type = ? AND user_id = ? AND status IN ?", dto.CauserType, dto.CauserId, statuses).Find(&chats)
 	return chats
 }

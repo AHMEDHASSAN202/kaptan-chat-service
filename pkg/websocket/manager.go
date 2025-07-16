@@ -152,7 +152,7 @@ func (manager *ChannelManager) JoinChannel(client *Client, channelID string) {
 	manager.channels[channelID][client] = true
 	client.channels[channelID] = true
 
-	fmt.Printf("Client joined channel: %s", channelID)
+	//fmt.Printf("Client joined channel: %s", channelID)
 }
 
 // LeaveChannel removes a client from a specific channel
