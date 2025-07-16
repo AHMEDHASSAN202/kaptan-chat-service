@@ -238,6 +238,17 @@ func (u ChatUseCase) UpdateMessage(ctx context.Context, dto *dto.UpdateMessage) 
 		//u.addUnreadMessage(u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId)), messageResponse.Channel)
 	}()
 
+	if message.BrandId != nil {
+		go func() {
+			contentJson, _ := json.Marshal(messageResponse)
+			u.websocketManager.Broadcast <- websocket.Message{
+				ChannelID: consts.GENERAL_CHAT,
+				Content:   string(contentJson),
+				Action:    consts.UPDATE_MESSAGE_ACTION,
+			}
+		}()
+	}
+
 	return messageResponse, validators.ErrorResponse{}
 }
 
@@ -258,6 +269,17 @@ func (u ChatUseCase) DeleteMessage(ctx context.Context, dto *dto.DeleteMessage) 
 		}
 		//u.addUnreadMessage(u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId)), messageResponse.Channel)
 	}()
+
+	if message.BrandId != nil {
+		go func() {
+			contentJson, _ := json.Marshal(messageResponse)
+			u.websocketManager.Broadcast <- websocket.Message{
+				ChannelID: consts.GENERAL_CHAT,
+				Content:   string(contentJson),
+				Action:    consts.DELETE_MESSAGE_ACTION,
+			}
+		}()
+	}
 
 	return messageResponse, validators.ErrorResponse{}
 }
