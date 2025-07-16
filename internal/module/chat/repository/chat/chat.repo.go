@@ -266,7 +266,7 @@ func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) 
 	}()
 
 	go func() {
-		updateResult := r.db.Model(&domain.Chat{}).Where("channel = ?", message.Channel).Updates(&domain.Chat{Status: consts.ACCEPT_CHAT_STATUS, LastMessage: map[string]interface{}{
+		updateResult := r.db.Model(&domain.Chat{}).Where("channel = ?", message.Channel).Updates(&domain.Chat{LastMessage: map[string]interface{}{
 			"id":           message.ID,
 			"created_at":   message.CreatedAt,
 			"brand_id":     message.BrandId,
@@ -274,6 +274,13 @@ func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) 
 			"message":      message.Message,
 			"message_type": message.MessageType,
 		}})
+		if updateResult.Error != nil {
+			r.logger.Error("Update Last Message Error => ", updateResult.Error.Error())
+		}
+	}()
+
+	go func() {
+		updateResult := r.db.Model(&domain.Chat{}).Where("channel = ?", message.Channel).Where("user_id != ?", user.ID).Updates(&domain.Chat{Status: consts.ACCEPT_CHAT_STATUS})
 		if updateResult.Error != nil {
 			r.logger.Error("Update Last Message Error => ", updateResult.Error.Error())
 		}
