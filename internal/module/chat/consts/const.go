@@ -8,6 +8,7 @@ const (
 	START_CHAT_ACTION     = "start-chat-event"
 	ACCEPT_CHAT_ACTION    = "accept-chat-event"
 	SALE_CHAT_ACTION      = "sale-transfer-chat-event"
+	CLOSED_CHAT_ACTION    = "closed-chat-event"
 	REJECT_OFFER_ACTION   = "reject-offer-event"
 	GENERAL_CHAT          = "general"
 )
@@ -16,6 +17,7 @@ const (
 	PENDING_CHAT_STATUS   = "pending"
 	ACCEPT_CHAT_STATUS    = "accepted"
 	SALE_CHAT_STATUS      = "sale"
+	CLOSED_CHAT_STATUS    = "closed"
 	COMPLETED_CHAT_STATUS = "completed"
 	CANCEL_CHAT_STATUS    = "canceled"
 )

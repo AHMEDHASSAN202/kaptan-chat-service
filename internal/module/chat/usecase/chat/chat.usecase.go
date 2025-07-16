@@ -102,6 +102,16 @@ func (u ChatUseCase) SaleTransferChat(ctx context.Context, dto *dto.SaleTransfer
 		u.addUnreadMessage(u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId)), chatResponse.Channel)
 	}()
 
+	go func() {
+		contentJson, _ := json.Marshal(chatResponse)
+		u.websocketManager.Broadcast <- websocket.Message{
+			ChannelID: consts.GENERAL_CHAT,
+			Content:   string(contentJson),
+			Action:    consts.CLOSED_CHAT_ACTION,
+		}
+		u.addUnreadMessage(nil, consts.GENERAL_CHAT)
+	}()
+
 	return chatResponse, validators.ErrorResponse{}
 }
 
