@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/spf13/cast"
 	"kaptan/internal/module/chat/builder"
 	"kaptan/internal/module/chat/consts"
 	"kaptan/internal/module/chat/domain"
@@ -201,6 +202,9 @@ func (u ChatUseCase) SendMessage(ctx context.Context, dto *dto.SendMessage) (*ap
 	if err != nil {
 		return nil, validators.GetErrorResponseFromErr(err)
 	}
+
+	chat, _ := u.repo.GetChatOnly(ctx, dto.Channel, cast.ToInt(dto.CauserId))
+	message.Chat = chat
 
 	messageResponse := builder.MessageResponseBuilder(message)
 
