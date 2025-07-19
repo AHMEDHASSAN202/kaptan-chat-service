@@ -9,6 +9,7 @@ const (
 	ACCEPT_CHAT_ACTION    = "accept-chat-event"
 	SALE_CHAT_ACTION      = "sale-transfer-chat-event"
 	CLOSED_CHAT_ACTION    = "closed-chat-event"
+	SOLD_MESSAGE_ACTION   = "sold-message-event"
 	REJECT_OFFER_ACTION   = "reject-offer-event"
 	GENERAL_CHAT          = "general"
 )

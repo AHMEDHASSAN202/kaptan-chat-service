@@ -47,6 +47,10 @@ func (u ChatUseCase) GetChats(ctx context.Context, dto *dto.GetChats) (app.ListC
 	return chatsResponse, validators.ErrorResponse{}
 }
 
+func (u ChatUseCase) UnreadMessages(ctx context.Context, dto *dto.UnreadMessages) (int, validators.ErrorResponse) {
+	return u.repo.UnreadMessages(ctx, dto)
+}
+
 func (u ChatUseCase) GetChatMessages(ctx context.Context, dto *dto.GetChatMessage) (*app.MessagesResponse, validators.ErrorResponse) {
 	messages, pagination := u.repo.GetChatMessages(ctx, dto)
 	messagesResponse := builder.MessagesResponseBuilder(messages, pagination)
@@ -111,6 +115,19 @@ func (u ChatUseCase) SaleTransferChat(ctx context.Context, dto *dto.SaleTransfer
 			Action:    consts.CLOSED_CHAT_ACTION,
 		}
 		u.addUnreadMessage(nil, consts.GENERAL_CHAT)
+	}()
+
+	go func() {
+		soldMap := map[string]interface{}{
+			"channel":    chatResponse.Channel,
+			"message_id": chat.OpenedBy,
+		}
+		contentJson, _ := json.Marshal(soldMap)
+		u.websocketManager.Broadcast <- websocket.Message{
+			ChannelID: consts.GENERAL_CHAT,
+			Content:   string(contentJson),
+			Action:    consts.SOLD_MESSAGE_ACTION,
+		}
 	}()
 
 	return chatResponse, validators.ErrorResponse{}

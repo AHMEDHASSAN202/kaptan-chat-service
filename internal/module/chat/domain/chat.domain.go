@@ -26,6 +26,7 @@ type Chat struct {
 
 type ChatUseCase interface {
 	GetChats(ctx context.Context, dto *dto.GetChats) (app.ListChatResponse, validators.ErrorResponse)
+	UnreadMessages(ctx context.Context, dto *dto.UnreadMessages) (int, validators.ErrorResponse)
 	GetChat(ctx context.Context, dto *dto.GetChat) (*app.ChatResponse, interface{}, validators.ErrorResponse)
 	GetAcceptedChatByTransferId(ctx context.Context, transferId uint, userId string) (*app.ChatResponse, validators.ErrorResponse)
 	GetChatMessages(ctx context.Context, dto *dto.GetChatMessage) (*app.MessagesResponse, validators.ErrorResponse)
@@ -39,6 +40,7 @@ type ChatUseCase interface {
 
 type ChatRepository interface {
 	PrivateChats(ctx context.Context, dto *dto.GetChats) []*Chat
+	UnreadMessages(ctx context.Context, dto *dto.UnreadMessages) (int, validators.ErrorResponse)
 	GetActiveChats(ctx context.Context, dto *dto.GetChats) []*Chat
 	GetChat(ctx context.Context, dto *dto.GetChat) (*Chat, error)
 	GetChatOnly(ctx context.Context, channel string, userId int) (*Chat, error)

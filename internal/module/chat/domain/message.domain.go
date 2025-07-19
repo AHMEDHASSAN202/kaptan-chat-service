@@ -20,6 +20,7 @@ type Message struct {
 	TransferOffersRequested bool                 `gorm:"column:transfer_offers_requested;default:0"`
 	TransferOfferStatus     *string              `gorm:"column:transfer_offer_status;default:null"`
 	Chat                    *Chat                `gorm:"foreignKey:OpenedBy;references:ID"`
+	Sold                    bool                 `gorm:"column:sold;default:0"`
 }
 
 type MessageUseCase interface {

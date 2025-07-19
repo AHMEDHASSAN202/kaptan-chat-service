@@ -50,6 +50,23 @@ func (r ChatRepository) PrivateChats(ctx context.Context, dto *dto.GetChats) []*
 	return chats
 }
 
+func (r ChatRepository) UnreadMessages(ctx context.Context, dto *dto.UnreadMessages) (int, validators.ErrorResponse) {
+	type result struct {
+		UnreadCount int
+	}
+	unreadResult := result{UnreadCount: 0}
+	q := r.db.Model(&domain.Chat{}).Where("user_type = ?", dto.CauserType).Where("user_id = ?", dto.CauserId)
+	if dto.Channel != nil && *dto.Channel != "" {
+		q = q.Where("channel = ?", dto.Channel)
+	}
+	dbResult := q.Select("SUM(unread_messages_count) as UnreadCount").Find(&unreadResult)
+	if dbResult.Error != nil {
+		r.logger.Error("Error counting unread messages: ", dbResult.Error)
+		return unreadResult.UnreadCount, validators.GetErrorResponseFromErr(dbResult.Error)
+	}
+	return unreadResult.UnreadCount, validators.ErrorResponse{}
+}
+
 func (r ChatRepository) GetActiveChats(ctx context.Context, dto *dto.GetChats) []*domain.Chat {
 	var chats []*domain.Chat
 	statuses := []string{consts.PENDING_CHAT_STATUS, consts.ACCEPT_CHAT_STATUS, consts.SALE_CHAT_STATUS}
@@ -197,6 +214,13 @@ func (r ChatRepository) SaleTransferChat(ctx context.Context, dto *dto.SaleTrans
 		updateResult := r.db.Model(&domain.Chat{}).Where("channel != ?", dto.Channel).Update("status", consts.CLOSED_CHAT_STATUS)
 		if updateResult.Error != nil {
 			r.logger.Error("Update Closed Chats Error => ", updateResult.Error.Error())
+		}
+	}()
+
+	go func() {
+		updateResult := r.db.Model(&domain.Message{}).Where("id = ?", chat.OpenedBy).Update("sold", true)
+		if updateResult.Error != nil {
+			r.logger.Error("Update Message Sold Error => ", updateResult.Error.Error())
 		}
 	}()
 

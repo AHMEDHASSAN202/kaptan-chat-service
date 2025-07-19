@@ -41,6 +41,7 @@ func InitChatController(e *echo.Echo, us domain.ChatUseCase, validator *validato
 		mobile.PUT("/message/:id", handler.UpdateMessage)
 		mobile.DELETE("/message/:id", handler.DeleteMessage)
 		mobile.PUT("/message/:id/reject", handler.RejectOffer)
+		mobile.GET("/unread-messages", handler.UnreadMessages)
 	}
 }
 
@@ -321,4 +322,35 @@ func (a *ChatHandler) RejectOffer(c echo.Context) error {
 	}
 
 	return validators.SuccessResponse(c, map[string]interface{}{"message": message})
+}
+
+func (a *ChatHandler) UnreadMessages(c echo.Context) error {
+	ctx := c.Request().Context()
+
+	chatsDto := dto.UnreadMessages{}
+
+	binder := &echo.DefaultBinder{}
+	if err := binder.BindHeaders(c, &chatsDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	if err := c.Bind(&chatsDto); err != nil {
+		a.logger.Error(err)
+		return validators.ErrorStatusUnprocessableEntity(c, validators.GetErrorResponseFromErr(err))
+	}
+
+	validationErr := chatsDto.Validate(ctx, a.validator)
+	if validationErr.IsError {
+		a.logger.Error(validationErr)
+		return validators.ErrorStatusUnprocessableEntity(c, validationErr)
+	}
+
+	count, errResp := a.chatUsecase.UnreadMessages(ctx, &chatsDto)
+	if errResp.IsError {
+		a.logger.Error(errResp)
+		return validators.ErrorResp(c, errResp)
+	}
+
+	return validators.SuccessResponse(c, map[string]interface{}{"unread_messages_count": count})
 }
