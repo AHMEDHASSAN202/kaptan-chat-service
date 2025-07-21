@@ -23,6 +23,8 @@ func MessageResponseBuilder(message *domain.Message) *app.MessageResponse {
 		TransferOffersRequested: message.TransferOffersRequested,
 		TransferOfferStatus:     message.TransferOfferStatus,
 		Sold:                    message.Sold,
+		Price:                   message.Price,
+		Note:                    message.Note,
 	}
 
 	if message.CreatedAt == message.UpdatedAt {

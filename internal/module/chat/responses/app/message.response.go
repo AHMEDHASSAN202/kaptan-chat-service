@@ -23,4 +23,6 @@ type MessageResponse struct {
 	TransferOfferStatus     *string        `json:"transfer_offer_status"`
 	Chat                    *ChatResponse  `json:"chat"`
 	Sold                    bool           `json:"sold"`
+	Price                   *float64       `json:"price"`
+	Note                    *string        `json:"note"`
 }

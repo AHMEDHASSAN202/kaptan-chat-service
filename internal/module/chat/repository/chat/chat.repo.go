@@ -281,6 +281,8 @@ func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) 
 		IsPrivate:               strings.HasPrefix(dto.Channel, "private-"),
 		User:                    utils.StructToMap(user.ToResponse(), "json"),
 		TransferOffersRequested: dto.TransferOffersRequested,
+		Price:                   dto.Price,
+		Note:                    dto.Note,
 	}
 	if dto.TransferOffersRequested {
 		message.TransferOfferStatus = utils.GetAsPointer[string](consts.PENDING_TRANSFER_OFFER_STATUS)
