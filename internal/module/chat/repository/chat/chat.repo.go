@@ -211,7 +211,7 @@ func (r ChatRepository) SaleTransferChat(ctx context.Context, dto *dto.SaleTrans
 	}()
 
 	go func() {
-		updateResult := r.db.Model(&domain.Chat{}).Where("channel != ?", dto.Channel).Update("status", consts.CLOSED_CHAT_STATUS)
+		updateResult := r.db.Model(&domain.Chat{}).Where("channel != ?", dto.Channel).Where("opened_by", chat.OpenedBy).Update("status", consts.CLOSED_CHAT_STATUS)
 		if updateResult.Error != nil {
 			r.logger.Error("Update Closed Chats Error => ", updateResult.Error.Error())
 		}
