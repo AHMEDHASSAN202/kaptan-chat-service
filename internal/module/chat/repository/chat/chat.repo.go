@@ -46,6 +46,9 @@ func (r ChatRepository) PrivateChats(ctx context.Context, dto *dto.GetChats) []*
 	if dto.MessageId != nil {
 		q.Where("opened_by = ?", dto.MessageId)
 	}
+	if dto.TransferId != nil {
+		q.Where("transfer_id = ?", dto.TransferId)
+	}
 	q.Order("updated_at desc").Find(&chats)
 	return chats
 }

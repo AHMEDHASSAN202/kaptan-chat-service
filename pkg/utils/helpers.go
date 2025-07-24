@@ -701,3 +701,13 @@ func Assets(path string) string {
 	baseURL := os.Getenv("ASSETS_URL")
 	return fmt.Sprintf("%s/%s", strings.TrimRight(baseURL, "/"), strings.TrimLeft(path, "/"))
 }
+
+func StrLimit(s string, limit int, suffix string) string {
+	if len(s) <= limit {
+		return s
+	}
+	if limit < len(suffix) {
+		return s[:limit]
+	}
+	return s[:limit-len(suffix)] + suffix
+}

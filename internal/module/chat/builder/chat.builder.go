@@ -34,7 +34,7 @@ func ChatResponseBuilder(chat *domain.Chat, driver *domain2.Driver) *app.ChatRes
 
 func getChatName(chat *domain.Chat) string {
 	if val, ok := chat.User["name"]; ok {
-		return fmt.Sprintf("%s #%d", val, chat.ID)
+		return fmt.Sprintf("#%d | %s", chat.OpenedBy, val)
 	}
 	return chat.Channel
 }
