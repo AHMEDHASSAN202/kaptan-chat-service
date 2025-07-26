@@ -16,6 +16,7 @@ type Driver struct {
 	UpdatedAt time.Time `gorm:"column:updated_at" json:"updated_at"`
 	Rating    float32   `gorm:"column:rating;index:idx_drivers_rating" json:"rating"`
 	SoldTrips int       `gorm:"column:sold_trips;index:idx_drivers_sold_trips" json:"sold_trips"`
+	VehicleId *uint     `gorm:"column:vehicle_id" json:"vehicle_id,omitempty"`
 
 	// Media relationship
 	Media []Media `gorm:"foreignKey:ModelID;references:ID" json:"media,omitempty"`
