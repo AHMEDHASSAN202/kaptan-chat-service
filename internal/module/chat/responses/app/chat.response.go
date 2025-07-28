@@ -18,4 +18,5 @@ type ChatResponse struct {
 	UpdatedAt           *time.Time             `json:"updated_at"`
 	DeletedAt           gorm.DeletedAt         `json:"deleted_at"`
 	Status              string                 `json:"status"`
+	OpenedBy            uint                   `json:"opened_by"`
 }

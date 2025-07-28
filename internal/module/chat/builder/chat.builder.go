@@ -22,6 +22,7 @@ func ChatResponseBuilder(chat *domain.Chat, driver *domain2.Driver) *app.ChatRes
 		LastMessage:         chat.LastMessage,
 		Status:              chat.Status,
 		UnreadMessagesCount: chat.UnreadMessagesCount,
+		OpenedBy:            chat.OpenedBy,
 	}
 	if driver != nil {
 		response.User = utils.StructToMap(driver.ToResponse(), "json")
