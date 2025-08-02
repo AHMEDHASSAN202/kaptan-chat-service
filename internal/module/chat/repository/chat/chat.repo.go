@@ -316,7 +316,7 @@ func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) 
 	}()
 
 	go func() {
-		updateResult := r.db.Model(&domain.Chat{}).Where("channel = ?", message.Channel).Where("user_id != ?", user.ID).Updates(&domain.Chat{Status: consts.ACCEPT_CHAT_STATUS})
+		updateResult := r.db.Model(&domain.Chat{}).Where("channel = ?", message.Channel).Where("status", consts.PENDING_CHAT_STATUS).Where("user_id != ?", user.ID).Updates(&domain.Chat{Status: consts.ACCEPT_CHAT_STATUS})
 		if updateResult.Error != nil {
 			r.logger.Error("Update Last Message Error => ", updateResult.Error.Error())
 		}
