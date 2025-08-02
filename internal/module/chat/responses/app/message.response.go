@@ -24,5 +24,6 @@ type MessageResponse struct {
 	Chat                    *ChatResponse  `json:"chat"`
 	Sold                    bool           `json:"sold"`
 	Price                   *float64       `json:"price"`
+	Phone                   *string        `json:"phone"`
 	Note                    *string        `json:"note"`
 }

@@ -22,6 +22,7 @@ type Message struct {
 	Chat                    *Chat                `gorm:"foreignKey:OpenedBy;references:ID"`
 	Sold                    bool                 `gorm:"column:sold;default:0"`
 	Price                   *float64             `gorm:"column:price;default:null"`
+	Phone                   *string              `gorm:"column:phone;default:null"`
 	Note                    *string              `gorm:"column:note;default:null"`
 }
 

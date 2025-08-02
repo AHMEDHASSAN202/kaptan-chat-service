@@ -16,6 +16,7 @@ type SendMessage struct {
 	TransferOffersRequested bool     `json:"transfer_offers_requested" form:"transfer_offers_requested" query:"transfer_offers_requested"`
 	Price                   *float64 `json:"price" form:"price" query:"price"`
 	Note                    *string  `json:"note" form:"note" query:"note"`
+	Phone                   *string  `json:"phone" form:"phone" query:"phone"`
 	dto.MobileHeaders
 }
 

@@ -24,6 +24,7 @@ func MessageResponseBuilder(message *domain.Message) *app.MessageResponse {
 		TransferOfferStatus:     message.TransferOfferStatus,
 		Sold:                    message.Sold,
 		Price:                   message.Price,
+		Phone:                   message.Phone,
 		Note:                    message.Note,
 	}
 

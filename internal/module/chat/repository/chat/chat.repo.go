@@ -285,6 +285,7 @@ func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) 
 		User:                    utils.StructToMap(user.ToResponse(), "json"),
 		TransferOffersRequested: dto.TransferOffersRequested,
 		Price:                   dto.Price,
+		Phone:                   dto.Phone,
 		Note:                    dto.Note,
 	}
 	if dto.TransferOffersRequested {
