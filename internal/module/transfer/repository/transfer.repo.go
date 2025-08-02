@@ -92,6 +92,27 @@ func (r *Repository) AssignSellerToTransfer(ctx *context.Context, driverID uint,
 	transfer.DriverID = &driverID         // assuming SellerID is a *uint in the domain
 	transfer.CarID = carId                // assuming CarID is a *uint in the domain
 	transfer.CarObject = car              // assuming transfer.Car is of type map[string]interface{}
+	saleStatus := domain.TransferSaleStatusAccepted
+	transfer.SaleStatus = &saleStatus // assuming SaleStatus is a string
+
+	// Step 3: Save the updated transfer
+	if err := r.db.Save(&transfer).Error; err != nil {
+		return nil, err
+	}
+
+	// Step 4: Return updated transfer
+	return transfer, nil
+}
+
+func (r *Repository) MarkTransferAsSaleOffer(ctx *context.Context, transferID uint) (*domain.Transfer, error) {
+	// Step 1: Find the transfer
+	transfer, err := r.Find(ctx, transferID)
+	if err != nil {
+		return nil, err
+	}
+
+	saleStatus := domain.TransferSaleStatusPending
+	transfer.SaleStatus = &saleStatus // assuming SaleStatus is a string
 
 	// Step 3: Save the updated transfer
 	if err := r.db.Save(&transfer).Error; err != nil {

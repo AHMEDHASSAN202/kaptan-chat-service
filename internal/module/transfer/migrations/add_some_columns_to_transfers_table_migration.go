@@ -13,4 +13,9 @@ func NewTransferMigration(db *gorm.DB) {
 		}
 		db.Exec("CREATE INDEX idx_seller_transfers ON transfers(seller_id)")
 	}
+	if !db.Migrator().HasColumn(&domain.Transfer{}, "sale_status") {
+		if err := db.Migrator().AddColumn(&domain.Transfer{}, "sale_status"); err != nil {
+			log.Error(err)
+		}
+	}
 }

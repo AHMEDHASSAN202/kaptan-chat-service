@@ -45,6 +45,8 @@ type TransferResponse struct {
 
 	CarObject *custom_types.JSONMap `json:"car"`
 
+	SaleStatus *types.TransferSaleStatus `json:"sale_status"`
+
 	// Notes
 	Notes      *string `json:"notes,omitempty"`
 	GuestNotes *string `json:"guest_notes,omitempty"`

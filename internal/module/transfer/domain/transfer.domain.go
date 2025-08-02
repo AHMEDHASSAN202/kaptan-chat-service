@@ -88,7 +88,8 @@ type Transfer struct {
 	Notes      *string `gorm:"type:text" json:"notes,omitempty"`
 	GuestNotes *string `gorm:"type:text" json:"guest_notes,omitempty"`
 
-	SellerID *uint `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"seller_id,omitempty"`
+	SellerID   *uint                     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"seller_id,omitempty"`
+	SaleStatus *types.TransferSaleStatus `gorm:"type:enum('pending','accepted')" json:"sale_status,omitempty"`
 }
 
 const (
@@ -134,9 +135,15 @@ const (
 	PaymentSourceHotelOwner PaymentSource = "hotel_owner"
 )
 
+const (
+	TransferSaleStatusPending  types.TransferSaleStatus = "pending"
+	TransferSaleStatusAccepted types.TransferSaleStatus = "accepted"
+)
+
 type TransferRepository interface {
 	Find(ctx *context.Context, id uint) (domainData *Transfer, err error)
 	AssignSellerToTransfer(ctx *context.Context, driverID uint, transferID uint) (*Transfer, error)
+	MarkTransferAsSaleOffer(ctx *context.Context, transferID uint) (*Transfer, error)
 	MarkTransferAsStart(ctx *context.Context, transferDto *dto.StartTransfer) (*Transfer, error)
 	MarkTransferAsEnd(ctx *context.Context, transferDto *dto.EndTransfer) (*Transfer, error)
 }

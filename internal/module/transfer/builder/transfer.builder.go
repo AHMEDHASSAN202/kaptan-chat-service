@@ -42,6 +42,7 @@ func TransferResponseBuilder(transfer *domain.Transfer) *app.TransferResponse {
 		Notes:        transfer.Notes,
 		GuestNotes:   transfer.GuestNotes,
 		CarObject:    transfer.CarObject,
+		SaleStatus:   transfer.SaleStatus,
 	}
 
 	_ = utils.TryCatch(func() {

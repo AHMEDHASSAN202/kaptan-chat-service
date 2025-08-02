@@ -330,6 +330,15 @@ func (r ChatRepository) StoreMessage(ctx context.Context, dto *dto.SendMessage) 
 		}
 	}()
 
+	go func() {
+		if message.TransferId != nil && !message.IsPrivate {
+			_, errIncrement := r.transferRepository.MarkTransferAsSaleOffer(&ctx, uint(*message.TransferId))
+			if errIncrement != nil {
+				r.logger.Error(errIncrement)
+			}
+		}
+	}()
+
 	return message, result.Error
 }
 
