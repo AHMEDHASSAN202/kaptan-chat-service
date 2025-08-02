@@ -76,6 +76,8 @@ func (u ChatUseCase) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat
 		anotherClient := u.websocketManager.GetClient(utils.GetClientUserId(message.SenderType, fmt.Sprintf("%v", message.SenderId)))
 		u.websocketManager.JoinChannel(myClient, chatResponse.Channel)
 		u.websocketManager.JoinChannel(anotherClient, chatResponse.Channel)
+		u.logger.Info("Joining channel", "channel", chatResponse.Channel, "userId", utils.GetClientUserId(dto.CauserType, dto.CauserId), "userId2", utils.GetClientUserId(message.SenderType, fmt.Sprintf("%v", message.SenderId)))
+		u.logger.Info("Broadcasting chat response", "myClient", myClient, "anotherClient", anotherClient)
 		u.websocketManager.Broadcast <- websocket.Message{
 			ChannelID: chatResponse.Channel,
 			Content:   string(contentJson),
