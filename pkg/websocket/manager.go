@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -11,6 +12,21 @@ import (
 	"kaptan/pkg/utils"
 	"net/http"
 	"sync"
+	"time"
+)
+
+const (
+	// Time allowed to write a message to the peer
+	writeWait = 10 * time.Second
+
+	// Time allowed to read the next pong message from the peer
+	pongWait = 60 * time.Second
+
+	// Send pings to peer with this period. Must be less than pongWait
+	pingPeriod = (pongWait * 9) / 10
+
+	// Maximum message size allowed from peer
+	maxMessageSize = 512
 )
 
 // Configure the upgrader
@@ -29,6 +45,9 @@ type Client struct {
 	send       chan []byte
 	channelMgr *ChannelManager
 	userId     string
+	lastSeen   time.Time
+	ctx        context.Context
+	cancel     context.CancelFunc
 }
 
 // ChannelManager manages all channels and clients
@@ -39,7 +58,7 @@ type ChannelManager struct {
 	unregister chan *Client
 	Broadcast  chan Message
 	mutex      sync.RWMutex
-	shutdown   chan struct{} // Add shutdown channel
+	shutdown   chan struct{}
 	clientsMap map[string]*Client
 }
 
@@ -74,14 +93,18 @@ func NewChannelManager() *ChannelManager {
 
 // Run the channel manager
 func (manager *ChannelManager) Run() {
+	// Start cleanup routine for stale connections
+	go manager.cleanupStaleConnections()
+
 	for {
 		select {
 		case client := <-manager.register:
 			manager.mutex.Lock()
 			manager.clients[client] = true
 			manager.clientsMap[client.userId] = client
+			client.lastSeen = time.Now()
 			manager.mutex.Unlock()
-			fmt.Println("New client connected")
+			fmt.Printf("New client connected: %s\n", client.userId)
 
 		case client := <-manager.unregister:
 			manager.mutex.Lock()
@@ -89,6 +112,11 @@ func (manager *ChannelManager) Run() {
 				delete(manager.clients, client)
 				delete(manager.clientsMap, client.userId)
 				close(client.send)
+
+				// Cancel client context
+				if client.cancel != nil {
+					client.cancel()
+				}
 
 				// Remove client from all channels
 				for channelID := range client.channels {
@@ -98,7 +126,7 @@ func (manager *ChannelManager) Run() {
 				}
 			}
 			manager.mutex.Unlock()
-			fmt.Println("Client disconnected")
+			fmt.Printf("Client disconnected: %s\n", client.userId)
 
 		case message := <-manager.Broadcast:
 			manager.mutex.RLock()
@@ -110,6 +138,7 @@ func (manager *ChannelManager) Run() {
 					}
 					select {
 					case client.send <- []byte(utils.JsonEncode(message)):
+						client.lastSeen = time.Now() // Update last seen when sending message
 					default:
 						close(client.send)
 						delete(manager.clients, client)
@@ -123,14 +152,48 @@ func (manager *ChannelManager) Run() {
 			// Close all client connections
 			manager.mutex.Lock()
 			for client := range manager.clients {
+				if client.cancel != nil {
+					client.cancel()
+				}
 				close(client.send)
 				client.conn.Close()
 			}
 			manager.clients = make(map[*Client]bool)
 			manager.channels = make(map[string]map[*Client]bool)
 			manager.mutex.Unlock()
-
 			return // Exit the goroutine
+		}
+	}
+}
+
+// cleanupStaleConnections removes connections that haven't been active
+func (manager *ChannelManager) cleanupStaleConnections() {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			manager.mutex.Lock()
+			now := time.Now()
+			var staleClients []*Client
+
+			for client := range manager.clients {
+				// Consider connection stale if no activity for 2 minutes
+				if now.Sub(client.lastSeen) > 2*time.Minute {
+					staleClients = append(staleClients, client)
+				}
+			}
+
+			// Remove stale clients
+			for _, client := range staleClients {
+				fmt.Printf("Removing stale client: %s\n", client.userId)
+				manager.unregister <- client
+			}
+			manager.mutex.Unlock()
+
+		case <-manager.shutdown:
+			return
 		}
 	}
 }
@@ -151,8 +214,9 @@ func (manager *ChannelManager) JoinChannel(client *Client, channelID string) {
 	// Add client to channel
 	manager.channels[channelID][client] = true
 	client.channels[channelID] = true
+	client.lastSeen = time.Now()
 
-	//fmt.Printf("Client joined channel: %s", channelID)
+	fmt.Printf("Client %s joined channel: %s\n", client.userId, channelID)
 }
 
 // LeaveChannel removes a client from a specific channel
@@ -163,12 +227,14 @@ func (manager *ChannelManager) LeaveChannel(client *Client, channelID string) {
 	if _, ok := manager.channels[channelID]; ok {
 		delete(manager.channels[channelID], client)
 		delete(client.channels, channelID)
-		fmt.Printf("Client left channel: %s", channelID)
+		fmt.Printf("Client %s left channel: %s\n", client.userId, channelID)
 	}
 }
 
 // GetClient Get Client By UserId
 func (manager *ChannelManager) GetClient(userId string) *Client {
+	manager.mutex.RLock()
+	defer manager.mutex.RUnlock()
 	return manager.clientsMap[userId]
 }
 
@@ -190,6 +256,7 @@ func (manager *ChannelManager) SendToClient(userId string, message interface{}) 
 
 	select {
 	case client.send <- messageBytes:
+		client.lastSeen = time.Now()
 		return true // Message sent successfully
 	default:
 		// Client's send channel is full or closed
@@ -197,69 +264,175 @@ func (manager *ChannelManager) SendToClient(userId string, message interface{}) 
 	}
 }
 
-// HandleClient handles WebSocket connections for a client
+// HandleClient handles WebSocket connections for a client with proper timeout handling
 func (client *Client) HandleClient() {
 	defer func() {
 		client.channelMgr.unregister <- client
 		client.conn.Close()
 	}()
 
+	// Set up ping/pong handlers
+	client.conn.SetReadLimit(maxMessageSize)
+	client.conn.SetReadDeadline(time.Now().Add(pongWait))
+	client.conn.SetPongHandler(func(string) error {
+		client.conn.SetReadDeadline(time.Now().Add(pongWait))
+		client.lastSeen = time.Now()
+		return nil
+	})
+
+	// Start ping routine
+	go client.pingRoutine()
+
 	// Handle incoming messages
-	go func() {
-		for {
+	go client.readMessages()
+
+	// Send messages to this client
+	client.writeMessages()
+}
+
+// readMessages handles incoming messages from the client
+func (client *Client) readMessages() {
+	defer func() {
+		if client.cancel != nil {
+			client.cancel()
+		}
+	}()
+
+	for {
+		select {
+		case <-client.ctx.Done():
+			return
+		default:
 			_, message, err := client.conn.ReadMessage()
 			if err != nil {
-				fmt.Printf("Error reading message: %v", err)
-				break
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					fmt.Printf("WebSocket error for client %s: %v\n", client.userId, err)
+				}
+				return
 			}
 
-			fmt.Println("Received message:", string(message))
+			client.lastSeen = time.Now()
+			fmt.Printf("Received message from %s: %s\n", client.userId, string(message))
 
 			// Parse the incoming message as JSON
 			var action ClientAction
 			if err := json.Unmarshal(message, &action); err != nil {
-				fmt.Printf("Error parsing message: %v", err)
+				fmt.Printf("Error parsing message from %s: %v\n", client.userId, err)
 				continue
 			}
 
 			// Handle different actions
 			switch action.Action {
 			case "subscribe":
-				// Join the specified channel
-				fmt.Printf("Client subscribing to channel: %s\n", action.ChannelID)
+				fmt.Printf("Client %s subscribing to channel: %s\n", client.userId, action.ChannelID)
 				client.channelMgr.JoinChannel(client, action.ChannelID)
 
-				// Optionally send confirmation back to client
-				confirmMsg, _ := json.Marshal(map[string]string{
+				// Send confirmation back to client
+				confirmMsg := map[string]interface{}{
+					"type":       "subscription_confirmed",
 					"status":     "subscribed",
 					"channel_id": action.ChannelID,
-				})
-				client.conn.WriteMessage(websocket.TextMessage, confirmMsg)
+					"timestamp":  time.Now().Unix(),
+				}
+
+				if confirmBytes, err := json.Marshal(confirmMsg); err == nil {
+					select {
+					case client.send <- confirmBytes:
+					default:
+						return
+					}
+				}
 
 			case "unsubscribe":
-				// Leave the specified channel
-				fmt.Printf("Client unsubscribing from channel: %s\n", action.ChannelID)
+				fmt.Printf("Client %s unsubscribing from channel: %s\n", client.userId, action.ChannelID)
 				client.channelMgr.LeaveChannel(client, action.ChannelID)
 
 			case "message":
-				// Send message to the specified channel
 				client.channelMgr.Broadcast <- Message{
 					ChannelID: action.ChannelID,
 					Content:   action.Content,
 				}
 
+			case "ping":
+				// Handle explicit ping from client
+				pongMsg := map[string]interface{}{
+					"type":      "pong",
+					"timestamp": time.Now().Unix(),
+				}
+				if pongBytes, err := json.Marshal(pongMsg); err == nil {
+					select {
+					case client.send <- pongBytes:
+					default:
+						return
+					}
+				}
+
 			default:
-				fmt.Printf("Unknown action: %s\n", action.Action)
+				fmt.Printf("Unknown action from %s: %s\n", client.userId, action.Action)
 			}
 		}
-	}()
+	}
+}
 
-	// Send messages to this client
-	for message := range client.send {
-		err := client.conn.WriteMessage(websocket.TextMessage, message)
-		if err != nil {
-			fmt.Printf("Error writing message: %v", err)
-			break
+// writeMessages handles outgoing messages to the client
+func (client *Client) writeMessages() {
+	ticker := time.NewTicker(pingPeriod)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case message, ok := <-client.send:
+			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if !ok {
+				client.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+
+			if err := client.conn.WriteMessage(websocket.TextMessage, message); err != nil {
+				fmt.Printf("Error writing message to client %s: %v\n", client.userId, err)
+				return
+			}
+
+		case <-ticker.C:
+			client.conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := client.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				fmt.Printf("Error sending ping to client %s: %v\n", client.userId, err)
+				return
+			}
+
+		case <-client.ctx.Done():
+			return
+		}
+	}
+}
+
+// pingRoutine sends periodic ping messages to keep connection alive
+func (client *Client) pingRoutine() {
+	ticker := time.NewTicker(pingPeriod)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			// Send application-level ping
+			pingMsg := map[string]interface{}{
+				"type":      "ping",
+				"timestamp": time.Now().Unix(),
+			}
+
+			if pingBytes, err := json.Marshal(pingMsg); err == nil {
+				select {
+				case client.send <- pingBytes:
+				case <-client.ctx.Done():
+					return
+				default:
+					// Channel is full, connection might be dead
+					return
+				}
+			}
+
+		case <-client.ctx.Done():
+			return
 		}
 	}
 }
@@ -273,17 +446,23 @@ func handleWebSocket(c echo.Context, manager *ChannelManager, chatUseCase domain
 
 	userId := utils.GetClientUserId(c.Request().Header.Get("causer-type"), c.Request().Header.Get("causer-id"))
 
+	// Create context with cancel for the client
+	ctx, cancel := context.WithCancel(c.Request().Context())
+
 	client := &Client{
 		conn:       ws,
 		channels:   make(map[string]bool),
 		send:       make(chan []byte, 256),
 		channelMgr: manager,
 		userId:     userId,
+		lastSeen:   time.Now(),
+		ctx:        ctx,
+		cancel:     cancel,
 	}
 
 	manager.register <- client
 
-	// Join default channel (you can customize this)
+	// Join default channels
 	chatDto := dto.GetChats{}
 	chatDto.CauserId = c.Request().Header.Get("causer-id")
 	chatDto.CauserType = c.Request().Header.Get("causer-type")
@@ -293,8 +472,8 @@ func handleWebSocket(c echo.Context, manager *ChannelManager, chatUseCase domain
 	}
 	manager.JoinChannel(client, consts.GENERAL_CHAT)
 
-	// Handle client messages
-	go client.HandleClient()
+	// Handle client messages (this will block until client disconnects)
+	client.HandleClient()
 
 	return nil
 }
