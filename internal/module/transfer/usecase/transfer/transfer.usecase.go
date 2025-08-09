@@ -7,6 +7,7 @@ import (
 	domain3 "kaptan/internal/module/transfer/domain"
 	"kaptan/internal/module/transfer/dto"
 	domain2 "kaptan/internal/module/user/domain"
+	"kaptan/pkg/fcm_notification"
 	"kaptan/pkg/gate"
 	"kaptan/pkg/logger"
 	"kaptan/pkg/validators"
@@ -20,9 +21,10 @@ type UseCase struct {
 	driverRepo       domain2.DriverRepository
 	transferRepo     domain3.TransferRepository
 	chatUseCase      domain4.ChatUseCase
+	fcmClient        *fcm_notification.FCMClient
 }
 
-func NewTransferUseCase(chatUseCase domain4.ChatUseCase, driverRepo domain2.DriverRepository, transferRepo domain3.TransferRepository, gate *gate.Gate, websocketManager *websocket.ChannelManager, logger logger.ILogger) domain3.UseCase {
+func NewTransferUseCase(chatUseCase domain4.ChatUseCase, driverRepo domain2.DriverRepository, transferRepo domain3.TransferRepository, gate *gate.Gate, websocketManager *websocket.ChannelManager, logger logger.ILogger, fcmClient *fcm_notification.FCMClient) domain3.UseCase {
 	return &UseCase{
 		chatUseCase:      chatUseCase,
 		logger:           logger,
@@ -30,6 +32,7 @@ func NewTransferUseCase(chatUseCase domain4.ChatUseCase, driverRepo domain2.Driv
 		driverRepo:       driverRepo,
 		websocketManager: websocketManager,
 		transferRepo:     transferRepo,
+		fcmClient:        fcmClient,
 	}
 }
 

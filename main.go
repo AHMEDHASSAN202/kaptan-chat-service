@@ -9,6 +9,7 @@ import (
 	"kaptan/pkg/config"
 	"kaptan/pkg/database"
 	"kaptan/pkg/event_bus"
+	"kaptan/pkg/fcm_notification"
 	"kaptan/pkg/gate"
 	"kaptan/pkg/http"
 	"kaptan/pkg/http/echo"
@@ -33,6 +34,7 @@ func main() {
 				validators.Init,
 				aws.Init,
 				event_bus.NewEventBus,
+				fcm_notification.NewFcmManager,
 			),
 			database.Module,
 			websocket.Module,

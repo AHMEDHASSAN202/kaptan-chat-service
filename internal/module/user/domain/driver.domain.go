@@ -93,4 +93,6 @@ type DriverRepository interface {
 	FindWithMedia(ctx *context.Context, id uint) (domainData *Driver, err error)
 	FindByAccessTokenId(ctx *context.Context, id uint) (*Driver, error)
 	IncrementSoldTripsByValue(ctx *context.Context, id uint, value int) error
+	GetFcmTokenByIds(ctx *context.Context, ids []uint) ([]string, error)
+	RemoveInvalidFcmTokens(ctx *context.Context, tokens []string) error
 }

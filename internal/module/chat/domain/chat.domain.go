@@ -44,6 +44,7 @@ type ChatRepository interface {
 	GetActiveChats(ctx context.Context, dto *dto.GetChats) []*Chat
 	GetChat(ctx context.Context, dto *dto.GetChat) (*Chat, error)
 	GetChatOnly(ctx context.Context, channel string, userId int) (*Chat, error)
+	GetAnotherSideChat(ctx context.Context, channel string, userId int) (*Chat, error)
 	GetAcceptedChatByTransferId(ctx context.Context, transferId uint, userId string) (*Chat, error)
 	GetChatMessages(ctx context.Context, dto *dto.GetChatMessage) ([]*Message, *mysql.Pagination)
 	AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat) (*Chat, *Message, error)

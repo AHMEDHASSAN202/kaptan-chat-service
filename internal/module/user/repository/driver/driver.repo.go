@@ -73,3 +73,36 @@ func (r *Repository) IncrementSoldTripsByValue(ctx *context.Context, id uint, va
 
 	return nil
 }
+
+// GetFcmTokenByIds retrieves FCM tokens for a list of driver IDs
+func (r *Repository) GetFcmTokenByIds(ctx *context.Context, ids []uint) ([]string, error) {
+	var tokens []string
+	err := r.db.Table("personal_access_tokens").
+		Select("device_token").
+		Where("tokenable_id IN ? AND tokenable_type = ? AND expires_at IS NULL AND device_token IS NOT NULL", ids, "App\\Models\\Driver").
+		Scan(&tokens).Error
+	if err != nil {
+		return nil, err
+	}
+	return tokens, nil
+}
+
+func (r *Repository) RemoveInvalidFcmTokens(ctx *context.Context, tokens []string) error {
+	if len(tokens) == 0 {
+		return nil
+	}
+
+	result := r.db.Table("personal_access_tokens").
+		Where("device_token IN ? AND tokenable_type = ?", tokens, "App\\Models\\Driver").
+		Delete(nil)
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	return nil
+}

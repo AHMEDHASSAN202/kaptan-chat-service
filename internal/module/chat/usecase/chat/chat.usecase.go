@@ -13,6 +13,8 @@ import (
 	builder2 "kaptan/internal/module/transfer/builder"
 	domain3 "kaptan/internal/module/transfer/domain"
 	domain2 "kaptan/internal/module/user/domain"
+	"kaptan/internal/module/user/usecase/notification"
+	"kaptan/pkg/fcm_notification"
 	"kaptan/pkg/gate"
 	"kaptan/pkg/logger"
 	"kaptan/pkg/utils"
@@ -28,9 +30,11 @@ type ChatUseCase struct {
 	websocketManager *websocket.ChannelManager
 	driverRepo       domain2.DriverRepository
 	transferRepo     domain3.TransferRepository
+	fcmClient        *fcm_notification.FCMClient
+	notification     *notification.UseCase
 }
 
-func NewChatUseCase(repo domain.ChatRepository, driverRepo domain2.DriverRepository, transferRepo domain3.TransferRepository, gate *gate.Gate, websocketManager *websocket.ChannelManager, logger logger.ILogger) domain.ChatUseCase {
+func NewChatUseCase(repo domain.ChatRepository, driverRepo domain2.DriverRepository, transferRepo domain3.TransferRepository, gate *gate.Gate, websocketManager *websocket.ChannelManager, logger logger.ILogger, fcmClient *fcm_notification.FCMClient, notification *notification.UseCase) domain.ChatUseCase {
 	return &ChatUseCase{
 		repo:             repo,
 		logger:           logger,
@@ -38,6 +42,8 @@ func NewChatUseCase(repo domain.ChatRepository, driverRepo domain2.DriverReposit
 		driverRepo:       driverRepo,
 		websocketManager: websocketManager,
 		transferRepo:     transferRepo,
+		fcmClient:        fcmClient,
+		notification:     notification,
 	}
 }
 
@@ -86,6 +92,25 @@ func (u ChatUseCase) AddPrivateChat(ctx context.Context, dto *dto.AddPrivateChat
 		u.addUnreadMessage(myClient, chatResponse.Channel)
 	}()
 
+	go func() {
+		messageTitle := "New Private Chat"
+		messageBody := fmt.Sprintf("New private chat with %s", message.User["name"].(string))
+		contentJson, _ := json.Marshal(chatResponse)
+		chatJson, _ := json.Marshal(websocket.Message{
+			ChannelID: chatResponse.Channel,
+			Content:   string(contentJson),
+			Action:    consts.START_CHAT_ACTION,
+		})
+		anotherSideChat, errAnotherSideChat := u.repo.GetAnotherSideChat(ctx, chatResponse.Channel, cast.ToInt(dto.CauserId))
+		if errAnotherSideChat != nil {
+			u.logger.Info("AnotherSideChat Error => ", err)
+			return
+		}
+		_ = u.notification.SendNotificationToUsers(ctx, []uint{cast.ToUint(anotherSideChat.UserId)}, messageTitle, messageBody, map[string]string{
+			"chat": string(chatJson),
+		})
+	}()
+
 	return chatResponse, validators.ErrorResponse{}
 }
 
@@ -130,6 +155,31 @@ func (u ChatUseCase) SaleTransferChat(ctx context.Context, dto *dto.SaleTransfer
 		}
 	}()
 
+	go func() {
+		messageTitle := "Sold Transfer"
+		messageBody := fmt.Sprintf("New sold transfer sold with %s", chatResponse.User["name"].(string))
+		soldMap := map[string]interface{}{
+			"channel":    chatResponse.Channel,
+			"message_id": chat.OpenedBy,
+		}
+		chatContentJson, _ := json.Marshal(chatResponse)
+		contentJson, _ := json.Marshal(soldMap)
+		chatJson, _ := json.Marshal(websocket.Message{
+			ChannelID: chatResponse.Channel,
+			Content:   string(chatContentJson),
+			Action:    consts.SOLD_MESSAGE_ACTION,
+		})
+		anotherSideChat, errAnotherSideChat := u.repo.GetAnotherSideChat(ctx, chatResponse.Channel, cast.ToInt(dto.CauserId))
+		if errAnotherSideChat != nil {
+			u.logger.Info("AnotherSideChat Error => ", err)
+			return
+		}
+		_ = u.notification.SendNotificationToUsers(ctx, []uint{cast.ToUint(anotherSideChat.UserId)}, messageTitle, messageBody, map[string]string{
+			"message": string(contentJson),
+			"chat":    string(chatJson),
+		})
+	}()
+
 	return chatResponse, validators.ErrorResponse{}
 }
 
@@ -149,6 +199,25 @@ func (u ChatUseCase) RejectOffer(ctx context.Context, dto *dto.RejectOffer) (*ap
 		}
 		myClient := u.websocketManager.GetClient(utils.GetClientUserId(dto.CauserType, dto.CauserId))
 		u.addUnreadMessage(myClient, messageResponse.Channel)
+	}()
+
+	go func() {
+		messageTitle := "Rejected Offer"
+		messageBody := fmt.Sprintf("Offer rejected by %s", message.User["name"].(string))
+		contentJson, _ := json.Marshal(messageResponse)
+		messageJson, _ := json.Marshal(websocket.Message{
+			ChannelID: messageResponse.Channel,
+			Content:   string(contentJson),
+			Action:    consts.REJECT_OFFER_ACTION,
+		})
+		anotherSideChat, errAnotherSideChat := u.repo.GetAnotherSideChat(ctx, message.Channel, cast.ToInt(dto.CauserId))
+		if errAnotherSideChat != nil {
+			u.logger.Info("AnotherSideChat Error => ", err)
+			return
+		}
+		_ = u.notification.SendNotificationToUsers(ctx, []uint{cast.ToUint(anotherSideChat.UserId)}, messageTitle, messageBody, map[string]string{
+			"message": string(messageJson),
+		})
 	}()
 
 	return messageResponse, validators.ErrorResponse{}
@@ -248,6 +317,31 @@ func (u ChatUseCase) SendMessage(ctx context.Context, dto *dto.SendMessage) (*ap
 		}()
 	}
 
+	go func() {
+		messageTitle := message.User["name"].(string) + " | New Message"
+		contentJson, _ := json.Marshal(messageResponse)
+		messageJson, _ := json.Marshal(websocket.Message{
+			ChannelID: consts.GENERAL_CHAT,
+			Content:   string(contentJson),
+			Action:    consts.ADD_MESSAGE_ACTION,
+		})
+		if message.IsPrivate {
+			anotherSideChat, errAnotherSideChat := u.repo.GetAnotherSideChat(ctx, messageResponse.Channel, cast.ToInt(dto.CauserId))
+			if errAnotherSideChat != nil {
+				u.logger.Info("AnotherSideChat Error => ", err)
+				return
+			}
+			_ = u.notification.SendNotificationToUsers(ctx, []uint{cast.ToUint(anotherSideChat.UserId)}, messageTitle, dto.Message, map[string]string{
+				"message": string(messageJson),
+			})
+		} else {
+			condition := fmt.Sprintf("'drivers' in topics && !'user_%s' in topics", dto.CauserId)
+			_ = u.notification.SendNotificationToTopic(ctx, "drivers", messageTitle, dto.Message, map[string]string{
+				"message": string(contentJson),
+			}, condition)
+		}
+	}()
+
 	return messageResponse, validators.ErrorResponse{}
 }
 
@@ -280,6 +374,31 @@ func (u ChatUseCase) UpdateMessage(ctx context.Context, dto *dto.UpdateMessage) 
 		}()
 	}
 
+	go func() {
+		messageTitle := message.User["name"].(string) + " | Update Message"
+		contentJson, _ := json.Marshal(messageResponse)
+		messageJson, _ := json.Marshal(websocket.Message{
+			ChannelID: consts.GENERAL_CHAT,
+			Content:   string(contentJson),
+			Action:    consts.UPDATE_MESSAGE_ACTION,
+		})
+		if message.IsPrivate {
+			anotherSideChat, errAnotherSideChat := u.repo.GetAnotherSideChat(ctx, messageResponse.Channel, cast.ToInt(dto.CauserId))
+			if errAnotherSideChat != nil {
+				u.logger.Info("AnotherSideChat Error => ", err)
+				return
+			}
+			_ = u.notification.SendNotificationToUsers(ctx, []uint{cast.ToUint(anotherSideChat.UserId)}, messageTitle, dto.Message, map[string]string{
+				"message": string(messageJson),
+			})
+		} else {
+			condition := fmt.Sprintf("'drivers' in topics && !'user_%s' in topics", dto.CauserId)
+			_ = u.notification.SendNotificationToTopic(ctx, "drivers", messageTitle, dto.Message, map[string]string{
+				"message": string(contentJson),
+			}, condition)
+		}
+	}()
+
 	return messageResponse, validators.ErrorResponse{}
 }
 
@@ -311,6 +430,31 @@ func (u ChatUseCase) DeleteMessage(ctx context.Context, dto *dto.DeleteMessage) 
 			}
 		}()
 	}
+
+	go func() {
+		messageTitle := message.User["name"].(string) + " | Delete Message"
+		contentJson, _ := json.Marshal(messageResponse)
+		messageJson, _ := json.Marshal(websocket.Message{
+			ChannelID: consts.GENERAL_CHAT,
+			Content:   string(contentJson),
+			Action:    consts.DELETE_MESSAGE_ACTION,
+		})
+		if message.IsPrivate {
+			anotherSideChat, errAnotherSideChat := u.repo.GetAnotherSideChat(ctx, messageResponse.Channel, cast.ToInt(dto.CauserId))
+			if errAnotherSideChat != nil {
+				u.logger.Info("AnotherSideChat Error => ", err)
+				return
+			}
+			_ = u.notification.SendNotificationToUsers(ctx, []uint{cast.ToUint(anotherSideChat.UserId)}, messageTitle, "---------", map[string]string{
+				"message": string(messageJson),
+			})
+		} else {
+			condition := fmt.Sprintf("'drivers' in topics && !'user_%s' in topics", dto.CauserId)
+			_ = u.notification.SendNotificationToTopic(ctx, "drivers", messageTitle, "---------", map[string]string{
+				"message": string(contentJson),
+			}, condition)
+		}
+	}()
 
 	return messageResponse, validators.ErrorResponse{}
 }

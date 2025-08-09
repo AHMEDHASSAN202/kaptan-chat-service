@@ -62,6 +62,7 @@ type (
 
 	FirebaseConfig struct {
 		DatabaseURL string `json:"database_url"`
+		FcmFilePath string `json:"fcm_file_path"`
 	}
 
 	HTTPConfig struct {
@@ -176,6 +177,7 @@ func setFromEnv(cfg *Config) {
 	cfg.JWTConfig.UserTempSigningKey = os.Getenv("JWT_SECRET_USER_TEMP")
 
 	cfg.FirebaseConfig.DatabaseURL = os.Getenv("REAlTIME_DATABASE_URL")
+	cfg.FirebaseConfig.FcmFilePath = os.Getenv("FCM_FILE_PATH")
 
 	cfg.Mysql.HOST = os.Getenv("DB_HOST")
 	cfg.Mysql.PORT = os.Getenv("DB_PORT")

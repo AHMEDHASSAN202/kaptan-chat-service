@@ -258,6 +258,12 @@ func (r ChatRepository) GetChatOnly(ctx context.Context, channel string, userId 
 	return chat, nil
 }
 
+func (r ChatRepository) GetAnotherSideChat(ctx context.Context, channel string, userId int) (*domain.Chat, error) {
+	var chat *domain.Chat
+	r.db.Model(&domain.Chat{}).Where("channel = ?", channel).Where("user_id != ?", userId).First(&chat)
+	return chat, nil
+}
+
 func (r ChatRepository) GetAcceptedChatByTransferId(ctx context.Context, transferId uint, userId string) (*domain.Chat, error) {
 	var chat *domain.Chat
 	r.db.Model(&domain.Chat{}).Where("transfer_id = ?", transferId).Where("status = ?", consts.ACCEPT_CHAT_STATUS).Where("user_id = ?", userId).First(&chat)
